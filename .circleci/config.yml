@@ -4,6 +4,7 @@ jobs:
    docker:
      - image: gongyh/scgs:dev
    steps:
+     - checkout
      - run:
          name: The First Step
          command: |
