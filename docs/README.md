@@ -1,6 +1,6 @@
-# nf-core/scgs: Documentation
+# gongyh/nf-core-scgs: Documentation
 
-The nf-core/scgs documentation is split into the following files:
+The gongyh/nf-core-scgs documentation is split into the following files:
 
 1. [Installation](installation.md)
 2. Pipeline configuration

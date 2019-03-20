@@ -1,6 +1,6 @@
 FROM nfcore/base
 LABEL authors="Yanhai Gong" \
-      description="Docker image containing all requirements for nf-core/scgs pipeline"
+      description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
 COPY environment.yml /
 RUN conda env create -f /environment.yml && conda clean -a

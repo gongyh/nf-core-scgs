@@ -1,4 +1,4 @@
-# nf-core/scgs
+# gongyh/nf-core-scgs
 
 **Single Cell Genome Sequencing data analysis pipeline**.
 
@@ -13,7 +13,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 
 ## Documentation
-The nf-core/scgs pipeline comes with documentation about the pipeline, found in the `docs/` directory:
+The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, found in the `docs/` directory:
 
 1. [Installation](docs/installation.md)
 2. Pipeline configuration
@@ -27,4 +27,4 @@ The nf-core/scgs pipeline comes with documentation about the pipeline, found in 
 <!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
 
 ## Credits
-nf-core/scgs was originally written by Yanhai Gong.
+gongyh/nf-core-scgs was originally written by Yanhai Gong.

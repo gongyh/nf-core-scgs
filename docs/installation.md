@@ -1,6 +1,6 @@
-# nf-core/scgs: Installation
+# gongyh/nf-core-scgs: Installation
 
-To start using the nf-core/scgs pipeline, follow the steps below:
+To start using the gongyh/nf-core-scgs pipeline, follow the steps below:
 
 <!-- Install Atom plugin markdown-toc-auto for this ToC -->
 <!-- TOC START min:2 max:3 link:true asterisk:true -->
@@ -38,17 +38,17 @@ See [nextflow.io](https://www.nextflow.io/) for further instructions on how to i
 ## Install the pipeline
 
 ### Automatic
-This pipeline itself needs no installation - NextFlow will automatically fetch it from GitHub if `nf-core/scgs` is specified as the pipeline name.
+This pipeline itself needs no installation - NextFlow will automatically fetch it from GitHub if `gongyh/nf-core-scgs` is specified as the pipeline name.
 
 ### Offline
 The above method requires an internet connection so that Nextflow can download the pipeline files. If you're running on a system that has no internet connection, you'll need to download and transfer the pipeline files manually:
 
 ```bash
-wget https://github.com/nf-core/scgs/archive/master.zip
+wget https://github.com/gongyh/nf-core-scgs/archive/master.zip
 mkdir -p ~/my-pipelines/nf-core/
 unzip master.zip -d ~/my-pipelines/nf-core/
 cd ~/my_data/
-nextflow run ~/my-pipelines/nf-core/scgs-master
+nextflow run ~/my-pipelines/gongyh/nf-core-scgs-master
 ```
 
 To stop nextflow from looking for updates online, you can tell it to run in offline mode by specifying the following environment variable in your ~/.bashrc file:
@@ -87,7 +87,7 @@ The process is very similar: running the pipeline with the option `-profile sing
 If running offline with Singularity, you'll need to download and transfer the Singularity image first:
 
 ```bash
-singularity pull --name nf-core-scgs.simg nf-core/scgs
+singularity pull --name nf-core-scgs.simg gongyh/nf-core-scgs
 ```
 
 Once transferred, use `-with-singularity` and specify the path to the image file:

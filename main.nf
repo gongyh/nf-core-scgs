@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 /*
 ========================================================================================
-                         nf-core/scgs
+                         gongyh/nf-core-scgs
 ========================================================================================
- nf-core/scgs Analysis Pipeline.
+ gongyh/nf-core-scgs Analysis Pipeline.
  #### Homepage / Documentation
- https://github.com/nf-core/scgs
+ https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
 
@@ -19,7 +19,7 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/scgs --reads '*_R{1,2}.fastq.gz' -profile docker
+    nextflow run gongyh/nf-core-scgs --reads '*_R{1,2}.fastq.gz' -profile docker
 
     Mandatory arguments:
       --reads                       Path to input data (must be surrounded with quotes)
@@ -159,8 +159,8 @@ def create_workflow_summary(summary) {
     yaml_file.text  = """
     id: 'nf-core-scgs-summary'
     description: " - this information is collected when the pipeline is started."
-    section_name: 'nf-core/scgs Workflow Summary'
-    section_href: 'https://github.com/nf-core/scgs'
+    section_name: 'gongyh/nf-core-scgs Workflow Summary'
+    section_href: 'https://github.com/gongyh/nf-core-scgs'
     plot_type: 'html'
     data: |
         <dl class=\"dl-horizontal\">
@@ -269,9 +269,9 @@ process output_documentation {
 workflow.onComplete {
 
     // Set up the e-mail variables
-    def subject = "[nf-core/scgs] Successful: $workflow.runName"
+    def subject = "[gongyh/nf-core-scgs] Successful: $workflow.runName"
     if(!workflow.success){
-      subject = "[nf-core/scgs] FAILED: $workflow.runName"
+      subject = "[gongyh/nf-core-scgs] FAILED: $workflow.runName"
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
@@ -304,12 +304,12 @@ workflow.onComplete {
         if (workflow.success) {
             mqc_report = multiqc_report.getVal()
             if (mqc_report.getClass() == ArrayList){
-                log.warn "[nf-core/scgs] Found multiple reports from process 'multiqc', will use only one"
+                log.warn "[gongyh/nf-core-scgs] Found multiple reports from process 'multiqc', will use only one"
                 mqc_report = mqc_report[0]
             }
         }
     } catch (all) {
-        log.warn "[nf-core/scgs] Could not attach MultiQC report to summary email"
+        log.warn "[gongyh/nf-core-scgs] Could not attach MultiQC report to summary email"
     }
 
     // Render the TXT template
@@ -335,11 +335,11 @@ workflow.onComplete {
           if( params.plaintext_email ){ throw GroovyException('Send plaintext e-mail, not HTML') }
           // Try to send HTML e-mail using sendmail
           [ 'sendmail', '-t' ].execute() << sendmail_html
-          log.info "[nf-core/scgs] Sent summary e-mail to $params.email (sendmail)"
+          log.info "[gongyh/nf-core-scgs] Sent summary e-mail to $params.email (sendmail)"
         } catch (all) {
           // Catch failures and try with plaintext
           [ 'mail', '-s', subject, params.email ].execute() << email_txt
-          log.info "[nf-core/scgs] Sent summary e-mail to $params.email (mail)"
+          log.info "[gongyh/nf-core-scgs] Sent summary e-mail to $params.email (mail)"
         }
     }
 
@@ -358,10 +358,10 @@ workflow.onComplete {
     c_green = params.monochrome_logs ? '' : "\033[0;32m";
     c_red = params.monochrome_logs ? '' : "\033[0;31m";
     if(workflow.success){
-        log.info "${c_purple}[nf-core/scgs]${c_green} Pipeline complete${c_reset}"
+        log.info "${c_purple}[gongyh/nf-core-scgs]${c_green} Pipeline complete${c_reset}"
     } else {
         checkHostname()
-        log.info "${c_purple}[nf-core/scgs]${c_red} Pipeline completed with errors${c_reset}"
+        log.info "${c_purple}[gongyh/nf-core-scgs]${c_red} Pipeline completed with errors${c_reset}"
     }
 
 }
@@ -385,7 +385,7 @@ def nfcoreHeader(){
     ${c_blue}  |\\ | |__  __ /  ` /  \\ |__) |__         ${c_yellow}}  {${c_reset}
     ${c_blue}  | \\| |       \\__, \\__/ |  \\ |___     ${c_green}\\`-._,-`-,${c_reset}
                                             ${c_green}`._,._,\'${c_reset}
-    ${c_purple}  nf-core/scgs v${workflow.manifest.version}${c_reset}
+    ${c_purple}  gongyh/nf-core-scgs v${workflow.manifest.version}${c_reset}
     ${c_dim}----------------------------------------------------${c_reset}
     """.stripIndent()
 }

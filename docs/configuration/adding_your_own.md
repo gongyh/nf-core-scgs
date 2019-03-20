@@ -1,4 +1,4 @@
-# nf-core/scgs: Configuration for other clusters
+# gongyh/nf-core-scgs: Configuration for other clusters
 
 It is entirely possible to run this pipeline on other clusters, though you will need to set up your own config file so that the pipeline knows how to work with your cluster.
 
@@ -35,7 +35,7 @@ To run the pipeline, several software packages are required. How you satisfy the
 Please see the [`installation documentation`](../installation.md) for how to run using the below as a one-off. These instructions are about configuring a config file for repeated use.
 
 ### Docker
-Docker is a great way to run nf-core/scgs, as it manages all software installations and allows the pipeline to be run in an identical software environment across a range of systems.
+Docker is a great way to run gongyh/nf-core-scgs, as it manages all software installations and allows the pipeline to be run in an identical software environment across a range of systems.
 
 Nextflow has [excellent integration](https://www.nextflow.io/docs/latest/docker.html) with Docker, and beyond installing the two tools, not much else is required - nextflow will automatically fetch the [nfcore/scgs](https://hub.docker.com/r/nfcore/scgs/) image that we have created and is hosted at dockerhub at run time.
 
@@ -57,7 +57,7 @@ To specify singularity usage in your pipeline config file, add the following:
 
 ```nextflow
 singularity.enabled = true
-process.container = "nf-core/scgs"
+process.container = "gongyh/nf-core-scgs"
 ```
 
 If you intend to run the pipeline offline, nextflow will not be able to automatically download the singularity image for you.
@@ -66,7 +66,7 @@ Instead, you'll have to do this yourself manually first, transfer the image file
 First, pull the image file where you have an internet connection:
 
 ```bash
-singularity pull --name nf-core-scgs.simg nf-core/scgs
+singularity pull --name nf-core-scgs.simg gongyh/nf-core-scgs
 ```
 
 Then transfer this file and point the config file to the image:
