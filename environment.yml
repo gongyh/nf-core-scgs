@@ -1,12 +1,15 @@
 # You can use this file to create a conda environment for this pipeline:
-#   conda env create -f environment.yml
-name: nf-core-scgs-1.0dev
+#   conda env update -f environment.yml -n base
 channels:
   - conda-forge
   - bioconda
+  - r
   - defaults
 dependencies:
   # TODO nf-core: Add required software dependencies here
+  - r-base=3.5.1
+  - perl-app-cpanminus=1.7044
+  - perl-bioperl=1.7.2
   - fastqc=0.11.8
   - emboss=6.6.0
   - bowtie2=2.3.4.3
