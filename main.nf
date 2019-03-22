@@ -32,6 +32,19 @@ def helpMessage() {
 
     References                      If not specified in the configuration file or you wish to overwrite any of the references.
       --fasta                       Path to Fasta reference
+      --gff                         Path to GFF reference
+
+    Trimming options
+      --notrim                      Specifying --notrim will skip the adapter trimming step.
+      --saveTrimmed                 Save the trimmed Fastq files in the the Results directory.
+      --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1 (or single-end reads)
+      --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2 (paired-end reads only)
+      --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1 AFTER adapter/quality trimming has been performed
+      --three_prime_clip_r2 [int]   Instructs Trim Galore to re move bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed
+
+    Mapping options:
+      --allow_multi_align           Secondary alignments and unmapped reads are also reported in addition to primary alignments
+      --saveAlignedIntermediates    Save the intermediate BAM files from the Alignment step  - not done by default
 
     Other options:
       --outdir                      The output directory where the results will be saved
@@ -74,6 +87,11 @@ if ( params.fasta ){
 //   file fasta from fasta
 //
 
+gff = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
+if ( params.gff ){
+    gff = file(params.gff)
+    if( !gff.exists() ) exit 1, "GFF file not found: ${params.gff}"
+}
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -95,6 +113,12 @@ if( workflow.profile == 'awsbatch') {
 // Stage config files
 ch_multiqc_config = Channel.fromPath(params.multiqc_config)
 ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
+
+// Custom trimming options
+params.clip_r1 = 0
+params.clip_r2 = 0
+params.three_prime_clip_r1 = 0
+params.three_prime_clip_r2 = 0
 
 /*
  * Create a channel for input read files
@@ -136,6 +160,14 @@ summary['Launch dir']       = workflow.launchDir
 summary['Working dir']      = workflow.workDir
 summary['Script dir']       = workflow.projectDir
 summary['User']             = workflow.userName
+if( params.notrim ){
+    summary['Trimming Step'] = 'Skipped'
+} else {
+    summary['Trim R1'] = params.clip_r1
+    summary['Trim R2'] = params.clip_r2
+    summary["Trim 3' R1"] = params.three_prime_clip_r1
+    summary["Trim 3' R2"] = params.three_prime_clip_r2
+}
 if(workflow.profile == 'awsbatch'){
    summary['AWS Region']    = params.awsregion
    summary['AWS Queue']     = params.awsqueue
@@ -213,7 +245,191 @@ process fastqc {
     """
 }
 
+/*
+ * STEP 2 - Trim Galore!
+ */
+if(params.notrim){
+    trimmed_reads = read_files_trimming
+    trimgalore_results = []
+    trimgalore_fastqc_reports = []
+} else {
+    process trim_galore {
+        tag "$name"
+        publishDir "${params.outdir}/trim_galore", mode: 'copy',
+            saveAs: {filename ->
+                if (filename.indexOf("_fastqc") > 0) "FastQC/$filename"
+                else if (filename.indexOf("trimming_report.txt") > 0) "logs/$filename"
+                else params.saveTrimmed ? filename : null
+            }
 
+        input:
+        set val(name), file(reads) from raw_reads_trimgalore
+
+        output:
+        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades
+        file '*trimming_report.txt' into trimgalore_results
+        file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports
+
+        script:
+        c_r1 = params.clip_r1 > 0 ? "--clip_r1 ${params.clip_r1}" : ''
+        c_r2 = params.clip_r2 > 0 ? "--clip_r2 ${params.clip_r2}" : ''
+        tpc_r1 = params.three_prime_clip_r1 > 0 ? "--three_prime_clip_r1 ${params.three_prime_clip_r1}" : ''
+        tpc_r2 = params.three_prime_clip_r2 > 0 ? "--three_prime_clip_r2 ${params.three_prime_clip_r2}" : ''
+        if (params.singleEnd) {
+            """
+            trim_galore --fastqc --gzip $c_r1 $tpc_r1 $reads
+            """
+        } else {
+            """
+            trim_galore --paired --fastqc --gzip $c_r1 $c_r2 $tpc_r1 $tpc_r2 $reads
+            """
+        }
+    }
+}
+
+/*
+ * STEP 3 - align with bowtie2
+ */
+process bowtie2 {
+    tag "$prefix"
+    publishDir path: { params.saveAlignedIntermediates ? "${params.outdir}/bowtie2" : params.outdir }, mode: 'copy',
+               saveAs: {filename -> params.saveAlignedIntermediates ? filename : null }
+
+    input:
+    file reads from trimmed_reads
+    file index from bowtie2_index
+
+    output:
+    file '*.bam' into bb_bam
+
+    script:
+    prefix = reads[0].toString() - ~/(.R1)?(_1)?(_R1)?(_trimmed)?(_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    R1 = reads[0].toString()
+    R2 = reads[1].toString()
+    filtering = params.allow_multi_align ? '' : "| samtools view -b -q 1 -F 4 -F 256 -"
+    """
+    bowtie2 -p 32 --no-mixed --no-discordant -X 1000 -k 1 -x ${index}/genome -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
+    """
+}
+
+/*
+ * STEP 4 - post-alignment processing
+ */
+process samtools {
+    tag "${bam.baseName}"
+    publishDir path: "${pp_outdir}", mode: 'copy',
+               saveAs: { filename ->
+                   if (filename.indexOf(".stats.txt") > 0) "stats/$filename"
+                   else params.saveAlignedIntermediates ? filename : null
+               }
+
+    input:
+    file bam from bb_bam
+
+    output:
+    file '*.sorted.bam' into bam_for_mapped, bam_for_circleator
+    file '*.sorted.bam.bai' into bwa_bai, bai_for_mapped, bai_for_circleator
+    file '*.sorted.bed' into bed_total
+    file '*.stats.txt' into samtools_stats
+
+    script:
+    pp_outdir = "${params.outdir}/bowtie2"
+    """
+    samtools sort -o ${bam.baseName}.sorted.bam $bam
+    samtools index ${bam.baseName}.sorted.bam
+    bedtools bamtobed -i ${bam.baseName}.sorted.bam | sort -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${bam.baseName}.sorted.bed
+    samtools stats ${bam.baseName}.sorted.bam > ${bam.baseName}.stats.txt
+    """
+}
+
+/*
+ * STEP 5 - Prepare coverage files for Circleator
+ */
+process circleator {
+    tag "${bam.baseName}"
+    publishDir "${params.outdir}/circleator", mode: 'copy', 
+            saveAs: {filename ->
+                if (filename.indexOf(".txt") > 0) "$filename" else null
+            }
+
+    input:
+    file bam from bam_for_circleator
+    file bai from bai_for_circleator
+
+    output:
+    file "${bam.baseName}-coverage-100*.txt" into circleator_out
+    
+    shell:
+    """
+    /opt/Circleator-1.0.1/util/samtools/bam_get_coverage $bam 100 ${bam.baseName}-coverage-100.txt
+    /opt/Circleator-1.0.1/util/log-transform-coverage.pl ${bam.baseName}-coverage-100.txt
+    """
+}
+
+/*
+ * STEP 6 - Assemble using SPAdes
+ */
+process spades {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/spades", mode: 'copy'
+
+    input:
+    file clean_reads from trimmed_reads_for_spades
+
+    output:
+    file "${prefix}.contigs.fasta" into contigs_for_quast, contigs_for_checkm
+
+    script:
+    prefix = clean_reads[0].toString() - ~/(.R1)?(_1)?(_R1)?(_trimmed)?(_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    R1 = clean_reads[0].toString()
+    R2 = clean_reads[1].toString()
+    """
+    spades.py --sc -1 $R1 -2 $R2 --careful -t 48 -m 96 -o ${prefix}.spades_out
+    ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
+    """
+}
+
+/*
+ * STEP 7 - Evaluation using QUAST
+ */
+process quast {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/quast/${prefix}", mode: 'copy'
+
+    input:
+    file fasta from fasta_for_quast
+    file gff from gff_for_quast
+    file contigs from contigs_for_quast
+
+    output:
+    file 'quast_report'
+
+    script:
+    prefix = contigs.toString() - ~/.contigs.fasta$/
+    euk = params.euk ? "-e" : ''
+    """
+    quast.py -o quast_report -R $fasta -G $gff -m 50 -t 8 $euk $contigs
+    """
+}
+
+/*
+ * STEP 8 - Completeness and contamination evaluation using CheckM
+ */
+process checkm {
+   tag "$prefix"
+   publishDir "${params.outdir}/CheckM", mode: 'copy'
+
+   input:
+   file ('spades/*') from contigs_for_checkm.collect()
+
+   output:
+   file 'spades_checkM.txt' into checkm_report
+
+   script:
+   """
+   checkm taxonomy_wf -t 48 -f spades_checkM.txt -x fasta genus Escherichia spades spades_checkM
+   """
+}
 
 /*
  * STEP 2 - MultiQC
@@ -226,6 +442,8 @@ process multiqc {
     // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from fastqc_results.collect().ifEmpty([])
     file ('software_versions/*') from software_versions_yaml
+    file ('trimgalore/*') from trimgalore_results.collect()
+    file ('samtools/*') from samtools_stats.collect()
     file workflow_summary from create_workflow_summary(summary)
 
     output:
