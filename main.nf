@@ -46,6 +46,9 @@ def helpMessage() {
       --allow_multi_align           Secondary alignments and unmapped reads are also reported in addition to primary alignments
       --saveAlignedIntermediates    Save the intermediate BAM files from the Alignment step  - not done by default
 
+    Quast options:
+      --euk                         Euk genome
+
     Other options:
       --outdir                      The output directory where the results will be saved
       --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
@@ -67,6 +70,14 @@ if (params.help){
     helpMessage()
     exit 0
 }
+
+// default values
+params.genome = false
+params.notrim = false
+params.saveTrimmed = false
+params.allow_multi_align = false
+params.saveAlignedIntermediates = false
+params.euk = false
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -223,7 +234,32 @@ process get_software_versions {
     """
 }
 
+/*
+ * STEP 0 - Split Build Bowtie2 index if necessary
+ */
 
+bowtie2 = params.genome ? params.genomes[ params.genome ].bowtie2 ?: false : false
+if(bowtie2){
+    bowtie2_index = file(bowtie2) 
+} else {
+process prepare_bowtie2 {
+    tag 'bowtie2-build'
+    publishDir path: "${params.outdir}/reference_genome", mode: 'copy'
+
+    input:
+    file fasta from fasta
+
+    output:
+    file "Bowtie2Index" into bowtie2_index
+
+    script:
+    """
+    mkdir -p Bowtie2Index; cd Bowtie2Index
+    ln -s ../${fasta} genome.fa
+    bowtie2-build genome.fa genome
+    """
+}
+}
 
 /*
  * STEP 1 - FastQC
@@ -263,7 +299,7 @@ if(params.notrim){
             }
 
         input:
-        set val(name), file(reads) from raw_reads_trimgalore
+        set val(name), file(reads) from read_files_trimming
 
         output:
         file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades
@@ -308,7 +344,7 @@ process bowtie2 {
     R2 = reads[1].toString()
     filtering = params.allow_multi_align ? '' : "| samtools view -b -q 1 -F 4 -F 256 -"
     """
-    bowtie2 -p 32 --no-mixed --no-discordant -X 1000 -k 1 -x ${index}/genome -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
+    bowtie2 --no-mixed --no-discordant -X 1000 -k 1 -x ${index}/genome -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
     """
 }
 
@@ -361,8 +397,9 @@ process circleator {
     
     shell:
     """
-    /opt/Circleator-1.0.1/util/samtools/bam_get_coverage $bam 100 ${bam.baseName}-coverage-100.txt
-    /opt/Circleator-1.0.1/util/log-transform-coverage.pl ${bam.baseName}-coverage-100.txt
+    touch ${bam.baseName}-coverage-100.txt
+    #/opt/Circleator-1.0.1/util/samtools/bam_get_coverage $bam 100 ${bam.baseName}-coverage-100.txt
+    #/opt/Circleator-1.0.1/util/log-transform-coverage.pl ${bam.baseName}-coverage-100.txt
     """
 }
 
@@ -384,7 +421,7 @@ process spades {
     R1 = clean_reads[0].toString()
     R2 = clean_reads[1].toString()
     """
-    spades.py --sc -1 $R1 -2 $R2 --careful -t 48 -m 96 -o ${prefix}.spades_out
+    spades.py --sc -1 $R1 -2 $R2 --careful -o ${prefix}.spades_out
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     """
 }
@@ -397,8 +434,8 @@ process quast {
     publishDir path: "${params.outdir}/quast/${prefix}", mode: 'copy'
 
     input:
-    file fasta from fasta_for_quast
-    file gff from gff_for_quast
+    file fasta from fasta
+    file gff from gff
     file contigs from contigs_for_quast
 
     output:
@@ -408,7 +445,7 @@ process quast {
     prefix = contigs.toString() - ~/.contigs.fasta$/
     euk = params.euk ? "-e" : ''
     """
-    quast.py -o quast_report -R $fasta -G $gff -m 50 -t 8 $euk $contigs
+    quast.py -o quast_report -R $fasta -G $gff -m 50 $euk $contigs
     """
 }
 
@@ -419,6 +456,8 @@ process checkm {
    tag "$prefix"
    publishDir "${params.outdir}/CheckM", mode: 'copy'
 
+   conda '/opt/conda/envs/py27'
+
    input:
    file ('spades/*') from contigs_for_checkm.collect()
 
@@ -427,7 +466,7 @@ process checkm {
 
    script:
    """
-   checkm taxonomy_wf -t 48 -f spades_checkM.txt -x fasta genus Escherichia spades spades_checkM
+   checkm taxonomy_wf -f spades_checkM.txt -x fasta genus Escherichia spades spades_checkM
    """
 }
 

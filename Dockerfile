@@ -5,6 +5,8 @@ LABEL authors="Yanhai Gong" \
 COPY environment.yml /
 RUN conda env update -n base -f /environment.yml && conda clean -a
 
+RUN conda create -n py27 -c bioconda -y python=2.7 checkm-genome && conda clean -a
+
 # Install procps so that Nextflow can poll CPU usage
 RUN apt-get update && apt-get install -y procps && apt-get clean -y 
 
@@ -12,12 +14,14 @@ RUN apt-get update && apt-get install -y procps && apt-get clean -y
 RUN apt-get update && apt-get install -y graphviz && apt-get clean
 
 # Install Circleator
-RUN apt-get update && apt-get install -y libbatik-java vcftools && apt-get clean
-RUN cpanm JSON Log::Log4perl SVG Text::CSV Test::Most Bio::FeatureIO::gff
-RUN cd /opt && wget https://github.com/jonathancrabtree/Circleator/archive/1.0.1.tar.gz -O Circleator-1.0.1.tar.gz && \
-    tar xzvf Circleator-1.0.1.tar.gz && cd Circleator-1.0.1 && perl Build.PL && ./Build && ./Build install
-RUN rm -rf /opt/*.tar.gz
+#RUN apt-get update && apt-get install -y libbatik-java vcftools pkg-config gcc && apt-get clean
+#RUN cpanm JSON Log::Log4perl SVG Text::CSV Test::Most Bio::FeatureIO::gff
+#RUN cd /opt && wget https://github.com/jonathancrabtree/Circleator/archive/1.0.1.tar.gz -O Circleator-1.0.1.tar.gz && \
+#    tar xzvf Circleator-1.0.1.tar.gz && cd Circleator-1.0.1 && perl Build.PL && ./Build && ./Build install
+### install samtools
+#RUN cd /opt/Circleator-1.0.1/utils/samtools/ && ./make.sh
+#RUN rm -rf /opt/Circleator-1.0.1.tar.gz
 
 # clean up
-RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove && conda clean -a
-
+RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
+RUN conda clean -y -a && rm -rf /opt/conda/pkgs/*
