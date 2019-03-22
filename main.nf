@@ -464,7 +464,7 @@ process checkm {
 
    script:
    """
-   conda activate py27
+   source activate py27
    checkm taxonomy_wf -f spades_checkM.txt -x fasta genus Escherichia spades spades_checkM
    """
 }
