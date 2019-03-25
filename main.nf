@@ -455,9 +455,7 @@ process quast {
 process checkm {
    tag "$prefix"
    publishDir "${params.outdir}/CheckM", mode: 'copy'
-
-   conda '/opt/conda/envs/py27'
-
+   
    input:
    file ('spades/*') from contigs_for_checkm.collect()
 
@@ -466,6 +464,7 @@ process checkm {
 
    script:
    """
+   source activate py27
    checkm taxonomy_wf -f spades_checkM.txt -x fasta genus Escherichia spades spades_checkM
    """
 }
