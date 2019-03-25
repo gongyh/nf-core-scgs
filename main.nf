@@ -229,6 +229,11 @@ process get_software_versions {
     echo $workflow.manifest.version > v_pipeline.txt
     echo $workflow.nextflow.version > v_nextflow.txt
     fastqc --version > v_fastqc.txt
+    trim_galore --version &> v_trim_galore.txt
+    bowtie2 --version &> v_bowtie2.txt
+    samtools --version &> v_samtools.txt
+    spades.py --version &> v_spades.txt
+    quast.py --version &> v_quast.txt
     multiqc --version > v_multiqc.txt
     scrape_software_versions.py > software_versions_mqc.yaml
     """
@@ -470,7 +475,7 @@ process checkm {
 }
 
 /*
- * STEP 2 - MultiQC
+ * STEP 9 - MultiQC
  */
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
@@ -500,7 +505,7 @@ process multiqc {
 
 
 /*
- * STEP 3 - Output Description HTML
+ * STEP 10 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
