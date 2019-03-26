@@ -15,7 +15,7 @@ RUN [ "/bin/bash", "-c", "source activate py27 && ((echo /opt/checkm-data; sleep
 RUN apt-get update && apt-get install -y procps && apt-get clean -y 
 
 # Install graphviz so that Nextflow can draw DAG
-RUN apt-get update && apt-get install -y graphviz && apt-get clean
+#RUN apt-get update && apt-get install -y graphviz && apt-get clean
 
 # Install Circleator
 #RUN apt-get update && apt-get install -y libbatik-java vcftools pkg-config gcc && apt-get clean

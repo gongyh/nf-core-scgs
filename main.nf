@@ -207,7 +207,7 @@ def create_workflow_summary(summary) {
     plot_type: 'html'
     data: |
         <dl class=\"dl-horizontal\">
-${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
+${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
         </dl>
     """.stripIndent()
 
@@ -444,13 +444,13 @@ process quast {
     file contigs from contigs_for_quast
 
     output:
-    file 'quast_report'
+    file "${prefix}.quast_results/report.tsv" into quast_report
 
     script:
     prefix = contigs.toString() - ~/.contigs.fasta$/
     euk = params.euk ? "-e" : ''
     """
-    quast.py -o quast_report -R $fasta -G $gff -m 50 $euk $contigs
+    quast.py -o ${prefix}.quast_results -R $fasta -G $gff -m 50 $euk $contigs
     """
 }
 
@@ -458,7 +458,6 @@ process quast {
  * STEP 8 - Completeness and contamination evaluation using CheckM
  */
 process checkm {
-   tag "$prefix"
    publishDir "${params.outdir}/CheckM", mode: 'copy'
    
    input:
@@ -486,7 +485,9 @@ process multiqc {
     file ('fastqc/*') from fastqc_results.collect().ifEmpty([])
     file ('software_versions/*') from software_versions_yaml
     file ('trimgalore/*') from trimgalore_results.collect()
+    file ('fastqc2/*') from trimgalore_fastqc_reports.collect()
     file ('samtools/*') from samtools_stats.collect()
+    file ('*.quast_results/report.tsv') from quast_report.collect()
     file workflow_summary from create_workflow_summary(summary)
 
     output:

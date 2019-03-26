@@ -12,7 +12,7 @@ regexes = {
     'Bowtie2': ['v_bowtie2.txt', r"bowtie2-align-s version (\S+)"],
     'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
     'Spades': ['v_spades.txt', r"SPAdes v(\S+)"],
-    'Quast': ['v_quast.txt', r"QUAST v(\S+), "],
+    'Quast': ['v_quast.txt', r"QUAST v(\S+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],
 }
 results = OrderedDict()
