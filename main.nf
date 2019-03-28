@@ -30,11 +30,15 @@ def helpMessage() {
       --genome                      Name of iGenomes reference
       --singleEnd                   Specifies that the input is single end reads
 
-    References                      If not specified in the configuration file or you wish to overwrite any of the references.
+    References:                     If not specified in the configuration file or you wish to overwrite any of the references.
       --fasta                       Path to Fasta reference
       --gff                         Path to GFF reference
 
-    Trimming options
+    Species related:
+      --genus                       Genus information for use in CheckM
+      --database                    Genome database (TBD)
+
+    Trimming options:
       --notrim                      Specifying --notrim will skip the adapter trimming step.
       --saveTrimmed                 Save the trimmed Fastq files in the the Results directory.
       --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1 (or single-end reads)
@@ -78,6 +82,8 @@ params.saveTrimmed = false
 params.allow_multi_align = false
 params.saveAlignedIntermediates = false
 params.euk = false
+params.genus = null
+params.database = null
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -236,6 +242,27 @@ process get_software_versions {
     quast.py --version &> v_quast.txt
     multiqc --version > v_multiqc.txt
     scrape_software_versions.py > software_versions_mqc.yaml
+    """
+}
+
+/*
+ * Store reference
+ */
+process save_reference {
+    publishDir path: "${params.outdir}/reference_genome", mode: 'copy'
+
+    input:
+    file fasta from fasta
+    file gff from gff
+
+    output:
+    file "genome.fa"
+    file "genome.gff"
+
+    script:
+    """
+    ln -s ${fasta} genome.fa
+    ln -s ${gff} genome.gff
     """
 }
 
@@ -436,7 +463,7 @@ process spades {
  */
 process quast {
     tag "${prefix}"
-    publishDir path: "${params.outdir}/quast/${prefix}", mode: 'copy'
+    publishDir path: "${params.outdir}/quast", mode: 'copy'
 
     input:
     file fasta from fasta
@@ -444,13 +471,15 @@ process quast {
     file contigs from contigs_for_quast
 
     output:
-    file "${prefix}.quast_results/report.tsv" into quast_report
+    file "${prefix}_report.tsv" into quast_report
+    file "${prefix}.quast_results"
 
     script:
     prefix = contigs.toString() - ~/.contigs.fasta$/
     euk = params.euk ? "-e" : ''
     """
     quast.py -o ${prefix}.quast_results -R $fasta -G $gff -m 50 $euk $contigs
+    ln -s ${prefix}.quast_results/report.tsv ${prefix}_report.tsv
     """
 }
 
@@ -467,9 +496,14 @@ process checkm {
    file 'spades_checkM.txt' into checkm_report
 
    script:
+   checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
    """
    source activate py27
-   checkm taxonomy_wf -f spades_checkM.txt -x fasta genus Escherichia spades spades_checkM
+   if [ \"$checkm_wf\" -eq \"taxonomy_wf\"]; then
+     checkm taxonomy_wf -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
+   else
+     checkm lineage_wf -f spades_checkM.txt -x fasta spades spades_checkM
+   fi
    """
 }
 
@@ -487,7 +521,7 @@ process multiqc {
     file ('trimgalore/*') from trimgalore_results.collect()
     file ('fastqc2/*') from trimgalore_fastqc_reports.collect()
     file ('samtools/*') from samtools_stats.collect()
-    file ('*.quast_results/report.tsv') from quast_report.collect()
+    file ('quast/*') from quast_report.collect()
     file workflow_summary from create_workflow_summary(summary)
 
     output:
