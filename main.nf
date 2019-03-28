@@ -499,7 +499,7 @@ process checkm {
    checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
    """
    source activate py27
-   if [ \"${checkm_wf}\" -eq \"taxonomy_wf\"]; then
+   if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
      checkm taxonomy_wf -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
    else
      checkm lineage_wf -f spades_checkM.txt -x fasta spades spades_checkM
