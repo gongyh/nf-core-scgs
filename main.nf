@@ -258,11 +258,15 @@ process save_reference {
     output:
     file "genome.fa"
     file "genome.gff"
+    file "*.bed"
+    file "genome.bed" into genome_circlize
 
     script:
     """
     ln -s ${fasta} genome.fa
     ln -s ${gff} genome.gff
+    source activate py27
+    fa2bed.py genome.fa
     """
 }
 
@@ -395,8 +399,8 @@ process samtools {
     file bam from bb_bam
 
     output:
-    file '*.sorted.bam' into bam_for_mapped, bam_for_circleator
-    file '*.sorted.bam.bai' into bwa_bai, bai_for_mapped, bai_for_circleator
+    file '*.sorted.bam' into bam_for_mapped, bam_for_circlize
+    file '*.sorted.bam.bai' into bwa_bai, bai_for_mapped, bai_for_circlize
     file '*.sorted.bed' into bed_total
     file '*.stats.txt' into samtools_stats
 
@@ -411,27 +415,27 @@ process samtools {
 }
 
 /*
- * STEP 5 - Prepare coverage files for Circleator
+ * STEP 5 - Prepare files for Circlize
  */
-process circleator {
+process circlize {
     tag "${bam.baseName}"
-    publishDir "${params.outdir}/circleator", mode: 'copy', 
+    publishDir "${params.outdir}/circlize", mode: 'copy', 
             saveAs: {filename ->
-                if (filename.indexOf(".txt") > 0) "$filename" else null
+                if (filename.indexOf(".bed") > 0) "$filename" else null
             }
 
     input:
-    file bam from bam_for_circleator
-    file bai from bai_for_circleator
+    file bam from bam_for_circlize
+    file bai from bai_for_circlize
+    file refbed from genome_circlize
 
     output:
-    file "${bam.baseName}-coverage-100*.txt" into circleator_out
+    file "${bam.baseName}-cov100.bed"
     
     shell:
     """
-    touch ${bam.baseName}-coverage-100.txt
-    #/opt/Circleator-1.0.1/util/samtools/bam_get_coverage $bam 100 ${bam.baseName}-coverage-100.txt
-    #/opt/Circleator-1.0.1/util/log-transform-coverage.pl ${bam.baseName}-coverage-100.txt
+    bedtools makewindows -g $refbed -w 100 > genome.100.bed
+    bedtools coverage -abam $bam -b genome.100.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${bam.baseName}-cov100.bed
     """
 }
 
