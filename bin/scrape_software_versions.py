@@ -11,6 +11,7 @@ regexes = {
     'Trim Galore!': ['v_trim_galore.txt', r"version (\S+)"],
     'Bowtie2': ['v_bowtie2.txt', r"bowtie2-align-s version (\S+)"],
     'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
+    'BEDTools': ['v_bedtools.txt', r"bedtools (\S+)"],
     'Spades': ['v_spades.txt', r"SPAdes v(\S+)"],
     'Quast': ['v_quast.txt', r"QUAST v(\S+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],
@@ -22,6 +23,7 @@ results['FastQC'] = '<span style="color:#999999;\">N/A</span>'
 results['Trim Galore!'] = '<span style="color:#999999;\">N/A</span>'
 results['Bowtie2'] = '<span style="color:#999999;\">N/A</span>'
 results['Samtools'] = '<span style="color:#999999;\">N/A</span>'
+results['BEDTools'] = '<span style="color:#999999;\">N/A</span>'
 results['Spades'] = '<span style="color:#999999;\">N/A</span>'
 results['Quast'] = '<span style="color:#999999;\">N/A</span>'
 results['MultiQC'] = '<span style="color:#999999;\">N/A</span>'

@@ -238,6 +238,7 @@ process get_software_versions {
     trim_galore --version &> v_trim_galore.txt
     bowtie2 --version &> v_bowtie2.txt
     samtools --version &> v_samtools.txt
+    bedtools --version &> v_bedtools.txt
     spades.py --version &> v_spades.txt
     quast.py --version &> v_quast.txt
     multiqc --version > v_multiqc.txt
@@ -267,6 +268,7 @@ process save_reference {
     ln -s ${gff} genome.gff
     source activate py27
     fa2bed.py genome.fa
+    cat genome.gff | grep \$'\tgene\t' | bedtools sort | cut -f1,4,5,7 > genes.bed
     """
 }
 
@@ -399,9 +401,9 @@ process samtools {
     file bam from bb_bam
 
     output:
-    file '*.sorted.bam' into bam_for_mapped, bam_for_circlize
-    file '*.sorted.bam.bai' into bwa_bai, bai_for_mapped, bai_for_circlize
-    file '*.sorted.bed' into bed_total
+    file '*.sorted.bam' into bam_for_mapped
+    file '*.sorted.bam.bai' into bai_for_mapped
+    file '*.sorted.bed' into bed_for_circlize
     file '*.stats.txt' into samtools_stats
 
     script:
@@ -418,24 +420,23 @@ process samtools {
  * STEP 5 - Prepare files for Circlize
  */
 process circlize {
-    tag "${bam.baseName}"
+    tag "${sbed.baseName}"
     publishDir "${params.outdir}/circlize", mode: 'copy', 
             saveAs: {filename ->
                 if (filename.indexOf(".bed") > 0) "$filename" else null
             }
 
     input:
-    file bam from bam_for_circlize
-    file bai from bai_for_circlize
+    file sbed from bed_for_circlize
     file refbed from genome_circlize
 
     output:
-    file "${bam.baseName}-cov100.bed"
+    file "${sbed.baseName}-cov100.bed"
     
     shell:
     """
-    bedtools makewindows -g $refbed -w 100 > genome.100.bed
-    bedtools coverage -abam $bam -b genome.100.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${bam.baseName}-cov100.bed
+    bedtools makewindows -b $refbed -w 100 > genome.100.bed
+    bedtools coverage -b $sbed -a genome.100.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${sbed.baseName}-cov100.bed
     """
 }
 
