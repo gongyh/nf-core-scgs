@@ -431,12 +431,12 @@ process circlize {
     file refbed from genome_circlize
 
     output:
-    file "${sbed.baseName}-cov100.bed"
+    file "${sbed.baseName}-cov200.bed"
     
     shell:
     """
-    bedtools makewindows -b $refbed -w 100 > genome.100.bed
-    bedtools coverage -b $sbed -a genome.100.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${sbed.baseName}-cov100.bed
+    bedtools makewindows -b $refbed -w 200 > genome.200.bed
+    bedtools coverage -b $sbed -a genome.200.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${sbed.baseName}-cov200.bed
     """
 }
 

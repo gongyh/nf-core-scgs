@@ -8,9 +8,10 @@ from Bio import SeqIO
 import click
 
 @click.command()
-@click.option('--window', default=100, help='length of sliding window (default: 100bp)')
+@click.option('--window', default=10000, help='length of sliding window (default: 10Kbp)')
+@click.option('--step', default=200, help='length of step window (default: 200bp)')
 @click.argument('fa', type=click.File('rb'))
-def fa2bed(fa, window):
+def fa2bed(fa, window, step):
 
     # genome bed file
     genomeBed = open("genome.bed","w")
@@ -27,6 +28,7 @@ def fa2bed(fa, window):
     #gcSkewBed.write("chr\tstart\tend\tgcSkew\n")
 
     window_len = int(window)
+    step_len = int(step)
 
     for k,v in record_dict.items():
         chrom = v.id
@@ -34,14 +36,16 @@ def fa2bed(fa, window):
         length = len(chrom_seq)
         genomeBed.write(chrom+"\t0\t%d\n"%length)
 
-        for i in range(0, length, window_len):
-            start = i
-            end = i + window_len
+        for i in range(0, length, step_len):
+            start0 = i
+            end0 = i+step_len if i+step_len<=length else length
+            start = i-window_len/2 if i-window_len/2>=0 else 0
+            end = i+window_len/2 if i+window_len/2<=length else length
             s = chrom_seq[start : end]
             gc = GC(s)
             skew = GC_skew(s, window_len)[0]
-            gcBed.write(chrom+"\t%d\t%d\t%.3f\n"%(start,end,gc))
-            gcSkewBed.write(chrom+"\t%d\t%d\t%.3f\n"%(start,end,skew))
+            gcBed.write(chrom+"\t%d\t%d\t%.3f\n"%(start0,end0,gc))
+            gcSkewBed.write(chrom+"\t%d\t%d\t%.3f\n"%(start0,end0,skew))
 
     genomeBed.close()
     gcBed.close()
