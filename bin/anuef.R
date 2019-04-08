@@ -16,6 +16,13 @@ if (!require("AneuFinder")) {
   library("AneuFinder")
 }
 
-Aneufinder(inputfolder=input_fn, outputfolder=output_fn, numCPU=3, binsizes=c(1e3,1e4), pairedEndReads=TRUE,
+Aneufinder(inputfolder=input_fn, outputfolder=output_fn, numCPU=3, binsizes=200, pairedEndReads=TRUE,
   remove.duplicate.reads=TRUE, min.mapq=20, method='edivisive')
+
+files <- list.files(paste0(output_fn,"/MODELS/method-edivisive/"), full.names=TRUE)
+cl <- clusterByQuality(files, measures=c('spikiness','num.segments','entropy','bhattacharyya','sos'))
+plot(cl$Mclust, what='classification')
+
+selected.files <- unlist(cl$classification)
+heatmapGenomewide(selected.files)
 
