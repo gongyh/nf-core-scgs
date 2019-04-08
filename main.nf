@@ -461,7 +461,7 @@ process aneufinder {
     script:
     pp_outdir = "${params.outdir}/aneufinder"
     """
-    Rscript bin/aneuf.R
+    aneuf.R ./bams/ CNV_output
     """
 }
 

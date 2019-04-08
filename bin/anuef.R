@@ -16,6 +16,6 @@ if (!require("AneuFinder")) {
   library("AneuFinder")
 }
 
-Aneufinder(inputfolder=input_fn, outputfolder=output_fn,
-  numCPU=3, method='edivisive')
+Aneufinder(inputfolder=input_fn, outputfolder=output_fn, numCPU=3, binsizes=c(1e3,1e4), pairedEndReads=TRUE,
+  remove.duplicate.reads=TRUE, min.mapq=20, method='edivisive')
 
