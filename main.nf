@@ -417,6 +417,55 @@ process samtools {
 }
 
 /*
+ * STEP 4.1 - SNV detection using MonoVar
+ */
+process monovar {
+    tag "MonoVar"
+    publishDir path: "${pp_outdir}", mode: 'copy',
+               saveAs: { filename ->
+                   if (filename.indexOf(".vcf") > 0) "$filename" else null }
+
+    input:
+    file ("*") from bam_for_mapped.collect()
+    file ("*") from bai_for_mapped.collect()
+    file fa from fasta
+
+    output:
+    file 'monovar.vcf' into monovar_vcf
+
+    script:
+    pp_outdir = "${params.outdir}/monovar"
+    """
+    source activate py27
+    ls *.bam > bams.txt
+    samtools mpileup -BQ0 -d 10000 -q 40 -f $fa -b bams.txt | monovar.py -f $fa -o monovar.vcf -m 2 -b bams.txt
+    """
+}
+
+/*
+ * STEP 4.2 - CNV detection using AneuFinder
+ */
+process aneufinder {
+    tag "AneuFinder"
+    publishDir path: "${pp_outdir}", mode: 'copy',
+               saveAs: { filename ->
+                   if (filename.indexOf(".vcf") > 0) "$filename" else null }
+
+    input:
+    file ("bams/*") from bam_for_mapped.collect()
+    file ("bams/*") from bai_for_mapped.collect()
+
+    output:
+    file 'CNV_output' into cnv_output
+
+    script:
+    pp_outdir = "${params.outdir}/aneufinder"
+    """
+    Rscript bin/aneuf.R
+    """
+}
+
+/*
  * STEP 5 - Prepare files for Circlize
  */
 process circlize {
