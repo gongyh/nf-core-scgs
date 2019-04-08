@@ -21,7 +21,7 @@ RUN apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2A
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/debian stretch-cran35/'
 RUN apt-get update && apt-get install -y r-base && apt-get clean -y
 # Install AneuFinder
-RUN R -e "BiocManager::install('AneuFinder')"
+RUN R -e "install.packages('BiocManager'); BiocManager::install('AneuFinder')"
 
 # clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
