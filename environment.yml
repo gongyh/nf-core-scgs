@@ -18,3 +18,4 @@ dependencies:
   - r::r-base=3.5.1
   - r::r-essentials=3.5.1
   - r::r-rcurl=1.95_4.11
+  - bioconductor-rhtslib=1.14.0

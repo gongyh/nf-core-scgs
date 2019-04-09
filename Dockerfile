@@ -5,8 +5,8 @@ LABEL authors="Yanhai Gong" \
 COPY environment.yml /
 RUN conda env update -n base -f /environment.yml && conda clean -a
 
-# Install system level packages
-RUN apt-get update && apt-get install -y procps zlib1g-dev && apt-get clean -y 
+# Install procps so that Nextflow can poll CPU usage
+RUN apt-get update && apt-get install -y procps && apt-get clean -y 
 
 # Install Bioconductor packages
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('AneuFinder')"
