@@ -9,13 +9,13 @@ RUN conda create -n py27 -c bioconda -y python=2.7 checkm-genome biopython click
 RUN mkdir -p /opt/checkm-data && cd /opt/checkm-data && \
     wget https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz && \
     tar xzvf checkm_data_2015_01_16.tar.gz && rm -rf checkm_data_2015_01_16.tar.gz
-RUN [ "/bin/bash", "-c", "source activate py27 && ((echo /opt/checkm-data; sleep 1; echo /opt/checkm-data) | checkm data setRoot) && source deactivate" ]
+RUN [ "/bin/bash", "-c", "source activate py27 && ((echo /opt/checkm-data; sleep 2; echo /opt/checkm-data) | checkm data setRoot) && source deactivate" ]
 
 # Install procps so that Nextflow can poll CPU usage
 RUN apt-get update && apt-get install -y procps && apt-get clean -y 
 
 # Install AneuFinder
-RUN R -e "install.packages('BiocManager'); BiocManager::install('AneuFinder')"
+RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('AneuFinder')"
 
 # clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
