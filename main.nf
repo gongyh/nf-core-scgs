@@ -401,8 +401,8 @@ process samtools {
     file bam from bb_bam
 
     output:
-    file '*.sorted.bam' into bam_for_mapped
-    file '*.sorted.bam.bai' into bai_for_mapped
+    file '*.sorted.bam' into bam_for_monovar, bam_for_aneufinder
+    file '*.sorted.bam.bai' into bai_for_monovar, bai_for_aneufinder
     file '*.sorted.bed' into bed_for_circlize
     file '*.stats.txt' into samtools_stats
 
@@ -426,8 +426,8 @@ process monovar {
                    if (filename.indexOf(".vcf") > 0) "$filename" else null }
 
     input:
-    file ("*") from bam_for_mapped.collect()
-    file ("*") from bai_for_mapped.collect()
+    file ("*") from bam_for_monovar.collect()
+    file ("*") from bai_for_monovar.collect()
     file fa from fasta
 
     output:
@@ -452,8 +452,8 @@ process aneufinder {
                    if (filename.indexOf(".vcf") > 0) "$filename" else null }
 
     input:
-    file ("bams/*") from bam_for_mapped.collect()
-    file ("bams/*") from bai_for_mapped.collect()
+    file ("bams/*") from bam_for_aneufinder.collect()
+    file ("bams/*") from bai_for_aneufinder.collect()
 
     output:
     file 'CNV_output' into cnv_output

@@ -14,12 +14,6 @@ RUN [ "/bin/bash", "-c", "source activate py27 && ((echo /opt/checkm-data; sleep
 # Install procps so that Nextflow can poll CPU usage
 RUN apt-get update && apt-get install -y procps && apt-get clean -y 
 
-# Install R-base
-RUN apt install -y dirmngr --install-recommends && apt install -y software-properties-common apt-transport-https gnupg2
-RUN mkdir ~/.gnupg && echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf
-RUN apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
-RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/debian stretch-cran35/'
-RUN apt-get update && apt-get install -y r-base && apt-get clean -y
 # Install AneuFinder
 RUN R -e "install.packages('BiocManager'); BiocManager::install('AneuFinder')"
 
