@@ -400,7 +400,7 @@ process samtools {
 
     output:
     file '*.sorted.bam' into bam_for_monovar, bam_for_aneufinder, bam_for_quast
-    file '*.sorted.bam.bai' into bai_for_monovar, bai_for_aneufinder, bam_for_quast
+    file '*.sorted.bam.bai' into bai_for_monovar, bai_for_aneufinder, bai_for_quast
     file '*.sorted.bed' into bed_for_circlize
     file '*.stats.txt' into samtools_stats
 
@@ -520,6 +520,7 @@ process quast {
     file gff from gff
     file contigs from contigs_for_quast
     file bam from bam_for_quast
+    file bai from bai_for_quast
 
     output:
     file "${prefix}_report.tsv" into quast_report
