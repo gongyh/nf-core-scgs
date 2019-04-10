@@ -11,6 +11,12 @@ RUN apt-get update && apt-get install -y procps && apt-get clean -y
 # Install Bioconductor packages
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
 
+# Fix circos gd problem
+RUN cd /opt/conda/lib && ln -s libwebp.so.6 libwebp.so.7
+
+# Download silva and busco for Quast 5.x
+RUN quast-download-silva && quast-download-busco
+
 # py27
 RUN conda create -n py27 -c bioconda -y python=2.7 checkm-genome biopython click monovar && conda clean -a
 RUN mkdir -p /opt/checkm-data && cd /opt/checkm-data && \
