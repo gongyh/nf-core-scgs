@@ -399,8 +399,8 @@ process samtools {
     file bam from bb_bam
 
     output:
-    file '*.sorted.bam' into bam_for_monovar, bam_for_aneufinder
-    file '*.sorted.bam.bai' into bai_for_monovar, bai_for_aneufinder
+    file '*.sorted.bam' into bam_for_monovar, bam_for_aneufinder, bam_for_quast
+    file '*.sorted.bam.bai' into bai_for_monovar, bai_for_aneufinder, bam_for_quast
     file '*.sorted.bed' into bed_for_circlize
     file '*.stats.txt' into samtools_stats
 
@@ -519,6 +519,7 @@ process quast {
     file fasta from fasta
     file gff from gff
     file contigs from contigs_for_quast
+    file bam from bam_for_quast
 
     output:
     file "${prefix}_report.tsv" into quast_report
@@ -528,7 +529,7 @@ process quast {
     prefix = contigs.toString() - ~/.contigs.fasta$/
     euk = params.euk ? "-e" : ''
     """
-    quast.py -o ${prefix}.quast_results -R $fasta -G $gff -m 50 $euk $contigs
+    quast.py -o ${prefix}.quast_results -R $fasta -G $gff -m 50 $euk --circos --rna-finding -b --bam $bam --no-sv --no-read-stats $contigs
     ln -s ${prefix}.quast_results/report.tsv ${prefix}_report.tsv
     """
 }

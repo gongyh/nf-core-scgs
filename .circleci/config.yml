@@ -2,7 +2,7 @@ version: 2.0
 jobs:
  build:
    docker:
-     - image: gongyh/scgs:dev
+     - image: gongyh/scgs
    steps:
      - checkout
      - run:

@@ -21,8 +21,7 @@ Aneufinder(inputfolder=input_fn, outputfolder=output_fn, numCPU=1, binsizes=1000
 
 files <- list.files(paste0(output_fn,"/MODELS/method-edivisive/"), full.names=TRUE)
 cl <- clusterByQuality(files, measures=c('spikiness','num.segments','entropy','bhattacharyya','sos'))
+
+pdf(paste0(output_fn,"/PLOTS/method-edivisive/clusterByQuality.pdf"))
 plot(cl$Mclust, what='classification')
-
-selected.files <- unlist(cl$classification)
-heatmapGenomewide(selected.files)
-
+dev.off()
