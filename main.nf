@@ -225,7 +225,6 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
  * Parse software version numbers
  */
 process get_software_versions {
-
     output:
     file 'software_versions_mqc.yaml' into software_versions_yaml
 
@@ -281,7 +280,6 @@ if(bowtie2){
     bowtie2_index = file(bowtie2) 
 } else {
 process prepare_bowtie2 {
-    tag 'bowtie2-build'
     publishDir path: "${params.outdir}/reference_genome", mode: 'copy'
 
     input:
@@ -420,7 +418,6 @@ process samtools {
  * STEP 4.1 - SNV detection using MonoVar
  */
 process monovar {
-    tag "MonoVar"
     publishDir path: "${pp_outdir}", mode: 'copy',
                saveAs: { filename ->
                    if (filename.indexOf(".vcf") > 0) "$filename" else null }
@@ -446,7 +443,6 @@ process monovar {
  * STEP 4.2 - CNV detection using AneuFinder
  */
 process aneufinder {
-    tag "AneuFinder"
     publishDir path: "${pp_outdir}", mode: 'copy',
                saveAs: { filename ->
                    if (filename.indexOf(".vcf") > 0) "$filename" else null }
@@ -461,7 +457,7 @@ process aneufinder {
     script:
     pp_outdir = "${params.outdir}/aneufinder"
     """
-    aneuf.R ./bams/ CNV_output
+    aneuf.R ./bams CNV_output
     """
 }
 

@@ -16,7 +16,7 @@ if (!require("AneuFinder")) {
   library("AneuFinder")
 }
 
-Aneufinder(inputfolder=input_fn, outputfolder=output_fn, numCPU=3, binsizes=200, pairedEndReads=TRUE,
+Aneufinder(inputfolder=input_fn, outputfolder=output_fn, numCPU=1, binsizes=1000, pairedEndReads=TRUE,
   remove.duplicate.reads=TRUE, min.mapq=20, method='edivisive')
 
 files <- list.files(paste0(output_fn,"/MODELS/method-edivisive/"), full.names=TRUE)
