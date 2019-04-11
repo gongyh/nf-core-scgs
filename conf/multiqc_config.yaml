@@ -1,5 +1,7 @@
 module_order:
     - quast
+    - qualimap
+    - preseq
     - samtools
     - bowtie2
     - fastqc:

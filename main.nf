@@ -428,7 +428,7 @@ process preseq {
     file sbed from bed_for_preseq
 
     output:
-    file '*.txt'
+    file '*.txt' into preseq_for_multiqc
 
     script:
     pp_outdir = "${params.outdir}/preseq"
@@ -444,7 +444,6 @@ process preseq {
  * STEP 4.2 - quality control of alignment sequencing data using QualiMap 
  */
 process qualimap {
-    tag "${prefix}"
     publishDir path: "${pp_outdir}", mode: 'copy'
 
     input:
@@ -453,11 +452,10 @@ process qualimap {
     file gff from gff
 
     output:
-    file 'qualimap'
+    file 'qualimap' into qualimap_for_multiqc
 
     script:
     pp_outdir = "${params.outdir}"
-    prefix = sbed.toString() - ~/(\.sorted\.bam)?(\.sorted)?(\.bam)?$/
     """
     ls *.sorted.bam > bams.txt
     cat bams.txt | awk '{split(\$1,a,".sorted.bam"); print a[1]"\t"\$1}' > inputs.txt
@@ -621,6 +619,8 @@ process multiqc {
     file ('trimgalore/*') from trimgalore_results.collect()
     file ('fastqc2/*') from trimgalore_fastqc_reports.collect()
     file ('samtools/*') from samtools_stats.collect()
+    file ('preseq/*') from preseq_for_multiqc.collect()
+    file ('*') from qualimap_for_multiqc
     file ('quast/*') from quast_report.collect()
     file workflow_summary from create_workflow_summary(summary)
 
