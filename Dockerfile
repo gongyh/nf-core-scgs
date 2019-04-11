@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y procps && apt-get clean -y
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
 
 # Fix circos gd problem
-RUN cd /opt/conda/lib && ln -s libwebp.so.6 libwebp.so.7
+#RUN cd /opt/conda/lib && ln -s libwebp.so.6 libwebp.so.7
 
 # Download silva and busco for Quast 5.x
 RUN quast-download-silva && quast-download-busco
