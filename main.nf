@@ -380,7 +380,7 @@ process bowtie2 {
     R2 = reads[1].toString()
     filtering = params.allow_multi_align ? '' : "| samtools view -b -q 1 -F 4 -F 256 -"
     """
-    bowtie2 --no-mixed --no-discordant -X 1000 -k 1 -x ${index}/genome -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
+    bowtie2 --no-mixed --no-discordant -X 1000 -k 1 -x ${index}/genome -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
     """
 }
 
@@ -388,7 +388,7 @@ process bowtie2 {
  * STEP 4 - post-alignment processing
  */
 process samtools {
-    tag "${bam.baseName}"
+    tag "${prefix}"
     publishDir path: "${pp_outdir}", mode: 'copy',
                saveAs: { filename ->
                    if (filename.indexOf(".stats.txt") > 0) "stats/$filename"
@@ -399,23 +399,74 @@ process samtools {
     file bam from bb_bam
 
     output:
-    file '*.sorted.bam' into bam_for_monovar, bam_for_aneufinder, bam_for_quast
-    file '*.sorted.bam.bai' into bai_for_monovar, bai_for_aneufinder, bai_for_quast
-    file '*.sorted.bed' into bed_for_circlize
+    file '*.sorted.bam' into bam_for_qualimap, bam_for_monovar, bam_for_aneufinder, bam_for_quast
+    file '*.sorted.bam.bai' into bai_for_qualimap, bai_for_monovar, bai_for_aneufinder, bai_for_quast
+    file '*.sorted.bed' into bed_for_circlize, bed_for_preseq
     file '*.stats.txt' into samtools_stats
 
     script:
     pp_outdir = "${params.outdir}/bowtie2"
+    prefix = bam.baseName
     """
-    samtools sort -o ${bam.baseName}.sorted.bam $bam
-    samtools index ${bam.baseName}.sorted.bam
-    bedtools bamtobed -i ${bam.baseName}.sorted.bam | sort -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${bam.baseName}.sorted.bed
-    samtools stats ${bam.baseName}.sorted.bam > ${bam.baseName}.stats.txt
+    samtools sort -o ${prefix}.sorted.bam $bam
+    samtools index ${prefix}.sorted.bam
+    bedtools bamtobed -i ${prefix}.sorted.bam | sort -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${prefix}.sorted.bed
+    samtools stats ${prefix}.sorted.bam > ${prefix}.stats.txt
     """
 }
 
 /*
- * STEP 4.1 - SNV detection using MonoVar
+ * STEP 4.1 - predicting library complexity and genome coverage using preseq
+ */
+process preseq {
+    tag "${prefix}"
+    publishDir path: "${pp_outdir}", mode: 'copy',
+               saveAs: { filename ->
+                   if (filename.indexOf(".txt") > 0) "$filename" else null }
+
+    input:
+    file sbed from bed_for_preseq
+
+    output:
+    file '*.txt'
+
+    script:
+    pp_outdir = "${params.outdir}/preseq"
+    prefix = sbed.toString() - ~/(\.sorted\.bed)?(\.sorted)?(\.bed)?$/
+    """
+    preseq c_curve -o ${prefix}_c.txt $sbed
+    preseq lc_extrap -o ${prefix}_lc.txt $sbed
+    preseq gc_extrap -o ${prefix}_gc.txt $sbed
+    """
+}
+
+/*
+ * STEP 4.2 - quality control of alignment sequencing data using QualiMap 
+ */
+process qualimap {
+    tag "${prefix}"
+    publishDir path: "${pp_outdir}", mode: 'copy'
+
+    input:
+    file ("*") from bam_for_qualimap.collect()
+    file ("*") from bai_for_qualimap.collect()
+    file gff from gff
+
+    output:
+    file 'qualimap'
+
+    script:
+    pp_outdir = "${params.outdir}"
+    prefix = sbed.toString() - ~/(\.sorted\.bam)?(\.sorted)?(\.bam)?$/
+    """
+    ls *.sorted.bam > bams.txt
+    cat bams.txt | awk '{split(\$1,a,".sorted.bam"); print a[1]"\t"\$1}' > inputs.txt
+    qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir qualimap
+    """
+}
+
+/*
+ * STEP 4.3 - SNV detection using MonoVar
  */
 process monovar {
     publishDir path: "${pp_outdir}", mode: 'copy',
@@ -435,12 +486,12 @@ process monovar {
     """
     source activate py27
     ls *.bam > bams.txt
-    samtools mpileup -BQ0 -d 10000 -q 40 -f $fa -b bams.txt | monovar -f $fa -o monovar.vcf -m 2 -b bams.txt
+    samtools mpileup -BQ0 -d 10000 -q 40 -f $fa -b bams.txt | monovar -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
     """
 }
 
 /*
- * STEP 4.2 - CNV detection using AneuFinder
+ * STEP 4.4 - CNV detection using AneuFinder
  */
 process aneufinder {
     publishDir path: "${pp_outdir}", mode: 'copy'
@@ -455,7 +506,7 @@ process aneufinder {
     script:
     pp_outdir = "${params.outdir}/aneufinder"
     """
-    aneuf.R ./bams CNV_output
+    aneuf.R ./bams CNV_output ${task.cpus}
     """
 }
 
@@ -502,7 +553,7 @@ process spades {
     R1 = clean_reads[0].toString()
     R2 = clean_reads[1].toString()
     """
-    spades.py --sc -1 $R1 -2 $R2 --careful -o ${prefix}.spades_out
+    spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -o ${prefix}.spades_out
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     """
 }
@@ -529,7 +580,7 @@ process quast {
     """
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     bam=\$(ls *.sorted.bam | paste -sd "," -)
-    quast.py -o quast -R $fasta -G $gff -m 50 $euk --circos --rna-finding -b --bam \$bam --no-sv --no-read-stats \$contigs
+    quast.py -o quast -R $fasta -G $gff -m 50 -t ${task.cpus} $euk --circos --rna-finding -b --bam \$bam --no-sv --no-read-stats \$contigs
     """
 }
 
@@ -550,9 +601,9 @@ process checkm {
    """
    source activate py27
    if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
-     checkm taxonomy_wf -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
+     checkm taxonomy_wf -t ${task.cpus} -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
    else
-     checkm lineage_wf -f spades_checkM.txt -x fasta spades spades_checkM
+     checkm lineage_wf -t ${task.cpus} -f spades_checkM.txt -x fasta spades spades_checkM
    fi
    """
 }
