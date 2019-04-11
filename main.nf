@@ -165,7 +165,7 @@ if(params.readPaths){
 // Header log info
 log.info nfcoreHeader()
 def summary = [:]
-summary['Run Name']         = custom_runName ?: workflow.runName
+//summary['Run Name']         = custom_runName ?: workflow.runName
 // TODO nf-core: Report custom parameters here
 summary['Reads']            = params.reads
 summary['Fasta Ref']        = params.fasta
@@ -180,8 +180,8 @@ summary['User']             = workflow.userName
 if( params.notrim ){
     summary['Trimming Step'] = 'Skipped'
 } else {
-    summary['Trim R1'] = params.clip_r1
-    summary['Trim R2'] = params.clip_r2
+    summary["Trim 5' R1"] = params.clip_r1
+    summary["Trim 5' R2"] = params.clip_r2
     summary["Trim 3' R1"] = params.three_prime_clip_r1
     summary["Trim 3' R2"] = params.three_prime_clip_r2
 }
@@ -375,7 +375,7 @@ process bowtie2 {
     file '*.bam' into bb_bam
 
     script:
-    prefix = reads[0].toString() - ~/(.R1)?(_1)?(_R1)?(_trimmed)?(_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(\.1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = reads[0].toString()
     R2 = reads[1].toString()
     filtering = params.allow_multi_align ? '' : "| samtools view -b -q 1 -F 4 -F 256 -"
@@ -443,9 +443,7 @@ process monovar {
  * STEP 4.2 - CNV detection using AneuFinder
  */
 process aneufinder {
-    publishDir path: "${pp_outdir}", mode: 'copy',
-               saveAs: { filename ->
-                   if (filename.indexOf(".vcf") > 0) "$filename" else null }
+    publishDir path: "${pp_outdir}", mode: 'copy'
 
     input:
     file ("bams/*") from bam_for_aneufinder.collect()
@@ -465,7 +463,7 @@ process aneufinder {
  * STEP 5 - Prepare files for Circlize
  */
 process circlize {
-    tag "${sbed.baseName}"
+    tag "${prefix}"
     publishDir "${params.outdir}/circlize", mode: 'copy', 
             saveAs: {filename ->
                 if (filename.indexOf(".bed") > 0) "$filename" else null
@@ -476,12 +474,13 @@ process circlize {
     file refbed from genome_circlize
 
     output:
-    file "${sbed.baseName}-cov200.bed"
+    file "${prefix}-cov200.bed"
     
     shell:
+    prefix = sbed.toString() - ~/(\.sorted\.bed)?(\.sorted)?(\.bed)?$/
     """
     bedtools makewindows -b $refbed -w 200 > genome.200.bed
-    bedtools coverage -b $sbed -a genome.200.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${sbed.baseName}-cov200.bed
+    bedtools coverage -b $sbed -a genome.200.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${prefix}-cov200.bed
     """
 }
 
@@ -499,7 +498,7 @@ process spades {
     file "${prefix}.contigs.fasta" into contigs_for_quast, contigs_for_checkm
 
     script:
-    prefix = clean_reads[0].toString() - ~/(.R1)?(_1)?(_R1)?(_trimmed)?(_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(\.1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = clean_reads[0].toString()
     R2 = clean_reads[1].toString()
     """
@@ -512,26 +511,25 @@ process spades {
  * STEP 7 - Evaluation using QUAST
  */
 process quast {
-    tag "${prefix}"
-    publishDir path: "${params.outdir}/quast", mode: 'copy'
+    publishDir path: "${params.outdir}", mode: 'copy'
 
     input:
     file fasta from fasta
     file gff from gff
-    file contigs from contigs_for_quast
-    file bam from bam_for_quast
-    file bai from bai_for_quast
+    file ("*") from contigs_for_quast.collect()
+    file ("*") from bam_for_quast.collect()
+    file ("*") from bai_for_quast.collect()
 
     output:
-    file "${prefix}_report.tsv" into quast_report
-    file "${prefix}.quast_results"
+    file "quast/report.tsv" into quast_report
+    file "quast"
 
     script:
-    prefix = contigs.toString() - ~/.contigs.fasta$/
-    euk = params.euk ? "-e" : ''
+    euk = params.euk ? "-e" : ""
     """
-    quast.py -o ${prefix}.quast_results -R $fasta -G $gff -m 50 $euk --circos --rna-finding -b --bam $bam --no-sv --no-read-stats $contigs
-    ln -s ${prefix}.quast_results/report.tsv ${prefix}_report.tsv
+    contigs=\$(ls *.contigs.fasta | paste -sd " " -)
+    bam=\$(ls *.sorted.bam | paste -sd "," -)
+    quast.py -o quast -R $fasta -G $gff -m 50 $euk --circos --rna-finding -b --bam \$bam --no-sv --no-read-stats \$contigs
     """
 }
 
@@ -567,8 +565,7 @@ process multiqc {
 
     input:
     file multiqc_config from ch_multiqc_config
-    // TODO nf-core: Add in log files from your new processes for MultiQC to find!
-    file ('fastqc/*') from fastqc_results.collect().ifEmpty([])
+    file ('fastqc/*') from fastqc_results.collect()
     file ('software_versions/*') from software_versions_yaml
     file ('trimgalore/*') from trimgalore_results.collect()
     file ('fastqc2/*') from trimgalore_fastqc_reports.collect()
@@ -581,11 +578,8 @@ process multiqc {
     file "*_data"
 
     script:
-    rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
-    rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
-    // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
     """
-    multiqc -f $rtitle $rfilename --config $multiqc_config .
+    multiqc -f --config $multiqc_config .
     """
 }
 
