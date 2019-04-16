@@ -241,9 +241,13 @@ process get_software_versions {
     bedtools --version &> v_bedtools.txt
     preseq &> v_preseq.txt
     qualimap -h &> v_qualimap.txt
+    picard MarkDuplicates --version > v_picard.txt
+    gatk3 -version > v_gatk.txt
+    Rscript -e 'print(packageVersion("AneuFinder"))' &> v_AneuFinder.txt
     spades.py --version &> v_spades.txt
     quast.py --version &> v_quast.txt
-    multiqc --version > v_multiqc.txt
+    multiqc --version &> v_multiqc.txt
+    source activate py27 && conda list | grep monovar | awk '{print \$2}' &> v_monovar.txt
     scrape_software_versions.py > software_versions_mqc.yaml
     """
 }
@@ -381,9 +385,9 @@ process bowtie2 {
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = reads[0].toString()
     R2 = reads[1].toString()
-    filtering = params.allow_multi_align ? '' : "| samtools view -b -q 1 -F 4 -F 256 -"
+    filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
     """
-    bowtie2 --no-mixed --no-discordant -X 1000 -k 1 -x ${index}/genome -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
+    bowtie2 --no-mixed --no-discordant -X 1000 -x ${index}/genome -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
     """
 }
 
