@@ -520,7 +520,7 @@ process IndelRealign {
     picard AddOrReplaceReadGroups I=$bam O=${prefix}.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
     samtools index ${prefix}.bam
     gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
-    gatk3 -T IndelRealigner -nt ${task.cpus} -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
+    gatk3 -T IndelRealigner -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
     samtools index ${prefix}.realign.bam                                      
     """                                                                         
 }
