@@ -17,6 +17,10 @@ RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); 
 # Download silva and busco for Quast 5.x
 RUN quast-download-silva && quast-download-busco
 
+# Download GATK and setting
+RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
+    gatk3-register ./GenomeAnalysisTK-3.8.tar.bz2 && rm -rf ./GenomeAnalysisTK-3.8.tar.bz2
+
 # py27
 RUN conda create -n py27 -c bioconda -y python=2.7 checkm-genome biopython click monovar && conda clean -a
 RUN mkdir -p /opt/checkm-data && cd /opt/checkm-data && \

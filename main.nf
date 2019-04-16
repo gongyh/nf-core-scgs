@@ -402,9 +402,9 @@ process samtools {
     file bam from bb_bam
 
     output:
-    file '*.sorted.bam' into bam_for_qualimap, bam_for_monovar, bam_for_aneufinder, bam_for_quast
-    file '*.sorted.bam.bai' into bai_for_qualimap, bai_for_monovar, bai_for_aneufinder, bai_for_quast
-    file '*.sorted.bed' into bed_for_circlize, bed_for_preseq
+    file '*.markdup.bam' into bam_for_qualimap, bam_for_monovar, bam_for_realign, bam_for_quast
+    file '*.markdup.bam.bai' into bai_for_qualimap, bai_for_monovar, bai_for_realign, bai_for_quast
+    file '*.markdup.bed' into bed_for_circlize, bed_for_preseq
     file '*.stats.txt' into samtools_stats
 
     script:
@@ -413,8 +413,10 @@ process samtools {
     """
     samtools sort -o ${prefix}.sorted.bam $bam
     samtools index ${prefix}.sorted.bam
-    bedtools bamtobed -i ${prefix}.sorted.bam | sort -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${prefix}.sorted.bed
-    samtools stats ${prefix}.sorted.bam > ${prefix}.stats.txt
+    picard MarkDuplicates I=${prefix}.sorted.bam O=${prefix}.markdup.bam M=metrics.txt AS=true
+    samtools index ${prefix}.markdup.bam
+    bedtools bamtobed -i ${prefix}.markdup.bam | sort -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${prefix}.markdup.bed
+    samtools stats ${prefix}.markdup.bam > ${prefix}.stats.txt
     """
 }
 
@@ -435,7 +437,7 @@ process preseq {
 
     script:
     pp_outdir = "${params.outdir}/preseq"
-    prefix = sbed.toString() - ~/(\.sorted\.bed)?(\.sorted)?(\.bed)?$/
+    prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
     """
     preseq c_curve -P -s 1e+4 -o ${prefix}_c.txt $sbed
     preseq lc_extrap -o ${prefix}_lc.txt $sbed
@@ -455,14 +457,14 @@ process qualimap {
     file gff from gff
 
     output:
-    file '*.sorted_stats' into qualimap_for_multiqc
+    file '*.markdup_stats' into qualimap_for_multiqc
     file 'multi-bamqc'
 
     script:
     pp_outdir = "${params.outdir}/qualimap"
     """
-    ls *.sorted.bam > bams.txt
-    cat bams.txt | awk '{split(\$1,a,".sorted.bam"); print a[1]"\t"\$1}' > inputs.txt
+    ls *.markdup.bam > bams.txt
+    cat bams.txt | awk '{split(\$1,a,".markdup.bam"); print a[1]"\t"\$1}' > inputs.txt
     qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir multi-bamqc
     """
 }
@@ -492,8 +494,39 @@ process monovar {
     """
 }
 
+/*                                                                              
+ * STEP 4.4.0 - Realign InDels                                
+ */                                                                             
+process IndelRealign {
+    tag "${prefix}"                                                            
+    publishDir path: "${pp_outdir}", mode: 'copy'                               
+                                                                                
+    input:                                                                      
+    file bam from bam_for_realign
+    file fa from fasta                           
+                                                                                
+    output:                                                                     
+    file '*.realign.bam' into bam_for_aneufinder
+    file '*.realign.bam.bai' into bai_for_aneufinder                                           
+                                                                                
+    script:                                                                     
+    pp_outdir = "${params.outdir}/gatk"
+    prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/                                   
+    """
+    wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2
+    gatk3-register ./GenomeAnalysisTK-3.8.tar.bz2
+    samtools faidx $fa
+    picard CreateSequenceDictionary R=$fa
+    picard AddOrReplaceReadGroups I=$bam O=${prefix}.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
+    samtools index ${prefix}.bam
+    gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
+    gatk3 -T IndelRealigner -nt ${task.cpus} -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
+    samtools index ${prefix}.realign.bam                                      
+    """                                                                         
+}
+
 /*
- * STEP 4.4 - CNV detection using AneuFinder
+ * STEP 4.4.1 - CNV detection using AneuFinder
  */
 process aneufinder {
     publishDir path: "${pp_outdir}", mode: 'copy'
@@ -530,7 +563,7 @@ process circlize {
     file "${prefix}-cov200.bed"
     
     shell:
-    prefix = sbed.toString() - ~/(\.sorted\.bed)?(\.sorted)?(\.bed)?$/
+    prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
     """
     bedtools makewindows -b $refbed -w 200 > genome.200.bed
     bedtools coverage -b $sbed -a genome.200.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${prefix}-cov200.bed
@@ -581,7 +614,7 @@ process quast {
     euk = params.euk ? "-e" : ""
     """
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
-    bam=\$(ls *.sorted.bam | paste -sd "," -)
+    bam=\$(ls *.markdup.bam | paste -sd "," -)
     quast.py -o quast -R $fasta -G $gff -m 50 -t ${task.cpus} $euk --circos --rna-finding -b --bam \$bam --no-sv --no-read-stats \$contigs
     """
 }
