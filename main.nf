@@ -84,6 +84,7 @@ params.saveAlignedIntermediates = false
 params.euk = false
 params.genus = null
 params.database = null
+params.readPaths = null
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -165,7 +166,7 @@ if(params.readPaths){
 // Header log info
 log.info nfcoreHeader()
 def summary = [:]
-//summary['Run Name']         = custom_runName ?: workflow.runName
+summary['Run Name']         = custom_runName ?: workflow.runName
 // TODO nf-core: Report custom parameters here
 summary['Reads']            = params.reads
 summary['Fasta Ref']        = params.fasta
@@ -238,6 +239,8 @@ process get_software_versions {
     bowtie2 --version &> v_bowtie2.txt
     samtools --version &> v_samtools.txt
     bedtools --version &> v_bedtools.txt
+    preseq &> v_preseq.txt
+    qualimap -h &> v_qualimap.txt
     spades.py --version &> v_spades.txt
     quast.py --version &> v_quast.txt
     multiqc --version > v_multiqc.txt
@@ -375,7 +378,7 @@ process bowtie2 {
     file '*.bam' into bb_bam
 
     script:
-    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(\.1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = reads[0].toString()
     R2 = reads[1].toString()
     filtering = params.allow_multi_align ? '' : "| samtools view -b -q 1 -F 4 -F 256 -"
@@ -434,7 +437,7 @@ process preseq {
     pp_outdir = "${params.outdir}/preseq"
     prefix = sbed.toString() - ~/(\.sorted\.bed)?(\.sorted)?(\.bed)?$/
     """
-    preseq c_curve -o ${prefix}_c.txt $sbed
+    preseq c_curve -P -s 1e+4 -o ${prefix}_c.txt $sbed
     preseq lc_extrap -o ${prefix}_lc.txt $sbed
     preseq gc_extrap -o ${prefix}_gc.txt $sbed
     """
@@ -452,14 +455,15 @@ process qualimap {
     file gff from gff
 
     output:
-    file 'qualimap' into qualimap_for_multiqc
+    file '*.sorted_stats' into qualimap_for_multiqc
+    file 'multi-bamqc'
 
     script:
-    pp_outdir = "${params.outdir}"
+    pp_outdir = "${params.outdir}/qualimap"
     """
     ls *.sorted.bam > bams.txt
     cat bams.txt | awk '{split(\$1,a,".sorted.bam"); print a[1]"\t"\$1}' > inputs.txt
-    qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir qualimap
+    qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir multi-bamqc
     """
 }
 
@@ -547,7 +551,7 @@ process spades {
     file "${prefix}.contigs.fasta" into contigs_for_quast, contigs_for_checkm
 
     script:
-    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(\.1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = clean_reads[0].toString()
     R2 = clean_reads[1].toString()
     """
@@ -620,7 +624,7 @@ process multiqc {
     file ('fastqc2/*') from trimgalore_fastqc_reports.collect()
     file ('samtools/*') from samtools_stats.collect()
     file ('preseq/*') from preseq_for_multiqc.collect()
-    file ('*') from qualimap_for_multiqc
+    file ('*') from qualimap_for_multiqc.collect()
     file ('quast/*') from quast_report.collect()
     file workflow_summary from create_workflow_summary(summary)
 
