@@ -19,6 +19,7 @@ dependencies:
   - multiqc=1.6
   - qualimap=2.2.2a
   - preseq=2.0.3
+  - perl-bioperl=1.7.2
   - r::r-base=3.5.1
   - r::r-essentials=3.5.1
   - r::r-rcurl=1.95_4.11

@@ -25,11 +25,12 @@ RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-ar
     gatk3-register ./GenomeAnalysisTK-3.8.tar.bz2 && rm -rf ./GenomeAnalysisTK-3.8.tar.bz2
 
 # py27
-RUN conda create -n py27 -c bioconda -y python=2.7 checkm-genome biopython click monovar && conda clean -a
+RUN conda create -n py27 -c bioconda -y python=2.7 checkm-genome biopython click monovar blobtools=1.0.1 && conda clean -a
 RUN mkdir -p /opt/checkm-data && cd /opt/checkm-data && \
     wget https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz && \
     tar xzvf checkm_data_2015_01_16.tar.gz && rm -rf checkm_data_2015_01_16.tar.gz
 RUN [ "/bin/bash", "-c", "source activate py27 && ((echo /opt/checkm-data; sleep 2; echo /opt/checkm-data) | checkm data setRoot) && source deactivate" ]
+RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
 # clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove

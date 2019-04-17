@@ -36,7 +36,8 @@ def helpMessage() {
 
     Species related:
       --genus                       Genus information for use in CheckM
-      --database                    Genome database (TBD)
+      --nt_db                       NCBI Nt database
+      --kraken_db                   Kraken database
 
     Trimming options:
       --notrim                      Specifying --notrim will skip the adapter trimming step.
@@ -77,13 +78,16 @@ if (params.help){
 
 // default values
 params.genome = false
+params.fasta = false
+params.gff = false
 params.notrim = false
 params.saveTrimmed = false
 params.allow_multi_align = false
 params.saveAlignedIntermediates = false
 params.euk = false
 params.genus = null
-params.database = null
+params.nt_db = null
+params.kraken_db = null
 params.readPaths = null
 
 // Check if genome exists in the config file
@@ -129,7 +133,8 @@ if( workflow.profile == 'awsbatch') {
 }
 
 // Stage config files
-ch_multiqc_config = Channel.fromPath(params.multiqc_config)
+ch_multiqc_config1 = Channel.fromPath(params.multiqc_config)
+ch_multiqc_config2 = Channel.fromPath(params.multiqc_config)
 ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
 
 // Custom trimming options
@@ -137,6 +142,9 @@ params.clip_r1 = 0
 params.clip_r2 = 0
 params.three_prime_clip_r1 = 0
 params.three_prime_clip_r2 = 0
+
+// mode
+denovo = (params.genome && params.genomes[ params.genome ].bowtie2) || params.fasta ? false : true
 
 /*
  * Create a channel for input read files
@@ -227,7 +235,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
  */
 process get_software_versions {
     output:
-    file 'software_versions_mqc.yaml' into software_versions_yaml
+    file 'software_versions_mqc.yaml' into software_versions_yaml1, software_versions_yaml2
 
     script:
     // TODO nf-core: Get all tools to print their version number here
@@ -241,8 +249,8 @@ process get_software_versions {
     bedtools --version &> v_bedtools.txt
     preseq &> v_preseq.txt
     qualimap -h &> v_qualimap.txt
-    picard MarkDuplicates --version > v_picard.txt
-    gatk3 -version > v_gatk.txt
+    if [ x=`picard MarkDuplicates --version &> v_picard.txt` = 1 ]; then return 0; fi
+    gatk3 -version &> v_gatk.txt
     Rscript -e 'print(packageVersion("AneuFinder"))' &> v_AneuFinder.txt
     spades.py --version &> v_spades.txt
     quast.py --version &> v_quast.txt
@@ -267,6 +275,9 @@ process save_reference {
     file "genome.gff"
     file "*.bed"
     file "genome.bed" into genome_circlize
+
+    when:
+    params.fasta && params.gff
 
     script:
     """
@@ -295,6 +306,9 @@ process prepare_bowtie2 {
     output:
     file "Bowtie2Index" into bowtie2_index
 
+    when:
+    params.fasta
+
     script:
     """
     mkdir -p Bowtie2Index; cd Bowtie2Index
@@ -316,7 +330,7 @@ process fastqc {
     set val(name), file(reads) from read_files_fastqc
 
     output:
-    file "*_fastqc.{zip,html}" into fastqc_results
+    file "*_fastqc.{zip,html}" into fastqc_results1, fastqc_results2
 
     script:
     """
@@ -346,8 +360,8 @@ if(params.notrim){
 
         output:
         file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades
-        file '*trimming_report.txt' into trimgalore_results
-        file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports
+        file '*trimming_report.txt' into trimgalore_results1, trimgalore_results2
+        file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports1, trimgalore_fastqc_reports2
 
         script:
         c_r1 = params.clip_r1 > 0 ? "--clip_r1 ${params.clip_r1}" : ''
@@ -381,6 +395,9 @@ process bowtie2 {
     output:
     file '*.bam' into bb_bam
 
+    when:
+    denovo == false
+
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = reads[0].toString()
@@ -406,8 +423,8 @@ process samtools {
     file bam from bb_bam
 
     output:
-    file '*.markdup.bam' into bam_for_qualimap, bam_for_monovar, bam_for_realign, bam_for_quast
-    file '*.markdup.bam.bai' into bai_for_qualimap, bai_for_monovar, bai_for_realign, bai_for_quast
+    file '*.markdup.bam' into bam_for_qualimap, bam_for_aneufinder, bam_for_realign, bam_for_quast
+    file '*.markdup.bam.bai' into bai_for_qualimap, bai_for_aneufinder, bai_for_realign, bai_for_quast
     file '*.markdup.bed' into bed_for_circlize, bed_for_preseq
     file '*.stats.txt' into samtools_stats
 
@@ -473,6 +490,35 @@ process qualimap {
     """
 }
 
+/*                                                                              
+ * STEP 4.3.0 - Realign InDels                                                  
+ */                                                                             
+process IndelRealign {                                                          
+    tag "${prefix}"                                                             
+    publishDir path: "${pp_outdir}", mode: 'copy'                               
+                                                                                
+    input:                                                                      
+    file bam from bam_for_realign                                               
+    file fa from fasta                                                          
+                                                                                
+    output:                                                                     
+    file '*.realign.bam' into bam_for_monovar                                   
+    file '*.realign.bam.bai' into bai_for_monovar                               
+                                                                                
+    script:                                                                     
+    pp_outdir = "${params.outdir}/gatk"                                         
+    prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/         
+    """                                                                         
+    samtools faidx $fa                                                          
+    picard CreateSequenceDictionary R=$fa                                       
+    picard AddOrReplaceReadGroups I=$bam O=${prefix}.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
+    samtools index ${prefix}.bam                                                
+    gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals 
+    gatk3 -T IndelRealigner -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
+    samtools index ${prefix}.realign.bam                                        
+    """                                                                         
+}
+
 /*
  * STEP 4.3 - SNV detection using MonoVar
  */
@@ -498,39 +544,8 @@ process monovar {
     """
 }
 
-/*                                                                              
- * STEP 4.4.0 - Realign InDels                                
- */                                                                             
-process IndelRealign {
-    tag "${prefix}"                                                            
-    publishDir path: "${pp_outdir}", mode: 'copy'                               
-                                                                                
-    input:                                                                      
-    file bam from bam_for_realign
-    file fa from fasta                           
-                                                                                
-    output:                                                                     
-    file '*.realign.bam' into bam_for_aneufinder
-    file '*.realign.bam.bai' into bai_for_aneufinder                                           
-                                                                                
-    script:                                                                     
-    pp_outdir = "${params.outdir}/gatk"
-    prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/                                   
-    """
-    wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2
-    gatk3-register ./GenomeAnalysisTK-3.8.tar.bz2
-    samtools faidx $fa
-    picard CreateSequenceDictionary R=$fa
-    picard AddOrReplaceReadGroups I=$bam O=${prefix}.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
-    samtools index ${prefix}.bam
-    gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
-    gatk3 -T IndelRealigner -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
-    samtools index ${prefix}.realign.bam                                      
-    """                                                                         
-}
-
 /*
- * STEP 4.4.1 - CNV detection using AneuFinder
+ * STEP 4.4 - CNV detection using AneuFinder
  */
 process aneufinder {
     publishDir path: "${pp_outdir}", mode: 'copy'
@@ -585,7 +600,8 @@ process spades {
     file clean_reads from trimmed_reads_for_spades
 
     output:
-    file "${prefix}.contigs.fasta" into contigs_for_quast, contigs_for_checkm
+    file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_blob
 
     script:
     prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
@@ -594,32 +610,66 @@ process spades {
     """
     spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -o ${prefix}.spades_out
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
+    faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     """
 }
 
 /*
  * STEP 7 - Evaluation using QUAST
  */
-process quast {
+process quast_ref {
+    label "quast"
     publishDir path: "${params.outdir}", mode: 'copy'
 
     input:
     file fasta from fasta
     file gff from gff
-    file ("*") from contigs_for_quast.collect()
+    file ("*") from contigs_for_quast1.collect()
     file ("*") from bam_for_quast.collect()
     file ("*") from bai_for_quast.collect()
 
     output:
-    file "quast/report.tsv" into quast_report
+    file "quast/report.tsv" into quast_report1
     file "quast"
+
+    when:
+    denovo == false
 
     script:
     euk = params.euk ? "-e" : ""
+    ref = fasta.exists() ? "-r $fasta" : ""
+    gene = gff.exists() ? "--features gene:$gff" : ""
     """
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
-    bam=\$(ls *.markdup.bam | paste -sd "," -)
-    quast.py -o quast -R $fasta -G $gff -m 50 -t ${task.cpus} $euk --circos --rna-finding -b --bam \$bam --no-sv --no-read-stats \$contigs
+    labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
+    bams=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta/.markdup.bam/g')
+    #fix a bug of quast5
+    sed -i 's/species = fly/species = E_coli_K12/g' /opt/conda/lib/python3.6/site-packages/quast_libs/busco/config.ini.default
+    sed -i "s/'fly' in dirname/'fly' in dirname or 'E_coli_K12' in dirname or 'aspergillus_nidulans' in dirname/g" /opt/conda/lib/python3.6/site-packages/quast_libs/run_busco.py
+    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk --circos --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
+    """
+}
+
+process quast_denovo {
+    label "quast"                                                                 
+    publishDir path: "${params.outdir}", mode: 'copy'                           
+                                                                                
+    input:                                                                                                                                 
+    file ("*") from contigs_for_quast2.collect()                                     
+                                                                                
+    output:                                                                     
+    file "quast/report.tsv" into quast_report2                                   
+    file "quast"                                                                
+
+    when:
+    denovo == true
+                                                                                
+    script:                                                                     
+    euk = params.euk ? "-e" : ""                          
+    """                                                                         
+    contigs=\$(ls *.contigs.fasta | paste -sd " " -)                            
+    labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
+    quast.py -o quast -m 200 -t ${task.cpus} $euk --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
     """
 }
 
@@ -633,7 +683,10 @@ process checkm {
    file ('spades/*') from contigs_for_checkm.collect()
 
    output:
-   file 'spades_checkM.txt' into checkm_report
+   file 'spades_checkM.txt' into checkm_report1, checkm_report2
+
+   when:
+   params.euk ? false : true
 
    script:
    checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
@@ -642,32 +695,91 @@ process checkm {
    if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
      checkm taxonomy_wf -t ${task.cpus} -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
    else
-     checkm lineage_wf -t ${task.cpus} -f spades_checkM.txt -x fasta spades spades_checkM
+     checkm lineage_wf -t ${task.cpus} -r -f spades_checkM.txt -x fasta spades spades_checkM
    fi
    """
 }
 
+/*                                                                              
+ * STEP 9 - Annotate contigs using NT database              
+ */                                                                             
+process blast_nt {
+   tag "${prefix}"                                                              
+   publishDir "${params.outdir}/blob", mode: 'copy'                           
+                                                                                
+   input:                                                                       
+   file contigs from contigs_for_nt
+   file nt from file(params.nt_db)
+                                                                                
+   output:                                                                      
+   file "${prefix}_nt.out" into nt_for_blobtools                 
+                                                                                
+   when:                                                                        
+   params.nt_db                                                    
+                                                                                
+   script:                                                                      
+   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/              
+   """
+   export BLASTDB=$nt                                                                          
+   blastn -query $contigs -db $nt -outfmt '6 qseqid staxids bitscore std' \
+     -max_target_seqs 5 -max_hsps 1 -evalue 1e-25 \
+     -num_threads ${task.cpus} -out ${prefix}_nt.out                                      
+   """                                                                          
+}
+
 /*
- * STEP 9 - MultiQC
+ * STEP 10 - Blobplot
  */
-process multiqc {
+process blobtools {
+   tag "${prefix}"
+   publishDir "${params.outdir}/blob", mode: 'copy'
+
+   input:
+   file contigs from contigs_for_blob
+   file anno from nt_for_blobtools
+
+   output:
+   file "${prefix}"
+
+   script:                                                                      
+   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   """
+   blobtools create -i $contigs -y spades -t $anno -o ${prefix}/${prefix} \
+     --db /opt/conda/envs/py27/opt/blobtools-1.0.1/data/nodesDB.txt
+   blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
+   """
+}
+
+/*
+ * STEP 11 - MultiQC
+ */
+process multiqc_ref {
+    label "multiqc"
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
     input:
-    file multiqc_config from ch_multiqc_config
-    file ('fastqc/*') from fastqc_results.collect()
-    file ('software_versions/*') from software_versions_yaml
-    file ('trimgalore/*') from trimgalore_results.collect()
-    file ('fastqc2/*') from trimgalore_fastqc_reports.collect()
+    file multiqc_config from ch_multiqc_config1
+    file ('fastqc/*') from fastqc_results1.collect()
+    file ('software_versions/*') from software_versions_yaml1
+    file ('trimgalore/*') from trimgalore_results1.collect()
+    file ('fastqc2/*') from trimgalore_fastqc_reports1.collect()
     file ('samtools/*') from samtools_stats.collect()
     file ('preseq/*') from preseq_for_multiqc.collect()
     file ('*') from qualimap_for_multiqc.collect()
-    file ('quast/*') from quast_report.collect()
+    file ('quast/*') from quast_report1.collect()
     file workflow_summary from create_workflow_summary(summary)
 
     output:
-    file "*multiqc_report.html" into multiqc_report
+    file "*multiqc_report.html" into multiqc_report1
     file "*_data"
+
+    when:
+    denovo == false
 
     script:
     """
@@ -675,7 +787,31 @@ process multiqc {
     """
 }
 
+process multiqc_denovo {
+    label "multiqc"                                                               
+    publishDir "${params.outdir}/MultiQC", mode: 'copy'                         
+                                                                                
+    input:                                                                      
+    file multiqc_config from ch_multiqc_config2                                  
+    file ('fastqc/*') from fastqc_results2.collect()                             
+    file ('software_versions/*') from software_versions_yaml2                    
+    file ('trimgalore/*') from trimgalore_results2.collect()                     
+    file ('fastqc2/*') from trimgalore_fastqc_reports2.collect()                              
+    file ('quast/*') from quast_report2.collect()                                
+    file workflow_summary from create_workflow_summary(summary)                 
+                                                                                
+    output:                                                                     
+    file "*multiqc_report.html" into multiqc_report2                             
+    file "*_data"                                                               
 
+    when:
+    denovo == true
+                                                                                
+    script:                                                                     
+    """                                                                         
+    multiqc -f --config $multiqc_config .                                       
+    """                                                                         
+}
 
 /*
  * STEP 10 - Output Description HTML
@@ -736,7 +872,11 @@ workflow.onComplete {
     def mqc_report = null
     try {
         if (workflow.success) {
-            mqc_report = multiqc_report.getVal()
+            if (multiqc_report1 != null) {
+                mqc_report = multiqc_report1.getVal()
+            } else if (multiqc_report2 != null) {                                      
+                mqc_report = multiqc_report2.getVal()
+            }
             if (mqc_report.getClass() == ArrayList){
                 log.warn "[gongyh/nf-core-scgs] Found multiple reports from process 'multiqc', will use only one"
                 mqc_report = mqc_report[0]

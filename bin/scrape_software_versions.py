@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf-8
 from __future__ import print_function
 from collections import OrderedDict
 import re
@@ -17,7 +18,7 @@ regexes = {
     'Picard': ['v_picard.txt', r"(\S+)"],
     'GATK': ['v_gatk.txt', r"(\S+)"],
     'Monovar': ['v_monovar.txt', r"v(\S+)"],
-    'AneuFinder': ['v_AneuFinder.txt', r"[1] ‘(\S+)’"],
+    'AneuFinder': ['v_AneuFinder.txt', r'\[1\] ‘(\S+)’'],
     'Spades': ['v_spades.txt', r"SPAdes v(\S+)"],
     'Quast': ['v_quast.txt', r"QUAST v(\S+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],

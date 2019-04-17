@@ -38,4 +38,5 @@ script:
   # Lint the documentation
   - markdownlint ${TRAVIS_BUILD_DIR} -c ${TRAVIS_BUILD_DIR}/.github/markdownlint.yml
   # Run the pipeline with the test profile
-  - nextflow run ${TRAVIS_BUILD_DIR} -profile test,docker
+  - nextflow run ${TRAVIS_BUILD_DIR} -profile test,docker -w work1 --outdir result1 -name hasref
+  - nextflow run ${TRAVIS_BUILD_DIR} -profile test_denovo,docker -w work2 --outdir result2 -name denovo
