@@ -9,7 +9,7 @@ my $minLen = $ARGV[1];
 
 my $ctgs  = Bio::SeqIO->new( -format => 'fasta', -file => $contig);
 
-while( my $ctg = $ctg->next_seq() ) {
+while( my $ctg = $ctgs->next_seq() ) {
     my $id  = $ctg->primary_id; chomp $id;
     my $seq = $ctg->seq; chomp $seq;
     my $len = length($seq);
