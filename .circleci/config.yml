@@ -6,7 +6,14 @@ jobs:
    steps:
      - checkout
      - run:
-         name: The First Step
-         command: |
-           echo 'Hello World!'
-           echo 'This is the delivery pipeline'
+         name: install-nextflow
+         command: wget -qO- get.nextflow.io | bash && sudo ln -s nextflow /usr/local/bin/nextflow
+     - run:
+         name: install-GraphViz
+         command: sudo apt-get install -y graphviz
+     - run:
+         name: test-hasref
+         command: mkdir -p tests && cd tests && nextflow run ../ -profile test,docker -w work1 --outdir result1 -name hasref && cd ..
+     - run:
+         name: test-denovo
+         command: mkdir -p tests && cd tests && nextflow run ../ -profile test_denovo,docker -w work2 --outdir result2 -name denovo && cd ..

@@ -709,7 +709,7 @@ process blast_nt {
                                                                                 
    input:                                                                       
    file contigs from contigs_for_nt
-   file nt from file(params.nt_db)
+   file nt from Channel.fromPath(params.nt_db.toString())
                                                                                 
    output:                                                                      
    file "${prefix}_nt.out" into nt_for_blobtools                 

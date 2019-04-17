@@ -22,7 +22,7 @@ RUN quast-download-silva && quast-download-busco
 
 # Download GATK and setting
 RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
-    gatk3-register ./GenomeAnalysisTK-3.8.tar.bz2 && rm -rf ./GenomeAnalysisTK-3.8.tar.bz2
+    tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
 
 # py27
 RUN conda create -n py27 -c bioconda -y python=2.7 checkm-genome biopython click monovar blobtools=1.0.1 && conda clean -a
