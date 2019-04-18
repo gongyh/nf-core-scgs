@@ -2,23 +2,18 @@ FROM continuumio/miniconda3:4.5.4
 LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
-COPY environment.yml /
-
 # Install procps so that Nextflow can poll CPU usage
 RUN apt-get update && apt-get install -y procps && apt-get clean -y 
-
-# install conda environments
-RUN conda install conda=4.6.12
-RUN conda env update -n base -f /environment.yml && conda clean -a
 
 # Install locale en_US.UTF-8 used by Picard
 RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
 
+# install conda environments
+COPY environment.yml /
+RUN conda install conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
+
 # Install Bioconductor packages
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
-
-# Fix circos gd problem, not needed
-#RUN cd /opt/conda/lib && ln -s libwebp.so.6 libwebp.so.7
 
 # Download silva and busco for Quast 5.x
 RUN quast-download-silva && quast-download-busco
