@@ -10,6 +10,7 @@ dependencies:
   - bowtie2=2.3.4.3
   - bwa=0.7.17
   - trim-galore=0.5.0
+  - kraken=1.1
   - samtools=1.9
   - bedtools=2.27.1
   - picard=2.19.0

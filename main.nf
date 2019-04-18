@@ -253,9 +253,11 @@ process get_software_versions {
     gatk3 -version &> v_gatk.txt
     Rscript -e 'print(packageVersion("AneuFinder"))' &> v_AneuFinder.txt
     spades.py --version &> v_spades.txt
+    blastn -version &> v_blast.txt
     quast.py --version &> v_quast.txt
     multiqc --version &> v_multiqc.txt
     source activate py27 && conda list | grep monovar | awk '{print \$2}' &> v_monovar.txt
+    source activate py27 && blobtools -v &> v_blobtools.txt
     scrape_software_versions.py > software_versions_mqc.yaml
     """
 }
@@ -343,6 +345,8 @@ process fastqc {
  */
 if(params.notrim){
     trimmed_reads = read_files_trimming
+    trimmed_reads_for_spades = read_files_trimming
+    trimmed_reads_for_kraken = read_files_trimming
     trimgalore_results = []
     trimgalore_fastqc_reports = []
 } else {
@@ -359,7 +363,7 @@ if(params.notrim){
         set val(name), file(reads) from read_files_trimming
 
         output:
-        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades
+        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken
         file '*trimming_report.txt' into trimgalore_results1, trimgalore_results2
         file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports1, trimgalore_fastqc_reports2
 
@@ -378,6 +382,33 @@ if(params.notrim){
             """
         }
     }
+}
+
+/*                                                                              
+ * STEP 2.1 - kraken                                                  
+ */                                                                             
+process kraken {                                                               
+    tag "$prefix"                                                               
+    publishDir path: { params.saveAlignedIntermediates ? "${params.outdir}/kraken" : params.outdir }, mode: 'copy'
+                                                                                
+    input:                                                                      
+    file reads from trimmed_reads_for_kraken
+    file db from Channel.fromPath(params.kraken_db.toString())                                              
+                                                                                
+    output:                                                                     
+    file "${prefix}.report"                                                    
+                                                                                
+    when:                                                                       
+    params.kraken_db                                                             
+                                                                                
+    script:                                                                     
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    R1 = reads[0].toString()                                                    
+    R2 = reads[1].toString()
+    """                                                                         
+    kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed --paired --check-names --output ${prefix}.kraken
+    kraken-report -db $db ${prefix}.kraken > ${prefix}.report
+    """                                                                         
 }
 
 /*
@@ -600,8 +631,8 @@ process spades {
     file clean_reads from trimmed_reads_for_spades
 
     output:
-    file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_blob
+    file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_blob, contigs_for_checkm
 
     script:
     prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
@@ -721,7 +752,7 @@ process blast_nt {
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/              
    """
    export BLASTDB=$nt                                                                          
-   blastn -query $contigs -db $nt -outfmt '6 qseqid staxids bitscore std' \
+   blastn -query $contigs -db $nt/nt -outfmt '6 qseqid staxids bitscore std' \
      -max_target_seqs 5 -max_hsps 1 -evalue 1e-25 \
      -num_threads ${task.cpus} -out ${prefix}_nt.out                                      
    """                                                                          

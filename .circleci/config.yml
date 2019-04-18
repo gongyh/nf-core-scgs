@@ -7,7 +7,7 @@ jobs:
      - checkout
      - run:
          name: install-nextflow
-         command: wget -qO- get.nextflow.io | bash && ln -s nextflow /usr/local/bin/nextflow
+         command: wget -qO- get.nextflow.io | bash && ln -s $PWD/nextflow /usr/local/bin/nextflow
      - run:
          name: install-GraphViz
          command: apt-get install -y graphviz

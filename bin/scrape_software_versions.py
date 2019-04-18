@@ -20,6 +20,8 @@ regexes = {
     'Monovar': ['v_monovar.txt', r"v(\S+)"],
     'AneuFinder': ['v_AneuFinder.txt', r'\[1\] ‘(\S+)’'],
     'Spades': ['v_spades.txt', r"SPAdes v(\S+)"],
+    'BLAST': ['v_blast.txt', r"blastn: (\S+)"],
+    'BlobTools': ['v_blobtools.txt', r"blobtools v(\S+)"],
     'Quast': ['v_quast.txt', r"QUAST v(\S+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],
 }
@@ -38,6 +40,8 @@ results['GATK'] = '<span style="color:#999999;\">N/A</span>'
 results['Monovar'] = '<span style="color:#999999;\">N/A</span>'
 results['AneuFinder'] = '<span style="color:#999999;\">N/A</span>'
 results['Spades'] = '<span style="color:#999999;\">N/A</span>'
+results['BLAST'] = '<span style="color:#999999;\">N/A</span>'
+results['BlobTools'] = '<span style="color:#999999;\">N/A</span>'
 results['Quast'] = '<span style="color:#999999;\">N/A</span>'
 results['MultiQC'] = '<span style="color:#999999;\">N/A</span>'
 
