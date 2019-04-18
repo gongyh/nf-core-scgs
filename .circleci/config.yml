@@ -7,10 +7,10 @@ jobs:
      - checkout
      - run:
          name: install-nextflow
-         command: wget -qO- get.nextflow.io | bash && sudo ln -s nextflow /usr/local/bin/nextflow
+         command: wget -qO- get.nextflow.io | bash && ln -s nextflow /usr/local/bin/nextflow
      - run:
          name: install-GraphViz
-         command: sudo apt-get install -y graphviz
+         command: apt-get install -y graphviz
      - run:
          name: test-hasref
          command: mkdir -p tests && cd tests && nextflow run ../ -profile test,docker -w work1 --outdir result1 -name hasref && cd ..

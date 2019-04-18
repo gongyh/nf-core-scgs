@@ -460,9 +460,9 @@ process preseq {
     pp_outdir = "${params.outdir}/preseq"
     prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
     """
-    preseq c_curve -P -s 1e+4 -o ${prefix}_c.txt $sbed
-    preseq lc_extrap -o ${prefix}_lc.txt $sbed
-    preseq gc_extrap -o ${prefix}_gc.txt $sbed
+    preseq c_curve -P -s 1e+5 -o ${prefix}_c.txt $sbed
+    preseq lc_extrap -P -s 1e+5 -o ${prefix}_lc.txt $sbed
+    preseq gc_extrap -w 1000 -s 1e+7 -D -o ${prefix}_gc.txt $sbed
     """
 }
 
