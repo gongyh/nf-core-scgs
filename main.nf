@@ -115,6 +115,20 @@ if ( params.gff ){
     if( !gff.exists() ) exit 1, "GFF file not found: ${params.gff}"
 }
 
+// Configurable nt database                                               
+nt_db = false
+if ( params.nt_db ){                                                            
+    nt_db = file(params.nt_db)                                                  
+    if( !nt_db.exists() ) exit 1, "NT database not found: ${params.nt_db}"       
+}
+
+// Configurable nt database                                                     
+kraken_db = false                                                                   
+if ( params.kraken_db ){                                                            
+    kraken_db = file(params.kraken_db)                                                  
+    if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"       
+}
+
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
 custom_runName = params.name
@@ -393,7 +407,7 @@ process kraken {
                                                                                 
     input:                                                                      
     file reads from trimmed_reads_for_kraken
-    file db from Channel.fromPath(params.kraken_db.toString())                                              
+    file db from kraken_db                                              
                                                                                 
     output:                                                                     
     file "${prefix}.report"                                                    
@@ -406,7 +420,7 @@ process kraken {
     R1 = reads[0].toString()                                                    
     R2 = reads[1].toString()
     """                                                                         
-    kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed --paired --check-names --output ${prefix}.kraken
+    kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed --paired --check-names --output ${prefix}.kraken $reads
     kraken-report -db $db ${prefix}.kraken > ${prefix}.report
     """                                                                         
 }
@@ -632,7 +646,7 @@ process spades {
 
     output:
     file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_blob, contigs_for_checkm
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm
 
     script:
     prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
@@ -740,10 +754,11 @@ process blast_nt {
                                                                                 
    input:                                                                       
    file contigs from contigs_for_nt
-   file nt from Channel.fromPath(params.nt_db.toString())
+   file nt from nt_db
                                                                                 
    output:                                                                      
-   file "${prefix}_nt.out" into nt_for_blobtools                 
+   file "${prefix}_nt.out" into nt_for_blobtools
+   file contigs into contigs_for_blob                 
                                                                                 
    when:                                                                        
    params.nt_db                                                    
@@ -775,6 +790,8 @@ process blobtools {
    script:                                                                      
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
    """
+   source activate py27
+   mkdir -p ${prefix}
    blobtools create -i $contigs -y spades -t $anno -o ${prefix}/${prefix} \
      --db /opt/conda/envs/py27/opt/blobtools-1.0.1/data/nodesDB.txt
    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
