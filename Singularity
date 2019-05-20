@@ -12,6 +12,7 @@ Singularity container for gongyh/scgs pipeline.
     Author gongyh@qibebt.ac.cn
 
 %post
+    export PATH="/opt/conda/bin:$PATH"
     apt-get update && apt-get install -y procps && apt-get clean -y
     apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
     conda install conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
