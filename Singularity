@@ -6,7 +6,7 @@ IncludeCmd: yes
 Singularity container for gongyh/scgs pipeline.
 
 %files
-    environment.yml ${SINGULARITY_ROOTFS}/
+    environment.yml /
 
 %labels
     Author gongyh@qibebt.ac.cn
