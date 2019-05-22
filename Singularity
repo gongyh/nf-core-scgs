@@ -11,9 +11,6 @@ environment.yml /
 %labels
 Author gongyh@qibebt.ac.cn
 
-%environment
-. activate base
-
 %post
 export PATH="/opt/conda/bin:$PATH"
 apt-get update && apt-get install -y procps && apt-get clean -y
