@@ -481,7 +481,7 @@ process samtools {
     samtools index ${prefix}.sorted.bam
     picard MarkDuplicates I=${prefix}.sorted.bam O=${prefix}.markdup.bam M=metrics.txt AS=true
     samtools index ${prefix}.markdup.bam
-    bedtools bamtobed -i ${prefix}.markdup.bam | sort -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${prefix}.markdup.bed
+    bedtools bamtobed -i ${prefix}.markdup.bam | sort -T /tmp -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${prefix}.markdup.bed
     samtools stats ${prefix}.markdup.bam > ${prefix}.stats.txt
     """
 }
@@ -689,9 +689,9 @@ process quast_ref {
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
     bams=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta/.markdup.bam/g')
     #fix a bug of quast5
-    sed -i 's/species = fly/species = E_coli_K12/g' /opt/conda/lib/python3.6/site-packages/quast_libs/busco/config.ini.default
-    sed -i "s/'fly' in dirname/'fly' in dirname or 'E_coli_K12' in dirname or 'aspergillus_nidulans' in dirname/g" /opt/conda/lib/python3.6/site-packages/quast_libs/run_busco.py
-    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk --circos --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
+    #sed -i 's/species = fly/species = E_coli_K12/g' /opt/conda/lib/python3.6/site-packages/quast_libs/busco/config.ini.default
+    #sed -i "s/'fly' in dirname/'fly' in dirname or 'E_coli_K12' in dirname or 'aspergillus_nidulans' in dirname/g" /opt/conda/lib/python3.6/site-packages/quast_libs/run_busco.py
+    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
     """
 }
 
