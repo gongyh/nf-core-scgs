@@ -13,7 +13,7 @@ jobs:
          command: apt-get install -y graphviz
      - run:
          name: test-hasref
-         command: mkdir -p tests && cd tests && nextflow run ../ -profile test,docker -w work1 --outdir result1 -name hasref && cd ..
+         command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work1 --outdir result1 -name hasref && cd ..
      - run:
          name: test-denovo
-         command: mkdir -p tests && cd tests && nextflow run ../ -profile test_denovo,docker -w work2 --outdir result2 -name denovo && cd ..
+         command: mkdir -p tests && cd tests && nextflow run ../ -profile test_denovo -w work2 --outdir result2 -name denovo && cd ..
