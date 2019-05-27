@@ -14,6 +14,7 @@ jobs:
      - run:
          name: test
          command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work --outdir result && cd ..
+         no_output_timeout: 30m
      - store_artifacts:
          path: /root/project/tests/.nextflow.log
          destination: nextflow-log
