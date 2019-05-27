@@ -12,8 +12,8 @@ jobs:
          name: install-GraphViz
          command: apt-get install -y graphviz
      - run:
-         name: test-hasref
-         command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work1 --outdir result1 -name hasref && cd ..
-     - run:
-         name: test-denovo
-         command: mkdir -p tests && cd tests && nextflow run ../ -profile test_denovo -w work2 --outdir result2 -name denovo && cd ..
+         name: test
+         command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work --outdir result && cd ..
+     - store_artifacts:
+         path: /root/project/tests/.nextflow.log
+         destination: nextflow-log
