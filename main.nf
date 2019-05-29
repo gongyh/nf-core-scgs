@@ -29,6 +29,8 @@ def helpMessage() {
     Options:
       --genome                      Name of iGenomes reference
       --singleEnd                   Specifies that the input is single end reads
+      --snv                         Enable detection of single nucleotide variation
+      --cnv                         Enable detection of copy number variation
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the references.
       --fasta                       Path to Fasta reference
@@ -89,6 +91,8 @@ params.genus = null
 params.nt_db = null
 params.kraken_db = null
 params.readPaths = null
+params.snv = false
+params.cnv = false
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -410,7 +414,8 @@ process kraken {
     file db from kraken_db                                              
                                                                                 
     output:                                                                     
-    file "${prefix}.report"                                                    
+    file "${prefix}.report"
+    file "${prefix}.kraken"                                                    
                                                                                 
     when:                                                                       
     params.kraken_db                                                             
@@ -549,7 +554,10 @@ process IndelRealign {
     output:                                                                     
     file '*.realign.bam' into bam_for_monovar                                   
     file '*.realign.bam.bai' into bai_for_monovar                               
-                                                                                
+    
+    when:
+    params.snv
+                                                                            
     script:                                                                     
     pp_outdir = "${params.outdir}/gatk"                                         
     prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/         
@@ -580,6 +588,9 @@ process monovar {
     output:
     file 'monovar.vcf' into monovar_vcf
 
+    when:
+    params.snv
+
     script:
     pp_outdir = "${params.outdir}/monovar"
     """
@@ -601,6 +612,9 @@ process aneufinder {
 
     output:
     file 'CNV_output' into cnv_output
+
+    when:
+    params.cnv
 
     script:
     pp_outdir = "${params.outdir}/aneufinder"
@@ -653,7 +667,7 @@ process spades {
     R1 = clean_reads[0].toString()
     R2 = clean_reads[1].toString()
     """
-    spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -o ${prefix}.spades_out
+    spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     """
