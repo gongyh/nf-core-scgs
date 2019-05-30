@@ -23,7 +23,8 @@ RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-ar
     tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
 
 # py27
-RUN conda create -n py27 -c bioconda -y python=2.7 checkm-genome biopython click monovar blobtools=1.0.1 && conda clean -a
+COPY py27_env.yml /
+RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
 RUN mkdir -p /opt/checkm-data && cd /opt/checkm-data && \
     wget https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz && \
     tar xzvf checkm_data_2015_01_16.tar.gz && rm -rf checkm_data_2015_01_16.tar.gz

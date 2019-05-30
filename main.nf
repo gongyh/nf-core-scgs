@@ -35,11 +35,13 @@ def helpMessage() {
     References:                     If not specified in the configuration file or you wish to overwrite any of the references.
       --fasta                       Path to Fasta reference
       --gff                         Path to GFF reference
-
-    Species related:
       --genus                       Genus information for use in CheckM
-      --nt_db                       NCBI Nt database
+
+    External databases:
+      --nt_db                       NCBI Nt database (BLAST)
+      --uniprot_db        Uniprot proteomes database (diamond)
       --kraken_db                   Kraken database
+      --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
 
     Trimming options:
       --notrim                      Specifying --notrim will skip the adapter trimming step.
@@ -91,6 +93,8 @@ params.genus = null
 params.nt_db = null
 params.kraken_db = null
 params.readPaths = null
+params.uniprot_db = null
+params.eggnog_db = null
 params.snv = false
 params.cnv = false
 

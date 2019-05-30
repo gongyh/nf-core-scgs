@@ -1,0 +1,13 @@
+# You can use this file to create a conda environment for this pipeline:
+# #   conda env create -n py27 -f environment.yml
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - python=2.7
+  - checkm-genome
+  - biopython
+  - click
+  - monovar
+  - blobtools=1.0.1
+  - eggnog-mapper=1.0.3
