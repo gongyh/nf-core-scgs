@@ -15,8 +15,8 @@ RUN conda install conda=4.6.12 && conda env update -n base -f /environment.yml &
 # Install Bioconductor packages
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
 
-# Download silva and busco for Quast 5.x
-RUN quast-download-silva && quast-download-busco
+# Download silva and busco for Quast 5.x, update taxa db for krona
+RUN quast-download-silva && quast-download-busco && ktUpdateTaxonomy.sh
 
 # Download GATK and setting
 RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
