@@ -24,6 +24,7 @@ dependencies:
   - perl-bioperl=1.7.2
   - minced=0.3.0
   - prokka=1.12
+  - diamond=0.9.24
   - r-base=3.5.1
   - r::r-essentials=3.5.1
   - r::r-rcurl=1.95_4.11

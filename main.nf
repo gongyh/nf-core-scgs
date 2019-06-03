@@ -41,6 +41,7 @@ def helpMessage() {
       --nt_db                       NCBI Nt database (BLAST)
       --uniprot_db                  Uniprot proteomes database (diamond)
       --kraken_db                   Kraken database
+      --checkm_db                   CheckM database
       --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
 
     Trimming options:
@@ -97,6 +98,7 @@ params.nt_db = null
 params.kraken_db = null
 params.readPaths = null
 params.uniprot_db = null
+params.checkm_db = null
 params.eggnog_db = null
 params.snv = false
 params.cnv = false
@@ -148,6 +150,13 @@ kraken_db = false
 if ( params.kraken_db ) {                                                            
     kraken_db = file(params.kraken_db)                                                  
     if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"       
+}
+
+// Configurable CheckM database                                                     
+checkm_db = false                                                               
+if ( params.checkm_db ) {                                                       
+    checkm_db = file(params.checkm_db)                                          
+    if( !checkm_db.exists() ) exit 1, "CheckM database not found: ${params.CheckM_db}"
 }
 
 // Configurable eggNOG database
@@ -452,12 +461,6 @@ process kraken {
     """                                                                         
     kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed --paired --check-names --output ${prefix}.krk $reads
     kraken-report -db $db ${prefix}.krk > ${prefix}.report
-    wget https://github.com/marbl/Krona/releases/download/v2.7.1/KronaTools-2.7.1.tar
-    tar xvf KronaTools-2.7.1.tar
-    cd KronaTools-2.7.1
-    ./install.pl
-    ./updateTaxonomy.sh
-    cd ..
     cut -f2,3 ${prefix}.krk > ${prefix}.f23
     ktImportTaxonomy -o ${prefix}.krona.html ${prefix}.f23
     """                                                                         
@@ -735,9 +738,6 @@ process quast_ref {
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
     bams=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta/.markdup.bam/g')
-    #fix a bug of quast5
-    #sed -i 's/species = fly/species = E_coli_K12/g' /opt/conda/lib/python3.6/site-packages/quast_libs/busco/config.ini.default
-    #sed -i "s/'fly' in dirname/'fly' in dirname or 'E_coli_K12' in dirname or 'aspergillus_nidulans' in dirname/g" /opt/conda/lib/python3.6/site-packages/quast_libs/run_busco.py
     quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
     """
 }
@@ -778,12 +778,13 @@ process checkm {
    file 'spades_checkM.txt' into checkm_report1, checkm_report2
 
    when:
-   params.euk ? false : true
+   (params.euk ? false : true) && checkm_db
 
    script:
    checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
    """
    source activate py27
+   echo -e "cat << EOF\\n${checkm_db}\\nEOF\\n" | checkm data setRoot
    if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
      checkm taxonomy_wf -t ${task.cpus} -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
    else
@@ -848,7 +849,7 @@ process diamond_uniprot {
      """
      source activate py27
      diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
-       --outfmt 6 --sensitive --max-target-seqs 1 --evalue 1e-25 -b ${params.blockSize}                               
+       --outfmt 6 --sensitive --max-target-seqs 1 --evalue 1e-25 -b ${params.blockSize} -t /dev/shm                              
      """
    }                                                
 }
@@ -960,12 +961,6 @@ process prokka {
    script:
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
    """
-   git clone https://github.com/ctSkennerton/minced.git
-   cd minced
-   make
-   cp minced /opt/conda/share/minced-0.4.0-0/
-   cp minced.jar /opt/conda/share/minced-0.4.0-0/
-   cd ..
    prokka --outdir $prefix --prefix $prefix --cpus ${task.cpus} $contigs
    """
 }

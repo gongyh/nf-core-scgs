@@ -16,7 +16,7 @@ RUN conda install conda=4.6.12 && conda env update -n base -f /environment.yml &
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
 
 # Download silva and busco for Quast 5.x, update taxa db for krona
-RUN quast-download-silva && quast-download-busco && ktUpdateTaxonomy.sh
+RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
 
 # Download GATK and setting
 RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
@@ -24,11 +24,6 @@ RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-ar
 
 # py27
 COPY py27_env.yml /
-RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
-RUN mkdir -p /opt/checkm-data && cd /opt/checkm-data && \
-    wget https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz && \
-    tar xzvf checkm_data_2015_01_16.tar.gz && rm -rf checkm_data_2015_01_16.tar.gz
-RUN [ "/bin/bash", "-c", "source activate py27 && ((echo /opt/checkm-data; sleep 2; echo /opt/checkm-data) | checkm data setRoot) && source deactivate" ]
 RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
 # clean up
