@@ -39,7 +39,8 @@ def helpMessage() {
 
     External databases:
       --nt_db                       NCBI Nt database (BLAST)
-      --uniprot_db                  Uniprot proteomes database (diamond)
+      --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
+      --uniprot_taxids              Sequence id to taxa id mapping file
       --kraken_db                   Kraken database
       --checkm_db                   CheckM database
       --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
@@ -98,6 +99,7 @@ params.nt_db = null
 params.kraken_db = null
 params.readPaths = null
 params.uniprot_db = null
+params.uniprot_taxids = null
 params.checkm_db = null
 params.eggnog_db = null
 params.snv = false
@@ -143,6 +145,15 @@ if ( params.uniprot_db ) {
     if ( !uniprot_db.exists() ) exit 1, "Uniprot proteomes database not found: ${params.uniprot_db}"
 } else {
     uniprot_db = file("/dev/null")
+}
+
+//uniprot_taxids
+uniprot_taxids = false                                                              
+if ( params.uniprot_taxids ) {                                                      
+    uniprot_taxids = file(params.uniprot_taxids)                                        
+    if ( !uniprot_taxids.exists() ) exit 1, "Uniprot proteomes seq2tax mapping file not found: ${params.uniprot_taxids}"
+} else {                                                                        
+    uniprot_taxids = file("/dev/null")                                              
 }
 
 // Configurable kraken database                                                     
@@ -307,6 +318,11 @@ process get_software_versions {
     blastn -version &> v_blast.txt
     quast.py --version &> v_quast.txt
     multiqc --version &> v_multiqc.txt
+    diamond version &> v_diamond.txt
+    kraken --version | grep Kraken &> v_kraken.txt
+    head -n 1 /opt/conda/envs/py27/lib/python2.7/site-packages/checkm/VERSION &> v_checkm.txt
+    prokka -v &> v_prokka.txt
+    cat /opt/conda/envs/py27/lib/python2.7/site-packages/eggnogmapper/version.py | grep VERSION &> v_eggnogmapper.txt
     source activate py27 && conda list | grep monovar | awk '{print \$2}' &> v_monovar.txt
     source activate py27 && blobtools -v &> v_blobtools.txt
     scrape_software_versions.py > software_versions_mqc.yaml
@@ -805,7 +821,7 @@ process blast_nt {
    file nt from nt_db
                                                                                 
    output:                                                                      
-   file "${prefix}_nt.out" into nt_for_blobtools
+   file "${prefix}_nt.out" into nt_for_blobtools_original
    file contigs into contigs_for_uniprot                 
                                                                                 
    when:                                                                        
@@ -829,29 +845,36 @@ process diamond_uniprot {
    publishDir "${params.outdir}/blob", mode: 'copy'                             
                                                                                 
    input:                                                                       
-   file contigs from contigs_for_uniprot                                             
-   file uniprot from uniprot_db                                                           
+   file contigs from contigs_for_uniprot
+   file nt_out from nt_for_blobtools_original                                             
+   file uniprot from uniprot_db
+   file taxids from uniprot_taxids                                                           
                                                                                 
    output:                                                                      
-   file "${prefix}_uniprot.out" into uniprot_for_blobtools                                
+   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools                                
    file contigs into contigs_for_blob
-   val used into uniprot_real                                                               
+   file nt_out into nt_for_blobtools
+   val used into uniprot_real
+   file "${prefix}_uniprot.*"                                                               
                                                                                 
    script:                                                                      
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ) {
+   if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ||
+        taxids.toString().equals("/dev/null") || taxids.toString().equals("null") ) {
      used = false
      """
      touch ${prefix}_uniprot.out
+     touch ${prefix}_uniprot.taxified.out
      """
    } else {
      used = true
      """
-     source activate py27
      diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
-       --outfmt 6 --sensitive --max-target-seqs 1 --evalue 1e-25 -b ${params.blockSize} -t /dev/shm                              
+       --outfmt 6 --sensitive --max-target-seqs 1 --evalue 1e-25 -b ${params.blockSize}
+     source activate py27
+     blobtools taxify -f ${prefix}_uniprot.out -m ${taxids} -s 0 -t 2
      """
-   }                                                
+   }             
 }
 
 /*
@@ -877,7 +900,7 @@ process blobtools {
    source activate py27
    mkdir -p ${prefix}
    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
-     --db /opt/conda/envs/py27/opt/blobtools-1.0.1/data/nodesDB.txt
+     -x bestsumorder --db /opt/conda/envs/py27/opt/blobtools-1.0.1/data/nodesDB.txt
    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/

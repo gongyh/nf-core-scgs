@@ -24,6 +24,7 @@ RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-ar
 
 # py27
 COPY py27_env.yml /
+RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
 RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
 # clean up

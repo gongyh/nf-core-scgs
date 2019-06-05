@@ -21,6 +21,11 @@ regexes = {
     'AneuFinder': ['v_AneuFinder.txt', r'\[1\] ‘(\S+)’'],
     'Spades': ['v_spades.txt', r"SPAdes v(\S+)"],
     'BLAST': ['v_blast.txt', r"blastn: (\S+)"],
+    'Diamond': ['v_diamond.txt', r"diamond version (\S+)"],
+    'Kraken': ['v_kraken.txt', r"Kraken version (\S+)"],
+    'CheckM': ['v_checkm.txt', r"(\S+)"],
+    'Prokka': ['v_prokka.txt', r"prokka (\S+)"],
+    'eggNOG-mapper': ['v_eggmapper.txt', r"__VERSION__='(\S+)'"],
     'BlobTools': ['v_blobtools.txt', r"blobtools v(\S+)"],
     'Quast': ['v_quast.txt', r"QUAST v(\S+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],
@@ -41,6 +46,11 @@ results['Monovar'] = '<span style="color:#999999;\">N/A</span>'
 results['AneuFinder'] = '<span style="color:#999999;\">N/A</span>'
 results['Spades'] = '<span style="color:#999999;\">N/A</span>'
 results['BLAST'] = '<span style="color:#999999;\">N/A</span>'
+results['Diamond'] = '<span style="color:#999999;\">N/A</span>'
+results['Kraken'] = '<span style="color:#999999;\">N/A</span>'
+results['CheckM'] = '<span style="color:#999999;\">N/A</span>'
+results['Prokka'] = '<span style="color:#999999;\">N/A</span>'
+results['eggNOG-mapper'] = '<span style="color:#999999;\">N/A</span>'
 results['BlobTools'] = '<span style="color:#999999;\">N/A</span>'
 results['Quast'] = '<span style="color:#999999;\">N/A</span>'
 results['MultiQC'] = '<span style="color:#999999;\">N/A</span>'
