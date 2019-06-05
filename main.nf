@@ -900,7 +900,7 @@ process blobtools {
    source activate py27
    mkdir -p ${prefix}
    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
-     -x bestsumorder --db /opt/conda/envs/py27/opt/blobtools-1.0.1/data/nodesDB.txt
+     --db /opt/conda/envs/py27/opt/blobtools-1.0.1/data/nodesDB.txt
    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/

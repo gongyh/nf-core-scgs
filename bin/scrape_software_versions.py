@@ -25,7 +25,7 @@ regexes = {
     'Kraken': ['v_kraken.txt', r"Kraken version (\S+)"],
     'CheckM': ['v_checkm.txt', r"(\S+)"],
     'Prokka': ['v_prokka.txt', r"prokka (\S+)"],
-    'eggNOG-mapper': ['v_eggmapper.txt', r"__VERSION__='(\S+)'"],
+    'eggNOG-mapper': ['v_eggnogmapper.txt', r"__VERSION__='(\S+)'"],
     'BlobTools': ['v_blobtools.txt', r"blobtools v(\S+)"],
     'Quast': ['v_quast.txt', r"QUAST v(\S+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],
