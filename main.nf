@@ -27,6 +27,7 @@ def helpMessage() {
                                     Available: conda, docker, singularity, awsbatch, test and more.
 
     Options:
+      --bulk                        WGS of bulk DNA, not MDA
       --genome                      Name of iGenomes reference
       --singleEnd                   Specifies that the input is single end reads
       --snv                         Enable detection of single nucleotide variation
@@ -104,6 +105,7 @@ params.checkm_db = null
 params.eggnog_db = null
 params.snv = false
 params.cnv = false
+params.bulk = false
 params.blockSize = 2.0
 
 // Check if genome exists in the config file
@@ -241,6 +243,7 @@ summary['Run Name']         = custom_runName ?: workflow.runName
 summary['Reads']            = params.reads
 summary['Fasta Ref']        = params.fasta
 summary['Data Type']        = params.singleEnd ? 'Single-End' : 'Paired-End'
+summary['Bulk']             = params.bulk ? 'Yes' : 'No'
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -718,8 +721,16 @@ process spades {
     prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = clean_reads[0].toString()
     R2 = clean_reads[1].toString()
+    if (params.bulk) {
+      """
+      spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      """
+    } else {
+      """
+      spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      """
+    }
     """
-    spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     """
