@@ -797,6 +797,7 @@ process checkm {
    
    input:
    file ('spades/*') from contigs_for_checkm.collect()
+   file checkmDB from checkm_db
 
    output:
    file 'spades_checkM.txt' into checkm_report1, checkm_report2
@@ -808,7 +809,7 @@ process checkm {
    checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
    """
    source activate py27
-   echo -e "cat << EOF\\n${checkm_db}\\nEOF\\n" | checkm data setRoot
+   echo -e "cat << EOF\\n${checkmDB}\\nEOF\\n" | checkm data setRoot
    if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
      checkm taxonomy_wf -t ${task.cpus} -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
    else
@@ -830,7 +831,7 @@ process blast_nt {
                                                                                 
    output:                                                                      
    file "${prefix}_nt.out" into nt_for_blobtools_original
-   file contigs into contigs_for_uniprot                 
+   file "${contigs}" into contigs_for_uniprot
                                                                                 
    when:                                                                        
    params.nt_db                                                    
@@ -856,19 +857,18 @@ process diamond_uniprot {
    file contigs from contigs_for_uniprot
    file nt_out from nt_for_blobtools_original                                             
    file uniprot from uniprot_db
-   file taxids from uniprot_taxids                                                           
+   file "uniprot.taxids" from uniprot_taxids                                                           
                                                                                 
    output:                                                                      
    file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools                                
-   file contigs into contigs_for_blob
-   file nt_out into nt_for_blobtools
+   file "${contigs}" into contigs_for_blob
+   file "${nt_out}" into nt_for_blobtools
    val used into uniprot_real
    file "${prefix}_uniprot.*"                                                               
                                                                                 
    script:                                                                      
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ||
-        taxids.toString().equals("/dev/null") || taxids.toString().equals("null") ) {
+   if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ) {
      used = false
      """
      touch ${prefix}_uniprot.out
@@ -880,7 +880,7 @@ process diamond_uniprot {
      diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
        --outfmt 6 --sensitive --max-target-seqs 1 --evalue 1e-25 -b ${params.blockSize}
      source activate py27
-     blobtools taxify -f ${prefix}_uniprot.out -m ${taxids} -s 0 -t 2
+     blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
      """
    }             
 }
