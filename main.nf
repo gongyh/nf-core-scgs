@@ -103,8 +103,8 @@ params.uniprot_db = null
 params.uniprot_taxids = null
 params.checkm_db = null
 params.eggnog_db = null
-params.snv = false
-params.cnv = false
+params.snv = true
+params.cnv = true
 params.bulk = false
 params.blockSize = 2.0
 
@@ -996,7 +996,8 @@ process prokka {
    gunzip linux64.tbl2asn.gz
    chmod +x linux64.tbl2asn
    mv linux64.tbl2asn /opt/conda/bin/tbl2asn
-   prokka --outdir $prefix --prefix $prefix --addgenes --centre X --compliant --cpus ${task.cpus} $contigs
+   cat $contigs | sed 's/_length.*$//g' > ${prefix}_node.fa
+   prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa
    """
 }
 
