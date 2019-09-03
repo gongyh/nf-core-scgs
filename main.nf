@@ -1001,7 +1001,7 @@ process prokka {
    gunzip linux64.tbl2asn.gz
    chmod +x linux64.tbl2asn
    mv linux64.tbl2asn /opt/conda/bin/tbl2asn
-   cat $contigs | sed 's/_length.*$//g' > ${prefix}_node.fa
+   cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
    prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa
    """
 }
