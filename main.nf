@@ -32,6 +32,7 @@ def helpMessage() {
       --singleEnd                   Specifies that the input is single end reads
       --snv                         Enable detection of single nucleotide variation
       --cnv                         Enable detection of copy number variation
+      --ass                         Assemble using SPAdes
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the references.
       --fasta                       Path to Fasta reference
@@ -106,6 +107,7 @@ params.eggnog_db = null
 params.snv = true
 params.cnv = true
 params.bulk = false
+params.ass = false
 params.blockSize = 2.0
 
 // Check if genome exists in the config file
@@ -716,6 +718,9 @@ process spades {
     output:
     file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
     file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka
+
+    when:
+    params.ass
 
     script:
     prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
