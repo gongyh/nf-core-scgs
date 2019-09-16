@@ -23,5 +23,7 @@ wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archiv
     tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
 conda env create -n py27 -f /py27_env.yml && conda clean -a
 /bin/bash -c "source activate py27 && blobtools-build_nodesdb && source deactivate"
+git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
+git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
 apt-get autoremove --purge && apt-get clean && apt-get autoremove
 conda clean -y -a && rm -rf /opt/conda/pkgs/*
