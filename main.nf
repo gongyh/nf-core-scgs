@@ -592,8 +592,14 @@ process qualimap {
     pp_outdir = "${params.outdir}/qualimap"
     """
     ls *.markdup.bam > bams.txt
-    cat bams.txt | awk '{split(\$1,a,".markdup.bam"); print a[1]"\t"\$1}' > inputs.txt
-    qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir multi-bamqc
+    let num=`ls *.bam | wc -l`
+    if [ \$num == 1 ]; then 
+      qualimap bamqc -c -bam *.markdup.bam -gff U3-1.gff -outdir multi-bamqc
+      ln -s multi-bamqc Sample.markdup_stats
+    else
+      cat bams.txt | awk '{split(\$1,a,".markdup.bam"); print a[1]"\t"\$1}' > inputs.txt
+      qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir multi-bamqc
+    fi
     """
 }
 
@@ -612,9 +618,6 @@ process IndelRealign {
     file '*.realign.bam' into bam_for_monovar                                   
     file '*.realign.bam.bai' into bai_for_monovar                               
     
-    when:
-    params.snv
-                                                                            
     script:                                                                     
     pp_outdir = "${params.outdir}/gatk"                                         
     prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/         
@@ -701,7 +704,7 @@ process circlize {
     prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
     """
     bedtools makewindows -b $refbed -w 200 > genome.200.bed
-    bedtools coverage -b $sbed -a genome.200.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${prefix}-cov200.bed
+    bedtools coverage -mean -b $sbed -a genome.200.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${prefix}-cov200.bed
     """
 }
 
