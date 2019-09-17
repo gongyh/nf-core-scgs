@@ -3,7 +3,7 @@ LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
 # Install procps so that Nextflow can poll CPU usage
-RUN apt-get update && apt-get install -y procps && apt-get clean -y 
+RUN apt-get update && apt-get install -y procps libpng16-16 && apt-get clean -y 
 
 # Install locale en_US.UTF-8 used by Picard
 RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
