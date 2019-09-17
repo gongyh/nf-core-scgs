@@ -27,7 +27,7 @@ dependencies:
   - diamond=0.9.24
   - biopython=1.73
   - cgecore=1.5.1
-  - tabulate=1.8.3
+  - anaconda::tabulate=1.8.3
   - r-base=3.5.1
   - r::r-essentials=3.5.1
   - r::r-rcurl=1.95_4.11
