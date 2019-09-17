@@ -1014,6 +1014,7 @@ process multiqc_denovo {
  * STEP 12 - Find genes using Prokka                                            
  */
 process prokka {
+   tag "$prefix"
    publishDir "${params.outdir}/prokka", mode: 'copy'
 
    input:
@@ -1038,7 +1039,8 @@ process prokka {
 /*                                                                              
  * STEP 13 - Annotate genes using EggNOG                      
  */
-process eggnog {                                                                
+process eggnog {
+   tag "$prefix"                                                               
    publishDir "${params.outdir}/eggnog", mode: 'copy'                           
                                                                                 
    input:                                                                       
@@ -1063,13 +1065,15 @@ process eggnog {
  * STEP 14 - Find ARGs                                        
  */
 process resfinder {
+    tag "$prefix"
     publishDir "${params.outdir}/ARG", mode: 'copy'
 
     input:
     file contigs from contigs_for_resfinder
+    file db from resfinder_db
 
     output:
-    file "${prefix}"
+    file "${prefix}/*"
 
     when:
     params.acquired && resfinder_db
@@ -1077,21 +1081,25 @@ process resfinder {
     script:
     prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
     """
-    python /opt/resfinder/resfinder.py -i $contigs -o $prefix -p $resfinder_db -mp blastn -x
+    mkdir -p $prefix
+    python /opt/resfinder/resfinder.py -i $contigs -o $prefix -p $db -mp blastn -x
+    rm -rf $prefix/tmp
     """
 }
 
 /*                                                                              
  * STEP 15 - Find point mutations                                                          
  */
-process pointfinder {                                                             
+process pointfinder {
+    tag "$prefix"                                                           
     publishDir "${params.outdir}/ARG", mode: 'copy'                             
                                                                                 
     input:                                                                      
-    file contigs from contigs_for_pointfinder                                     
+    file contigs from contigs_for_pointfinder
+    file db from pointfinder_db                                     
                                                                                 
     output:                                                                     
-    file "${prefix}"                                                            
+    file "${prefix}/*"                                                            
                                                                                 
     when:                                                                       
     params.point && pointfinder_db                                             
@@ -1100,10 +1108,12 @@ process pointfinder {
     prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
     species = params.pointfinder_species
     known_snp = params.only_known ? "" : "-l 0.4 -r all -u"
-    """                                                                         
-    python /opt/pointfinder/PointFinder.py -p $pointfinder_db \
+    """
+    mkdir -p $prefix                                                                         
+    python /opt/pointfinder/PointFinder.py -p $db \
       -m blastn -m_p /opt/conda/bin/blastn $known_snp \
       -i $contigs -o $prefix -s $species
+    rm -rf $prefix/tmp
     """                                                                         
 }
 
