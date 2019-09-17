@@ -28,8 +28,8 @@ RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
 RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
 # install resfinder and pointFinder
-RUN git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
-RUN git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
+RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
+RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
 
 # clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
