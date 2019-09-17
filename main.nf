@@ -65,6 +65,14 @@ def helpMessage() {
     Diamond options:
       --blockSize                   Sequence block size in billions of letters (default=2.0)
 
+    ARG related options:
+      --acquired                    Enable ARG analysis
+      --point                       Enable point mutation analysis
+      --only_known                  Only analyze known SNPs
+      --resfinder_db                Database path for resfinder
+      --pointfinder_db              Database path for pointfinder
+      --pointfinder_species         Species for pointfinder
+
     Output options:
       --outdir                      The output directory where the results will be saved
       --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
@@ -109,6 +117,10 @@ params.cnv = true
 params.bulk = false
 params.ass = false
 params.blockSize = 2.0
+params.acquired = true
+params.point = false
+params.only_known = true
+params.pointfinder_species = "escherichia_coli"
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -179,6 +191,20 @@ eggnog_db = false
 if ( params.eggnog_db ) {                                                       
     eggnog_db = file(params.eggnog_db)                                          
     if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
+}
+
+// Configure resfinder_db
+resfinder_db = false
+if ( params.resfinder_db ) {
+    resfinder_db = file(params.resfinder_db)
+    if( !resfinder_db.exists() ) exit 1, "ResFinder database not found: ${params.resfinder_db}"
+}
+
+// Configure pointfinder_db                                                       
+pointfinder_db = false                                                            
+if ( params.pointfinder_db ) {                                                    
+    pointfinder_db = file(params.pointfinder_db)                                    
+    if( !pointfinder_db.exists() ) exit 1, "PointFinder database not found: ${params.pointfinder_db}"
 }
 
 // Has the run name been specified by the user?
@@ -720,7 +746,7 @@ process spades {
 
     output:
     file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_resfinder, contigs_for_pointfinder
 
     when:
     params.ass
@@ -1033,8 +1059,56 @@ process eggnog {
    """                                                                          
 }
 
+/*                                                                              
+ * STEP 14 - Find ARGs                                        
+ */
+process resfinder {
+    publishDir "${params.outdir}/ARG", mode: 'copy'
+
+    input:
+    file contigs from contigs_for_resfinder
+
+    output:
+    file "${prefix}"
+
+    when:
+    params.acquired && resfinder_db
+
+    script:
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    """
+    python /opt/resfinder/resfinder.py -i $contigs -o $prefix -p $resfinder_db -mp blastn -x
+    """
+}
+
+/*                                                                              
+ * STEP 15 - Find point mutations                                                          
+ */
+process pointfinder {                                                             
+    publishDir "${params.outdir}/ARG", mode: 'copy'                             
+                                                                                
+    input:                                                                      
+    file contigs from contigs_for_pointfinder                                     
+                                                                                
+    output:                                                                     
+    file "${prefix}"                                                            
+                                                                                
+    when:                                                                       
+    params.point && pointfinder_db                                             
+                                                                                
+    script:                                                                     
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    species = params.pointfinder_species
+    known_snp = params.only_known ? "" : "-l 0.4 -r all -u"
+    """                                                                         
+    python /opt/pointfinder/PointFinder.py -p $pointfinder_db \
+      -m blastn -m_p /opt/conda/bin/blastn $known_snp \
+      -i $contigs -o $prefix -s $species
+    """                                                                         
+}
+
 /*
- * STEP 14 - Output Description HTML
+ * STEP 16 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
