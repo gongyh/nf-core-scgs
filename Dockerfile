@@ -10,7 +10,7 @@ RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale
 
 # install conda environments
 COPY environment.yml /
-RUN conda install conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
+RUN conda install python=3.6 conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
 
 # Install Bioconductor packages
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
