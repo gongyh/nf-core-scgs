@@ -28,6 +28,7 @@ IncludeCmd: yes
     cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
     apt-get autoremove --purge && apt-get clean && apt-get autoremove
     conda clean -y -a && rm -rf /opt/conda/pkgs/*
+    chmod -R o+rx /opt/nf-core-scgs
 
 %runscript
-    /opt/conda/bin/nextflow run /opt/nf-core-scgs/main.nf --help
+    exec /opt/conda/bin/nextflow run /opt/nf-core-scgs/main.nf $@
