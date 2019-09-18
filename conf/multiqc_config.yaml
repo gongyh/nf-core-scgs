@@ -1,5 +1,6 @@
 module_order:
     - quast
+    - prokka
     - qualimap
     - preseq
     - samtools
@@ -72,4 +73,8 @@ report_header_info:
     - Project Type: 'Application'
     - Sequencing Platform: 'HiSeq'
     - Sequencing Setup: '2x125 or 2x150'
+
+prokka:
+    prokka_table: True
+    prokka_fn_snames: True
 

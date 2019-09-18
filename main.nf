@@ -834,7 +834,7 @@ process checkm {
    file checkmDB from checkm_db
 
    output:
-   file 'spades_checkM.txt' into checkm_report1, checkm_report2
+   file 'spades_checkM.txt'
 
    when:
    (params.euk ? false : true) && checkm_db
@@ -969,6 +969,7 @@ process multiqc_ref {
     file ('preseq/*') from preseq_for_multiqc.collect()
     file ('*') from qualimap_for_multiqc.collect()
     file ('quast/*') from quast_report1.collect()
+    file ('prokka/*') from prokka_for_mqc1.collect()
     file workflow_summary from create_workflow_summary(summary)
 
     output:
@@ -994,7 +995,8 @@ process multiqc_denovo {
     file ('software_versions/*') from software_versions_yaml2                    
     file ('trimgalore/*') from trimgalore_results2.collect()                     
     file ('fastqc2/*') from trimgalore_fastqc_reports2.collect()                              
-    file ('quast/*') from quast_report2.collect()                                
+    file ('quast/*') from quast_report2.collect()
+    file ('prokka/*') from prokka_for_mqc2.collect()                                
     file workflow_summary from create_workflow_summary(summary)                 
                                                                                 
     output:                                                                     
@@ -1021,7 +1023,7 @@ process prokka {
    file contigs from contigs_for_prokka
 
    output:
-   file "$prefix"
+   file "$prefix" into prokka_for_mqc1, prokka_for_mqc2
    file "$prefix/${prefix}.faa" into faa_eggnog
 
    script:
@@ -1048,7 +1050,7 @@ process eggnog {
    file db from eggnog_db                                   
                                                                                 
    output:                                                                      
-   file "$prefix.annotations"
+   file "$prefix.emapper.annotations"
 
    when:
    eggnog_db                                    
@@ -1057,7 +1059,7 @@ process eggnog {
    prefix = faa.toString() - ~/(\.faa)?$/
    """
    source activate py27                                                                          
-   emapper.py -h        
+   emapper.py -i $faa -o $prefix --output . --dmnd_db $db -m diamond 
    """                                                                          
 }
 
