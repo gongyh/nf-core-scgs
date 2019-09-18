@@ -2,13 +2,23 @@ FROM continuumio/miniconda3:4.5.4
 LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
-# Install procps so that Nextflow can poll CPU usage
-RUN apt-get update && apt-get install -y procps libpng16-16 && apt-get clean -y 
+# Install procps so that Nextflow can poll CPU usage, graphviz to create pipeline figure
+RUN apt-get update && apt-get install -y procps graphviz && apt-get clean -y 
 
 # Install locale en_US.UTF-8 used by Picard
 RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
 
-# install conda environments
+# Install resfinder and pointFinder
+RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
+RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
+
+# Install nextflow
+RUN cd /opt && wget -qO- get.nextflow.io | bash && ln -s nextflow /usr/local/bin/nextflow
+
+# Keep a copy of current pipeline to container
+COPY . /opt/nf-core-scgs/
+
+# Install conda environments
 COPY environment.yml /
 RUN conda install python=3.6 conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
 
@@ -22,15 +32,15 @@ RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
 RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
     tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
 
-# py27
+# Install conda environment py27
 COPY py27_env.yml /
 RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
 RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
-# install resfinder and pointFinder
-RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
-RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
-
-# clean up
+# Clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
 RUN conda clean -y -a && rm -rf /opt/conda/pkgs/*
+
+# Add default container command
+CMD ["/usr/local/bin/nextflow", "run", "/opt/nf-core-scgs/main.nf", "--help"]
+
