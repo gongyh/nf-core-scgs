@@ -28,6 +28,8 @@ dependencies:
   - biopython=1.73
   - cgecore=1.5.1
   - anaconda::tabulate=0.8.3
+  - bioconda::nextflow
+  - graphviz
   - r-base=3.5.1
   - r::r-essentials=3.5.1
   - r::r-rcurl=1.95_4.11

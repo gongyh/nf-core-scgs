@@ -2,8 +2,8 @@ FROM continuumio/miniconda3:4.5.4
 LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
-# Install procps so that Nextflow can poll CPU usage, graphviz to create pipeline figure
-RUN apt-get update && apt-get install -y procps graphviz && apt-get clean -y 
+# Install procps so that Nextflow can poll CPU usage
+RUN apt-get update && apt-get install -y procps libpng16-16 && apt-get clean -y 
 
 # Install locale en_US.UTF-8 used by Picard
 RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
@@ -11,9 +11,6 @@ RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale
 # Install resfinder and pointFinder
 RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
 RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
-
-# Install nextflow
-RUN cd /opt && wget -qO- get.nextflow.io | bash && ln -s nextflow /usr/local/bin/nextflow
 
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/
@@ -42,5 +39,5 @@ RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
 RUN conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Add default container command
-CMD ["/usr/local/bin/nextflow", "run", "/opt/nf-core-scgs/main.nf", "--help"]
+CMD ["/opt/conda/bin/nextflow", "run", "/opt/nf-core-scgs/main.nf", "--help"]
 
