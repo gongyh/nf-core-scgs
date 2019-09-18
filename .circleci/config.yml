@@ -6,12 +6,6 @@ jobs:
    steps:
      - checkout
      - run:
-         name: install-nextflow
-         command: export NXF_VER='19.01.0' && wget -qO- get.nextflow.io | bash && ln -s $PWD/nextflow /usr/local/bin/nextflow
-     - run:
-         name: install-GraphViz
-         command: apt-get install -y graphviz
-     - run:
          name: test
          command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work --outdir result && cd ..
          no_output_timeout: 30m

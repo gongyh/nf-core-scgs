@@ -31,4 +31,4 @@ IncludeCmd: yes
     chmod -R o+rx /opt/nf-core-scgs
 
 %runscript
-    exec /opt/conda/bin/nextflow run /opt/nf-core-scgs/main.nf $@
+    exec /opt/conda/bin/nextflow run /opt/nf-core-scgs/main.nf --help
