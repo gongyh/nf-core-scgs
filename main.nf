@@ -952,8 +952,34 @@ process blobtools {
    """
 }
 
+/*                                                                              
+ * STEP 11 - Find genes using Prokka                                            
+ */                                                                             
+process prokka {                                                                
+   tag "$prefix"                                                                
+   publishDir "${params.outdir}/prokka", mode: 'copy'                           
+                                                                                
+   input:                                                                       
+   file contigs from contigs_for_prokka                                         
+                                                                                
+   output:                                                                      
+   file "$prefix" into prokka_for_mqc1, prokka_for_mqc2                         
+   file "$prefix/${prefix}.faa" into faa_eggnog                                 
+                                                                                
+   script:                                                                      
+   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   """                                                                          
+   wget ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz
+   gunzip linux64.tbl2asn.gz                                                    
+   chmod +x linux64.tbl2asn                                                     
+   mv linux64.tbl2asn /opt/conda/bin/tbl2asn                                    
+   cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa                    
+   prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa
+   """                                                                          
+}
+
 /*
- * STEP 11 - MultiQC
+ * STEP 12 - MultiQC
  */
 process multiqc_ref {
     label "multiqc"
@@ -1010,32 +1036,6 @@ process multiqc_denovo {
     """                                                                         
     multiqc -f --config $multiqc_config .                                       
     """                                                                         
-}
-
-/*                                                                              
- * STEP 12 - Find genes using Prokka                                            
- */
-process prokka {
-   tag "$prefix"
-   publishDir "${params.outdir}/prokka", mode: 'copy'
-
-   input:
-   file contigs from contigs_for_prokka
-
-   output:
-   file "$prefix" into prokka_for_mqc1, prokka_for_mqc2
-   file "$prefix/${prefix}.faa" into faa_eggnog
-
-   script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   """
-   wget ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz
-   gunzip linux64.tbl2asn.gz
-   chmod +x linux64.tbl2asn
-   mv linux64.tbl2asn /opt/conda/bin/tbl2asn
-   cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
-   prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa
-   """
 }
 
 /*                                                                              
