@@ -32,7 +32,6 @@ RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-ar
 # Install conda environment py27
 COPY py27_env.yml /
 RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
-RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
 # Install ACDC
 RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DDBOOST_ROOT=/opt/conda/ && \
@@ -44,6 +43,9 @@ ADD rnammer.patch /tmp/rnammer
 WORKDIR /tmp/rnammer
 RUN tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.patch && mkdir /usr/local/share/rnammer && \
     cp -r * /usr/local/share/rnammer && ln -s /usr/local/share/rnammer/rnammer /usr/local/bin/rnammer && rm -rf /tmp/rnammer
+
+# Install database for blobtools
+RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
 # Clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
