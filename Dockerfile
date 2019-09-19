@@ -3,7 +3,7 @@ LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
 # Install procps so that Nextflow can poll CPU usage
-RUN apt-get update && apt-get install -y procps libpng16-16 && apt-get clean -y 
+RUN apt-get update && apt-get install -y procps libpng16-16 cmake hmmer2 && apt-get clean -y 
 
 # Install locale en_US.UTF-8 used by Picard
 RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
@@ -33,6 +33,17 @@ RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-ar
 COPY py27_env.yml /
 RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
 RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
+
+# Install ACDC
+RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DDBOOST_ROOT=/opt/conda/ && \
+    make -j $(nproc) && make install && rm -rf /tmp/acdc && mkdir /acdc
+
+# Install rnammer
+ADD rnammer-1.2.src.tar.Z /tmp/rnammer
+ADD rnammer.patch /tmp/rnammer
+WORKDIR /tmp/rnammer
+RUN tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.patch && mkdir /usr/local/share/rnammer && \
+    cp -r * /usr/local/share/rnammer && ln -s /usr/local/share/rnammer/rnammer /usr/local/bin/rnammer && rm -rf /tmp/rnammer
 
 # Clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove

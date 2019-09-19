@@ -1050,7 +1050,7 @@ process eggnog {
    file db from eggnog_db                                   
                                                                                 
    output:                                                                      
-   file "$prefix.emapper.annotations"
+   file "${prefix}.emapper.annotations"
 
    when:
    eggnog_db                                    
@@ -1059,7 +1059,7 @@ process eggnog {
    prefix = faa.toString() - ~/(\.faa)?$/
    """
    source activate py27                                                                          
-   emapper.py -i $faa -o $prefix --output . --dmnd_db $db -m diamond 
+   emapper.py -i $faa -o $prefix --output . --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond 
    """                                                                          
 }
 
