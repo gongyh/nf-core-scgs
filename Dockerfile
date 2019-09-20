@@ -38,6 +38,7 @@ RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mk
     make -j $(nproc) && make install && rm -rf /tmp/acdc && mkdir /acdc
 
 # Install rnammer
+RUN mkdir /tmp/rnammer
 ADD rnammer-1.2.src.tar.Z /tmp/rnammer
 ADD rnammer.patch /tmp/rnammer
 WORKDIR /tmp/rnammer
