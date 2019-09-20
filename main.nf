@@ -934,7 +934,7 @@ process blobtools {
 
    output:
    file "${prefix}"
-   file "${prefix}/${prefix}.blobDB.table.txt" into blob_tax
+   file "${prefix}/${prefix}.blobDB*table.txt" into blob_tax
 
    script:                                                                      
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
