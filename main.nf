@@ -1083,7 +1083,7 @@ process eggnog {
    prefix = faa.toString() - ~/(\.faa)?$/
    """
    source activate py27                                                                          
-   emapper.py -i $faa -o $prefix --output . --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond 
+   emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond 
    """                                                                          
 }
 
