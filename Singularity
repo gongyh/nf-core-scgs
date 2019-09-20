@@ -15,7 +15,7 @@ IncludeCmd: yes
 
 %post
     export PATH="/opt/conda/bin:$PATH"
-    apt-get update && apt-get install -y procps libpng16-16 && apt-get clean -y
+    apt-get update && apt-get install -y procps libpng16-16 cmake gcc g++ hmmer2 && apt-get clean -y
     apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
     conda install python=3.6 conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
     R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
@@ -26,6 +26,11 @@ IncludeCmd: yes
     /bin/bash -c "source activate py27 && blobtools-build_nodesdb && source deactivate"
     cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
     cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
+    git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DDBOOST_ROOT=/opt/conda/ && \
+      make -j $(nproc) && make install && rm -rf /tmp/acdc && mkdir /acdc
+    cd /tmp/rnammer && cp /opt/nf-core-scgs/rnammer-1.2.src.tar.Z . && cp /opt/nf-core-scgs/rnammer.patch .
+    tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.patch && mkdir /usr/local/share/rnammer && \
+      cp -r * /usr/local/share/rnammer && ln -s /usr/local/share/rnammer/rnammer /usr/local/bin/rnammer && rm -rf /tmp/rnammer
     apt-get autoremove --purge && apt-get clean && apt-get autoremove
     conda clean -y -a && rm -rf /opt/conda/pkgs/*
     chmod -R o+rx /opt/nf-core-scgs
