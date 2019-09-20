@@ -746,7 +746,7 @@ process spades {
 
     output:
     file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_resfinder, contigs_for_pointfinder
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc
 
     when:
     params.ass
@@ -920,7 +920,7 @@ process diamond_uniprot {
 }
 
 /*
- * STEP 10 - Blobplot
+ * STEP 10.1 - Blobplot
  */
 process blobtools {
    tag "${prefix}"
@@ -934,6 +934,7 @@ process blobtools {
 
    output:
    file "${prefix}"
+   file "${prefix}/${prefix}.blobDB.table.txt" into blob_tax
 
    script:                                                                      
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
@@ -950,6 +951,29 @@ process blobtools {
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
    """
+}
+
+/*                                                                              
+ * STEP 10.2 - ACDC
+ */
+process acdc {
+    tag "${prefix}"
+    publishDir "${params.outdir}/acdc", mode: 'copy'
+
+    input:
+    file contigs from contigs_for_acdc
+    file db from kraken_db
+    file tax from blob_tax
+
+    output:
+    file "${prefix}"
+
+    script:
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    """
+    cat $tax | grep -v '^#' | cut -f1,18 > genus.txt
+    /usr/local/bin/acdc -i $contigs -m 1000 -b 100 -o $prefix -K $db -x genus.txt -T ${task.cpus}
+    """
 }
 
 /*                                                                              
