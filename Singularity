@@ -26,9 +26,9 @@ IncludeCmd: yes
     /bin/bash -c "source activate py27 && blobtools-build_nodesdb && source deactivate"
     cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
     cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
-    git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DDBOOST_ROOT=/opt/conda/ && \
+    git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/ && \
       make -j $(nproc) && make install && rm -rf /tmp/acdc && mkdir /acdc
-    cd /tmp/rnammer && cp /opt/nf-core-scgs/rnammer-1.2.src.tar.Z . && cp /opt/nf-core-scgs/rnammer.patch .
+    mkdir /tmp/rnammer && cd /tmp/rnammer && cp /opt/nf-core-scgs/rnammer-1.2.src.tar.Z . && cp /opt/nf-core-scgs/rnammer.patch .
     tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.patch && mkdir /usr/local/share/rnammer && \
       cp -r * /usr/local/share/rnammer && ln -s /usr/local/share/rnammer/rnammer /usr/local/bin/rnammer && rm -rf /tmp/rnammer
     apt-get autoremove --purge && apt-get clean && apt-get autoremove

@@ -34,7 +34,7 @@ COPY py27_env.yml /
 RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
 
 # Install ACDC
-RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DDBOOST_ROOT=/opt/conda/ && \
+RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/ && \
     make -j $(nproc) && make install && rm -rf /tmp/acdc && mkdir /acdc
 
 # Install rnammer
