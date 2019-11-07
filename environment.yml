@@ -30,6 +30,7 @@ dependencies:
   - anaconda::tabulate=0.8.3
   - bioconda::nextflow=19.01.0
   - graphviz
+  - ruby=2.6.5
   - r-base=3.5.1
   - r::r-essentials=3.5.1
   - r::r-rcurl=1.95_4.11

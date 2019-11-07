@@ -121,6 +121,8 @@ params.acquired = true
 params.point = false
 params.only_known = true
 params.pointfinder_species = "escherichia_coli"
+params.resfinder_db = null
+params.pointfinder_db = null
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {

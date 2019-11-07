@@ -48,6 +48,10 @@ RUN tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.
 # Build database for blobtools
 RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
+# Install kofamscan
+RUN cd /opt && wget ftp://ftp.genome.jp/pub/tools/kofamscan/kofamscan-1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
+    tar xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
+
 # Clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
 RUN conda clean -y -a && rm -rf /opt/conda/pkgs/*
