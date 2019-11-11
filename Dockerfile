@@ -41,8 +41,7 @@ RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mk
 RUN mkdir /tmp/rnammer
 ADD rnammer-1.2.src.tar.Z /tmp/rnammer
 ADD rnammer.patch /tmp/rnammer
-WORKDIR /tmp/rnammer
-RUN tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.patch && mkdir /usr/local/share/rnammer && \
+RUN cd /tmp/rnammer && tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.patch && mkdir /usr/local/share/rnammer && \
     cp -r * /usr/local/share/rnammer && ln -s /usr/local/share/rnammer/rnammer /usr/local/bin/rnammer && rm -rf /tmp/rnammer
 
 # Build database for blobtools
