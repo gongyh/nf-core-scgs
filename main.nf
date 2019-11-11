@@ -46,6 +46,8 @@ def helpMessage() {
       --kraken_db                   Kraken database
       --checkm_db                   CheckM database
       --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
+      --kofam_profile               KOfam profile database
+      --kofam_kolist                KOfam ko_list file
 
     Trimming options:
       --notrim                      Specifying --notrim will skip the adapter trimming step.
@@ -123,6 +125,8 @@ params.only_known = true
 params.pointfinder_species = "escherichia_coli"
 params.resfinder_db = null
 params.pointfinder_db = null
+params.kofam_profile = null
+params.kofam_kolist = null
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -207,6 +211,19 @@ pointfinder_db = false
 if ( params.pointfinder_db ) {                                                    
     pointfinder_db = file(params.pointfinder_db)                                    
     if( !pointfinder_db.exists() ) exit 1, "PointFinder database not found: ${params.pointfinder_db}"
+}
+
+// Configure KOfam search database
+kofam_profile = false
+if ( params.kofam_profile ) {                                                  
+    kofam_profile = file(params.kofam_profile)                                
+    if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
+}
+
+kofam_kolist = false                                                           
+if ( params.kofam_kolist ) {                                                   
+    kofam_kolist = file(params.kofam_kolist)                                  
+    if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
 }
 
 // Has the run name been specified by the user?
@@ -990,7 +1007,7 @@ process prokka {
                                                                                 
    output:                                                                      
    file "$prefix" into prokka_for_mqc1, prokka_for_mqc2                         
-   file "$prefix/${prefix}.faa" into faa_eggnog                                 
+   file "$prefix/${prefix}.faa" into faa_eggnog, faa_kofam                                 
                                                                                 
    script:                                                                      
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
@@ -1086,6 +1103,33 @@ process eggnog {
    """
    source activate py27                                                                          
    emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond 
+   """                                                                          
+}
+
+/*                                                                              
+ * STEP 13.1 - Annotate genes using KOfamKOALA                                        
+ */
+process kofam {                                                                
+   tag "$prefix"                                                                
+   publishDir "${params.outdir}/kofam", mode: 'copy'                           
+                                                                                
+   input:                                                                       
+   file faa from faa_kofam                                                     
+   file profile from kofam_profile
+   file id_list from kofam_idlist                                                       
+                                                                                
+   output:                                                                      
+   file "${prefix}_KOs_*.txt"                                         
+                                                                                
+   when:                                                                        
+   kofam_profile && kofam_idlist                                                                    
+                                                                                
+   script:                                                                      
+   prefix = faa.toString() - ~/(\.faa)?$/                                       
+   """
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${id_list} --cpu ${task.cpus} -o ${prefix}_KOs_detail.txt ${faa}
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${id_list} --cpu ${task.cpus} -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${id_list} --cpu ${task.cpus} -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
    """                                                                          
 }
 
