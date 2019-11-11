@@ -1116,20 +1116,20 @@ process kofam {
    input:                                                                       
    file faa from faa_kofam                                                     
    file profile from kofam_profile
-   file id_list from kofam_idlist                                                       
+   file ko_list from kofam_kolist                                                       
                                                                                 
    output:                                                                      
    file "${prefix}_KOs_*.txt"                                         
                                                                                 
    when:                                                                        
-   kofam_profile && kofam_idlist                                                                    
+   kofam_profile && kofam_kolist                                                                    
                                                                                 
    script:                                                                      
    prefix = faa.toString() - ~/(\.faa)?$/                                       
    """
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${id_list} --cpu ${task.cpus} -o ${prefix}_KOs_detail.txt ${faa}
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${id_list} --cpu ${task.cpus} -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${id_list} --cpu ${task.cpus} -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -o ${prefix}_KOs_detail.txt ${faa}
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
    """                                                                          
 }
 
