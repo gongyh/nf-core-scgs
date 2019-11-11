@@ -14,6 +14,8 @@ before_install:
   - docker pull gongyh/scgs
 
 install:
+  # use jdk8
+  - jdk_switcher use openjdk8
   # Install Nextflow
   - mkdir /tmp/nextflow && cd /tmp/nextflow
   - wget -qO- get.nextflow.io | bash
@@ -29,7 +31,7 @@ install:
   - sudo apt-get install graphviz
 
 env:
-  - NXF_VER='18.10.1' # Specify a minimum NF version that should be tested and work
+  - NXF_VER='0.32.0' # Specify a minimum NF version that should be tested and work
   - NXF_VER='19.10.0' # Plus: get the latest NF version and check that it works
 
 script:
