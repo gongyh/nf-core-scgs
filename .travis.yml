@@ -15,6 +15,7 @@ before_install:
 
 install:
   # use jdk8
+  - . /opt/jdk_switcher/jdk_switcher
   - jdk_switcher use openjdk8
   # Install Nextflow
   - mkdir /tmp/nextflow && cd /tmp/nextflow

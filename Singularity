@@ -32,7 +32,7 @@ IncludeCmd: yes
     tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.patch && mkdir /usr/local/share/rnammer && \
       cp -r * /usr/local/share/rnammer && ln -s /usr/local/share/rnammer/rnammer /usr/local/bin/rnammer && rm -rf /tmp/rnammer
     cd /opt && wget ftp://ftp.genome.jp/pub/tools/kofamscan/kofamscan-1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
-      tar xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
+      tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
     apt-get autoremove --purge && apt-get clean && apt-get autoremove
     conda clean -y -a && rm -rf /opt/conda/pkgs/*
     chmod -R o+rx /opt/nf-core-scgs
