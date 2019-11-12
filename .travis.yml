@@ -1,17 +1,12 @@
 sudo: required
-language: python
-jdk: oraclejdk8
+dist: xenial
+language: java
+jdk: openjdk8
 services: docker
 python: '3.6'
 cache: pip
 matrix:
   fast_finish: true
-
-addons:
-  apt:
-  packages:
-    - oracle-java8-installer
-    - oracle-java8-set-default
 
 before_install:
   # PRs to master are only ok if coming from dev branch
