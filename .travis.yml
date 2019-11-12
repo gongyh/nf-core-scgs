@@ -1,11 +1,17 @@
 sudo: required
 language: python
-jdk: openjdk8
+jdk: oraclejdk8
 services: docker
 python: '3.6'
 cache: pip
 matrix:
   fast_finish: true
+
+addons:
+  apt:
+  packages:
+    - oracle-java8-installer
+    - oracle-java8-set-default
 
 before_install:
   # PRs to master are only ok if coming from dev branch
@@ -14,9 +20,6 @@ before_install:
   - docker pull gongyh/scgs
 
 install:
-  # use jdk8
-  - . /opt/jdk_switcher/jdk_switcher
-  - jdk_switcher use openjdk8
   # Install Nextflow
   - mkdir /tmp/nextflow && cd /tmp/nextflow
   - wget -qO- get.nextflow.io | bash
