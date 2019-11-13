@@ -894,7 +894,7 @@ process blast_nt {
    """
    export BLASTDB=$nt                                                                          
    blastn -query $contigs -db $nt/nt -outfmt '6 qseqid staxids bitscore std' \
-     -max_target_seqs 10 -max_hsps 1 -evalue 1e-25 \
+     -max_target_seqs 1 -max_hsps 1 -evalue 1e-25 \
      -num_threads ${task.cpus} -out ${prefix}_nt.out                                      
    """                                                                          
 }
