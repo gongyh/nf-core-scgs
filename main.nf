@@ -1127,9 +1127,9 @@ process kofam {
    script:                                                                      
    prefix = faa.toString() - ~/(\.faa)?$/                                       
    """
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -o ${prefix}_KOs_detail.txt ${faa}
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
+   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
    """                                                                          
 }
 
