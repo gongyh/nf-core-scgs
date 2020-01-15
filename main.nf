@@ -639,7 +639,7 @@ process qualimap {
     ls *.markdup.bam > bams.txt
     let num=`ls *.bam | wc -l`
     if [ \$num == 1 ]; then 
-      qualimap bamqc -c -bam *.markdup.bam -gff U3-1.gff -outdir multi-bamqc
+      qualimap bamqc -c -bam *.markdup.bam -gff $gff -outdir multi-bamqc
       ln -s multi-bamqc Sample.markdup_stats
     else
       cat bams.txt | awk '{split(\$1,a,".markdup.bam"); print a[1]"\t"\$1}' > inputs.txt
