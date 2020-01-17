@@ -9,7 +9,7 @@
 [![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://singularity-hub.org/collections/3000)
 
 ## Introduction
-The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker / singularity containers making installation trivial and results highly reproducible.
+The pipeline is used for single cell genome sequencing data analysis and built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker / singularity containers making installation trivial and results highly reproducible.
 
 
 ## Documentation
@@ -25,6 +25,9 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 5. [Troubleshooting](docs/troubleshooting.md)
 
 <!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
+
+## How to cite
+[1] Single-cell Phenome-Genome Profiling of Bacterial Antibiotic Susceptibility by Raman-activated Gravity-driven Encapsulation and Sequencing. *In preparation* [Details] (https://github.com/gongyh/nf-core-scgs/blob/master/RAGE-Seq/Data.md)
 
 ## Credits
 gongyh/nf-core-scgs was originally written by Yanhai Gong.
