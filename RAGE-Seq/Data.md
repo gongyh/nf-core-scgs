@@ -1,6 +1,6 @@
-## Single-cell Phenome-Genome Profiling of Bacterial Antibiotic Susceptibility by Raman-activated Gravity-driven Encapsulation and Sequencing
+# Single-cell Phenome-Genome Profiling of Bacterial Antibiotic Susceptibility by Raman-activated Gravity-driven Encapsulation and Sequencing
 
-# Genome assemblies of SAGs and bulk-WGS data
+## Genome assemblies of SAGs and bulk-WGS data
 
 |       Organism    | Group | Sample | Assembly file | Raw data |
 | ----------------- | ----- | :----: | ---- | -------- |

@@ -63,6 +63,7 @@ def helpMessage() {
 
     Quast options:
       --euk                         Euk genome
+      --fungus                      Fungal genome
 
     Diamond options:
       --blockSize                   Sequence block size in billions of letters (default=2.0)
@@ -106,6 +107,7 @@ params.saveTrimmed = false
 params.allow_multi_align = false
 params.saveAlignedIntermediates = false
 params.euk = false
+params.fungus = false
 params.genus = null
 params.nt_db = null
 params.kraken_db = null
@@ -153,11 +155,15 @@ if ( params.gff ) {
     if( !gff.exists() ) exit 1, "GFF file not found: ${params.gff}"
 }
 
-// Configurable nt database                                               
+if ( params.fungus == true && params.euk == false) {
+    params.euk = true
+}
+
+// Configurable nt database
 nt_db = false
-if ( params.nt_db ) {                                                            
-    nt_db = file(params.nt_db)                                                  
-    if( !nt_db.exists() ) exit 1, "NT database not found: ${params.nt_db}"       
+if ( params.nt_db ) {
+    nt_db = file(params.nt_db)
+    if( !nt_db.exists() ) exit 1, "NT database not found: ${params.nt_db}"
 }
 
 // Configurable uniprot proteomes database
@@ -170,32 +176,32 @@ if ( params.uniprot_db ) {
 }
 
 //uniprot_taxids
-uniprot_taxids = false                                                              
-if ( params.uniprot_taxids ) {                                                      
-    uniprot_taxids = file(params.uniprot_taxids)                                        
+uniprot_taxids = false
+if ( params.uniprot_taxids ) {
+    uniprot_taxids = file(params.uniprot_taxids)
     if ( !uniprot_taxids.exists() ) exit 1, "Uniprot proteomes seq2tax mapping file not found: ${params.uniprot_taxids}"
-} else {                                                                        
-    uniprot_taxids = file("/dev/null")                                              
+} else {
+    uniprot_taxids = file("/dev/null")
 }
 
-// Configurable kraken database                                                     
-kraken_db = false                                                                   
-if ( params.kraken_db ) {                                                            
-    kraken_db = file(params.kraken_db)                                                  
-    if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"       
+// Configurable kraken database
+kraken_db = false
+if ( params.kraken_db ) {
+    kraken_db = file(params.kraken_db)
+    if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"
 }
 
-// Configurable CheckM database                                                     
-checkm_db = false                                                               
-if ( params.checkm_db ) {                                                       
-    checkm_db = file(params.checkm_db)                                          
+// Configurable CheckM database
+checkm_db = false
+if ( params.checkm_db ) {
+    checkm_db = file(params.checkm_db)
     if( !checkm_db.exists() ) exit 1, "CheckM database not found: ${params.CheckM_db}"
 }
 
 // Configurable eggNOG database
 eggnog_db = false
-if ( params.eggnog_db ) {                                                       
-    eggnog_db = file(params.eggnog_db)                                          
+if ( params.eggnog_db ) {
+    eggnog_db = file(params.eggnog_db)
     if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
 }
 
@@ -206,23 +212,23 @@ if ( params.resfinder_db ) {
     if( !resfinder_db.exists() ) exit 1, "ResFinder database not found: ${params.resfinder_db}"
 }
 
-// Configure pointfinder_db                                                       
-pointfinder_db = false                                                            
-if ( params.pointfinder_db ) {                                                    
-    pointfinder_db = file(params.pointfinder_db)                                    
+// Configure pointfinder_db
+pointfinder_db = false
+if ( params.pointfinder_db ) {
+    pointfinder_db = file(params.pointfinder_db)
     if( !pointfinder_db.exists() ) exit 1, "PointFinder database not found: ${params.pointfinder_db}"
 }
 
 // Configure KOfam search database
 kofam_profile = false
-if ( params.kofam_profile ) {                                                  
-    kofam_profile = file(params.kofam_profile)                                
+if ( params.kofam_profile ) {
+    kofam_profile = file(params.kofam_profile)
     if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
 }
 
-kofam_kolist = false                                                           
-if ( params.kofam_kolist ) {                                                   
-    kofam_kolist = file(params.kofam_kolist)                                  
+kofam_kolist = false
+if ( params.kofam_kolist ) {
+    kofam_kolist = file(params.kofam_kolist)
     if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
 }
 
@@ -414,7 +420,7 @@ process save_reference {
 
 bowtie2 = params.genome ? params.genomes[ params.genome ].bowtie2 ?: false : false
 if(bowtie2){
-    bowtie2_index = file(bowtie2) 
+    bowtie2_index = file(bowtie2)
 } else {
 process prepare_bowtie2 {
     publishDir path: "${params.outdir}/reference_genome", mode: 'copy'
@@ -501,35 +507,35 @@ if(params.notrim){
     }
 }
 
-/*                                                                              
- * STEP 2.1 - kraken                                                  
- */                                                                             
-process kraken {                                                               
-    tag "$prefix"                                                               
+/*
+ * STEP 2.1 - kraken
+ */
+process kraken {
+    tag "$prefix"
     publishDir path: "${params.outdir}/kraken", mode: 'copy'
-                                                                                
-    input:                                                                      
+
+    input:
     file reads from trimmed_reads_for_kraken
-    file db from kraken_db                                              
-                                                                                
-    output:                                                                     
+    file db from kraken_db
+
+    output:
     file "${prefix}.report"
     file "${prefix}.krk"
-    file "${prefix}.krona.html"                                                    
-                                                                                
-    when:                                                                       
-    params.kraken_db                                                             
-                                                                                
-    script:                                                                     
+    file "${prefix}.krona.html"
+
+    when:
+    params.kraken_db
+
+    script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    R1 = reads[0].toString()                                                    
+    R1 = reads[0].toString()
     R2 = reads[1].toString()
-    """                                                                         
+    """
     kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed --paired --check-names --output ${prefix}.krk $reads
     kraken-report -db $db ${prefix}.krk > ${prefix}.report
     cut -f2,3 ${prefix}.krk > ${prefix}.f23
     ktImportTaxonomy -o ${prefix}.krona.html ${prefix}.f23
-    """                                                                         
+    """
 }
 
 /*
@@ -619,7 +625,7 @@ process preseq {
 }
 
 /*
- * STEP 4.2 - quality control of alignment sequencing data using QualiMap 
+ * STEP 4.2 - quality control of alignment sequencing data using QualiMap
  */
 process qualimap {
     publishDir path: "${pp_outdir}", mode: 'copy'
@@ -638,7 +644,7 @@ process qualimap {
     """
     ls *.markdup.bam > bams.txt
     let num=`ls *.bam | wc -l`
-    if [ \$num == 1 ]; then 
+    if [ \$num == 1 ]; then
       qualimap bamqc -c -bam *.markdup.bam -gff $gff -outdir multi-bamqc
       ln -s multi-bamqc Sample.markdup_stats
     else
@@ -648,33 +654,33 @@ process qualimap {
     """
 }
 
-/*                                                                              
- * STEP 4.3.0 - Realign InDels                                                  
- */                                                                             
-process IndelRealign {                                                          
-    tag "${prefix}"                                                             
-    publishDir path: "${pp_outdir}", mode: 'copy'                               
-                                                                                
-    input:                                                                      
-    file bam from bam_for_realign                                               
-    file fa from fasta                                                          
-                                                                                
-    output:                                                                     
-    file '*.realign.bam' into bam_for_monovar                                   
-    file '*.realign.bam.bai' into bai_for_monovar                               
-    
-    script:                                                                     
-    pp_outdir = "${params.outdir}/gatk"                                         
-    prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/         
-    """                                                                         
-    samtools faidx $fa                                                          
-    picard CreateSequenceDictionary R=$fa                                       
+/*
+ * STEP 4.3.0 - Realign InDels
+ */
+process IndelRealign {
+    tag "${prefix}"
+    publishDir path: "${pp_outdir}", mode: 'copy'
+
+    input:
+    file bam from bam_for_realign
+    file fa from fasta
+
+    output:
+    file '*.realign.bam' into bam_for_monovar
+    file '*.realign.bam.bai' into bai_for_monovar
+
+    script:
+    pp_outdir = "${params.outdir}/gatk"
+    prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/
+    """
+    samtools faidx $fa
+    picard CreateSequenceDictionary R=$fa
     picard AddOrReplaceReadGroups I=$bam O=${prefix}.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
-    samtools index ${prefix}.bam                                                
-    gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals 
+    samtools index ${prefix}.bam
+    gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
     gatk3 -T IndelRealigner -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
-    samtools index ${prefix}.realign.bam                                        
-    """                                                                         
+    samtools index ${prefix}.realign.bam
+    """
 }
 
 /*
@@ -733,7 +739,7 @@ process aneufinder {
  */
 process circlize {
     tag "${prefix}"
-    publishDir "${params.outdir}/circlize", mode: 'copy', 
+    publishDir "${params.outdir}/circlize", mode: 'copy',
             saveAs: {filename ->
                 if (filename.indexOf(".bed") > 0) "$filename" else null
             }
@@ -744,7 +750,7 @@ process circlize {
 
     output:
     file "${prefix}-cov200.bed"
-    
+
     shell:
     prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
     """
@@ -808,37 +814,37 @@ process quast_ref {
     denovo == false
 
     script:
-    euk = params.euk ? "-e" : ""
+    euk = params.euk ? ( params.fungus ? "--fungus" : "-e") : ""
     ref = fasta.exists() ? "-r $fasta" : ""
     gene = gff.exists() ? "--features gene:$gff" : ""
     """
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
     bams=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta/.markdup.bam/g')
-    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
+    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk --rna-finding --bam \$bams -l \$labels --no-sv -f -b --no-read-stats \$contigs
     """
 }
 
 process quast_denovo {
-    label "quast"                                                                 
-    publishDir path: "${params.outdir}", mode: 'copy'                           
-                                                                                
-    input:                                                                                                                                 
-    file ("*") from contigs_for_quast2.collect()                                     
-                                                                                
-    output:                                                                     
-    file "quast/report.tsv" into quast_report2                                   
-    file "quast"                                                                
+    label "quast"
+    publishDir path: "${params.outdir}", mode: 'copy'
+
+    input:
+    file ("*") from contigs_for_quast2.collect()
+
+    output:
+    file "quast/report.tsv" into quast_report2
+    file "quast"
 
     when:
     denovo == true
-                                                                                
-    script:                                                                     
-    euk = params.euk ? "-e" : ""                          
-    """                                                                         
-    contigs=\$(ls *.contigs.fasta | paste -sd " " -)                            
+
+    script:
+    euk = params.euk ? ( params.fungus ? "--fungus" : "-e") : ""
+    """
+    contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
-    quast.py -o quast -m 200 -t ${task.cpus} $euk --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
+    quast.py -o quast -m 200 -t ${task.cpus} $euk --rna-finding -l \$labels --no-sv -f -b --no-read-stats \$contigs
     """
 }
 
@@ -847,7 +853,7 @@ process quast_denovo {
  */
 process checkm {
    publishDir "${params.outdir}/CheckM", mode: 'copy'
-   
+
    input:
    file ('spades/*') from contigs_for_checkm.collect()
    file checkmDB from checkm_db
@@ -871,55 +877,55 @@ process checkm {
    """
 }
 
-/*                                                                              
- * STEP 9.1 - Annotate contigs using NT database              
- */                                                                             
+/*
+ * STEP 9.1 - Annotate contigs using NT database
+ */
 process blast_nt {
-   tag "${prefix}"                                                              
-   publishDir "${params.outdir}/blob", mode: 'copy'                           
-                                                                                
-   input:                                                                       
+   tag "${prefix}"
+   publishDir "${params.outdir}/blob", mode: 'copy'
+
+   input:
    file contigs from contigs_for_nt
    file nt from nt_db
-                                                                                
-   output:                                                                      
+
+   output:
    file "${prefix}_nt.out" into nt_for_blobtools_original
    file "${contigs}" into contigs_for_uniprot
-                                                                                
-   when:                                                                        
-   params.nt_db                                                    
-                                                                                
-   script:                                                                      
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/              
+
+   when:
+   params.nt_db
+
+   script:
+   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
    """
-   export BLASTDB=$nt                                                                          
+   export BLASTDB=$nt
    blastn -query $contigs -db $nt/nt -outfmt '6 qseqid staxids bitscore std' \
      -max_target_seqs 1 -max_hsps 1 -evalue 1e-25 \
-     -num_threads ${task.cpus} -out ${prefix}_nt.out                                      
-   """                                                                          
+     -num_threads ${task.cpus} -out ${prefix}_nt.out
+   """
 }
 
-/*                                                                              
- * STEP 9.2 - Annotate contigs using Uniprot proteomes database                                
- */                                                                             
-process diamond_uniprot {                                                              
-   tag "${prefix}"                                                              
-   publishDir "${params.outdir}/blob", mode: 'copy'                             
-                                                                                
-   input:                                                                       
+/*
+ * STEP 9.2 - Annotate contigs using Uniprot proteomes database
+ */
+process diamond_uniprot {
+   tag "${prefix}"
+   publishDir "${params.outdir}/blob", mode: 'copy'
+
+   input:
    file contigs from contigs_for_uniprot
-   file nt_out from nt_for_blobtools_original                                             
+   file nt_out from nt_for_blobtools_original
    file uniprot from uniprot_db
-   file "uniprot.taxids" from uniprot_taxids                                                           
-                                                                                
-   output:                                                                      
-   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools                                
+   file "uniprot.taxids" from uniprot_taxids
+
+   output:
+   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools
    file "${contigs}" into contigs_for_blob
    file "${nt_out}" into nt_for_blobtools
    val used into uniprot_real
-   file "${prefix}_uniprot.*"                                                               
-                                                                                
-   script:                                                                      
+   file "${prefix}_uniprot.*"
+
+   script:
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
    if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ) {
      used = false
@@ -935,7 +941,7 @@ process diamond_uniprot {
      source activate py27
      blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
      """
-   }             
+   }
 }
 
 /*
@@ -955,7 +961,7 @@ process blobtools {
    file "${prefix}"
    file "${prefix}/${prefix}.blobDB*table.txt" into blob_tax
 
-   script:                                                                      
+   script:
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
    uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
    """
@@ -972,7 +978,7 @@ process blobtools {
    """
 }
 
-/*                                                                              
+/*
  * STEP 10.2 - ACDC
  */
 process acdc {
@@ -995,30 +1001,33 @@ process acdc {
     """
 }
 
-/*                                                                              
- * STEP 11 - Find genes using Prokka                                            
- */                                                                             
-process prokka {                                                                
-   tag "$prefix"                                                                
-   publishDir "${params.outdir}/prokka", mode: 'copy'                           
-                                                                                
-   input:                                                                       
-   file contigs from contigs_for_prokka                                         
-                                                                                
-   output:                                                                      
-   file "$prefix" into prokka_for_mqc1, prokka_for_mqc2                         
-   file "$prefix/${prefix}.faa" into faa_eggnog, faa_kofam                                 
-                                                                                
-   script:                                                                      
+/*
+ * STEP 11 - Find genes using Prokka
+ */
+process prokka {
+   tag "$prefix"
+   publishDir "${params.outdir}/prokka", mode: 'copy'
+
+   input:
+   file contigs from contigs_for_prokka
+
+   output:
+   file "$prefix" into prokka_for_mqc1, prokka_for_mqc2
+   file "$prefix/${prefix}.faa" into faa_eggnog, faa_kofam
+
+   when:
+   params.euk ? false : true
+
+   script:
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   """                                                                          
+   """
    wget ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz
-   gunzip linux64.tbl2asn.gz                                                    
-   chmod +x linux64.tbl2asn                                                     
-   mv linux64.tbl2asn /opt/conda/bin/tbl2asn                                    
-   cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa                    
+   gunzip linux64.tbl2asn.gz
+   chmod +x linux64.tbl2asn
+   mv linux64.tbl2asn /opt/conda/bin/tbl2asn
+   cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
    prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa
-   """                                                                          
+   """
 }
 
 /*
@@ -1055,86 +1064,86 @@ process multiqc_ref {
 }
 
 process multiqc_denovo {
-    label "multiqc"                                                               
-    publishDir "${params.outdir}/MultiQC", mode: 'copy'                         
-                                                                                
-    input:                                                                      
-    file multiqc_config from ch_multiqc_config2                                  
-    file ('fastqc/*') from fastqc_results2.collect()                             
-    file ('software_versions/*') from software_versions_yaml2                    
-    file ('trimgalore/*') from trimgalore_results2.collect()                     
-    file ('fastqc2/*') from trimgalore_fastqc_reports2.collect()                              
+    label "multiqc"
+    publishDir "${params.outdir}/MultiQC", mode: 'copy'
+
+    input:
+    file multiqc_config from ch_multiqc_config2
+    file ('fastqc/*') from fastqc_results2.collect()
+    file ('software_versions/*') from software_versions_yaml2
+    file ('trimgalore/*') from trimgalore_results2.collect()
+    file ('fastqc2/*') from trimgalore_fastqc_reports2.collect()
     file ('quast/*') from quast_report2.collect()
-    file ('prokka/*') from prokka_for_mqc2.collect()                                
-    file workflow_summary from create_workflow_summary(summary)                 
-                                                                                
-    output:                                                                     
-    file "*multiqc_report.html" into multiqc_report2                             
-    file "*_data"                                                               
+    file ('prokka/*') from prokka_for_mqc2.collect()
+    file workflow_summary from create_workflow_summary(summary)
+
+    output:
+    file "*multiqc_report.html" into multiqc_report2
+    file "*_data"
 
     when:
     denovo == true
-                                                                                
-    script:                                                                     
-    """                                                                         
-    multiqc -f --config $multiqc_config .                                       
-    """                                                                         
+
+    script:
+    """
+    multiqc -f --config $multiqc_config .
+    """
 }
 
-/*                                                                              
- * STEP 13 - Annotate genes using EggNOG                      
+/*
+ * STEP 13 - Annotate genes using EggNOG
  */
 process eggnog {
-   tag "$prefix"                                                               
-   publishDir "${params.outdir}/eggnog", mode: 'copy'                           
-                                                                                
-   input:                                                                       
+   tag "$prefix"
+   publishDir "${params.outdir}/eggnog", mode: 'copy'
+
+   input:
    file faa from faa_eggnog
-   file db from eggnog_db                                   
-                                                                                
-   output:                                                                      
+   file db from eggnog_db
+
+   output:
    file "${prefix}.emapper.annotations"
 
    when:
-   eggnog_db                                    
-                                                                                
-   script:                                                                      
+   eggnog_db
+
+   script:
    prefix = faa.toString() - ~/(\.faa)?$/
    """
-   source activate py27                                                                          
-   emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond 
-   """                                                                          
+   source activate py27
+   emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond
+   """
 }
 
-/*                                                                              
- * STEP 13.1 - Annotate genes using KOfamKOALA                                        
+/*
+ * STEP 13.1 - Annotate genes using KOfamKOALA
  */
-process kofam {                                                                
-   tag "$prefix"                                                                
-   publishDir "${params.outdir}/kofam", mode: 'copy'                           
-                                                                                
-   input:                                                                       
-   file faa from faa_kofam                                                     
+process kofam {
+   tag "$prefix"
+   publishDir "${params.outdir}/kofam", mode: 'copy'
+
+   input:
+   file faa from faa_kofam
    file profile from kofam_profile
-   file ko_list from kofam_kolist                                                       
-                                                                                
-   output:                                                                      
-   file "${prefix}_KOs_*.txt"                                         
-                                                                                
-   when:                                                                        
-   kofam_profile && kofam_kolist                                                                    
-                                                                                
-   script:                                                                      
-   prefix = faa.toString() - ~/(\.faa)?$/                                       
+   file ko_list from kofam_kolist
+
+   output:
+   file "${prefix}_KOs_*.txt"
+
+   when:
+   kofam_profile && kofam_kolist
+
+   script:
+   prefix = faa.toString() - ~/(\.faa)?$/
    """
    /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
    /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
    /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
-   """                                                                          
+   """
 }
 
-/*                                                                              
- * STEP 14 - Find ARGs                                        
+/*
+ * STEP 14 - Find ARGs
  */
 process resfinder {
     tag "$prefix"
@@ -1148,7 +1157,7 @@ process resfinder {
     file "${prefix}/*"
 
     when:
-    params.acquired && resfinder_db
+    (params.euk ? false : true) && params.acquired && resfinder_db
 
     script:
     prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
@@ -1159,34 +1168,34 @@ process resfinder {
     """
 }
 
-/*                                                                              
- * STEP 15 - Find point mutations                                                          
+/*
+ * STEP 15 - Find point mutations
  */
 process pointfinder {
-    tag "$prefix"                                                           
-    publishDir "${params.outdir}/ARG", mode: 'copy'                             
-                                                                                
-    input:                                                                      
+    tag "$prefix"
+    publishDir "${params.outdir}/ARG", mode: 'copy'
+
+    input:
     file contigs from contigs_for_pointfinder
-    file db from pointfinder_db                                     
-                                                                                
-    output:                                                                     
-    file "${prefix}/*"                                                            
-                                                                                
-    when:                                                                       
-    params.point && pointfinder_db                                             
-                                                                                
-    script:                                                                     
+    file db from pointfinder_db
+
+    output:
+    file "${prefix}/*"
+
+    when:
+    (params.euk ? false : true) && params.point && pointfinder_db
+
+    script:
     prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
     species = params.pointfinder_species
     known_snp = params.only_known ? "" : "-l 0.4 -r all -u"
     """
-    mkdir -p $prefix                                                                         
+    mkdir -p $prefix
     python /opt/pointfinder/PointFinder.py -p $db \
       -m blastn -m_p /opt/conda/bin/blastn $known_snp \
       -i $contigs -o $prefix -s $species
     rm -rf $prefix/tmp
-    """                                                                         
+    """
 }
 
 /*
@@ -1250,7 +1259,7 @@ workflow.onComplete {
         if (workflow.success) {
             if (multiqc_report1 != null) {
                 mqc_report = multiqc_report1.getVal()
-            } else if (multiqc_report2 != null) {                                      
+            } else if (multiqc_report2 != null) {
                 mqc_report = multiqc_report2.getVal()
             }
             if (mqc_report.getClass() == ArrayList){
