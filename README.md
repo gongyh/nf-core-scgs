@@ -27,7 +27,7 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 <!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
 
 ## How to cite
-[1] Single-cell Phenome-Genome Profiling of Bacterial Antibiotic Susceptibility by Raman-activated Gravity-driven Encapsulation and Sequencing. *In preparation* [Details](https://github.com/gongyh/nf-core-scgs/blob/master/RAGE-Seq/Data.md)
+[1] Phenome-Genome Profiling of Single Bacterial Cell by Raman-activated Gravity-driven Encapsulation and Sequencing. *Under revision* [Details](https://github.com/gongyh/nf-core-scgs/blob/master/RAGE-Seq/Data.md)
 
 ## Credits
 gongyh/nf-core-scgs was originally written by Yanhai Gong.
