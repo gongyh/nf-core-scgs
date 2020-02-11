@@ -11,6 +11,5 @@ dependencies:
   - click=7.0
   - monovar=v0.0.1
   - blobtools=1.0.1
-  - boost=1.68
-  - eggnog-mapper=1.0.3
+  - eggnog-mapper=2.0.1
   - funannotate=1.7.2
