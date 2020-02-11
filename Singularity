@@ -20,8 +20,9 @@ IncludeCmd: yes
     conda install python=3.6 conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
     R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
     quast-download-silva && ktUpdateTaxonomy.sh
-    wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
-      tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
+    #wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
+    #  tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
+    gatk3-register /opt/nf-core-scgs/GenomeAnalysisTK.jar
     conda env create -n py27 -f /py27_env.yml && conda clean -a
     /bin/bash -c "source activate py27 && blobtools-build_nodesdb && source deactivate"
     cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
