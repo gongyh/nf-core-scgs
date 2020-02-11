@@ -12,9 +12,6 @@ RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale
 RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
 RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
 
-# Keep a copy of current pipeline to container
-COPY . /opt/nf-core-scgs/
-
 # Install conda environments
 COPY environment.yml /
 RUN conda install python=3.6 conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
@@ -25,10 +22,11 @@ RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); 
 # Download silva and busco for Quast 5.x, update taxa db for krona
 RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
 
-# Download GATK and setting
+# Download GATK3 and setting
 #RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
 #    tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
-RUN gatk3-register /opt/nf-core-scgs/GenomeAnalysisTK.jar
+COPY GenomeAnalysisTK.jar /
+RUN gatk3-register /GenomeAnalysisTK.jar && rm -rf /GenomeAnalysisTK.jar
 
 # Install conda environment py27
 COPY py27_env.yml /
@@ -48,6 +46,9 @@ RUN cd /tmp/rnammer && tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z 
 # Build database for blobtools
 RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
+# Install Funannotate
+RUN [ "/bin/bash", "-c", "source activate py27 && conda install -c bioconda -c conda-forge funannotate=1.7.2 && source deactivate" ]
+
 # Install kofamscan
 RUN cd /opt && wget ftp://ftp.genome.jp/pub/tools/kofamscan/kofamscan-1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
     tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
@@ -55,6 +56,9 @@ RUN cd /opt && wget ftp://ftp.genome.jp/pub/tools/kofamscan/kofamscan-1.1.0.tar.
 # Clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
 RUN conda clean -y -a && rm -rf /opt/conda/pkgs/*
+
+# Keep a copy of current pipeline to container
+COPY . /opt/nf-core-scgs/
 
 # Add default container command
 CMD ["/opt/conda/bin/nextflow", "run", "/opt/nf-core-scgs/main.nf", "--help"]
