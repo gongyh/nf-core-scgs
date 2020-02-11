@@ -833,8 +833,7 @@ process quast_ref {
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
     bams=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta/.markdup.bam/g')
-    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams -l \$labels \\
-      --no-sv --gene-finding --conserved-genes-finding --no-read-stats \$contigs
+    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
     """
 }
 
@@ -859,8 +858,7 @@ process quast_denovo {
     cp $genemark_license ~/.gm_key
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
-    quast.py -o quast -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv \\
-      --gene-finding --conserved-genes-finding --no-read-stats \$contigs
+    quast.py -o quast -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
     """
 }
 

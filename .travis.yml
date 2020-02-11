@@ -5,7 +5,8 @@ jdk: openjdk8
 services: docker
 python: '3.6'
 cache: pip
-lfs_skip_smudge: true
+git:
+  lfs_skip_smudge: true
 jobs:
   fast_finish: true
 
