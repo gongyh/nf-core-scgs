@@ -2,11 +2,10 @@ FROM continuumio/miniconda3:4.5.4
 LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
-# Install procps so that Nextflow can poll CPU usage
-RUN apt-get update && apt-get install -y procps libpng16-16 cmake gcc g++ hmmer2 && apt-get clean -y 
-
-# Install locale en_US.UTF-8 used by Picard
-RUN apt-get install -y locales && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
+# Install procps so that Nextflow can poll CPU usage, set locale en_US.UTF-8 used by Picard
+RUN apt-get update && apt-get install --no-install-recommends -y procps libpng16-16 cmake gcc g++ hmmer2 locales && \
+  apt-get autoremove --purge && apt-get clean -y && apt-get autoremove && rm -rf /var/lib/apt/lists/* && \
+  sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
 
 # Install resfinder and pointFinder
 RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
@@ -14,7 +13,8 @@ RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.g
 
 # Install conda environments
 COPY environment.yml /
-RUN conda install python=3.6 conda=4.6.12 && conda env update -n base -f /environment.yml && conda clean -a
+RUN conda install python=3.6 conda=4.6.12 && conda clean -y -a && rm -rf /opt/conda/pkgs/*
+RUN conda env update -n base -f /environment.yml && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Install Bioconductor packages
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
@@ -30,7 +30,7 @@ RUN gatk3-register /GenomeAnalysisTK.jar && rm -rf /GenomeAnalysisTK.jar
 
 # Install conda environment py27
 COPY py27_env.yml /
-RUN conda env create -n py27 -f /py27_env.yml && conda clean -a
+RUN conda env create -n py27 -f /py27_env.yml && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Install ACDC
 RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/ && \
@@ -47,15 +47,14 @@ RUN cd /tmp/rnammer && tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z 
 RUN [ "/bin/bash", "-c", "source activate py27 && blobtools-build_nodesdb && source deactivate" ]
 
 # Install Funannotate
-RUN [ "/bin/bash", "-c", "source activate py27 && conda install -c bioconda -c conda-forge funannotate=1.7.2 && source deactivate" ]
+RUN [ "/bin/bash", "-c", "source activate py27 && conda install -c bioconda -c conda-forge funannotate=1.7.2 && conda clean -y -a && rm -rf /opt/conda/pkgs/* && source deactivate" ]
 
 # Install kofamscan
-RUN cd /opt && wget ftp://ftp.genome.jp/pub/tools/kofamscan/kofamscan-1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
+RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
     tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
 
 # Clean up
 RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
-RUN conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/
