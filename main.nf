@@ -389,6 +389,7 @@ process get_software_versions {
     head -n 1 /opt/conda/envs/py27/lib/python2.7/site-packages/checkm/VERSION &> v_checkm.txt
     prokka -v &> v_prokka.txt
     cat /opt/conda/envs/py27/lib/python2.7/site-packages/eggnogmapper/version.py | grep VERSION &> v_eggnogmapper.txt
+    set +u
     source activate py27 && conda list | grep monovar | awk '{print \$2}' &> v_monovar.txt
     source activate py27 && blobtools -v &> v_blobtools.txt
     scrape_software_versions.py > software_versions_mqc.yaml
@@ -418,7 +419,7 @@ process save_reference {
     """
     ln -s ${fasta} genome.fa
     ln -s ${gff} genome.gff
-    source activate py27
+    set +u && source activate py27
     fa2bed.py genome.fa
     cat genome.gff | grep \$'\tgene\t' | bedtools sort | cut -f1,4,5,7 > genes.bed
     """
@@ -715,7 +716,7 @@ process monovar {
     script:
     pp_outdir = "${params.outdir}/monovar"
     """
-    source activate py27
+    set +u && source activate py27
     ls *.bam > bams.txt
     samtools mpileup -BQ0 -d 10000 -q 40 -f $fa -b bams.txt | monovar -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
     """
@@ -881,7 +882,7 @@ process checkm {
    script:
    checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
    """
-   source activate py27
+   set +u && source activate py27
    echo -e "cat << EOF\\n${checkmDB}\\nEOF\\n" | checkm data setRoot
    if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
      checkm taxonomy_wf -t ${task.cpus} -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
@@ -952,7 +953,7 @@ process diamond_uniprot {
      """
      diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
        --outfmt 6 --sensitive --max-target-seqs 1 --evalue 1e-25 -b ${params.blockSize}
-     source activate py27
+     set +u && source activate py27
      blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
      """
    }
@@ -979,6 +980,7 @@ process blobtools {
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
    uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
    """
+   set +u
    source activate py27
    mkdir -p ${prefix}
    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
@@ -1124,7 +1126,7 @@ process eggnog {
    script:
    prefix = faa.toString() - ~/(\.faa)?$/
    """
-   source activate py27
+   set +u && source activate py27
    emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond
    """
 }
