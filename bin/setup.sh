@@ -13,6 +13,7 @@ The following databases are supported by gongyh/scgs pipeline:
   6) KOfam HMM database
   7) ResFinder database
   8) PointFinder database
+  9) Funannotate database
 
 Current working directory is ${PWD}.
 All database files will be downloaded into ${PWD}.
@@ -63,7 +64,7 @@ if [ $choice -eq 5 ]; then
   mkdir -p $PWD/eggnog
   cd $PWD/eggnog
   conda activate py27
-  download_eggnog_data.py
+  download_eggnog_data.py -y
   conda deactivate
 fi
 
@@ -87,6 +88,12 @@ if [ $choice -eq 8 ]; then
   cd $PWD/pointFinder
   git clone https://git@bitbucket.org/genomicepidemiology/pointfinder_db.git
 fi
+
+if [ $choice -eq 9 ]; then
+  mkdir -p $PWD/funannotate
+  funannotate setup -d $PWD/funannotate
+fi
+
 
 echo "Done!"
 

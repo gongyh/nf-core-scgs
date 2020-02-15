@@ -49,6 +49,8 @@ def helpMessage() {
       --kofam_profile               KOfam profile database
       --kofam_kolist                KOfam ko_list file
       --genemark_license            License file for GeneMark* software
+      --funannotate_db              Funannotate database
+      --busco_seed_species          busco_seed_species for funannotate predict, default 'saccharomyces'
 
     Trimming options:
       --notrim                      Specifying --notrim will skip the adapter trimming step.
@@ -75,7 +77,7 @@ def helpMessage() {
       --only_known                  Only analyze known SNPs
       --resfinder_db                Database path for resfinder
       --pointfinder_db              Database path for pointfinder
-      --pointfinder_species         Species for pointfinder
+      --pointfinder_species         Species for pointfinder, default 'escherichia_coli'
 
     Output options:
       --outdir                      The output directory where the results will be saved
@@ -130,6 +132,8 @@ params.resfinder_db = null
 params.pointfinder_db = null
 params.kofam_profile = null
 params.kofam_kolist = null
+params.funannotate_db = null
+params.busco_seed_species = "saccharomyces"
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -227,6 +231,13 @@ pointfinder_db = false
 if ( params.pointfinder_db ) {
     pointfinder_db = file(params.pointfinder_db)
     if( !pointfinder_db.exists() ) exit 1, "PointFinder database not found: ${params.pointfinder_db}"
+}
+
+// Configure Funannotate database
+funannotate_db = false
+if ( params.funannotate_db ) {
+    funannotate_db  = file(params.funannotate_db)
+    if ( !funannotate_db.exists() ) exit 1, "Funannotate database not found: ${params.funannotate_db}"
 }
 
 // Configure KOfam search database
@@ -782,7 +793,7 @@ process spades {
 
     output:
     file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_funannotate
 
     when:
     params.ass
@@ -1017,6 +1028,7 @@ process acdc {
     """
 }
 
+if (!euk) {
 /*
  * STEP 11 - Find genes using Prokka
  */
@@ -1044,6 +1056,43 @@ process prokka {
    cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
    prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa
    """
+}
+
+} else {
+prokka_for_mqc1 = file('/dev/null')
+prokka_for_mqc2 = file('/dev/null')
+/*
+ * STEP 11.2 - Find genes using Funannotate
+ */
+process funannotate {
+   tag "$prefix"
+   publishDir "${params.outdir}/funanno", mode: 'copy'
+
+   input:
+   file contigs from contigs_for_funannotate
+   file db from funannotate_db
+
+   output:
+   file "$prefix"
+   file "${prefix}/predict_results/*.proteins.fa" into faa_eggnog, faa_kofam
+
+   when:
+   euk && funannotate_db
+
+   script:
+   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   """
+   # clean id
+   cat $contigs | sed 's/_length.*\$//g' > ${prefix}_clean.fasta
+   export FUNANNOTATE_DB=\$PWD/$db
+   set +u && source activate py27
+   # mask
+   funannotate mask -i ${prefix}_clean.fasta -o ${prefix}_mask.fasta --cpus ${task.cpus}
+   # predict
+   funannotate predict -i ${prefix}_mask.fasta -o ${prefix} --species ${prefix} \
+     --busco_seed_species ${params.busco_seed_species} --cpus ${task.cpus}
+   """
+}
 }
 
 /*
@@ -1127,7 +1176,7 @@ process eggnog {
    prefix = faa.toString() - ~/(\.faa)?$/
    """
    set +u && source activate py27
-   emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond
+   emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond --cpu ${task.cpus}
    """
 }
 
@@ -1152,9 +1201,9 @@ process kofam {
    script:
    prefix = faa.toString() - ~/(\.faa)?$/
    """
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
-   /opt/kofamscan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
+   /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
+   /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
+   /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
    """
 }
 
