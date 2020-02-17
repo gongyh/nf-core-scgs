@@ -542,7 +542,6 @@ process kraken {
 
     output:
     file "${prefix}.report"
-    file "${prefix}.krk"
     file "${prefix}.krona.html"
 
     when:
@@ -1073,7 +1072,7 @@ process funannotate {
    file db from funannotate_db
 
    output:
-   file "$prefix"
+   file "${prefix}/predict_results"
    file "${prefix}/predict_results/*.proteins.fa" into faa_eggnog, faa_kofam
 
    when:
@@ -1173,7 +1172,7 @@ process eggnog {
    eggnog_db
 
    script:
-   prefix = faa.toString() - ~/(\.faa)?$/
+   prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?$/
    """
    set +u && source activate py27
    emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond --cpu ${task.cpus}
@@ -1199,7 +1198,7 @@ process kofam {
    kofam_profile && kofam_kolist
 
    script:
-   prefix = faa.toString() - ~/(\.faa)?$/
+   prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?$/
    """
    /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
    /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}

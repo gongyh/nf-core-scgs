@@ -25,7 +25,7 @@ IncludeCmd: yes
     gatk3-register /opt/nf-core-scgs/GenomeAnalysisTK.jar
     conda env create -n py27 -f /py27_env.yml && conda clean -a
     /bin/bash -c "source activate py27 && blobtools-build_nodesdb && source deactivate"
-    /bin/bash -c "source activate py27 && conda install -c bioconda -c conda-forge funannotate=1.7.2 && source deactivate"
+    /bin/bash -c "source activate py27 && conda install -c bioconda -c conda-forge trnascan-se=1.3.1 funannotate=1.7.2 && source deactivate"
     cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git
     cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
     git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/ && \
