@@ -48,7 +48,6 @@ def helpMessage() {
       --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
       --kofam_profile               KOfam profile database
       --kofam_kolist                KOfam ko_list file
-      --genemark_license            License file for GeneMark* software
       --funannotate_db              Funannotate database
       --busco_seed_species          busco_seed_species for funannotate predict, default 'saccharomyces'
 
@@ -163,14 +162,6 @@ if ( params.gff ) {
 euk = false
 if ( params.fungus || params.euk ) {
     euk = true
-}
-
-genemark_license = false
-if ( params.genemark_license ) {
-    genemark_license = file(params.genemark_license)
-    if( !genemark_license.exists() ) exit 1, "GeneMark* license file not found: ${params.genemark_license}"
-} else {
-    genemark_license = file("/dev/null")
 }
 
 // Configurable nt database
@@ -823,7 +814,6 @@ process quast_ref {
     input:
     file fasta from fasta
     file gff from gff
-    file genemark_license from genemark_license
     file ("*") from contigs_for_quast1.collect()
     file ("*") from bam_for_quast.collect()
     file ("*") from bai_for_quast.collect()
@@ -840,7 +830,6 @@ process quast_ref {
     ref = fasta.exists() ? "-r $fasta" : ""
     gene = gff.exists() ? "--features gene:$gff" : ""
     """
-    cp $genemark_license ~/.gm_key
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
     bams=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta/.markdup.bam/g')
@@ -854,7 +843,6 @@ process quast_denovo {
 
     input:
     file ("*") from contigs_for_quast2.collect()
-    file genemark_license from genemark_license
 
     output:
     file "quast/report.tsv" into quast_report2
@@ -866,7 +854,6 @@ process quast_denovo {
     script:
     euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
     """
-    cp $genemark_license ~/.gm_key
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
     quast.py -o quast -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
