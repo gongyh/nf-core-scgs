@@ -620,7 +620,7 @@ process samtools {
     cut -f1,3 ${genome} > ref.genome
     genomeCoverageBed -ibam ${prefix}.markdup.bam -d -g ref.genome > ${prefix}.raw.cov
     meanCov=\${awk 'BEGIN{ total=0; base=0 } { total=total+\$2; base=base+1 } END{ printf total/base }' ${prefix}.raw.cov}
-    awk -v mc=\$meanCov -F'\t' '{print \$1"\t"\$2"\t"\$3/mc}' ${prefix}.raw.cov > ${prefix}.relative.cov
+    awk -v mc=\$meanCov -F'\\t' '{print \$1"\\t"\$2"\\t"\$3/mc}' ${prefix}.raw.cov > ${prefix}.relative.cov
     awk '{sum+=$3} (NR%1000)==0{print sum/1000; sum=0;}' ${prefix}.relative.cov > ${prefix}_1k_bins.txt
     plotProp.R ${prefix}_1k_bins.txt ${prefix}
     """
