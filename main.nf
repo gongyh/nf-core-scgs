@@ -735,7 +735,7 @@ process monovar {
     """
     set +u && source activate py27
     ls *.bam > bams.txt
-    samtools mpileup -BQ0 -d 10000 -q 40 -f $fa -b bams.txt | monovar -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
+    /opt/conda/bin/samtools mpileup -BQ0 -d 10000 -q 40 -f $fa -b bams.txt | monovar -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
     """
 }
 
