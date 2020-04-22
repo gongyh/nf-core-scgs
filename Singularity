@@ -35,7 +35,10 @@ IncludeCmd: yes
       cp -r * /usr/local/share/rnammer && ln -s /usr/local/share/rnammer/rnammer /usr/local/bin/rnammer && rm -rf /tmp/rnammer
     cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
       tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
-    apt-get autoremove --purge && apt-get clean && apt-get autoremove
+    R -e "install.packages(c('magicaxis','ape','gridExtra'), repos='https://cloud.r-project.org')"
+    cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && \
+      apt update && apt install -y autoconf automake zlib1g-dev libncurses5-dev libncursesw5-dev && \
+      make all && apt-get autoremove --purge && apt-get clean && apt-get autoremove
     conda clean -y -a && rm -rf /opt/conda/pkgs/*
     chmod -R o+rx /opt/nf-core-scgs
 

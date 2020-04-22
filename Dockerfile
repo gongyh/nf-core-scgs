@@ -53,8 +53,13 @@ RUN [ "/bin/bash", "-c", "source activate py27 && conda install -c bioconda -c c
 RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
     tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
 
-# Clean up
-RUN apt-get autoremove --purge && apt-get clean && apt-get autoremove
+# Install R packages
+RUN R -e "install.packages(c('magicaxis','ape','gridExtra'), repos='https://cloud.r-project.org')"
+
+# Install mccortex
+RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && \
+    apt update && apt install -y autoconf automake zlib1g-dev libncurses5-dev libncursesw5-dev && \
+    make all && apt-get autoremove --purge && apt-get clean && apt-get autoremove
 
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/

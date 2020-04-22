@@ -412,7 +412,7 @@ process save_reference {
     file "genome.fa"
     file "genome.gff"
     file "*.bed"
-    file "genome.bed" into genome_circlize
+    file "genome.bed" into genome_circlize, genome_samtools
 
     when:
     params.fasta && params.gff
@@ -540,10 +540,9 @@ process kraken {
 
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    R1 = reads[0].toString()
-    R2 = reads[1].toString()
+    mode = params.singleEnd ? "" : "--paired"
     """
-    kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed --paired --check-names --output ${prefix}.krk $reads
+    kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed ${mode} --check-names --output ${prefix}.krk $reads
     kraken-report -db $db ${prefix}.krk > ${prefix}.report
     cut -f2,3 ${prefix}.krk > ${prefix}.f23
     ktImportTaxonomy -o ${prefix}.krona.html ${prefix}.f23
@@ -570,12 +569,18 @@ process bowtie2 {
 
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    R1 = reads[0].toString()
-    R2 = reads[1].toString()
     filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
+    R1 = reads[0].toString()
+    if (params.singleEnd) {
+    """
+    bowtie2 -x ${index}/genome -p ${task.cpus} -U $R1 | samtools view -bT $index - $filtering > ${prefix}.bam
+    """
+    } else {
+    R2 = reads[1].toString()
     """
     bowtie2 --no-mixed --no-discordant -X 1000 -x ${index}/genome -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
     """
+    }
 }
 
 /*
@@ -591,12 +596,15 @@ process samtools {
 
     input:
     file bam from bb_bam
+    file genome from genome_samtools
 
     output:
     file '*.markdup.bam' into bam_for_qualimap, bam_for_aneufinder, bam_for_realign, bam_for_quast
     file '*.markdup.bam.bai' into bai_for_qualimap, bai_for_aneufinder, bai_for_realign, bai_for_quast
     file '*.markdup.bed' into bed_for_circlize, bed_for_preseq
     file '*.stats.txt' into samtools_stats
+    file "${prefix}_1k_bins.txt"
+    file "${prefix}_pdrc.pdf"
 
     script:
     pp_outdir = "${params.outdir}/bowtie2"
@@ -608,6 +616,13 @@ process samtools {
     samtools index ${prefix}.markdup.bam
     bedtools bamtobed -i ${prefix}.markdup.bam | sort -T /tmp -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${prefix}.markdup.bed
     samtools stats ${prefix}.markdup.bam > ${prefix}.stats.txt
+    # uniformity
+    cut -f1,3 ${genome} > ref.genome
+    genomeCoverageBed -ibam ${prefix}.markdup.bam -d -g ref.genome > ${prefix}.raw.cov
+    meanCov=\${awk 'BEGIN{ total=0; base=0 } { total=total+\$2; base=base+1 } END{ printf total/base }' ${prefix}.raw.cov}
+    awk -v mc=\$meanCov -F'\t' '{print \$1"\t"\$2"\t"\$3/mc}' ${prefix}.raw.cov > ${prefix}.relative.cov
+    awk '{sum+=$3} (NR%1000)==0{print sum/1000; sum=0;}' ${prefix}.relative.cov > ${prefix}_1k_bins.txt
+    plotProp.R ${prefix}_1k_bins.txt ${prefix}
     """
 }
 
@@ -629,9 +644,10 @@ process preseq {
     script:
     pp_outdir = "${params.outdir}/preseq"
     prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
+    mode = params.singleEnd ? "" : "-P"
     """
-    preseq c_curve -P -s 1e+5 -o ${prefix}_c.txt $sbed
-    preseq lc_extrap -P -s 1e+5 -D -o ${prefix}_lc.txt $sbed
+    preseq c_curve ${mode} -s 1e+5 -o ${prefix}_c.txt $sbed
+    preseq lc_extrap ${mode} -s 1e+5 -D -o ${prefix}_lc.txt $sbed
     preseq gc_extrap -w 1000 -s 1e+7 -D -o ${prefix}_gc.txt $sbed
     """
 }
@@ -791,17 +807,31 @@ process spades {
     script:
     prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = clean_reads[0].toString()
-    R2 = clean_reads[1].toString()
     mode = params.bulk ? "bulk" : "mda"
+    if (params.singleEnd) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      spades.py -s $R1 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     else
-      spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      normalize-by-median.py -k 31 -C 40 --gzip -M 4e+9 -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz $R1
+      spades.py --sc -s ${prefix}_norm.fastq.gz --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     """
+    } else {
+    R2 = clean_reads[1].toString()
+    """
+    if [ \"${mode}\" == \"bulk\" ]; then
+      spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    else
+      interleave-reads.py $R1 $R2 | normalize-by-median.py -k 31 -C 40 -M 4e+9 -p --gzip -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz /dev/stdin
+      spades.py --sc --12 ${prefix}_norm.fastq.gz --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    fi
+    ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
+    faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
+    """
+    }
 }
 
 /*
