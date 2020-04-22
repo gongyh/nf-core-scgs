@@ -483,6 +483,7 @@ if(params.notrim){
     trimmed_reads = read_files_trimming
     trimmed_reads_for_spades = read_files_trimming
     trimmed_reads_for_kraken = read_files_trimming
+    trimmed_reads_for_kmer = read_files_trimming
     trimgalore_results = []
     trimgalore_fastqc_reports = []
 } else {
@@ -499,7 +500,7 @@ if(params.notrim){
         set val(name), file(reads) from read_files_trimming
 
         output:
-        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken
+        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer
         file '*trimming_report.txt' into trimgalore_results1, trimgalore_results2
         file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports1, trimgalore_fastqc_reports2
 
@@ -547,6 +548,45 @@ process kraken {
     cut -f2,3 ${prefix}.krk > ${prefix}.f23
     ktImportTaxonomy -o ${prefix}.krona.html ${prefix}.f23
     """
+}
+
+/*
+ * STEP 2.2 - saturation
+ */
+process saturation {
+    tag "$prefix"
+    publishDir path: "${params.outdir}/saturation", mode: 'copy'
+
+    input:
+    file reads from trimmed_reads_for_kmer
+
+    output:
+    file "${prefix}_kmer.pdf"
+
+    script:
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    R1 = reads[0].toString()
+    if (params.singleEnd) {
+    """
+    fastp -i $R1 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
+    
+    
+    """
+    } else {
+    """
+    fastp -i $R1 -I $R2 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split_R1.fq.gz -O ${prefix}_split_R2.fq.gz
+    for i in {1..10}; do
+      /opt/conda/mccortex/bin/mccortex31 build --kmer 31 --sample $i -t ${task.cpus} -Q 20 -m 4G \
+        --seq2 \${i}.${prefix}_split_R1.fq.gz:\${i}.${prefix}_split_R2.fq.gz \${i}.k31.ctx
+      if [ \$i == 1 ]; then
+        /opt/conda/mccortex/bin/mccortex31 clean --out merged_clean31.ctx -t ${task.cpus} -m 4G -C ${prefix}_cov31_p\${i}.csv \${i}.k31.ctx
+      else
+        /opt/conda/mccortex/bin/mccortex31 clean --out merged_clean31.ctx -t ${task.cpus} -m 4G -C ${prefix}_cov31_p\${i}.csv \${i}.k31.ctx merged_clean31.ctx
+      fi
+    done
+    KmerDensity.R $PWD ${prefix}
+    """
+    }
 }
 
 /*

@@ -61,6 +61,9 @@ RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd
     apt update && apt install -y autoconf automake zlib1g-dev libncurses5-dev libncursesw5-dev && \
     make all && apt-get autoremove --purge && apt-get clean && apt-get autoremove
 
+# Install fastp
+RUN cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fastp
+
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/
 

@@ -39,6 +39,7 @@ IncludeCmd: yes
     cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && \
       apt update && apt install -y autoconf automake zlib1g-dev libncurses5-dev libncursesw5-dev && \
       make all && apt-get autoremove --purge && apt-get clean && apt-get autoremove
+    cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fastp
     conda clean -y -a && rm -rf /opt/conda/pkgs/*
     chmod -R o+rx /opt/nf-core-scgs
 
