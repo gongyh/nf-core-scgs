@@ -9,7 +9,7 @@ dependencies:
   - emboss=6.6.0
   - bowtie2=2.3.4.3
   - bwa=0.7.17
-  - trim-galore=0.5.0
+  - trim-galore=0.4.5
   - kraken=1.1
   - krona=2.7.1
   - samtools=1.9
@@ -31,7 +31,7 @@ dependencies:
   - khmer=2.1.2
   - anaconda::tabulate=0.8.3
   - bioconda::nextflow=19.01.0
-  - graphviz
+  - conda-forge::graphviz=2.40.1
   - ruby=2.6.5
   - r-base=3.5.1
   - r::r-essentials=3.5.1

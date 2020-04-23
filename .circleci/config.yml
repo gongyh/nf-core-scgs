@@ -11,7 +11,7 @@ jobs:
          name: test
          command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work --cnv false --snv false --outdir result && cd ..
          no_output_timeout: 30m
-     - store_test_results:
+     - store_artifacts:
          path: /root/project/tests/result/pipeline_info
      - store_artifacts:
          path: /root/project/tests/.nextflow.log
