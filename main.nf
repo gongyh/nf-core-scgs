@@ -562,6 +562,7 @@ process saturation {
 
     output:
     file "${prefix}_kmer.pdf"
+    file "${prefix}_cov31_*.csv"
 
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
@@ -569,24 +570,40 @@ process saturation {
     if (params.singleEnd) {
     """
     fastp -i $R1 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
-    
-    
+    for i in {1..10}; do
+      /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 4G \
+       --seq \${i}.${prefix}_split.fq.gz \${i}.k31.ctx
+      if [ \$i == 1 ]; then
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 4G -B 1 -c ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
+        cp -f 1.k31.ctx tmp_clean31.ctx
+      else
+        /opt/mccortex/bin/mccortex31 join --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 4G -B 1 -c ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
+        mv -f merged_clean31.ctx tmp_clean31.ctx
+      fi
+    done
+    KmerDensity.R \$PWD ${prefix}
     """
     } else {
+    R2 = reads[1].toString()
     """
     fastp -i $R1 -I $R2 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split_R1.fq.gz -O ${prefix}_split_R2.fq.gz
     for i in {1..10}; do
-      /opt/conda/mccortex/bin/mccortex31 build --kmer 31 --sample $i -t ${task.cpus} -Q 20 -m 4G \
+      /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 4G \
         --seq2 \${i}.${prefix}_split_R1.fq.gz:\${i}.${prefix}_split_R2.fq.gz \${i}.k31.ctx
       if [ \$i == 1 ]; then
-        /opt/conda/mccortex/bin/mccortex31 clean --out merged_clean31.ctx -t ${task.cpus} -m 4G -C ${prefix}_cov31_p\${i}.csv \${i}.k31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 4G -B 1 -c ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
+        cp -f 1.k31.ctx tmp_clean31.ctx
       else
-        /opt/conda/mccortex/bin/mccortex31 clean --out merged_clean31.ctx -t ${task.cpus} -m 4G -C ${prefix}_cov31_p\${i}.csv \${i}.k31.ctx merged_clean31.ctx
+        /opt/mccortex/bin/mccortex31 join --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 4G -B 1 -c ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
+        mv -f merged_clean31.ctx tmp_clean31.ctx
       fi
     done
-    KmerDensity.R $PWD ${prefix}
+    KmerDensity.R \$PWD ${prefix}
     """
     }
+
 }
 
 /*

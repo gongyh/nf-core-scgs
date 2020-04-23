@@ -8,7 +8,7 @@ setwd('./')
 # Load / install packages
 if (!require("ape")) {
   install.packages("ape", dependencies=TRUE, repos='http://cloud.r-project.org/')
-  library("markdown")
+  library("ape")
 }
 
 library(optparse)
