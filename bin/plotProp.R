@@ -15,13 +15,15 @@ if (!require("magicaxis")) {
   library("magicaxis")
 }
 
-data <- read.table(input_fn, header=F)
-d <- density(data$V1)
+data <- read.table(input_fn, header=F)$V1
+data <- data[data > 1e-10]
+d <- density(data)
 
 pdf(paste0(output_prefix,"_pdrc.pdf"), useDingbats = FALSE, width = 6, height = 6)
 
 plot(d, main=paste0("PDRC-",output_prefix), xlab="Relative Coverage", ylab="Probability Density", 
-     lwd=2, log="x", xlim=c(0.1,10), axes=FALSE, col="red",xaxs="i",yaxs="i")
+     lwd=2, log="x", axes=FALSE, col="red",xaxs="i",yaxs="i")
 magaxis(1:4)
 
 dev.off()
+

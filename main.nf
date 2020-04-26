@@ -571,14 +571,14 @@ process saturation {
     """
     fastp -i $R1 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
     for i in {1..10}; do
-      /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 4G \
+      /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
        --seq \${i}.${prefix}_split.fq.gz \${i}.k31.ctx
       if [ \$i == 1 ]; then
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 4G -B 1 -c ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U2 -T32 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
         cp -f 1.k31.ctx tmp_clean31.ctx
       else
-        /opt/mccortex/bin/mccortex31 join --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 4G -B 1 -c ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
+        /opt/mccortex/bin/mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U2 -T32 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
         mv -f merged_clean31.ctx tmp_clean31.ctx
       fi
     done
@@ -589,14 +589,14 @@ process saturation {
     """
     fastp -i $R1 -I $R2 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split_R1.fq.gz -O ${prefix}_split_R2.fq.gz
     for i in {1..10}; do
-      /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 4G \
+      /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
         --seq2 \${i}.${prefix}_split_R1.fq.gz:\${i}.${prefix}_split_R2.fq.gz \${i}.k31.ctx
       if [ \$i == 1 ]; then
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 4G -B 1 -c ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U2 -T32 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
         cp -f 1.k31.ctx tmp_clean31.ctx
       else
-        /opt/mccortex/bin/mccortex31 join --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 4G -B 1 -c ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
+        /opt/mccortex/bin/mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U2 -T32 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
         mv -f merged_clean31.ctx tmp_clean31.ctx
       fi
     done
@@ -648,6 +648,8 @@ process samtools {
     publishDir path: "${pp_outdir}", mode: 'copy',
                saveAs: { filename ->
                    if (filename.indexOf(".stats.txt") > 0) "stats/$filename"
+                   else if (filename.indexOf("_bins.txt") > 0) filename
+                   else if (filename.indexOf("_pdrc.pdf") > 0) filename
                    else params.saveAlignedIntermediates ? filename : null
                }
 
@@ -676,7 +678,7 @@ process samtools {
     # uniformity
     cut -f1,3 ${genome} > ref.genome
     genomeCoverageBed -ibam ${prefix}.markdup.bam -d -g ref.genome > ${prefix}.raw.cov
-    meanCov=\$(awk 'BEGIN{ total=0; base=0 } { total=total+\$2; base=base+1 } END{ printf total/base }' ${prefix}.raw.cov)
+    meanCov=\$(awk 'BEGIN{ total=0; base=0 } { total=total+\$3; base=base+1 } END{ printf total/base }' ${prefix}.raw.cov)
     awk -v mc=\$meanCov -F'\t' '{print \$1"\t"\$2"\t"\$3/mc}' ${prefix}.raw.cov > ${prefix}.relative.cov
     awk '{sum+=\$3} (NR%1000)==0{print sum/1000; sum=0;}' ${prefix}.relative.cov > ${prefix}_1k_bins.txt
     plotProp.R ${prefix}_1k_bins.txt ${prefix}
@@ -690,23 +692,36 @@ process preseq {
     tag "${prefix}"
     publishDir path: "${pp_outdir}", mode: 'copy',
                saveAs: { filename ->
-                   if (filename.indexOf(".txt") > 0) "$filename" else null }
+                   if (filename.indexOf(".txt") > 0) filename
+                   else if (filename.indexOf(".pdf") > 0) filename
+                   else null }
 
     input:
     file sbed from bed_for_preseq
 
     output:
     file '*.txt' into preseq_for_multiqc
+    file '*.pdf'
 
     script:
     pp_outdir = "${params.outdir}/preseq"
     prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
     mode = params.singleEnd ? "" : "-P"
+    if (params.bulk) {
     """
     preseq c_curve ${mode} -s 1e+5 -o ${prefix}_c.txt $sbed
     preseq lc_extrap ${mode} -s 1e+5 -D -o ${prefix}_lc.txt $sbed
-    preseq gc_extrap -w 1000 -s 1e+7 -D -o ${prefix}_gc.txt $sbed
+    plotPreSeq.R ${prefix}_lc.txt ${prefix}_lc
     """
+    } else {
+    """
+    preseq c_curve ${mode} -s 1e+5 -o ${prefix}_c.txt $sbed
+    preseq lc_extrap ${mode} -s 1e+5 -D -o ${prefix}_lc.txt $sbed
+    plotPreSeq.R ${prefix}_lc.txt ${prefix}_lc
+    preseq gc_extrap -w 1000 -s 1e+7 -D -o ${prefix}_gc.txt $sbed
+    plotPreSeq.R ${prefix}_gc.txt ${prefix}_gc
+    """
+    }
 }
 
 /*
@@ -785,7 +800,7 @@ process monovar {
     file 'monovar.vcf' into monovar_vcf
 
     when:
-    params.snv
+    !params.bulk && params.snv
 
     script:
     pp_outdir = "${params.outdir}/monovar"
@@ -810,7 +825,7 @@ process aneufinder {
     file 'CNV_output' into cnv_output
 
     when:
-    params.cnv
+    !params.bulk && params.cnv
 
     script:
     pp_outdir = "${params.outdir}/aneufinder"
@@ -862,7 +877,7 @@ process spades {
     params.ass
 
     script:
-    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
     R1 = clean_reads[0].toString()
     mode = params.bulk ? "bulk" : "mda"
     if (params.singleEnd) {
@@ -882,7 +897,9 @@ process spades {
     if [ \"${mode}\" == \"bulk\" ]; then
       spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     else
-      interleave-reads.py $R1 $R2 | normalize-by-median.py -k 31 -C 40 -M 4e+9 -p --gzip -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz /dev/stdin
+      gzip -cd $R1 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R1_fq.gz
+      gzip -cd $R2 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R2_fq.gz
+      interleave-reads.py ${prefix}_rename_R1_fq.gz ${prefix}_rename_R2_fq.gz | normalize-by-median.py -k 31 -C 40 -M 4e+9 -p --gzip -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz /dev/stdin
       spades.py --sc --12 ${prefix}_norm.fastq.gz --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
@@ -919,7 +936,7 @@ process quast_ref {
     """
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
     labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
-    bams=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta/.markdup.bam/g')
+    bams=\$(ls *.markdup.bam | paste -sd "," -)
     quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
     """
 }

@@ -57,8 +57,8 @@ RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz 
 RUN R -e "install.packages(c('magicaxis','ape','gridExtra'), repos='https://cloud.r-project.org')"
 
 # Install mccortex
-RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && \
-    apt update && apt install -y autoconf automake zlib1g-dev libncurses5-dev libncursesw5-dev && \
+RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && apt update && \
+    apt install -y autoconf automake zlib1g-dev libncurses5-dev libncursesw5-dev fastx-toolkit && \
     make all && apt-get autoremove --purge && apt-get clean && apt-get autoremove
 
 # Install fastp

@@ -39,9 +39,9 @@ par(ps=10, mgp=c(1.5,1,0))
 data <- df[df$group=="10%",]
 maxNK <- max(df$NumKmers)
 lgds <- c("10%")
-pNK <- c(pNK, data[which.max(data$NumKmers[1:200]),"NumKmers"])
+pNK <- c(pNK, data[which.max(data$NumKmers[2:100]),"NumKmers"])
 plot(data$Covg, data$NumKmers, main="", xlab="Kmer coverage", ylab="Number of Kmers", lwd=2,
-     xlim=c(0,200), ylim=c(0, maxNK*1.05),axes=FALSE, col=cols[1],xaxs="i",yaxs="i",type="l")
+     xlim=c(0,100), ylim=c(0, maxNK*1.05),axes=FALSE, col=cols[1],xaxs="i",yaxs="i",type="l")
 
 magaxis(1:4)
 
@@ -50,10 +50,10 @@ for (i in 2:10) {
   lgds <- c(lgds, group)
   data <- df[df$group==group,]
   lines(data$Covg,data$NumKmers, col=cols[i],new=F,lty=1, lwd=2)
-  pNK <- c(pNK, data[which.max(data$NumKmers[1:200]),"NumKmers"])
+  pNK <- c(pNK, data[which.max(data$NumKmers[2:100]),"NumKmers"])
 }
 
-legend(x=150, y=maxNK*0.9, legend=lgds, col=cols, lty=1, lwd=2, box.col="white")
+legend(x=75, y=maxNK*0.9, legend=lgds, col=cols, lty=1, lwd=2, box.col="white")
 
 par(opar)
 plot((0:10)*10, pNK, type='b', xlab="Fraction of reads (%)", ylab="# Kmers at Peak Coverage")
