@@ -779,7 +779,7 @@ process IndelRealign {
     #samtools index ${prefix}.bam
     #gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
     #gatk3 -T IndelRealigner -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
-    java -jar ${workflow.projectDir}/bin/srma-0.1.15.jar I=${bam} O=${prefix}.realign.bam R=${fa}
+    java -XX:MaxRAMPercentage=90.0 -jar ${workflow.projectDir}/bin/srma-0.1.15.jar I=${bam} O=${prefix}.realign.bam R=${fa} MAX_QUEUE_SIZE=32768 MIN_MAPQ=10 MAX_RECORDS_IN_RAM=100000
     samtools index ${prefix}.realign.bam
     """
 }
