@@ -31,6 +31,11 @@ dependencies:
   - anaconda::tabulate=0.8.3
   - bioconda::nextflow=19.01.0
   - conda-forge::graphviz=2.40.1
+  - conda-forge::typer=0.2.1
+  - conda-forge::colorama=0.4.3
+  - conda-forge::shellingham=1.3.2
+  - conda-forge::click-spinner=0.1.10
+  - conda-forge::tqdm=4.46.0
   - ruby=2.6.5
   - r-base=3.5.1
   - r::r-essentials=3.5.1
