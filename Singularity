@@ -22,7 +22,7 @@ IncludeCmd: yes
     quast-download-silva && ktUpdateTaxonomy.sh
     #wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
     #  tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
-    gatk3-register /opt/nf-core-scgs/GenomeAnalysisTK.jar
+    #gatk3-register /opt/nf-core-scgs/GenomeAnalysisTK.jar
     conda env create -n py27 -f /py27_env.yml && conda clean -a
     /bin/bash -c "source activate py27 && blobtools-build_nodesdb && source deactivate"
     /bin/bash -c "source activate py27 && conda install -c bioconda -c conda-forge trnascan-se=1.3.1 funannotate=1.7.2 && source deactivate"
@@ -37,7 +37,7 @@ IncludeCmd: yes
       tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
     R -e "install.packages(c('magicaxis','ape','gridExtra'), repos='https://cloud.r-project.org')"
     cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && \
-      apt update && apt install -y autoconf automake zlib1g-dev libncurses5-dev libncursesw5-dev && \
+      apt update && apt install -y autoconf automake zlib1g-dev libncurses5-dev libncursesw5-dev fastx-toolkit && \
       make all && apt-get autoremove --purge && apt-get clean && apt-get autoremove
     cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fastp
     conda clean -y -a && rm -rf /opt/conda/pkgs/*

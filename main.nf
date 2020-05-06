@@ -574,11 +574,11 @@ process saturation {
       /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
        --seq \${i}.${prefix}_split.fq.gz \${i}.k31.ctx
       if [ \$i == 1 ]; then
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U2 -T32 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
         cp -f 1.k31.ctx tmp_clean31.ctx
       else
         /opt/mccortex/bin/mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U2 -T32 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
         mv -f merged_clean31.ctx tmp_clean31.ctx
       fi
     done
@@ -592,11 +592,11 @@ process saturation {
       /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
         --seq2 \${i}.${prefix}_split_R1.fq.gz:\${i}.${prefix}_split_R2.fq.gz \${i}.k31.ctx
       if [ \$i == 1 ]; then
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U2 -T32 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
         cp -f 1.k31.ctx tmp_clean31.ctx
       else
         /opt/mccortex/bin/mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U2 -T32 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
+        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
         mv -f merged_clean31.ctx tmp_clean31.ctx
       fi
     done
@@ -773,12 +773,13 @@ process IndelRealign {
     pp_outdir = "${params.outdir}/gatk"
     prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/
     """
-    samtools faidx $fa
-    picard CreateSequenceDictionary R=$fa
-    picard AddOrReplaceReadGroups I=$bam O=${prefix}.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
-    samtools index ${prefix}.bam
-    gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
-    gatk3 -T IndelRealigner -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
+    #samtools faidx $fa
+    #picard CreateSequenceDictionary R=$fa
+    #picard AddOrReplaceReadGroups I=$bam O=${prefix}.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
+    #samtools index ${prefix}.bam
+    #gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
+    #gatk3 -T IndelRealigner -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
+    java -jar ${workflow.projectDir}/bin/srma-0.1.15.jar I=${bam} O=${prefix}.realign.bam R=${fa}
     samtools index ${prefix}.realign.bam
     """
 }

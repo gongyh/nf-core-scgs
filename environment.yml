@@ -15,7 +15,6 @@ dependencies:
   - samtools=1.9
   - bedtools=2.27.1
   - picard=2.19.0
-  - gatk=3.8
   - spades=3.13.0
   - quast=5.0.2
   - multiqc=1.6
