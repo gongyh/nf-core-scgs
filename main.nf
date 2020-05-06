@@ -773,8 +773,8 @@ process IndelRealign {
     pp_outdir = "${params.outdir}/gatk"
     prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/
     """
-    #samtools faidx $fa
-    #picard CreateSequenceDictionary R=$fa
+    samtools faidx $fa
+    picard CreateSequenceDictionary R=$fa
     #picard AddOrReplaceReadGroups I=$bam O=${prefix}.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
     #samtools index ${prefix}.bam
     #gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
