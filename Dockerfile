@@ -38,7 +38,7 @@ COPY scgs_py27.txt /
 RUN conda create --name scgs_py27 --file /scgs_py27.txt && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Install ACDC
-RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/ && \
+RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/scgs_py36/ && \
     make -j $(nproc) && make install && rm -rf /tmp/acdc && mkdir /acdc
 
 # Install rnammer
