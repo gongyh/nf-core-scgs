@@ -16,6 +16,9 @@ COPY scgs_py36.txt /
 RUN conda install -y python=3.6 conda=4.6.12 nomkl && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 RUN conda create --name scgs_py36 --file /scgs_py36.txt && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
+# Set default conda env to scgs_py36
+RUN sed -i 's/conda activate base/conda activate scgs_py36/g' /root/.bashrc
+
 # Install Bioconductor packages
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
 
