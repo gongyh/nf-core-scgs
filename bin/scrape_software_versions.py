@@ -16,7 +16,6 @@ regexes = {
     'Preseq': ['v_preseq.txt', r"Version: (\S+)"],
     'QualiMap': ['v_qualimap.txt', r"QualiMap v.(\S+)"],
     'Picard': ['v_picard.txt', r"(\S+)"],
-    'GATK': ['v_gatk.txt', r"(\S+)"],
     'Monovar': ['v_monovar.txt', r"v(\S+)"],
     'AneuFinder': ['v_AneuFinder.txt', r'\[1\] ‘(\S+)’'],
     'Spades': ['v_spades.txt', r"SPAdes v(\S+)"],
@@ -41,7 +40,6 @@ results['BEDTools'] = '<span style="color:#999999;\">N/A</span>'
 results['Preseq'] = '<span style="color:#999999;\">N/A</span>'
 results['QualiMap'] = '<span style="color:#999999;\">N/A</span>'
 results['Picard'] = '<span style="color:#999999;\">N/A</span>'
-results['GATK'] = '<span style="color:#999999;\">N/A</span>'
 results['Monovar'] = '<span style="color:#999999;\">N/A</span>'
 results['AneuFinder'] = '<span style="color:#999999;\">N/A</span>'
 results['Spades'] = '<span style="color:#999999;\">N/A</span>'

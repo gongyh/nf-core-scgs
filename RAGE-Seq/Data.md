@@ -1,4 +1,23 @@
-# Single-cell Phenome-Genome Profiling of Bacterial Antibiotic Susceptibility by Raman-activated Gravity-driven Encapsulation and Sequencing
+# Phenome-Genome Profiling of Single Bacterial Cell by Raman-activated Gravity-driven Encapsulation and Sequencing
+
+## Abstract
+The small size and low DNA amount of bacterial cells have hindered establishing
+phenome-genome links in a precisely indexed, one-cell-per-reaction manner. Here we
+present Raman-Activated Gravity-driven single-cell Encapsulation and Sequencing
+(RAGE-Seq), where individual cells are phenotypically screened via single-cell Raman
+spectra (SCRS) in an aquatic, vitality-preserving environment, then the cell with
+targeted SCRS is precisely packaged in a picoliter microdroplet and readily exported in
+a precisely indexed, “one-cell-one-tube” manner. Such integration of microdroplet
+encapsulation to Raman-activated sorting ensures high-coverage one-cell genome
+sequencing or cultivation that is directly linked to metabolic phenotype. For clinical
+Escherichia coli isolates, genome assemblies derived from precisely one cell via
+RAGE-Seq consistently reached >95% coverage. Moreover, directly from a urine
+sample of urogenital tract infection, metabolic-activity-based antimicrobial susceptibility
+phenotypes and genome sequence of 99.5% coverage were obtained simultaneously
+from precisely one cell. This single-cell global mutation map corroborates resistance
+phenotype and genotype, and unveils epidemiological features with high specificity and
+sensitivity. The ability to profile and correlate bacterial metabolic phenome and highquality
+genome sequences at one-cell resolution suggests broad application of RAGESeq.
 
 ## Genome assemblies of SAGs and bulk-WGS data
 
@@ -20,4 +39,7 @@
 | *E. coli* ATCC35218 | RACE | S9 | ATCC35218_S9.ctg200.fasta | SRR10549451 |
 | *E. coli* UTI  | Bulk | Ur | U3-1_1_val.ctg200.fasta | SRR10849447 |
 | *E. coli* UTI  | RAGE | A10 | A10.ctg200.fasta | SRR10848967 |
+
+## Detailed analysis results
+Please refer to [http://single-cell.cn/RAGE-Seq/](http://single-cell.cn/RAGE-Seq/).
 

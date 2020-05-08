@@ -380,7 +380,7 @@ process get_software_versions {
     preseq &> v_preseq.txt
     qualimap -h &> v_qualimap.txt
     if [ x=`picard MarkDuplicates --version &> v_picard.txt` = 1 ]; then return 0; fi
-    gatk3 -version &> v_gatk.txt
+    #gatk3 -version &> v_gatk.txt
     Rscript -e 'print(packageVersion("AneuFinder"))' &> v_AneuFinder.txt
     spades.py --version &> v_spades.txt
     blastn -version &> v_blast.txt

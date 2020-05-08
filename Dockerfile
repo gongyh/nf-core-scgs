@@ -17,9 +17,9 @@ RUN conda install -y python=3.6 conda=4.6.12 nomkl && conda clean -y -a && rm -r
 RUN conda create --name scgs_py36 --file /scgs_py36.txt && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Set default conda env to scgs_py36
-RUN sed -i 's/conda activate base/conda activate scgs_py36/g' /root/.bashrc
+RUN echo 'conda activate scgs_py36' >> ~/.bashrc
 
-ENV PATH /opt/conda/envs/scgs_py36/bin:$PATH
+ENV PATH $PATH:/opt/conda/envs/scgs_py36/bin
 
 # Install Bioconductor packages
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
@@ -35,7 +35,7 @@ RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
 
 # Install conda environment py27
 COPY scgs_py27.txt /
-RUN conda create --name scgs_py27 --file /scgs_py27.txt && conda clean -y -a && rm -rf /opt/conda/pkgs/*
+RUN conda deactivate && conda create --name scgs_py27 --file /scgs_py27.txt && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Install ACDC
 RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/scgs_py36/ && \
