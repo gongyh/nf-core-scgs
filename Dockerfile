@@ -35,7 +35,7 @@ RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
 
 # Install conda environment py27
 COPY scgs_py27.txt /
-RUN conda create --name scgs_py27 --file /scgs_py27.txt && conda clean -y -a && rm -rf /opt/conda/pkgs/*
+RUN conda create --name scgs_py27 --file /scgs_py27.txt && conda clean -y -a && rm -rf /opt/conda/envs/scgs_py36/pkgs/*
 
 # Install ACDC
 RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/scgs_py36/ && \
