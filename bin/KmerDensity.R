@@ -21,11 +21,13 @@ if (!require("RColorBrewer")) {
 }
 
 df <- data.frame()
+maxNK <- 1000
 for (i in 1:10) {
   fname <- paste0(prefix,"_cov31_p",i,".csv")
   data <- read.csv(fname, header=T)
   data$group <- paste0(i*10, "%")
   df <- rbind(df, data)
+  maxNK <- max(maxNK, data$NumKmers[-length(data$NumKmers)])
 }
 
 cols <- brewer.pal(n = 10, name = "Set3")
@@ -37,7 +39,6 @@ opar <- par()
 par(ps=10, mgp=c(1.5,1,0))
 
 data <- df[df$group=="10%",]
-maxNK <- max(df$NumKmers)
 lgds <- c("10%")
 pNK <- c(pNK, data[which.max(data$NumKmers[2:100]),"NumKmers"])
 plot(data$Covg, data$NumKmers, main="", xlab="Kmer coverage", ylab="Number of Kmers", lwd=2,
