@@ -12,11 +12,13 @@ RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder
 RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
 
 # Install conda environments
-COPY environment.yml /
+COPY scgs_py36.txt /
 RUN conda install -y python=3.6 conda=4.6.12 nomkl && conda clean -y -a && rm -rf /opt/conda/pkgs/*
-RUN conda env create -n scgs_py36 -f /environment.yml && conda clean -y -a && rm -rf /opt/conda/pkgs/*
+RUN conda create --name scgs_py36 --file /scgs_py36.txt && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
+# Set default conda env to scgs_py36
 RUN echo 'conda activate scgs_py36' >> ~/.bashrc
+
 ENV PATH /opt/conda/envs/scgs_py36/bin:$PATH
 
 # Install Bioconductor packages
@@ -32,8 +34,8 @@ RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
 #RUN gatk3-register /GenomeAnalysisTK.jar && rm -rf /GenomeAnalysisTK.jar
 
 # Install conda environment py27
-COPY py27_env.yml /
-RUN conda env create -n scgs_py27 -f /py27_env.yml nomkl && conda clean -y -a && rm -rf /opt/conda/envs/scgs_py36/pkgs/*
+COPY scgs_py27.txt /
+RUN conda create --name scgs_py27 --file /scgs_py27.txt nomkl && conda clean -y -a && rm -rf /opt/conda/envs/scgs_py36/pkgs/*
 
 # Install ACDC
 RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/scgs_py36/ && \
@@ -50,7 +52,7 @@ RUN cd /tmp/rnammer && tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z 
 RUN [ "/bin/bash", "-c", "source activate scgs_py27 && blobtools-build_nodesdb && source deactivate" ]
 
 # Install Funannotate
-RUN [ "/bin/bash", "-c", "source activate scgs_py27 && conda install -c bioconda -c conda-forge trnascan-se=1.3.1 funannotate=1.7.2 && conda clean -y -a && rm -rf /opt/conda/pkgs/* && source deactivate" ]
+#RUN [ "/bin/bash", "-c", "source activate scgs_py27 && conda install -c bioconda -c conda-forge trnascan-se=1.3.1 funannotate=1.7.2 && conda clean -y -a && rm -rf /opt/conda/pkgs/* && source deactivate" ]
 
 # Install kofamscan
 RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
