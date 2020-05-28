@@ -22,7 +22,7 @@ RUN echo 'conda activate scgs_py36' >> ~/.bashrc
 ENV PATH /opt/conda/envs/scgs_py36/bin:$PATH
 
 # Install Bioconductor packages
-RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
+RUN R -e "install.packages(c('BiocManager','hyperSpec'), repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
 
 # Download silva and busco for Quast 5.x, update taxa db for krona
 RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
