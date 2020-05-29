@@ -388,9 +388,9 @@ process get_software_versions {
     multiqc --version &> v_multiqc.txt
     diamond version &> v_diamond.txt
     kraken --version | grep Kraken &> v_kraken.txt
-    head -n 1 /opt/conda/envs/scgs_py36/envs/scgs_py27/lib/python2.7/site-packages/checkm/VERSION &> v_checkm.txt
+    head -n 1 /opt/conda/envs/scgs_py27/lib/python2.7/site-packages/checkm/VERSION &> v_checkm.txt
     prokka -v &> v_prokka.txt
-    cat /opt/conda/envs/scgs_py36/envs/scgs_py27/lib/python2.7/site-packages/eggnogmapper/version.py | grep VERSION &> v_eggnogmapper.txt
+    cat /opt/conda/envs/scgs_py27/lib/python2.7/site-packages/eggnogmapper/version.py | grep VERSION &> v_eggnogmapper.txt
     set +u
     source activate scgs_py27 && conda list | grep monovar | awk '{print \$2}' &> v_monovar.txt
     source activate scgs_py27 && blobtools -v &> v_blobtools.txt
@@ -1086,7 +1086,7 @@ process blobtools {
    source activate scgs_py27
    mkdir -p ${prefix}
    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
-     --db /opt/conda/envs/scgs_py36/envs/scgs_py27/opt/blobtools-1.0.1/data/nodesDB.txt
+     --db /opt/conda/envs/scgs_py27/opt/blobtools-1.0.1/data/nodesDB.txt
    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
