@@ -1,10 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.6
 
 import time
 from enum import Enum
 from pathlib import Path
 import typer
 from Bio import SeqIO
+import subprocess
+import numpy as np
 
 def real_split(fa, ann, level, out_dir):
     """
@@ -47,6 +49,68 @@ APP_NAME = "scgs-cli"
 app = typer.Typer()
 tools_app = typer.Typer()
 app.add_typer(tools_app, name="tools", help="Misc tools.")
+
+@tools_app.command("scrs_pre")
+def tools_scrs_preprocess(raw_dir: Path = typer.Option(
+            ...,
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+           ),
+           out_dir: Path = typer.Option(
+            "./pre",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           meta_table: Path = typer.Option(
+            "./meta.txt",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           out_prefix: str = typer.Option("SCRS", show_default=True)
+      ):
+    # first check input SCRS
+    typer.echo(f"Checking input SCRS.")
+    if raw_dir.exists() and raw_dir.is_dir():
+        pass
+    else:
+        typer.echo(f"Please confirm {raw_dir} is exist and a directory.")
+        typer.Exit()
+    num_scrs = len(sorted(raw_dir.glob('*.txt')))
+    if num_scrs == 0: # at least one spectrum needed
+        typer.echo(f"No SCRS found, please check {raw_dir} .")
+        typer.Exit()
+
+    # then check meta table
+    meta = np.loadtxt(meta_table, dtype=object, delimiter='\t')
+    if len(meta.shape) != 2: # wrong shape
+        typer.echo(f"Wrong format, please check {meta_table} .")
+        typer.Exit()
+    elif meta.shape[0] > num_scrs: #error
+        typer.echo(f"Samples error, please check {meta_table} .")
+        typer.Exit()
+    elif meta.shape[0]>0 and meta.shape[1]<5: # not enough cols
+        typer.echo(f"Not enough columns, please check {meta_table} .")
+        typer.Exit()
+
+    # call R script to process
+    ret = subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_preprocess.R')),
+                                str(raw_dir), str(out_dir), str(meta_table), out_prefix]), shell=True)
+
+    return ret
 
 @tools_app.command("split")
 def tools_split(results_dir: Path = typer.Option(
@@ -135,7 +199,7 @@ def version_callback(value: bool):
 def main(ctx: typer.Context, verbose: bool = typer.Option(False, "--verbose/--silent", "-v/-s"),
          config: Path = typer.Option(
            "scgs.ini",
-           exists=True,
+           exists=False,
            file_okay=True,
            dir_okay=False,
            writable=False,
@@ -154,7 +218,7 @@ def main(ctx: typer.Context, verbose: bool = typer.Option(False, "--verbose/--si
         typer.echo("Will write verbose output")
         state["verbose"] = True
 
-    if ctx.invoked_subcommand is None:
+    if ctx.invoked_subcommand is None and config.exists():
         text = config.read_text()
         typer.echo("Check config file.")
         typer.echo(f"Config file contents: \n{text}")
