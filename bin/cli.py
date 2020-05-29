@@ -50,7 +50,7 @@ app = typer.Typer()
 tools_app = typer.Typer()
 app.add_typer(tools_app, name="tools", help="Misc tools.")
 
-@tools_app.command("scrs_pre")
+@tools_app.command("scrs_pre", help="Preprocess for SCRS")
 def tools_scrs_preprocess(raw_dir: Path = typer.Option(
             ...,
             exists=True,
@@ -87,32 +87,33 @@ def tools_scrs_preprocess(raw_dir: Path = typer.Option(
     if raw_dir.exists() and raw_dir.is_dir():
         pass
     else:
-        typer.echo(f"Please confirm {raw_dir} is exist and a directory.")
-        typer.Exit()
+        typer.secho(f"Please confirm {raw_dir} is exist and a directory.", fg=typer.colors.RED)
+        raise typer.Abort()
     num_scrs = len(sorted(raw_dir.glob('*.txt')))
     if num_scrs == 0: # at least one spectrum needed
-        typer.echo(f"No SCRS found, please check {raw_dir} .")
-        typer.Exit()
+        typer.secho(f"No SCRS found, please check {raw_dir} .", fg=typer.colors.RED)
+        raise typer.Abort()
 
     # then check meta table
     meta = np.loadtxt(meta_table, dtype=object, delimiter='\t')
+    #typer.echo(f"Size of meta table: {meta.shape}")
     if len(meta.shape) != 2: # wrong shape
-        typer.echo(f"Wrong format, please check {meta_table} .")
-        typer.Exit()
-    elif meta.shape[0] > num_scrs: #error
-        typer.echo(f"Samples error, please check {meta_table} .")
-        typer.Exit()
-    elif meta.shape[0]>0 and meta.shape[1]<5: # not enough cols
-        typer.echo(f"Not enough columns, please check {meta_table} .")
-        typer.Exit()
+        typer.secho(f"Wrong format, please check {meta_table} .", fg=typer.colors.RED)
+        raise typer.Abort()
+    elif meta.shape[0] <= 1: # not choose any SCRS
+        typer.secho(f"Samples error, please check {meta_table} .", fg=typer.colors.RED)
+        raise typer.Abort()
+    elif meta.shape[1]<5: # not enough cols
+        typer.secho(f"Not enough columns, please check {meta_table} .", fg=typer.colors.RED)
+        raise typer.Abort()
 
     # call R script to process
-    ret = subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_preprocess.R')),
-                                str(raw_dir), str(out_dir), str(meta_table), out_prefix]), shell=True)
+    subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_preprocess.R')),
+                          str(raw_dir), str(out_dir), str(meta_table), out_prefix]), shell=True)
 
-    return ret
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
 
-@tools_app.command("split")
+@tools_app.command("split", help="Split assembly genome according to taxa")
 def tools_split(results_dir: Path = typer.Option(
             "./results",
             exists=True,
@@ -139,8 +140,8 @@ def tools_split(results_dir: Path = typer.Option(
     samples = []
     blob_dir = results_dir.joinpath('blob')
     if not blob_dir.is_dir():
-        typer.echo(f"Taxa annotations not found, please check {blob_dir} .")
-        typer.Exit()
+        typer.secho(f"Taxa annotations not found, please check {blob_dir} .", fg=typer.colors.RED)
+        raise typer.Abort()
     else: # check subdir
         for child in blob_dir.iterdir():
             if child.is_dir(): # sample
@@ -148,22 +149,22 @@ def tools_split(results_dir: Path = typer.Option(
     typer.echo(f"INFO: {len(samples)} samples detected.")
     spades_dir = results_dir.joinpath('spades')
     if not spades_dir.is_dir():
-        typer.echo(f"Spades assemblies not found, please check {spades_dir} .")
-        typer.Exit()
+        typer.secho(f"Spades assemblies not found, please check {spades_dir} .", fg=typer.colors.RED)
+        raise typer.Abort()
     else: # check the existence of all genome assemblies
         for sample in samples:
             ass = spades_dir.joinpath(sample+'.ctg200.fasta')
             if not ass.exists():
-                typer.echo(f"genome assembly file {ass} not found.")
-                typer.Exit()
-    typer.echo(f"Done!")
+                typer.secho(f"genome assembly file {ass} not found.", fg=typer.colors.RED)
+                raise typer.Abort()
+    typer.secho(f"Done!", fg=typer.colors.GREEN)
 
     # try to create outdir
     try:
         output_dir.mkdir(exist_ok=True)
     except:
-        typer.echo(f"Can not create output directory.")
-        typer.Exit()
+        typer.secho(f"Can not create output directory.", fg=typer.colors.RED)
+        raise typer.Abort()
 
     # process split one by one
     with typer.progressbar(samples, label="Processing") as progress:
@@ -178,11 +179,11 @@ def tools_split(results_dir: Path = typer.Option(
                 if child.match(sample+'.blobDB*.table.txt'):
                     blob_table = child
             if blob_table is None:
-                typer.echo(f"Can not find annotation table for sample {sample}.")
-                typer.Exit()
+                typer.secho(f"Can not find annotation table for sample {sample}.", fg=typer.colors.RED)
+                raise typer.Abort()
             # perform split
             real_split(fa, blob_table, level, out_subdir)
-        typer.echo(f"\nFinished.")
+        typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
 
 @tools_app.callback()
 def items():
@@ -212,8 +213,9 @@ def main(ctx: typer.Context, verbose: bool = typer.Option(False, "--verbose/--si
     """
     Welcome to use gongyh/scgs pipeline!
     """
-    app_dir = typer.get_app_dir(APP_NAME)
-    typer.echo(f"This script runs at {app_dir}")
+    #app_dir = typer.get_app_dir(APP_NAME)
+    #typer.echo(f"This script runs at {app_dir}")
+    typer.echo("Welcome to use gongyh/scgs pipeline!")
     if verbose:
         typer.echo("Will write verbose output")
         state["verbose"] = True
@@ -221,7 +223,7 @@ def main(ctx: typer.Context, verbose: bool = typer.Option(False, "--verbose/--si
     if ctx.invoked_subcommand is None and config.exists():
         text = config.read_text()
         typer.echo("Check config file.")
-        typer.echo(f"Config file contents: \n{text}")
+        #typer.echo(f"Config file contents: \n{text}")
 
 
 if __name__ == "__main__":
