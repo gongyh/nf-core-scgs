@@ -29,7 +29,7 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 ## How to cite
 [1] Phenome-Genome Profiling of Single Bacterial Cell by Raman-activated Gravity-driven Encapsulation and Sequencing. *Under revision* [Details](https://github.com/gongyh/nf-core-scgs/blob/master/RAGE-Seq/Data.md)
 
-[2] Rational Optimization of Raman-Activated Cell Ejection and Sequencing for Bacteria. *Under revision*
+[2] Rational Optimization of Raman-Activated Cell Ejection and Sequencing for Bacteria. Anal Chem, 2020 May 29. doi: 10.1021/acs.analchem.9b05345.
 
 ## Credits
 gongyh/nf-core-scgs is maintained by [Yanhai Gong](mailto:gongyh@qibebt.ac.cn).

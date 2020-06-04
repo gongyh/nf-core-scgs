@@ -76,24 +76,25 @@ Be warned of two important points about this default configuration:
     * It's expected to use an additional config profile for docker, singularity or conda support. See below.
 
 ### Docker
-First, install docker on your system: [Docker Installation Instructions](https://docs.docker.com/engine/installation/)
+First, install docker on your system: [Docker Installation Instructions](https://docs.docker.com/engine/install/)
 
 Then, running the pipeline with the option `-profile docker` tells Nextflow to enable Docker for this run. An image containing all of the software requirements will be automatically fetched and used from dockerhub (<https://hub.docker.com/r/nfcore/scgs>).
 
 ### Singularity
-If you're not able to use Docker then [Singularity](http://singularity.lbl.gov/) is a great alternative.
+If you're not able to use Docker then [Singularity](https://sylabs.io/docs/) is a great alternative.
 The process is very similar: running the pipeline with the option `-profile singularity` tells Nextflow to enable singularity for this run. An image containing all of the software requirements will be automatically fetched and used from singularity hub.
 
 If running offline with Singularity, you'll need to download and transfer the Singularity image first:
 
 ```bash
 singularity pull --name nf-core-scgs.simg gongyh/nf-core-scgs
+singularity build --sandbox /path/to/nf-core-scgs-simg nf-core-scgs.simg
 ```
 
 Once transferred, use `-with-singularity` and specify the path to the image file:
 
 ```bash
-nextflow run /path/to/nf-core-scgs -with-singularity nf-core-scgs.simg
+nextflow run /path/to/nf-core-scgs -with-singularity /path/to/nf-core-scgs-simg
 ```
 
 Remember to pull updated versions of the singularity image if you update the pipeline.
