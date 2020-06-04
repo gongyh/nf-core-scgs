@@ -8,11 +8,28 @@ from Bio import SeqIO
 import subprocess
 import numpy as np
 
-def real_split(fa, ann, level, out_dir):
+def real_split(fa, ann, level, out_dir, gff=None):
     """
     Split by annotation
     """
     record_dict = SeqIO.to_dict(SeqIO.parse(fa, "fasta"))
+
+    ctg_genes = {}
+    if gff is None: # skip splitting gene ids
+        pass
+    else: # parse the gff file
+        with open(gff) as gfh:
+            for line in gfh:
+                cl = line.strip().split("\t")
+                if len(cl) >= 9: # gene annotation line
+                    ctg_id = cl[0]
+                    anno8 = cl[8].split(";")[0]
+                    if anno8.startswith("ID=") and anno8.endswith("_gene"): # correct line
+                        gid = anno8[3:len(anno8)-5]
+                        if ctg_id in ctg_genes.keys(): # add the new id
+                            ctg_genes[ctg_id].append(gid)
+                        else:
+                            ctg_genes[ctg_id] = [gid]
 
     annCol = -1 # which colum corresponds to the specified level
     with open(ann) as fh:
@@ -28,8 +45,14 @@ def real_split(fa, ann, level, out_dir):
                 continue
             cl = line.strip().split("\t")
             contig_id = cl[0]
-            assert(annCol>0)
+            ctg_id_short = contig_id.split("_length_")[0]
             annotation = cl[annCol]
+            gname = annotation.replace(" ","_")+".gids"
+            with out_dir.joinpath(gname).open('a') as f:
+                if ctg_id_short in ctg_genes.keys():
+                    for g in ctg_genes[ctg_id_short]:
+                        f.write(g+'\n')
+            assert(annCol>0)
             fname = annotation.replace(" ","_")+".fasta"
             with out_dir.joinpath(fname).open('a') as f:
                 SeqIO.write(record_dict[contig_id], f, "fasta")
@@ -134,9 +157,10 @@ def tools_split(results_dir: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=True
-           )
+           ),
+           force: bool = typer.Option(False, "--force", "-f")
         ):
-    typer.echo(f"Checking the existence of blob and spades results.")
+    typer.echo(f"Checking the existence of blob, prokka and spades results.")
     samples = []
     blob_dir = results_dir.joinpath('blob')
     if not blob_dir.is_dir():
@@ -157,11 +181,23 @@ def tools_split(results_dir: Path = typer.Option(
             if not ass.exists():
                 typer.secho(f"genome assembly file {ass} not found.", fg=typer.colors.RED)
                 raise typer.Abort()
+    prokka_dir = results_dir.joinpath('prokka')
+    anno_exist = False
+    if prokka_dir.exists() and prokka_dir.is_dir(): # exist the dir, ok
+        typer.echo(f"INFO: gene annotations found, will also split gene ids.")
+        anno_exist = True
+    else:
+        typer.echo(f"INFO: gene annotations not found, will skip splitting gene ids.")
+        anno_exist = False
     typer.secho(f"Done!", fg=typer.colors.GREEN)
 
     # try to create outdir
     try:
-        output_dir.mkdir(exist_ok=True)
+        if force and output_dir.exists() and output_dir.is_dir():
+            output_dir.rename(str(output_dir)+"%d"%(int(time.time())))
+            output_dir.mkdir(exist_ok=False)
+        else:
+            output_dir.mkdir(exist_ok=True)
     except:
         typer.secho(f"Can not create output directory.", fg=typer.colors.RED)
         raise typer.Abort()
@@ -181,8 +217,14 @@ def tools_split(results_dir: Path = typer.Option(
             if blob_table is None:
                 typer.secho(f"Can not find annotation table for sample {sample}.", fg=typer.colors.RED)
                 raise typer.Abort()
+            gff = None
+            sample_anno = prokka_dir.joinpath(sample)
+            if anno_exist and sample_anno.exists() and sample_anno.is_dir():
+                sample_gff = sample_anno.joinpath(sample+".gff")
+                if sample_gff.exists() and sample_gff.is_file(): # find annotation gff file
+                    gff = sample_gff
             # perform split
-            real_split(fa, blob_table, level, out_subdir)
+            real_split(fa, blob_table, level, out_subdir, gff)
         typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
 
 @tools_app.callback()

@@ -6,6 +6,7 @@ channels:
 dependencies:
   - python=2.7.16
   - checkm-genome=1.0.13
+  - bioconda::samtools=1.9
   - biopython=1.70
   - click=7.0
   - monovar=v0.0.1
