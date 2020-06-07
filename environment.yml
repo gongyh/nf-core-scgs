@@ -5,6 +5,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - nomkl
   - fastqc=0.11.8
   - emboss=6.6.0
   - bowtie2=2.3.4.3

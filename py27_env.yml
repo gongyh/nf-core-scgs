@@ -4,6 +4,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - nomkl
   - python=2.7.16
   - checkm-genome=1.0.13
   - bioconda::samtools=1.9
