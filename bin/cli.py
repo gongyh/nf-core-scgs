@@ -8,7 +8,7 @@ from Bio import SeqIO
 import subprocess
 import numpy as np
 
-def real_split(fa, ann, level, out_dir, gff=None):
+def real_split(fa, ann, level, out_dir, gff=None, ko_file=None):
     """
     Split by annotation
     """
@@ -31,6 +31,19 @@ def real_split(fa, ann, level, out_dir, gff=None):
                         else:
                             ctg_genes[ctg_id] = [gid]
 
+    gene_ko = {}
+    if ko_file is None:
+        pass
+    else:
+        with open(ko_file) as kfh:
+            for line in kfh:
+                cl = line.strip().split("\t")
+                if len(cl) == 2: # correct annotation
+                    if cl[0] not in gene_ko.keys():
+                        gene_ko[cl[0]] = [cl[1]]
+                    else:
+                        gene_ko[cl[0]].append(cl[1])
+
     annCol = -1 # which colum corresponds to the specified level
     with open(ann) as fh:
         for line in fh:
@@ -48,10 +61,16 @@ def real_split(fa, ann, level, out_dir, gff=None):
             ctg_id_short = contig_id.split("_length_")[0]
             annotation = cl[annCol]
             gname = annotation.replace(" ","_")+".gids"
+            kname = annotation.replace(" ","_")+".ko"
+            kofh = out_dir.joinpath(kname).open('a')
             with out_dir.joinpath(gname).open('a') as f:
                 if ctg_id_short in ctg_genes.keys():
                     for g in ctg_genes[ctg_id_short]:
                         f.write(g+'\n')
+                        if g in gene_ko.keys():
+                            for v in gene_ko[g]:
+                                kofh.write(g+"\t"+v+"\n")
+            kofh.close()
             assert(annCol>0)
             fname = annotation.replace(" ","_")+".fasta"
             with out_dir.joinpath(fname).open('a') as f:
@@ -162,6 +181,7 @@ def tools_split(results_dir: Path = typer.Option(
         ):
     typer.echo(f"Checking the existence of blob, prokka and spades results.")
     samples = []
+
     blob_dir = results_dir.joinpath('blob')
     if not blob_dir.is_dir():
         typer.secho(f"Taxa annotations not found, please check {blob_dir} .", fg=typer.colors.RED)
@@ -171,6 +191,7 @@ def tools_split(results_dir: Path = typer.Option(
             if child.is_dir(): # sample
                 samples.append(child.parts[-1])
     typer.echo(f"INFO: {len(samples)} samples detected.")
+
     spades_dir = results_dir.joinpath('spades')
     if not spades_dir.is_dir():
         typer.secho(f"Spades assemblies not found, please check {spades_dir} .", fg=typer.colors.RED)
@@ -181,6 +202,7 @@ def tools_split(results_dir: Path = typer.Option(
             if not ass.exists():
                 typer.secho(f"genome assembly file {ass} not found.", fg=typer.colors.RED)
                 raise typer.Abort()
+
     prokka_dir = results_dir.joinpath('prokka')
     anno_exist = False
     if prokka_dir.exists() and prokka_dir.is_dir(): # exist the dir, ok
@@ -189,6 +211,16 @@ def tools_split(results_dir: Path = typer.Option(
     else:
         typer.echo(f"INFO: gene annotations not found, will skip splitting gene ids.")
         anno_exist = False
+
+    kofam_dir = results_dir.joinpath('kofam')
+    ko_exist = False
+    if kofam_dir.exists() and kofam_dir.is_dir():
+        typer.echo(f"INFO: KO annotations found, will also split gene kos.")
+        ko_exist = True
+    else:
+        typer.echo(f"INFO: KO annotations not found, will skip splitting gene kos.")
+        ko_exist = False
+
     typer.secho(f"Done!", fg=typer.colors.GREEN)
 
     # try to create outdir
@@ -223,8 +255,11 @@ def tools_split(results_dir: Path = typer.Option(
                 sample_gff = sample_anno.joinpath(sample+".gff")
                 if sample_gff.exists() and sample_gff.is_file(): # find annotation gff file
                     gff = sample_gff
+            ko_file = None
+            if ko_exist:
+                ko_file = kofam_dir.joinpath(sample+"_KOs_mapper.txt")
             # perform split
-            real_split(fa, blob_table, level, out_subdir, gff)
+            real_split(fa, blob_table, level, out_subdir, gff, ko_file)
         typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
 
 @tools_app.callback()

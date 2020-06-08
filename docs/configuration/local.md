@@ -15,7 +15,7 @@ Then, simply run the analysis pipeline:
 nextflow run gongyh/nf-core-scgs -profile docker --genome '<genome ID>' --design '<path to your design file>'
 ```
 
-Nextflow will recognise `gongyh/nf-core-scgs` and download the pipeline from GitHub. The `-profile docker` configuration lists the [gongyh/nf-core-scgs](https://hub.docker.com/r/nfcore/scgs/) image that we have created and is hosted at dockerhub, and this is downloaded.
+Nextflow will recognise `gongyh/nf-core-scgs` and download the pipeline from GitHub. The `-profile docker` configuration lists the [gongyh/nf-core-scgs](https://hub.docker.com/r/gongyh/scgs/) image that we have created and is hosted at dockerhub, and this is downloaded.
 
 For more information about how to work with reference genomes, see [`docs/configuration/reference_genomes.md`](reference_genomes.md).
 
@@ -37,11 +37,11 @@ First, pull the image file where you have an internet connection:
 > Make sure that this tag corresponds to the version of the pipeline that you're using
 
 ```bash
-singularity pull --name nf-core-scgs-1.0.img docker://gongyh/nf-core-scgs:1.0
+singularity pull --name scgs-1.0.simg docker://gongyh/scgs:1.0
 ```
 
 Then transfer this file and run the pipeline with this path:
 
 ```bash
-nextflow run /path/to/nf-core-scgs -with-singularity /path/to/nf-core-scgs-1.0.img
+nextflow run /path/to/nf-core-scgs -with-singularity /path/to/scgs-1.0.simg
 ```
