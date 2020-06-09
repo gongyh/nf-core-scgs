@@ -4,18 +4,24 @@
 ### Please reformat SCRS data to txt format using labspec 6########
 ###################################################################
 
+if (!require("tools")) {
+   install.packages("tools", dependencies=TRUE, repos='http://cloud.r-project.org/')
+   library("tools")
+}
+
 # Command line argument processing
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 4) {
   stop("Usage: SCRS_preprocess.R <input_folder> <output_dir> <metadata> <prefix>", call.=FALSE)
 }
 
-filepath <- args[1] # directory containing SCRS txts
+filepath <- file_path_as_absolute(args[1]) # directory containing SCRS txts
 output <- args[2] # directory to store outputs
-meta_fp <- args[3] # meta TSV file, ID_Cell	Timepoint	Label	CellBg	Cell
+meta_fp <- file_path_as_absolute(args[3]) # meta TSV file, ID_Cell	Timepoint	Label	CellBg	Cell
 txt_filename <- args[4]
 
 dir.create(output)
+output <- file_path_as_absolute(output)
 
 # Load / install packages
 if (!require("hyperSpec")) {
@@ -26,6 +32,7 @@ if (!require("RColorBrewer")) {
   install.packages("RColorBrewer", dependencies=TRUE, repos='http://cloud.r-project.org/')
   library("RColorBrewer")
 }
+
 
 ###########################
 # Read meta data          #
@@ -107,7 +114,7 @@ write.csv(data_baseline_zero_scale_hyperSpec, "Cells_bg_baseline_zero_scale.csv"
 Cells_bg_baseline_zero_scale <- "Cells_bg_baseline_zero_scale/"
 dir.create(Cells_bg_baseline_zero_scale)
 for (i in (1:nrow(data_baseline_zero_scale_hyperSpec))){
-  Cells<-data.frame(shift=shift[1],intensity=t(data_baseline_zero_scale_hyperSpec[i]$spc))
+  Cells<-data.frame(shift=shift,intensity=t(data_baseline_zero_scale_hyperSpec[i]$spc))
   write.table(Cells,paste0(Cells_bg_baseline_zero_scale,data_baseline_zero_scale_hyperSpec$ID_Cell[i],".txt"),
   row.names=F,col.names=F,quote=F,sep = "\t")
 }

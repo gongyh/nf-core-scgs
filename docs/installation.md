@@ -115,4 +115,4 @@ See [`docs/configuration/reference_genomes.md`](configuration/reference_genomes.
 
 ## Databases for various tools
 
-See [`docs/configuration/databases.md`](docs/configuration/databases.md)
+See [`docs/configuration/databases.md`](configuration/databases.md)
