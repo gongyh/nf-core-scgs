@@ -164,6 +164,7 @@ scales="free"
 options(warn=-1)
 
 dir.create(outpath)
+outpath <- file_path_as_absolute(outpath)
 
 mat <- read.table(input, header = T,  sep="\t")
 mat$CD_ratio <- mat$CDR
@@ -181,8 +182,8 @@ stat="cummean"
 for (pheno in (c("CD_ratio"))){
   x<-mat1[, pheno]; names(x)<-rownames(mat1)
   StatAccumCurve(x, stat=stat, permutations = 1000, Group=mat[, "Time"], Group_name="Time", 
-       outdir=paste0(outpath, pheno,"_"), width=width, height=height, scales=scales)
-  StatAccumCurve(x, stat=stat, permutations = 1000, outdir=paste0(outpath, pheno,"_allcells_"), 
+       outdir=paste0(outpath, "/", pheno,"_"), width=width, height=height, scales=scales)
+  StatAccumCurve(x, stat=stat, permutations = 1000, outdir=paste0(outpath, "/",pheno,"_allcells_"), 
        width=width, height=height, scales=scales)
 }
 ####stat="cummax"
@@ -190,8 +191,8 @@ stat="cummax"
 for (pheno in (c("CD_ratio"))){
   x<-mat1[, pheno]; names(x)<-rownames(mat1)
   StatAccumCurve(x, stat=stat, permutations = 1000, Group=mat[, "Time"], Group_name="Time", 
-       outdir=paste0(outpath, pheno,"_"), width=width, height=height, scales=scales)
-  StatAccumCurve(x, stat=stat, permutations = 1000, outdir=paste0(outpath, pheno,"_allcells_"), 
+       outdir=paste0(outpath, "/", pheno,"_"), width=width, height=height, scales=scales)
+  StatAccumCurve(x, stat=stat, permutations = 1000, outdir=paste0(outpath, "/", pheno,"_allcells_"), 
        width=width, height=height, scales=scales)
 }
 ######negtive value to 1e-10 for cumcv#########
@@ -206,8 +207,8 @@ scales="fixed"
 for (pheno in (c("CD_ratio"))){
   x<-mat1[, pheno]; names(x)<-rownames(mat1)
   StatAccumCurve(x, stat=stat, permutations = 1000, Group=mat[, "Time"], Group_name="Time", 
-       outdir=paste0(outpath, pheno,"_"), width=width, height=height, scales=scales)
-  StatAccumCurve(x, stat=stat, permutations = 1000, outdir=paste0(outpath, pheno,"_allcells_"), 
+       outdir=paste0(outpath, "/", pheno,"_"), width=width, height=height, scales=scales)
+  StatAccumCurve(x, stat=stat, permutations = 1000, outdir=paste0(outpath, "/", pheno,"_allcells_"), 
        width=width, height=height, scales=scales)
 }
 ###############################################
