@@ -63,7 +63,7 @@ fi
 if [ $choice -eq 5 ]; then
   mkdir -p $PWD/eggnog
   cd $PWD/eggnog
-  conda activate py27
+  conda activate scgs_py27
   download_eggnog_data.py -y
   conda deactivate
 fi
