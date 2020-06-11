@@ -92,6 +92,44 @@ app = typer.Typer()
 tools_app = typer.Typer()
 app.add_typer(tools_app, name="tools", help="Misc tools.")
 
+@tools_app.command("scrs_filter", help="Remove low quality SCRS")
+def tools_scrs_filter(raw_dir: Path = typer.Option(
+            ...,
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+           ),
+           out_dir: Path = typer.Option(
+            "./good",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           )
+         ):
+    typer.echo(f"Checking input SCRS.")
+    if raw_dir.exists() and raw_dir.is_dir():
+        pass
+    else:
+        typer.secho(f"Please confirm {raw_dir} is exist and a directory.", fg=typer.colors.RED)
+        raise typer.Abort()
+    num_scrs = len(sorted(raw_dir.glob('*.txt')))
+    if num_scrs == 0: # at least one spectrum needed
+        typer.secho(f"No SCRS found, please check {raw_dir} .", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    # call R script to process
+    subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_filter.R')),
+                          str(raw_dir), str(out_dir)]), shell=True)
+
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
+
 @tools_app.command("scrs_pre", help="Preprocess for SCRS")
 def tools_scrs_preprocess(raw_dir: Path = typer.Option(
             ...,
@@ -154,6 +192,123 @@ def tools_scrs_preprocess(raw_dir: Path = typer.Option(
                           str(raw_dir), str(out_dir), str(meta_table), out_prefix]), shell=True)
 
     typer.secho(f"Finished", fg=typer.colors.GREEN)
+
+@tools_app.command("scrs_snr", help="Signal-Noise ratio calculation")
+def tools_scrs_snr(scgs_csv: Path = typer.Option(
+            ...,
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           out_dir: Path = typer.Option(
+            "./stats",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           )
+         ):
+    # first check input SCRS
+    typer.echo(f"Checking input SCRS.")
+    if scgs_csv.exists() and scgs_csv.is_file():
+        pass
+    else:
+        typer.secho(f"Please confirm {scgs_csv} is exist and a CSV file.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    # call R script to process
+    subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_snr.R')),
+                          str(scgs_csv), str(out_dir)]), shell=True)
+
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
+
+@tools_app.command("scrs_cdr", help="C-H / C-D peaks calculation")
+def tools_scrs_cdr(scgs_csv: Path = typer.Option(
+            ...,
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           out_dir: Path = typer.Option(
+            "./stats",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           )
+         ):
+    # first check input SCRS
+    typer.echo(f"Checking input SCRS.")
+    if scgs_csv.exists() and scgs_csv.is_file():
+        pass
+    else:
+        typer.secho(f"Please confirm {scgs_csv} is exist and a CSV file.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    # call R script to process
+    subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_cdr.R')),
+                          str(scgs_csv), str(out_dir)]), shell=True)
+
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
+
+@tools_app.command("scrs_rarefy", help="Sample depth for CDR")
+def tools_scrs_rarefy(scgs_csv: Path = typer.Option(
+            ...,
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           out_dir: Path = typer.Option(
+            "./rarefy",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           )
+         ):
+    # first check input SCRS
+    typer.echo(f"Checking input SCRS.")
+    if scgs_csv.exists() and scgs_csv.is_file():
+        pass
+    else:
+        typer.secho(f"Please confirm {scgs_csv} is exist and a CSV file.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    # call R script to process
+    subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_cdr_stats.R')),
+                          str(scgs_csv), str(out_dir)]), shell=True)
+    stats_out = out_dir.joinpath('CD_ratio_cummean_accum_df_by_Time.txt')
+    if stats_out.exists() and stats_out.is_file():
+        subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_cdr_rarafy.R')),
+                          str(scgs_csv), str(out_dir)]), shell=True)
+    else:
+        typer.secho(f"Can not perform CDR statistics for {scgs_csv}.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
+
+####################################################################################
 
 @tools_app.command("split", help="Split assembly genome according to taxa")
 def tools_split(results_dir: Path = typer.Option(

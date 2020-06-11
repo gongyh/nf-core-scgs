@@ -57,7 +57,7 @@ RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz 
     tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
 
 # Install R packages
-RUN R -e "install.packages(c('magicaxis','ape','gridExtra','hyperSpec'), repos='https://cloud.r-project.org')"
+RUN R -e "install.packages(c('magicaxis','ape','gridExtra','hyperSpec','permute'), repos='https://cloud.r-project.org')"
 
 # Install mccortex
 RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && apt update && \
@@ -71,5 +71,5 @@ RUN cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fas
 COPY . /opt/nf-core-scgs/
 
 # Add default container command
-CMD ["/opt/conda/bin/nextflow", "run", "/opt/nf-core-scgs/main.nf", "--help"]
+CMD ["/bin/bash"]
 

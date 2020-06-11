@@ -11,6 +11,8 @@ if (length(args) < 2) {
 input_csv <- args[1] # SCRS data
 output_dir <- args[2] # store cdr results
 
+dir.create(output_dir)
+
 SNR1<-read.table(input_csv, header = T, sep=",")
 SNR2<-SNR1[,12:length(SNR1[1,])-1]
 colnames(SNR2)<-formatC(as.numeric(gsub("spc.", "", colnames(SNR2))), digits=1, format="f")
