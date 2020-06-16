@@ -490,16 +490,6 @@ def tools_split(fastas_dir: Path = typer.Option(
             show_default=True
            ),
            threads: int = typer.Option(16, show_default=True),
-           checkm_db: Path = typer.Option(
-            "./checkm_db/",
-            exists=False,
-            file_okay=False,
-            dir_okay=True,
-            writable=False,
-            readable=True,
-            resolve_path=True,
-            show_default=True
-           ),
            checkm_table: Path = typer.Option(
             "./checkm.txt",
             exists=False,
@@ -513,6 +503,7 @@ def tools_split(fastas_dir: Path = typer.Option(
            force: bool = typer.Option(False, "--force", "-f")
          ):
     typer.echo(f"Checking output directory.")
+
     if output_dir.exists() and output_dir.is_dir():
         if force:
             output_dir.rename(str(output_dir)+"%d"%(int(time.time())))
@@ -528,18 +519,9 @@ def tools_split(fastas_dir: Path = typer.Option(
         else:
             typer.secho(f"Output checkm results already exist.", fg=typer.colors.RED)
             raise typer.Abort()
-    checkm_path = None
-    if checkm_db.exists() and checkm_db.is_dir():
-        checkm_path = checkm_db
-    elif config.checkm_db.exists() and config.checkm_db.is_dir():
-        checkm_path = config.checkm_db
 
-    if checkm_path is None:
-        typer.secho(f"Please correctly set checkm database!", fg=typer.colors.RED)
-        raise typer.Abort()
-    else:
-        subprocess.check_call(" ".join([str(Path(__file__).resolve().parent.joinpath('checkm.sh')), str(fastas_dir), str(suffix),
-          str(genus), str(output_dir), str(threads), str(checkm_path), str(checkm_table)]), shell=True)
+    subprocess.check_call(" ".join([str(Path(__file__).resolve().parent.joinpath('checkm.sh')), str(fastas_dir), str(suffix),
+                                    str(genus), str(output_dir), str(threads), str(checkm_table)]), shell=True)
     typer.secho(f"Finished", fg=typer.colors.GREEN)
 
 @tools_app.callback()

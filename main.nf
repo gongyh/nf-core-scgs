@@ -44,7 +44,6 @@ def helpMessage() {
       --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
       --uniprot_taxids              Sequence id to taxa id mapping file
       --kraken_db                   Kraken database
-      --checkm_db                   CheckM database
       --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
       --kofam_profile               KOfam profile database
       --kofam_kolist                KOfam ko_list file
@@ -116,7 +115,6 @@ params.kraken_db = null
 params.readPaths = null
 params.uniprot_db = null
 params.uniprot_taxids = null
-params.checkm_db = null
 params.eggnog_db = null
 params.snv = true
 params.cnv = true
@@ -194,13 +192,6 @@ kraken_db = false
 if ( params.kraken_db ) {
     kraken_db = file(params.kraken_db)
     if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"
-}
-
-// Configurable CheckM database
-checkm_db = false
-if ( params.checkm_db ) {
-    checkm_db = file(params.checkm_db)
-    if( !checkm_db.exists() ) exit 1, "CheckM database not found: ${params.CheckM_db}"
 }
 
 // Configurable eggNOG database
@@ -973,18 +964,16 @@ process checkm {
 
    input:
    file ('spades/*') from contigs_for_checkm.collect()
-   file checkmDB from checkm_db
 
    output:
    file 'spades_checkM.txt'
 
    when:
-   !euk && checkm_db
+   !euk
 
    script:
    checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
    """
-   echo -e "cat << EOF\\n${checkmDB}\\nEOF\\n" | checkm data setRoot
    if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
      checkm taxonomy_wf -t ${task.cpus} -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
    else
