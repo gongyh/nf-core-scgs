@@ -466,6 +466,82 @@ def tools_split(results_dir: Path = typer.Option(
             real_split(fa, blob_table, level, out_subdir, gff, ko_file)
         typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
 
+@tools_app.command("scgs_checkm", help="Perform CheckM for (splitted) draft assemblies")
+def tools_split(fastas_dir: Path = typer.Option(
+            ...,
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           suffix: str = typer.Option("fasta", show_default=True),
+           genus: str = typer.Option("lineage_wf", show_default=True),
+           output_dir: Path = typer.Option(
+            "./checkm_out/",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           threads: int = typer.Option(16, show_default=True),
+           checkm_db: Path = typer.Option(
+            "./checkm_db/",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           checkm_table: Path = typer.Option(
+            "./checkm.txt",
+            exists=False,
+            file_okay=True,
+            dir_okay=False,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           force: bool = typer.Option(False, "--force", "-f")
+         ):
+    typer.echo(f"Checking output directory.")
+    if output_dir.exists() and output_dir.is_dir():
+        if force:
+            output_dir.rename(str(output_dir)+"%d"%(int(time.time())))
+            typer.secho(f"Rename checkm output dir.", fg=typer.colors.RED)
+        else:
+            typer.secho(f"Output directory already exist, please move/delete and try again.", fg=typer.colors.RED)
+            raise typer.Abort()
+
+    if checkm_table.exists() and checkm_table.is_file():
+        if force:
+            checkm_table.rename(str(checkm_table)+"%d"%(int(time.time())))
+            typer.secho(f"Rename checkm result file.", fg=typer.colors.RED)
+        else:
+            typer.secho(f"Output checkm results already exist.", fg=typer.colors.RED)
+            raise typer.Abort()
+    checkm_path = None
+    if checkm_db.exists() and checkm_db.is_dir():
+        checkm_path = checkm_db
+    elif config.checkm_db.exists() and config.checkm_db.is_dir():
+        checkm_path = config.checkm_db
+
+    if checkm_path is None:
+        typer.secho(f"Please correctly set checkm database!", fg=typer.colors.RED)
+        raise typer.Abort()
+    else:
+        subprocess.check_call(" ".join([str(Path(__file__).resolve().parent.joinpath('checkm.sh')), str(fastas_dir), str(suffix),
+          str(genus), str(output_dir), str(threads), str(checkm_path), str(checkm_table)]), shell=True)
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
+
 @tools_app.callback()
 def items():
     """

@@ -31,6 +31,7 @@ dependencies:
   - khmer=2.1.2
   - anaconda::tabulate=0.8.3
   - bioconda::nextflow=19.01.0
+  - bioconda::checkm-genome=1.1.2
   - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
   - conda-forge::colorama=0.4.3

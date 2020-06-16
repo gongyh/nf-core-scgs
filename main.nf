@@ -388,7 +388,7 @@ process get_software_versions {
     multiqc --version &> v_multiqc.txt
     diamond version &> v_diamond.txt
     kraken --version | grep Kraken &> v_kraken.txt
-    head -n 1 /opt/conda/envs/scgs_py27/lib/python2.7/site-packages/checkm/VERSION &> v_checkm.txt
+    head -n 1 /opt/conda/envs/scgs_py36/lib/python3.6/site-packages/checkm/VERSION &> v_checkm.txt
     prokka -v &> v_prokka.txt
     cat /opt/conda/envs/scgs_py27/lib/python2.7/site-packages/eggnogmapper/version.py | grep VERSION &> v_eggnogmapper.txt
     set +u
@@ -984,7 +984,6 @@ process checkm {
    script:
    checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
    """
-   set +u && source activate scgs_py27
    echo -e "cat << EOF\\n${checkmDB}\\nEOF\\n" | checkm data setRoot
    if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
      checkm taxonomy_wf -t ${task.cpus} -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
