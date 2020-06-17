@@ -32,6 +32,7 @@ def helpMessage() {
       --singleEnd                   Specifies that the input is single end reads
       --snv                         Enable detection of single nucleotide variation
       --cnv                         Enable detection of copy number variation
+      --saturation                  Enable sequencing saturation analysis
       --ass                         Assemble using SPAdes
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the references.
@@ -116,8 +117,9 @@ params.readPaths = null
 params.uniprot_db = null
 params.uniprot_taxids = null
 params.eggnog_db = null
-params.snv = true
-params.cnv = true
+params.snv = false
+params.cnv = false
+params.saturation = false
 params.bulk = false
 params.ass = false
 params.blockSize = 2.0
@@ -555,6 +557,9 @@ process saturation {
     file "${prefix}_kmer.pdf"
     file "${prefix}_cov31_*.csv"
 
+    when:
+    params.saturation
+
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = reads[0].toString()
@@ -770,7 +775,7 @@ process IndelRealign {
     samtools index ${prefix}_rg.bam
     #gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}.bam -o indels.intervals
     #gatk3 -T IndelRealigner -R $fa -I ${prefix}.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
-    java -Xmx3g -jar ${workflow.projectDir}/bin/srma-0.1.15.jar I=${prefix}_rg.bam O=${prefix}.realign.bam R=${fa}
+    java -Xmx4g -jar ${workflow.projectDir}/bin/srma-0.1.15.jar I=${prefix}_rg.bam O=${prefix}.realign.bam R=${fa}
     samtools index ${prefix}.realign.bam
     """
 }
@@ -817,7 +822,7 @@ process aneufinder {
     file 'CNV_output' into cnv_output
 
     when:
-    !params.bulk && params.cnv
+    !params.bulk && params.cnv && !params.singleEnd
 
     script:
     pp_outdir = "${params.outdir}/aneufinder"
