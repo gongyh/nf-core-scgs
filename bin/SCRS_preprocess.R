@@ -91,6 +91,7 @@ wavelength<-shift
 data_hyperSpec<-new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
                      spc = Cells_bgsub[,(ncol_meta+1):ncol_raw.data], wavelength=wavelength)
 data_baseline <- data_hyperSpec-spc.fit.poly.below(data_hyperSpec, data_hyperSpec, poly.order = 7)
+#data_baseline <- data_hyperSpec - spc.rubberband(data_hyperSpec, noise=300, df=20)
 write.csv(data_baseline,"Cells_bg_baseline.csv",quote = F,row.names = F)
 
 ########
@@ -105,8 +106,8 @@ write.csv(data_baseline_zero_hyperSpec,"Cells_bg_baseline_zero.csv", quote=F, ro
 #################
 ##normalization##
 #################
-#data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowMeans (data_baseline_zero_hyperSpec)
-data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowSums (data_baseline_zero_hyperSpec)
+data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowMeans (data_baseline_zero_hyperSpec)
+#data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowSums (data_baseline_zero_hyperSpec)
 write.csv(data_baseline_zero_scale_hyperSpec, "Cells_bg_baseline_zero_scale.csv",
           quote=F, row.names=F)
 

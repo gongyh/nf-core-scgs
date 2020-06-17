@@ -45,6 +45,9 @@ plot(data_hyperSpec,"spcprctl5")
 cat("INFO:",length(data_hyperSpec$filename),"spectra left after minimum intensity filtering!",sep=" ",fill=T)
 
 # Filter low quality SCRS
+good_data_baseline_normalization <- data_hyperSpec
+wls <- wl(data_hyperSpec)
+if (wls[length(wls)]>=3099) {
 data_baseline <- data_hyperSpec[,,c(1730~3099)]- #3151 Horiba
   spc.fit.poly (data_hyperSpec[,,c(1730~2065,2300~2633,2783,3099)], data_hyperSpec[,,c(1730~3099)], poly.order =3)
   #spc.fit.poly.below (data_hyperSpec, data_hyperSpec, poly.order = 2)#3151 Horiba
@@ -59,6 +62,7 @@ good_data_baseline_normalization <- filter(data_baseline_normalization_frame,
                    apply(abs(data_baseline_normalization_frame[,5:75]),1,mean) < 0.05, 
                    apply(abs(data_baseline_normalization_frame[,5:75]),1,sd) < 0.05)
 cat("INFO:",length(good_data_baseline_normalization$filename),"spectra left after C/D filtering!",sep=" ",fill=T)
+}
 
 # output high quality SCRS
 data_postfilter  <- data_hyperSpec[data_hyperSpec$filename %in% good_data_baseline_normalization$filename] # output raw SCRS

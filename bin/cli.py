@@ -349,8 +349,8 @@ def tools_scrs_pipeline(raw_dir: Path = typer.Option(
     tools_scrs_preprocess(out_dir.joinpath('good'), out_dir.joinpath('pre'), meta_table,'SCRS')
     typer.secho(f"INFO: Calc SNR for SCRS.", fg=typer.colors.GREEN)
     tools_scrs_snr(out_dir.joinpath('pre','Cells_bg_baseline_zero_scale.csv'), out_dir.joinpath('stats'))
-    typer.secho(f"INFO: Calc CDR for SCRS.", fg=typer.colors.GREEN)
     if cdr:
+        typer.secho(f"INFO: Calc CDR for SCRS.", fg=typer.colors.GREEN)
         tools_scrs_cdr(out_dir.joinpath('pre','Cells_bg_baseline_zero_scale.csv'), out_dir.joinpath('stats'))
         if rarefy: # only when cdr ready
             typer.secho(f"INFO: Rarefy based on CDR.", fg=typer.colors.GREEN)
