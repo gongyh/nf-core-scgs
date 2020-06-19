@@ -1,6 +1,10 @@
 # gongyh/nf-core-scgs: Databases
 
 If running the pipeline in a local environment, you can download the databases of various tools using `bin/setup.sh` script.
+```bash
+docker run -v /data:/data -w /data -it gongyh/scgs /bin/bash
+(scgs_py36) root@a9cea5b5a003:/data# /opt/nf-core-scgs/bin/setup.sh
+```
 
 ## Supported databases
 

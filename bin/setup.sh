@@ -5,15 +5,15 @@
 echo """
 
 The following databases are supported by gongyh/scgs pipeline:
-  1) NCBI nt database
-  2) Uniprot proteomes database
-  3) Kraken database
-  4) CheckM database
-  5) EggNOG v5 database
-  6) KOfam HMM database
-  7) ResFinder database
-  8) PointFinder database
-  9) Funannotate database
+  1) NCBI nt database (latest version)
+  2) Uniprot proteomes database (Reference_Proteomes_2017_07)
+  3) Kraken database (minikraken_20171101_8GB_dustmasked)
+  4) CheckM database (checkm_data_2015_01_16, no longer needed after v1.0-rc)
+  5) EggNOG v5 database (v5)
+  6) KOfam HMM database (latest)
+  7) ResFinder database (latest)
+  8) PointFinder database (latest)
+  9) Funannotate database (latest, only needed for eukaryotic microbes, e.g. fungi)
 
 Current working directory is ${PWD}.
 All database files will be downloaded into ${PWD}.
@@ -63,6 +63,7 @@ fi
 if [ $choice -eq 5 ]; then
   mkdir -p $PWD/eggnog
   cd $PWD/eggnog
+  . /opt/conda/etc/profile.d/conda.sh
   conda activate scgs_py27
   download_eggnog_data.py -y
   conda deactivate
