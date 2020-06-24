@@ -91,8 +91,11 @@ if [ $choice -eq 8 ]; then
 fi
 
 if [ $choice -eq 9 ]; then
+  . /opt/conda/etc/profile.d/conda.sh
+  conda activate scgs_py27
   mkdir -p $PWD/funannotate
   funannotate setup -d $PWD/funannotate
+  conda deactivate
 fi
 
 
