@@ -29,7 +29,7 @@ install:
   # Install markdownlint-cli
   #- sudo apt-get install npm && npm install -g markdownlint-cli
   # Install GraphViz
-  - sudo apt-get install graphviz
+  - sudo apt-get install graphviz tar
 
 env:
   #- NXF_VER='0.32.0' # Specify a minimum NF version that should be tested and work
