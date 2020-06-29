@@ -29,7 +29,7 @@ install:
   # Install markdownlint-cli
   #- sudo apt-get install npm && npm install -g markdownlint-cli
   # Install GraphViz
-  - sudo apt-get install graphviz tar
+  - sudo apt-get install graphviz
 
 env:
   #- NXF_VER='0.32.0' # Specify a minimum NF version that should be tested and work
@@ -43,6 +43,5 @@ script:
   # Run the pipeline with the test profile
   - nextflow run ${TRAVIS_BUILD_DIR} -profile test,docker --cnv false --snv false
   # Test SCRS processing pipeline
-  - cp ${TRAVIS_BUILD_DIR}/test-datasets/scrs_test.tar.gz . && cp ${TRAVIS_BUILD_DIR}/test-datasets/scrs_meta.txt . && \
-    tar xzvf scrs_test.tar.gz && docker run -v ${TRAVIS_BUILD_DIR}:${TRAVIS_BUILD_DIR} -w ${TRAVIS_BUILD_DIR}/tests -i gongyh/scgs ${TRAVIS_BUILD_DIR}/bin/cli.py tools scrs_pipeline --raw-dir scrs_test --meta-table scrs_meta.txt --out-dir scrs_out -c -r
+  - cp ${TRAVIS_BUILD_DIR}/test-datasets/scrs_test.tar.gz . && cp ${TRAVIS_BUILD_DIR}/test-datasets/scrs_meta.txt . && tar xzvf scrs_test.tar.gz && docker run -v ${TRAVIS_BUILD_DIR}:${TRAVIS_BUILD_DIR} -w ${TRAVIS_BUILD_DIR}/tests -i gongyh/scgs ${TRAVIS_BUILD_DIR}/bin/cli.py tools scrs_pipeline --raw-dir scrs_test --meta-table scrs_meta.txt --out-dir scrs_out -c -r
 
