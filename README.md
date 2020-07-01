@@ -4,8 +4,7 @@
 
 [![Build Status](https://travis-ci.org/gongyh/nf-core-scgs.svg?branch=master)](https://travis-ci.org/gongyh/nf-core-scgs)
 [![CircleCI](https://circleci.com/gh/gongyh/nf-core-scgs.svg?style=svg&circle-token=5461bc66f3a9e65cbf8ee832cfacf579f90f8fa9)](https://circleci.com/gh/gongyh/nf-core-scgs)
-[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.32.0-brightgreen.svg)](https://www.nextflow.io/)
-<!-- [![Docker](https://img.shields.io/docker/cloud/build/gongyh/scgs.svg)](https://hub.docker.com/r/gongyh/scgs) -->
+[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.32.0-brightgreen.svg)](https://www.nextflow.io/)<!-- [![Docker](https://img.shields.io/docker/cloud/build/gongyh/scgs.svg)](https://hub.docker.com/r/gongyh/scgs) -->
 [![Docker Repository on Quay](https://quay.io/repository/gongyh/nf-core-scgs/status "Docker Repository on Quay")](https://quay.io/repository/gongyh/nf-core-scgs)
 
 ## Introduction
@@ -14,17 +13,17 @@ The pipeline is used for single cell genome sequencing data analysis and built u
 ![](scgs_pipeline.png)
 
 ## Quick start
-0. Prerequisites
+0. Prerequisites: 
 Git, Java 8 or later, Docker
 ```bash
 ## Install Nextflow
-curl -s https://get.nextflow.io | bash
-## Pull container
-docker pull gongyh/scgs:v1.0-rc
+$ curl -s https://get.nextflow.io | bash
+## Pull docker container
+$ docker pull gongyh/scgs:v1.0-rc
 ## Get the pipeline
-git clone https://github.com/gongyh/nf-core-scgs.git
-## Test
-./nextflow run nf-core-scgs -profile test_local,docker
+$ git clone https://github.com/gongyh/nf-core-scgs.git
+## Test (16 cpus, 48G memory)
+$ ./nextflow run nf-core-scgs -profile test_local,docker
 ```
 
 ## Documentation

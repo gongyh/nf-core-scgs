@@ -2,6 +2,21 @@
 
 <!-- TODO nf-core: Change this documentation if these parameters/errors are not relevant for your workflow -->
 
+## Can not use docker
+
+Use `docker info` to check whether your account can use docker, if not, contact your server administrator.
+```bash
+$ sudo usermod -aG docker $USER
+```
+
+## Can not pull docker image
+
+If you can not pull the docker image correctly, you may need to increase the size of base device (default 10G).
+```bash
+$ sudo dockerd --storage-opt dm.basesize=30G
+```
+More details, please refer to [this discussion](https://forums.docker.com/t/increase-container-volume-disk-size/1652) or [Google](https://www.google.com/).
+
 ## Input files not found
 
 If only no file, only one input file , or only read one and not read two is picked up then something is wrong with your input file declaration
