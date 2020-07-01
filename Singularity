@@ -36,7 +36,7 @@ IncludeCmd: yes
       tar xf rnammer-1.2.src.tar.Z && rm rnammer-1.2.src.tar.Z && patch < rnammer.patch && mkdir /usr/local/share/rnammer && \
       cp -r * /usr/local/share/rnammer && ln -s /usr/local/share/rnammer/rnammer /usr/local/bin/rnammer && rm -rf /tmp/rnammer
     /bin/bash -c "source activate scgs_py27 && blobtools-build_nodesdb && source deactivate"
-    /bin/bash -c "source activate scgs_py27 && mamba install -c bioconda -c conda-forge trnascan-se=1.3.1 funannotate=1.7.2 && conda clean -y -a && rm -rf /opt/conda/pkgs/* && source deactivate"
+    /bin/bash -c "source activate scgs_py27 && mamba install -y -c bioconda -c conda-forge trnascan-se=1.3.1 funannotate=1.7.2 && conda clean -y -a && rm -rf /opt/conda/pkgs/* && source deactivate"
     cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz -O kofamscan-1.1.0.tar.gz && \
       tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
     R -e "install.packages(c('magicaxis','ape','gridExtra','hyperSpec','permute'), repos='https://cloud.r-project.org')"
