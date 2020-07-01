@@ -24,7 +24,7 @@ The public docker images are tagged with the same version numbers as the code, w
 
 
 ## Singularity image
-Many HPC environments are not able to run Docker due to security issues. [Singularity](http://singularity.lbl.gov/) is a tool designed to run on such HPC systems which is very similar to Docker. Even better, it can use create images directly from dockerhub.
+Many HPC environments are not able to run Docker due to security issues. [Singularity](https://cloud.sylabs.io/) is a tool designed to run on such HPC systems which is very similar to Docker. Even better, it can use create images directly from dockerhub.
 
 To use the singularity image for a single run, use `-with-singularity`. This will download the docker container from dockerhub and create a singularity image for you dynamically.
 
@@ -33,15 +33,16 @@ If you intend to run the pipeline offline, nextflow will not be able to automati
 First, pull the image file where you have an internet connection:
 
 > NB: The "tag" at the end of this command corresponds to the pipeline version.
-> Here, we're pulling the docker image for version 1.0 of the gongyh/nf-core-scgs pipeline
+> Here, we're pulling the docker image of the gongyh/nf-core-scgs pipeline
 > Make sure that this tag corresponds to the version of the pipeline that you're using
 
 ```bash
-singularity pull --name scgs-1.0.simg docker://gongyh/scgs:1.0
+singularity pull scgs.simg docker://gongyh/scgs:latest
+#singularity pull scgs.simg library://gongyh/default/scgs:latest
 ```
 
 Then transfer this file and run the pipeline with this path:
 
 ```bash
-nextflow run /path/to/nf-core-scgs -with-singularity /path/to/scgs-1.0.simg
+nextflow run /path/to/nf-core-scgs -with-singularity /path/to/scgs.simg
 ```

@@ -87,14 +87,13 @@ The process is very similar: running the pipeline with the option `-profile sing
 If running offline with Singularity, you'll need to download and transfer the Singularity image first:
 
 ```bash
-singularity pull --name scgs.simg gongyh/scgs
-singularity build --sandbox /path/to/scgs-simg scgs.simg # if overlayfs not supported
+singularity pull scgs.simg library://gongyh/default/scgs:latest
 ```
 
 Once transferred, use `-with-singularity` and specify the path to the image file:
 
 ```bash
-nextflow run /path/to/nf-core-scgs -with-singularity /path/to/scgs-simg
+nextflow run /path/to/nf-core-scgs -with-singularity /path/to/scgs.simg
 ```
 
 Remember to pull updated versions of the singularity image if you update the pipeline.
