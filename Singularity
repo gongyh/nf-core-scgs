@@ -22,7 +22,7 @@ IncludeCmd: yes
     cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
     conda install python=3.6 conda=4.7.12 nomkl && conda install -y mamba -c conda-forge && conda clean -y -a && rm -rf /opt/conda/pkgs/*
     mamba env create -n scgs_py36 -f /environment.yml && conda clean -y -a && rm -rf /opt/conda/pkgs/*
-    echo 'conda activate scgs_py36' >> ~/.bashrc
+    echo 'conda activate scgs_py36' >> /root/.bashrc
     export PATH="/opt/conda/envs/scgs_py36/bin:$PATH"
     R -e "install.packages(c('BiocManager','stringi'), repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
     quast-download-silva && ktUpdateTaxonomy.sh
