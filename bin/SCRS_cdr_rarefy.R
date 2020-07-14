@@ -59,7 +59,7 @@ p1 <- ggplot(raw.data_new, aes(x = cells, y = stdev_mean)) + geom_point(size=0.0
   geom_hline(aes(yintercept=5), colour="grey10", linetype="dashed")+ #5% ???
   geom_vline(data=hline.data_all,aes(xintercept=cells), colour="grey10", linetype="dashed")+
   geom_point(data=hline.data_all,aes(x=cells,y=stdev_mean),size=1.5,color="#990000",shape=19)+
-  geom_text(data=hline.data_all,aes(x=cells+35,y=stdev_mean+0.5,label=paste(cells,"cells",sep=" ")),colour="#990000",size=5)+
+  geom_text(data=hline.data_all,aes(x=cells,y=stdev_mean,label=paste(cells,"cells",sep=" ")),colour="#990000",size=5,hjust=-0.5,vjust=-0.5)+
   theme_bw()+ 
   facet_wrap(~ Time,scales = "free_y")
 

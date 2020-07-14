@@ -20,11 +20,11 @@ wave_nums<-as.numeric(gsub("[A-Z]", "", colnames(SNR2)))
 SNR_All<-NULL
 for (i in (1:nrow(SNR2)))
 {
-  Baseline_start<-which.min(abs(wave_nums-1760))
-  Baseline_end<-which.min(abs(wave_nums-1960))
+  Baseline_start<-which.min(abs(wave_nums-1730))#1760
+  Baseline_end<-which.min(abs(wave_nums-1800))#1960
   Baseline<-SNR2[i,Baseline_start:Baseline_end]
-  marker<-max(SNR2[1,which.min(abs(wave_nums-1400)):which.min(abs(wave_nums-1460))])
-  SNR<-(marker-sum(Baseline)/length(Baseline))/sd(Baseline)
+  marker<-max(SNR2[i,which.min(abs(wave_nums-3050)):which.min(abs(wave_nums-2800))]) # C-H peak
+  SNR<-(marker-sum(Baseline)/length(Baseline))/sqrt(marker)
   SNR_All<-rbind(SNR_All,SNR) 
 }
 SNR_All<-cbind(SNR1[,1:7], data.frame(SNR=SNR_All))

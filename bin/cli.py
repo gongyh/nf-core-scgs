@@ -230,7 +230,7 @@ def tools_scrs_snr(scgs_csv: Path = typer.Option(
     typer.secho(f"Finished", fg=typer.colors.GREEN)
 
 @tools_app.command("scrs_cdr", help="C-H / C-D peaks calculation")
-def tools_scrs_cdr(scgs_csv: Path = typer.Option(
+def tools_scrs_cdr(scrs_csv: Path = typer.Option(
             ...,
             exists=True,
             file_okay=True,
@@ -253,7 +253,7 @@ def tools_scrs_cdr(scgs_csv: Path = typer.Option(
          ):
     # first check input SCRS
     typer.echo(f"Checking input SCRS.")
-    if scgs_csv.exists() and scgs_csv.is_file():
+    if scrs_csv.exists() and scrs_csv.is_file():
         pass
     else:
         typer.secho(f"Please confirm {scgs_csv} is exist and a CSV file.", fg=typer.colors.RED)
@@ -261,7 +261,7 @@ def tools_scrs_cdr(scgs_csv: Path = typer.Option(
 
     # call R script to process
     subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_cdr.R')),
-                          str(scgs_csv), str(out_dir)]), shell=True)
+                          str(scrs_csv), str(out_dir)]), shell=True)
 
     typer.secho(f"Finished", fg=typer.colors.GREEN)
 
@@ -288,7 +288,7 @@ def tools_scrs_rarefy(scgs_cdr: Path = typer.Option(
            )
          ):
     # first check input SCRS
-    typer.echo(f"Checking input SCRS.")
+    typer.echo(f"Checking CDR results file.")
     if scgs_cdr.exists() and scgs_cdr.is_file():
         pass
     else:
@@ -296,9 +296,11 @@ def tools_scrs_rarefy(scgs_cdr: Path = typer.Option(
         raise typer.Abort()
 
     # call R script to process
+    typer.echo(f"Performing permutations.")
     subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_cdr_stats.R')),
                           str(scgs_cdr), str(out_dir)]), shell=True)
     stats_out = out_dir.joinpath('CD_ratio_cummean_accum_df_by_Time.txt')
+    typer.echo(f"Calc cutoff.")
     if stats_out.exists() and stats_out.is_file():
         subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_cdr_rarefy.R')),
                           str(stats_out), str(out_dir)]), shell=True)

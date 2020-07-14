@@ -59,8 +59,8 @@ data_baseline_normalization <- data_baseline_normalization
 plot(data_baseline_normalization)
 data_baseline_normalization_frame  <- cbind(select(as.data.frame(data_baseline_normalization),-spc,-.row),as.data.frame(data_baseline_normalization$spc))
 good_data_baseline_normalization <- filter(data_baseline_normalization_frame, 
-                   apply(abs(data_baseline_normalization_frame[,5:75]),1,mean) < 0.05, 
-                   apply(abs(data_baseline_normalization_frame[,5:75]),1,sd) < 0.05)
+                   apply(abs(data_baseline_normalization_frame[,5:75]),1,mean) < 0.2, 
+                   apply(abs(data_baseline_normalization_frame[,5:75]),1,sd) < 0.2)
 cat("INFO:",length(good_data_baseline_normalization$filename),"spectra left after C/D filtering!",sep=" ",fill=T)
 }
 

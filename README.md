@@ -22,7 +22,7 @@ $ curl -s https://get.nextflow.io | bash
 $ docker pull gongyh/scgs:v1.0-rc
 ## Get the pipeline
 $ git clone https://github.com/gongyh/nf-core-scgs.git
-## Test (16 cpus, 48G memory)
+## Test (16 cpu cores, 48G memory)
 $ ./nextflow run nf-core-scgs -profile test_local,docker
 ```
 
@@ -45,6 +45,6 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 
 [2] Su, X., Gong, Y., Gou, H., Jing, X., Xu, T., Zheng, X., Chen, R., Li, Y., Ji, Y., Ma, B., Xu, J., Rational Optimization of Raman-Activated Cell Ejection and Sequencing for Bacteria. *Analytical Chemistry*, 2020. [https://doi.org/10.1021/acs.analchem.9b05345](https://doi.org/10.1021/acs.analchem.9b05345)
 
-## Credits
+## Contact
 gongyh/nf-core-scgs is maintained by [Yanhai Gong](mailto:gongyh@qibebt.ac.cn).
 

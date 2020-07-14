@@ -67,6 +67,9 @@ RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd
 # Install fastp
 RUN cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fastp
 
+# Install R packages
+RUN R -e "install.packages(c('ggpubr','rstatix'), repos='https://cloud.r-project.org')"
+
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/
 

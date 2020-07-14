@@ -94,14 +94,21 @@ data_baseline <- data_hyperSpec-spc.fit.poly.below(data_hyperSpec, data_hyperSpe
 #data_baseline <- data_hyperSpec - spc.rubberband(data_hyperSpec, noise=300, df=20)
 write.csv(data_baseline,"Cells_bg_baseline.csv",quote = F,row.names = F)
 
-########
-##zero##
-########
-yminset <- apply (data_baseline$spc, 1, min)
-data_baseline_zero<-data_baseline$spc+abs(yminset)
+## Replace negative intensities to zero ##
+data_baseline_zero<-data_baseline$spc
+data_baseline_zero[data_baseline_zero<0] <- 0
 data_baseline_zero_hyperSpec<-new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
                                    spc = data_baseline_zero, wavelength=wavelength)
 write.csv(data_baseline_zero_hyperSpec,"Cells_bg_baseline_zero.csv", quote=F, row.names=F)
+
+#output txts
+Cells_bg_baseline_zero <- "Cells_bg_baseline_zero/"
+dir.create(Cells_bg_baseline_zero)
+for (i in (1:nrow(data_baseline_zero_hyperSpec))){
+  Cells<-data.frame(shift=shift,intensity=t(data_baseline_zero_hyperSpec[i]$spc))
+  write.table(Cells,paste0(Cells_bg_baseline_zero,data_baseline_zero_hyperSpec$ID_Cell[i],".txt"),
+        row.names=F,col.names=F,quote=F,sep = "\t")
+}
 
 #################
 ##normalization##
