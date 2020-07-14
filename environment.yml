@@ -32,6 +32,11 @@ dependencies:
   - anaconda::tabulate=0.8.3
   - bioconda::nextflow=19.01.0
   - bioconda::checkm-genome=1.1.2
+  - bioconda::muscle=3.8.1551
+  - bioconda::gblocks=0.91b
+  - bioconda::fasttree=2.1.10
+  - bioconda::fastani=1.1
+  - bioconda::roary=3.13.0
   - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
   - conda-forge::colorama=0.4.3

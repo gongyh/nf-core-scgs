@@ -57,7 +57,7 @@ RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz 
     tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
 
 # Install R packages
-RUN R -e "install.packages(c('magicaxis','ape','gridExtra','hyperSpec','permute'), repos='https://cloud.r-project.org')"
+RUN R -e "install.packages(c('magicaxis','ape','gridExtra','hyperSpec','permute','ggpubr','rstatix'), repos='https://cloud.r-project.org')"
 
 # Install mccortex
 RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && apt update && \
@@ -67,8 +67,10 @@ RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd
 # Install fastp
 RUN cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fastp
 
-# Install R packages
-RUN R -e "install.packages(c('ggpubr','rstatix'), repos='https://cloud.r-project.org')"
+# Install ezTree and Pfam database
+RUN cd /opt && git clone https://github.com/yuwwu/ezTree.git && cd ezTree && mkdir data && cd data && \
+    curl ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam31.0/Pfam-A.hmm.gz > Pfam-A.hmm.gz && \
+    gzip -d Pfam-A.hmm.gz && hmmpress Pfam-A.hmm 1>/dev/null 2>/dev/null
 
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/
