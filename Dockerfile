@@ -67,10 +67,12 @@ RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd
 # Install fastp
 RUN cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fastp
 
-# Install ezTree and Pfam database
-RUN cd /opt && git clone https://github.com/yuwwu/ezTree.git && cd ezTree && mkdir data && cd data && \
-    curl ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam31.0/Pfam-A.hmm.gz > Pfam-A.hmm.gz && \
-    gzip -d Pfam-A.hmm.gz && hmmpress Pfam-A.hmm 1>/dev/null 2>/dev/null
+# Install ezTree
+RUN cd /opt && git clone https://github.com/gongyh/ezTree.git
+
+# Install PlasmidFinder and VirulenceFinder
+RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/plasmidfinder.git
+RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/virulencefinder.git
 
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/

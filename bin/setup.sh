@@ -14,6 +14,9 @@ The following databases are supported by gongyh/scgs pipeline:
   7) ResFinder database (latest)
   8) PointFinder database (latest)
   9) Funannotate database (latest, only needed for eukaryotic microbes, e.g. fungi)
+  10) PlasmidFinder database (latest)
+  11) VirulenceFinder database (latest)
+  12) Pfam-A database (Pfam31.0)
 
 Current working directory is ${PWD}.
 All database files will be downloaded into ${PWD}.
@@ -98,6 +101,26 @@ if [ $choice -eq 9 ]; then
   conda deactivate
 fi
 
+if [ $choice -eq 10 ]; then
+  mkdir -p $PWD/plasmidfinder
+  cd $PWD/plasmidfinder
+  git clone https://bitbucket.org/genomicepidemiology/plasmidfinder_db.git
+fi
+
+if [ $choice -eq 11 ]; then
+  mkdir -p $PWD/virulencefinder
+  cd $PWD/virulencefinder
+  git clone https://bitbucket.org/genomicepidemiology/virulencefinder_db.git
+fi
+
+if [ $choice -eq 12 ]; then
+  mkdir -p $PWD/PFAMDB
+  cd $PWD/PFAMDB
+  curl ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam31.0/Pfam-A.hmm.gz > Pfam-A.hmm.gz
+  gzip -d Pfam-A.hmm.gz
+  hmmpress Pfam-A.hmm 1>/dev/null 2>/dev/null
+  echo "Please set system environment variable PFAMDB_PATH to $PWD/PFAMDB before using ezTree."
+fi
 
 echo "Done!"
 
