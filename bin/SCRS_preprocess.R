@@ -28,6 +28,12 @@ if (!require("hyperSpec")) {
   install.packages("hyperSpec", dependencies=TRUE, repos='http://cloud.r-project.org/')
   library("hyperSpec")
 }
+
+if (!require("baseline")) {
+  install.packages("baseline", dependencies=TRUE, repos='http://cloud.r-project.org/')
+  library("baseline")
+}
+
 if (!require("RColorBrewer")) {
   install.packages("RColorBrewer", dependencies=TRUE, repos='http://cloud.r-project.org/')
   library("RColorBrewer")
@@ -85,13 +91,20 @@ Cells_bgsub<-raw.data[which(raw.data$CellBg=="Cell"),]
 #write.csv(Cells_bgsub,paste(output,"Cells_bg.csv",sep=""),quote = F,row.names = F)
 
 ############
-##baseline##
+##smooth##
 ############
 wavelength<-shift
 data_hyperSpec<-new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
                      spc = Cells_bgsub[,(ncol_meta+1):ncol_raw.data], wavelength=wavelength)
-data_baseline <- data_hyperSpec-spc.fit.poly.below(data_hyperSpec, data_hyperSpec, poly.order = 7)
-#data_baseline <- data_hyperSpec - spc.rubberband(data_hyperSpec, noise=300, df=20)
+data_hyperSpec<-spc.loess(data_hyperSpec,wavelength)
+
+############
+##baseline##
+############
+#data_baseline <- data_hyperSpec-spc.fit.poly.below(data_hyperSpec, data_hyperSpec, poly.order = 7)
+b_als <- baseline(data_hyperSpec$spc, method='als')
+data_baseline <- new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
+                      spc=getCorrected(b_als), wavelength=wavelength)
 write.csv(data_baseline,"Cells_bg_baseline.csv",quote = F,row.names = F)
 
 ## Replace negative intensities to zero ##

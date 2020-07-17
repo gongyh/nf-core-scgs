@@ -9,7 +9,7 @@ jobs:
      - checkout
      - run:
          name: test
-         command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work --cnv false --snv false --outdir result && cp ../test-datasets/scrs_test.tar.gz . && cp ../test-datasets/scrs_meta.txt . && tar xzvf scrs_test.tar.gz && ../bin/cli.py tools scrs_pipeline --raw-dir scrs_test --meta-table scrs_meta.txt --out-dir scrs_out -c -r && cd ..
+         command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work --cnv false --snv false --outdir result && cp ../test-datasets/scrs_test.tar.gz . && cp ../test-datasets/scrs_meta.txt . && tar xzvf scrs_test.tar.gz && ../bin/cli.py tools scrs_pipeline --raw-dir scrs_test --meta-table scrs_meta.txt --out-dir scrs_out -c && cd ..
          no_output_timeout: 30m
      - store_artifacts:
          path: /root/project/tests/result/pipeline_info

@@ -265,6 +265,42 @@ def tools_scrs_cdr(scrs_csv: Path = typer.Option(
 
     typer.secho(f"Finished", fg=typer.colors.GREEN)
 
+@tools_app.command("scrs_snr_cdr", help="SNR and CDR calculation")
+def tools_scrs_snr_cdr(scrs_csv: Path = typer.Option(
+            ...,
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           ),
+           out_dir: Path = typer.Option(
+            "./stats/",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True
+           )
+         ):
+    # first check input SCRS
+    typer.echo(f"Checking input SCRS.")
+    if scrs_csv.exists() and scrs_csv.is_file():
+        pass
+    else:
+        typer.secho(f"Please confirm {scgs_csv} is exist and a CSV file.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    # call R script to process
+    subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_snr_cdr.R')),
+                          str(scrs_csv), str(out_dir)]), shell=True)
+
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
+
 @tools_app.command("scrs_rarefy", help="Sample depth for CDR")
 def tools_scrs_rarefy(scgs_cdr: Path = typer.Option(
             ...,
@@ -341,22 +377,18 @@ def tools_scrs_pipeline(raw_dir: Path = typer.Option(
             resolve_path=True,
             show_default=True
            ),
-           cdr: bool = typer.Option(False, "--cdr", "-c"),
-           rarefy: bool = typer.Option(False, "--rarefy", "-r")
+           cdr: bool = typer.Option(False, "--cdr", "-c")
          ):
     out_dir.mkdir(exist_ok=True)
-    typer.secho(f"INFO: filter low quality SCRS.", fg=typer.colors.GREEN)
-    tools_scrs_filter(raw_dir, out_dir.joinpath('good'))
+    #typer.secho(f"INFO: filter low quality SCRS.", fg=typer.colors.GREEN)
+    #tools_scrs_filter(raw_dir, out_dir.joinpath('good'))
     typer.secho(f"INFO: preprocess SCRS.", fg=typer.colors.GREEN)
-    tools_scrs_preprocess(out_dir.joinpath('good'), out_dir.joinpath('pre'), meta_table,'SCRS')
+    tools_scrs_preprocess(raw_dir, out_dir.joinpath('pre'), meta_table,'SCRS')
     typer.secho(f"INFO: Calc SNR for SCRS.", fg=typer.colors.GREEN)
     tools_scrs_snr(out_dir.joinpath('pre','Cells_bg_baseline_zero_scale.csv'), out_dir.joinpath('stats'))
     if cdr:
         typer.secho(f"INFO: Calc CDR for SCRS.", fg=typer.colors.GREEN)
-        tools_scrs_cdr(out_dir.joinpath('pre','Cells_bg_baseline_zero_scale.csv'), out_dir.joinpath('stats'))
-        if rarefy: # only when cdr ready
-            typer.secho(f"INFO: Rarefy based on CDR.", fg=typer.colors.GREEN)
-            tools_scrs_rarefy(out_dir.joinpath('stats','CDR.txt'), out_dir.joinpath('rarefy'))
+        tools_scrs_snr_cdr(out_dir.joinpath('pre','Cells_bg_baseline_zero_scale.csv'), out_dir.joinpath('stats'))
     typer.secho(f"Done!", fg=typer.colors.GREEN)
 
 ####################################################################################

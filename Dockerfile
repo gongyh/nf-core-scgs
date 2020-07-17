@@ -57,7 +57,7 @@ RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz 
     tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
 
 # Install R packages
-RUN R -e "install.packages(c('magicaxis','ape','gridExtra','hyperSpec','permute','ggpubr','rstatix'), repos='https://cloud.r-project.org')"
+RUN R -e "install.packages(c('magicaxis','ape','gridExtra','hyperSpec','baseline','permute','ggpubr','rstatix'), repos='https://cloud.r-project.org')"
 
 # Install mccortex
 RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && apt update && \

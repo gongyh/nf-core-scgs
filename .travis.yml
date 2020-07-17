@@ -43,5 +43,5 @@ script:
   # Run the pipeline with the test profile
   - nextflow run ${TRAVIS_BUILD_DIR} -profile test,docker --cnv false --snv false
   # Test SCRS processing pipeline
-  - cp ${TRAVIS_BUILD_DIR}/test-datasets/scrs_test.tar.gz . && cp ${TRAVIS_BUILD_DIR}/test-datasets/scrs_meta.txt . && tar xzvf scrs_test.tar.gz && docker run -v ${TRAVIS_BUILD_DIR}:${TRAVIS_BUILD_DIR} -w ${TRAVIS_BUILD_DIR}/tests -i gongyh/scgs ${TRAVIS_BUILD_DIR}/bin/cli.py tools scrs_pipeline --raw-dir scrs_test --meta-table scrs_meta.txt --out-dir scrs_out -c -r
+  - cp ${TRAVIS_BUILD_DIR}/test-datasets/scrs_test.tar.gz . && cp ${TRAVIS_BUILD_DIR}/test-datasets/scrs_meta.txt . && tar xzvf scrs_test.tar.gz && docker run -v ${TRAVIS_BUILD_DIR}:${TRAVIS_BUILD_DIR} -w ${TRAVIS_BUILD_DIR}/tests -i gongyh/scgs ${TRAVIS_BUILD_DIR}/bin/cli.py tools scrs_pipeline --raw-dir scrs_test --meta-table scrs_meta.txt --out-dir scrs_out -c
 
