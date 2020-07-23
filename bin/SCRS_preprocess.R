@@ -11,14 +11,14 @@ if (!require("tools")) {
 
 # Command line argument processing
 args = commandArgs(trailingOnly=TRUE)
-if (length(args) < 4) {
-  stop("Usage: SCRS_preprocess.R <input_folder> <output_dir> <metadata> <prefix>", call.=FALSE)
+if (length(args) < 3) {
+  stop("Usage: SCRS_preprocess.R <input_folder> <output_dir> <metadata>", call.=FALSE)
 }
 
 filepath <- file_path_as_absolute(args[1]) # directory containing SCRS txts
 output <- args[2] # directory to store outputs
 meta_fp <- file_path_as_absolute(args[3]) # meta TSV file, ID_Cell	Timepoint	Label	CellBg	Cell
-txt_filename <- args[4]
+txt_filename <- 'SCRS'
 
 dir.create(output)
 output <- file_path_as_absolute(output)
@@ -39,6 +39,19 @@ if (!require("RColorBrewer")) {
   library("RColorBrewer")
 }
 
+sys.script <- function(){
+  cmdargs <- commandArgs(trailingOnly = FALSE)
+  fl <- grep("--file=", cmdargs)
+  if (length(fl) > 0) {
+    # Rscript
+    return(normalizePath(gsub("--file=", "", cmdargs[fl])))
+  } else {
+    # 'source'd via R console
+    return(normalizePath(sys.frames()[[1]]$ofile))
+  }
+}
+
+source(paste(dirname(sys.script()),'SCRS_helpers.R',sep="/"))
 
 ###########################
 # Read meta data          #
@@ -59,7 +72,10 @@ for (filename in files)
   ID_Cell <- sub(".txt","",filename)
   if (ID_Cell %in% ID_Cells) {
     dt <- read.table(filename, header=F, sep="\t")$V2
-    data <- c(unlist(meta_data[meta_data$ID_Cell==ID_Cell,]), dt)
+    # remove Cosmic Rays
+    dt2 <- removeCosmic(dt)
+    if (dt2$cosmic) {cat(filename,"contains cosmic ray signal.\n")}
+    data <- c(unlist(meta_data[meta_data$ID_Cell==ID_Cell,]), dt2$spc)
     final_data <- cbind(final_data, data)
   }
 }
@@ -90,13 +106,13 @@ Cells_bgsub<-raw.data[which(raw.data$CellBg=="Cell"),]
 #Cells_bgsub<-raw.data_bgsub[which(raw.data_bgsub$CellBg=="Cell"),]
 #write.csv(Cells_bgsub,paste(output,"Cells_bg.csv",sep=""),quote = F,row.names = F)
 
-############
-##smooth##
-############
+#### perpare hyperSpec object ####
 wavelength<-shift
 data_hyperSpec<-new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
                      spc = Cells_bgsub[,(ncol_meta+1):ncol_raw.data], wavelength=wavelength)
-data_hyperSpec<-spc.loess(data_hyperSpec,wavelength)
+
+### smooth ###
+data_hyperSpec<-spc.loess(data_hyperSpec,wavelength, normalize=F)
 
 ############
 ##baseline##
@@ -127,6 +143,20 @@ for (i in (1:nrow(data_baseline_zero_hyperSpec))){
 ##normalization##
 #################
 data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowMeans (data_baseline_zero_hyperSpec)
+
+### remove spectrum which contains cartenoid peaks ###
+keep = c()
+for (i in (1:nrow(data_baseline_zero_scale_hyperSpec))){
+    peaks <- wavelength[findPeaks(data_baseline_zero_scale_hyperSpec[i]$spc)]
+    if ((length(peaks[(peaks>992)&(peaks<1010)])>=1) && (length(peaks[(peaks>1145)&(peaks<1160)])>=1) &&
+        (length(peaks[(peaks>1480)&(peaks<1525)])>=1)) { # cartenoid peaks
+        cat(as.character(data_baseline_zero_scale_hyperSpec$ID_Cell)[i],"contains cartenoid peaks.\n")
+    } else {
+        keep <- c(keep, i)
+    }
+}
+data_baseline_zero_scale_hyperSpec <- data_baseline_zero_scale_hyperSpec[keep]
+
 #data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowSums (data_baseline_zero_hyperSpec)
 write.csv(data_baseline_zero_scale_hyperSpec, "Cells_bg_baseline_zero_scale.csv",
           quote=F, row.names=F)

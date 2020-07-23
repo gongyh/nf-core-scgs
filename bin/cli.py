@@ -159,8 +159,7 @@ def tools_scrs_preprocess(raw_dir: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=True
-           ),
-           out_prefix: str = typer.Option("SCRS", show_default=True)
+           )
       ):
     # first check input SCRS
     typer.echo(f"Checking input SCRS.")
@@ -189,7 +188,7 @@ def tools_scrs_preprocess(raw_dir: Path = typer.Option(
 
     # call R script to process
     subprocess.check_call(" ".join(['Rscript', str(Path(__file__).resolve().parent.joinpath('SCRS_preprocess.R')),
-                          str(raw_dir), str(out_dir), str(meta_table), out_prefix]), shell=True)
+                          str(raw_dir), str(out_dir), str(meta_table)]), shell=True)
 
     typer.secho(f"Finished", fg=typer.colors.GREEN)
 
@@ -383,7 +382,7 @@ def tools_scrs_pipeline(raw_dir: Path = typer.Option(
     #typer.secho(f"INFO: filter low quality SCRS.", fg=typer.colors.GREEN)
     #tools_scrs_filter(raw_dir, out_dir.joinpath('good'))
     typer.secho(f"INFO: preprocess SCRS.", fg=typer.colors.GREEN)
-    tools_scrs_preprocess(raw_dir, out_dir.joinpath('pre'), meta_table,'SCRS')
+    tools_scrs_preprocess(raw_dir, out_dir.joinpath('pre'), meta_table)
     typer.secho(f"INFO: Calc SNR for SCRS.", fg=typer.colors.GREEN)
     tools_scrs_snr(out_dir.joinpath('pre','Cells_bg_baseline_zero_scale.csv'), out_dir.joinpath('stats'))
     if cdr:

@@ -46,7 +46,7 @@ write.table(CDR_All, file=paste0(output_dir,"/","SNR_CDR.txt"), sep="\t", quote=
 pdf(paste0(output_dir,"/","CDR.pdf"), width=7, height=5, useDingbats = FALSE)
 par(ps=12)
 df <- read.table(paste0(output_dir,"/","SNR_CDR.txt"), sep='\t', header=T)
-df <- df[df$SNR>2,]
+df <- df[df$SNR>2.5,]
 
 ggdotplot(df, x = "Group", y = "CDR", add = c("violin","mean_sd"), size=0.3) +
     theme_bw() + xlab("Group") + ylab("CDR") + stat_compare_means() +
