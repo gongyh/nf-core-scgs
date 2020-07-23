@@ -38,6 +38,9 @@ dependencies:
   - bioconda::fasttree=2.1.10
   - bioconda::fastani=1.1
   - bioconda::roary=3.13.0
+  - bioconda::ncbi-genome-download=0.3.0
+  - bioconda::scoary=1.6.16
+  - bioconda::ete3=3.1.1
   - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
   - conda-forge::colorama=0.4.3
