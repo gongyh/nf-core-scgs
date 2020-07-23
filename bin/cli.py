@@ -346,7 +346,7 @@ def tools_scrs_rarefy(scgs_cdr: Path = typer.Option(
     typer.secho(f"Finished", fg=typer.colors.GREEN)
 
 
-@tools_app.command("scrs_pipeline", help="Pick->normalize->S/N->CDR->rarefy")
+@tools_app.command("scrs_pipeline", help="Filter->normalize->S/N->CDR")
 def tools_scrs_pipeline(raw_dir: Path = typer.Option(
             ...,
             exists=True,
@@ -500,7 +500,7 @@ def tools_split(results_dir: Path = typer.Option(
         typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
 
 @tools_app.command("scgs_checkm", help="Perform CheckM for (splitted) draft assemblies")
-def tools_split(fastas_dir: Path = typer.Option(
+def tools_checkm(fastas_dir: Path = typer.Option(
             ...,
             exists=True,
             file_okay=False,
@@ -555,6 +555,189 @@ def tools_split(fastas_dir: Path = typer.Option(
 
     subprocess.check_call(" ".join([str(Path(__file__).resolve().parent.joinpath('checkm.sh')), str(fastas_dir), str(suffix),
                                     str(genus), str(output_dir), str(threads), str(checkm_table)]), shell=True)
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
+
+@tools_app.command("scgs_fastANI", help="Perform FastANI for genomes")
+def tools_fastANI(query_genome: Path = typer.Option(
+            None, "--query", "-q",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="query genome (fasta/fastq)[.gz]"
+           ), query_list: Path = typer.Option(
+            None, "--queryList", "--ql",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="a file containing list of query genomes, one genome per line. * Incompatible with: --query"
+           ), ref_genome: Path = typer.Option(
+            None, "--ref", "-r",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="reference genome (fasta/fastq)[.gz]"
+           ), ref_list: Path = typer.Option(
+            None, "--refList", "--rl",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="a file containing list of reference genomes, one genome per line. * Incompatible with: --ref"
+           ), output_file: Path = typer.Option(
+            "fastani.out", "--output", "-o",
+            exists=False,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=True,
+            help="output file name"
+           ), threads: int = typer.Option(1, "--threads", "-t", show_default=True, 
+            help="thread count for parallel execution"
+           ), visualize: bool = typer.Option(False, "--visualize", 
+            help="output mappings and visualization")):
+
+    """
+    This is a wrapper script for fastANI. FastANI is a fast alignment-free implementation 
+      for computing whole-genome Average Nucleotide Identity (ANI) between genomes.
+    """
+
+    if query_genome is not None and query_list is not None:
+        typer.secho(f"Error: only one of --query or --queryList can be set.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    if ref_genome is not None and ref_list is not None:
+        typer.secho(f"Error: only one of --ref or --refList can be set.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    if visualize and (query_genome is None or ref_genome is None):
+        typer.secho(f"Error: visualize can only be enabled for one to one genome comparison", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    params_str = ""
+
+    if query_genome is not None:
+        params_str += "--query " + str(query_genome)
+    elif query_list is not None:
+        params_str += "--queryList " + str(query_list)
+    else:
+        typer.secho(f"Error: query genome(s) need to be set by --query or --queryList.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    if ref_genome is not None:
+        params_str += " --ref " + str(ref_genome)
+    elif ref_list is not None:
+        params_str += " --refList " + str(ref_list)
+    else:
+        typer.secho(f"Error: reference genome(s) need to be set by --ref or --refList.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    if visualize:
+        params_str += " --visualize"
+
+    subprocess.check_call(" ".join(["fastANI", params_str, "--output", str(output_file), "--threads", str(threads)]), shell=True)
+    if visualize:
+        visfile = Path(str(output_file)+".visual")
+        if visfile.exists() and visfile.is_file(): # can be used to draw plot
+            subprocess.check_call(" ".join([str(Path(__file__).resolve().parent.joinpath('fastANI_vis.R')), 
+                                  str(query_genome), str(ref_genome), str(visfile)]), shell=True)
+        else: # error
+            typer.secho(f"Error: mapping file (with .visual extension) is not generated.", fg=typer.colors.RED)
+
+    typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
+
+@tools_app.command("scgs_roary", help="Perform Roary for genomes")
+def tools_roary(input_dir: Path = typer.Option(
+            ..., "--input", "-i",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="directory with gff files"
+           ), threads: int = typer.Option(8, "--threads", "-t", show_default=True, 
+            help="number of threads"
+           ), kraken_db: Path = typer.Option(
+            None, "--kraken_db", "-k",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="path to Kraken database for QC"
+           ), output_dir: Path = typer.Option(
+            ".", "--output", "-f",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True,
+            help="output directory"
+           )):
+    """
+    This is a wrapper script for Roary. All GFF3 files created by Prokka are valid with Roary
+      and this is the recommended way of generating the input files.
+    """
+    typer.echo(f"Checking input.")
+    gffs = []
+
+    for child in input_dir.iterdir():
+        if child.is_file() and child.suffix == '.gff':
+            gffs.append(child)
+
+    if len(gffs) < 3:
+        typer.secho(f"Error: at least 3 gff files needed.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    params_str = "-r -e --mafft"
+    if kraken_db is not None:
+        params_str += " -qc -k " + str(kraken_db)
+
+    typer.echo(f"Run roary.")
+    subprocess.check_call(" ".join(["roary", params_str, "-f", str(output_dir), "-p", str(threads), str(input_dir)+"/*.gff"]), shell=True)
+    gpa = output_dir.joinpath("gene_presence_absence.csv")
+    if not gpa.exists():
+        typer.secho(f"Error: gene_presence_absence.csv not generated", fg=typer.colors.RED)
+        raise typer.Abort()
+    aln = output_dir.joinpath("core_gene_alignment.aln")
+    if not aln.exists():
+        typer.secho(f"Error: no core gene alignment file generated.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    typer.echo(f"Generate a newick tree.")
+    subprocess.check_call(" ".join(["fasttree", "-nt", "-gtr", str(aln), ">", str(output_dir)+"/tree.newick"]), shell=True)
+
+    tree = output_dir.joinpath("tree.newick")
+    if not tree.exists():
+        typer.secho(f"Error: tree file not generated.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    typer.echo(f"Plot figures.")
+    subprocess.check_call(" ".join([str(Path(__file__).resolve().parent.joinpath('roary_plots.py')),
+                          str(tree), str(gpa)]), shell=True)
+
     typer.secho(f"Finished", fg=typer.colors.GREEN)
 
 @tools_app.callback()

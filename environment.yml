@@ -26,6 +26,7 @@ dependencies:
   - prokka=1.12
   - diamond=0.9.24
   - biopython=1.73
+  - seaborn=0.10.1
   - cgecore=1.5.1
   - seqtk=1.3
   - khmer=2.1.2

@@ -37,7 +37,7 @@ RUN mamba env create -n scgs_py27 -f /py27_env.yml nomkl && conda clean -y -a &&
 
 # Install ACDC
 RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/scgs_py36/ && \
-    make -j $(nproc) && make install && rm -rf /tmp/acdc && mkdir /acdc
+    make -j $(nproc) && make install && rm -rf /tmp/acdc
 
 # Install rnammer
 RUN mkdir /tmp/rnammer
@@ -57,7 +57,7 @@ RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz 
     tar --no-same-owner -xzvf kofamscan-1.1.0.tar.gz && rm -rf kofamscan-1.1.0.tar.gz
 
 # Install R packages
-RUN R -e "install.packages(c('magicaxis','ape','gridExtra','hyperSpec','baseline','permute','ggpubr','rstatix'), repos='https://cloud.r-project.org')"
+RUN R -e "install.packages(c('magicaxis','ape','gridExtra','genoPlotR','hyperSpec','baseline','permute','ggpubr','rstatix'), repos='https://cloud.r-project.org')"
 
 # Install mccortex
 RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && apt update && \
