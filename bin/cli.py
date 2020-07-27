@@ -567,7 +567,7 @@ def tools_fastANI(query_genome: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=False,
-            help="query genome (fasta/fastq)[.gz]"
+            help="Query genome (fasta/fastq)[.gz]"
            ), query_list: Path = typer.Option(
             None, "--queryList", "--ql",
             exists=True,
@@ -577,7 +577,7 @@ def tools_fastANI(query_genome: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=False,
-            help="a file containing list of query genomes, one genome per line. * Incompatible with: --query"
+            help="A file containing list of query genomes, one genome per line. * Incompatible with: --query"
            ), ref_genome: Path = typer.Option(
             None, "--ref", "-r",
             exists=True,
@@ -587,7 +587,7 @@ def tools_fastANI(query_genome: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=False,
-            help="reference genome (fasta/fastq)[.gz]"
+            help="Reference genome (fasta/fastq)[.gz]"
            ), ref_list: Path = typer.Option(
             None, "--refList", "--rl",
             exists=True,
@@ -597,7 +597,7 @@ def tools_fastANI(query_genome: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=False,
-            help="a file containing list of reference genomes, one genome per line. * Incompatible with: --ref"
+            help="A file containing list of reference genomes, one genome per line. * Incompatible with: --ref"
            ), output_file: Path = typer.Option(
             "fastani.out", "--output", "-o",
             exists=False,
@@ -609,9 +609,9 @@ def tools_fastANI(query_genome: Path = typer.Option(
             show_default=True,
             help="output file name"
            ), threads: int = typer.Option(1, "--threads", "-t", show_default=True, 
-            help="thread count for parallel execution"
+            help="Thread count for parallel execution."
            ), visualize: bool = typer.Option(False, "--visualize", 
-            help="output mappings and visualization")):
+            help="Output mappings and visualization.")):
 
     """
     This is a wrapper script for fastANI. FastANI is a fast alignment-free implementation 
@@ -672,9 +672,9 @@ def tools_roary(input_dir: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=False,
-            help="directory with gff files"
+            help="Directory with gff files."
            ), threads: int = typer.Option(8, "--threads", "-t", show_default=True, 
-            help="number of threads"
+            help="Number of threads."
            ), kraken_db: Path = typer.Option(
             None, "--kraken_db", "-k",
             exists=True,
@@ -684,7 +684,7 @@ def tools_roary(input_dir: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=False,
-            help="path to Kraken database for QC"
+            help="Path to Kraken database for QC."
            ), output_dir: Path = typer.Option(
             ".", "--output", "-f",
             exists=True,
@@ -694,7 +694,7 @@ def tools_roary(input_dir: Path = typer.Option(
             readable=True,
             resolve_path=True,
             show_default=True,
-            help="output directory"
+            help="Output directory."
            )):
     """
     This is a wrapper script for Roary. All GFF3 files created by Prokka are valid with Roary
@@ -737,6 +737,94 @@ def tools_roary(input_dir: Path = typer.Option(
     typer.echo(f"Plot figures.")
     subprocess.check_call(" ".join([str(Path(__file__).resolve().parent.joinpath('roary_plots.py')),
                           str(tree), str(gpa)]), shell=True)
+
+    typer.secho(f"Finished", fg=typer.colors.GREEN)
+
+@tools_app.command("scgs_scoary", help="Perform Scoary for genomes")
+def tools_scoary(traits: Path = typer.Option(
+            ..., "--traits", "-t",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="Input trait table (csv), with trait presence: 1, absence: 0."
+           ), gene_presence: Path = typer.Option(
+            ..., "--genes", "-g",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="Input gene presence/absence table (csv) from ROARY."
+           ), correction: str = typer.Option("I", "--correction", "-c", show_default=True, 
+            help="Apply the indicated filtration measures (I B BH PW EPW or P), separate multiple measures by space, e.g. EPW P"
+           ), pvalue_cutoff: str = typer.Option("0.05", "--p_value_cutoff", "-p", show_default=True, 
+            help="P-value cut-off / alpha level, can be multiple values for different correction method, separated by space."
+           ), permute: int = typer.Option(None, "--permute", "-e", show_default=False, 
+            help="Perform N number of permutations of the significant results post-analysis. (E.g. 10000)"
+           ), restrict_to: str = typer.Option(None, "--restrict_to", "-r", show_default=False, 
+            help="Use if you only want to analyze a subset of your strains. (E.g. Strain1,Strain2,Strain3)"
+           ), threads: int = typer.Option(1, "--threads", "-t", show_default=True, 
+            help="Number of threads."
+           ), newicktree: Path = typer.Option(
+            None, "--newicktree", "-n",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            show_default=False,
+            help="Supply a custom tree (Newick format) for phylogenetic analyses instead instead of calculating it internally."
+           ), collapse: bool = typer.Option(False, "--collapse", 
+            help="Collapse correlated genes into merged units."
+           ), outdir: Path = typer.Option(
+            ".", "--outdir", "-o",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            readable=True,
+            resolve_path=True,
+            show_default=True,
+            help="Directory to place output files."
+           )):
+    """
+    This is a wrapper script for Scoary.
+    """
+    typer.echo(f"Checking input.")
+    cmd = "scoary -g "+str(gene_presence)+" -t "+str(traits)
+
+    corrects = correction.strip().split(" ")
+    pvalues = pvalue_cutoff.strip().split(" ")
+    if len(corrects)>0 and len(pvalues)>0 and len(corrects)==len(pvalues): # correct
+        cmd += " -c "+corrects+" -p "+pvalues
+    else:
+        typer.secho(f"Error: check --correction and --p_value_cutoff parameters.", fg=typer.colors.RED)
+        raise typer.Abort()
+
+    if permute is not None:
+        cmd += " -e "+permute
+
+    if restrict_to is not None:
+        cmd += " -r "+restrict_to+" -w"
+
+    cmd += " --threads "+threads
+
+    if newicktree is not None:
+        cmd += " -n "+newicktree
+
+    if collapse:
+        cmd += " --collapse"
+
+    cmd += " -o "+str(outdir)
+
+    subprocess.check_call(cmd, shell=True)
 
     typer.secho(f"Finished", fg=typer.colors.GREEN)
 
