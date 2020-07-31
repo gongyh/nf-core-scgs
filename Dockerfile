@@ -68,9 +68,8 @@ RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd
 RUN cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fastp
 
 # Install ANIcalculator
-ADD ANIcalculator_v1.tgz /usr/local/bin
-RUN cd /usr/local/bin && tar xzvf ANIcalculator_v1.tgz && cp ANIcalculator_v1/ANIcalculator . && cp ANIcalculator_v1/nsimscan . && \
-    rm -rf ANIcalculator_v1.tgz ANIcalculator_v1
+ADD ANIcalculator_v1.tgz /usr/local/bin/
+RUN cd /usr/local/bin && cp ANIcalculator_v1/ANIcalculator . && cp ANIcalculator_v1/nsimscan . && rm -rf ANIcalculator_v1
 
 # Install ezTree
 RUN cd /opt && git clone https://github.com/gongyh/ezTree.git
