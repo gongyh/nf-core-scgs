@@ -67,6 +67,9 @@ def helpMessage() {
       --euk                         Euk genome
       --fungus                      Fungal genome
 
+    Taxa annotation options:
+      --evalue                      E-value for blasting NCBI-nt and uniprot reference proteomes database (default=1e-25)
+
     Diamond options:
       --blockSize                   Sequence block size in billions of letters (default=2.0)
 
@@ -122,6 +125,7 @@ params.cnv = false
 params.saturation = false
 params.bulk = false
 params.ass = false
+params.evalue = 1e-25
 params.blockSize = 2.0
 params.acquired = true
 params.point = false
@@ -868,7 +872,7 @@ process spades {
 
     output:
     file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_funannotate
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_funannotate
 
     when:
     params.ass
@@ -1010,7 +1014,7 @@ process blast_nt {
    """
    export BLASTDB=$nt
    blastn -query $contigs -db $nt/nt -outfmt '6 qseqid staxids bitscore std' \
-     -max_target_seqs 1 -max_hsps 1 -evalue 1e-25 \
+     -max_target_seqs 1 -max_hsps 1 -evalue ${params.evalue} \
      -num_threads ${task.cpus} -out ${prefix}_nt.out
    """
 }
@@ -1047,7 +1051,7 @@ process diamond_uniprot {
      used = true
      """
      diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
-       --outfmt 6 --sensitive --max-target-seqs 1 --evalue 1e-25 -b ${params.blockSize}
+       --outfmt 6 --sensitive --max-target-seqs 1 --evalue ${params.evalue} -b ${params.blockSize}
      set +u && source activate scgs_py27
      blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
      """
@@ -1141,6 +1145,29 @@ process prokka {
    sed '/^##FASTA/Q' ${prefix}/${prefix}.gff > ${prefix}/${prefix}_noseq.gff
    """
 }
+/*
+ * STEP 11.2 - Find genes using prodigal
+ */
+process prodigal {
+   tag "$prefix"
+   publishDir "${params.outdir}/prodigal", mode: 'copy'
+
+   input:
+   file contigs from contigs_for_prodigal
+
+   output:
+   file "$prefix"
+
+   when:
+   !euk
+
+   script:
+   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   """
+   prodigal -i $contigs -o ${prefix}/${prefix}.gbk -a ${prefix}/${prefix}.proteins.faa -p meta
+   """
+}
+
 
 } else {
 prokka_for_mqc1 = file('/dev/null')

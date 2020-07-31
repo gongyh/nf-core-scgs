@@ -41,6 +41,8 @@ dependencies:
   - bioconda::ncbi-genome-download=0.3.0
   - bioconda::scoary=1.6.16
   - bioconda::ete3=3.1.1
+  - bioconda::drep=2.6.2
+  - bioconda::comparem=0.1.1
   - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
   - conda-forge::colorama=0.4.3
