@@ -182,7 +182,7 @@ write.csv(cluster_means_Group,"Cells_bg_baseline_zero_scale_M_Group.csv",quote =
 Cells_bg_baseline_zero_scale_M_Group="Cells_bg_baseline_zero_scale_M_Group/"
 dir.create(Cells_bg_baseline_zero_scale_M_Group)
 for (i in (1:nrow(cluster_means_Group))){
-  Cells<-data.frame(shift=shift[1],intensity=t(cluster_means_Group[i]$spc))
+  Cells<-data.frame(shift=shift,intensity=t(cluster_means_Group[i]$spc))
   write.table(Cells,paste(Cells_bg_baseline_zero_scale_M_Group,cluster_means_Group$Group[i],"_M.txt",sep=""),row.names=F,col.names=F,quote=F,sep = "\t")
 }
 ###################################################################

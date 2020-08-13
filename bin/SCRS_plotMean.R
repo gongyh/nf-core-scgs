@@ -63,6 +63,14 @@ data_baseline_zero_scale_hyperSpec <- data_baseline_zero_scale_hyperSpec2[data_b
 cluster_means_Group <- aggregate (data_baseline_zero_scale_hyperSpec, 
                                   data_baseline_zero_scale_hyperSpec$Group, mean)
 #write.csv(cluster_means_Group,"Cells_bg_baseline_zero_scale_M_Group.csv",quote = F,row.names = F)
+
+#output txts
+Cells_bg_baseline_zero_scale_M_Group="Cells_bg_baseline_zero_scale_M_Group/"
+dir.create(Cells_bg_baseline_zero_scale_M_Group)
+for (i in (1:nrow(cluster_means_Group))){
+  Cells<-data.frame(shift=wave_nums,intensity=t(cluster_means_Group[i]$spc))
+  write.table(Cells,paste(Cells_bg_baseline_zero_scale_M_Group,cluster_means_Group$Group[i],"_M.txt",sep=""),row.names=F,col.names=F,quote=F,sep = "\t")
+}
 ###################################################################
 
 #############
