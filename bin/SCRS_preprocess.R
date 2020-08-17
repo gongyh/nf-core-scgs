@@ -12,13 +12,18 @@ if (!require("tools")) {
 # Command line argument processing
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 3) {
-  stop("Usage: SCRS_preprocess.R <input_folder> <output_dir> <metadata>", call.=FALSE)
+  stop("Usage: SCRS_preprocess.R <input_folder> <output_dir> <metadata> {<normalize_500-2000>}", call.=FALSE)
 }
 
 filepath <- file_path_as_absolute(args[1]) # directory containing SCRS txts
 output <- args[2] # directory to store outputs
 meta_fp <- file_path_as_absolute(args[3]) # meta TSV file, ID_Cell	Timepoint	Label	CellBg	Cell
 txt_filename <- 'SCRS'
+
+normalize_fp <- FALSE
+if (length(args) >= 4) {
+  normalize_fp <- as.logical(args[4])
+}
 
 dir.create(output)
 output <- file_path_as_absolute(output)
@@ -89,8 +94,8 @@ raw.data <- read.table(paste0(txt_filename,"_rawdata.txt"),header = T,sep="\t")
 #########################
 ##wholespectra data######
 #########################
-Group<-paste(raw.data$Timepoint, sep="")
-raw.data<-cbind(No_Cell=seq(1:nrow(raw.data)),Group=Group,raw.data) #Add No_Cell, Group and other meta information
+Group <- paste(raw.data$Timepoint, sep="")
+raw.data <- cbind(No_Cell=seq(1:nrow(raw.data)),Group=Group,raw.data) #Add No_Cell, Group and other meta information
 
 ### delete 1049 peak ####
 #raw.data<-raw.data[,-(which(colnames(raw.data)=="X1026.09"):which(colnames(raw.data)=="X1075.76"))]
@@ -98,21 +103,21 @@ raw.data<-cbind(No_Cell=seq(1:nrow(raw.data)),Group=Group,raw.data) #Add No_Cell
 #######
 ##-bg##
 #######
-ncol_meta<-which(colnames(raw.data)=="Cell")#cols of meta data
-ncol_raw.data<-ncol(raw.data)#cols of raw.data
+ncol_meta <- which(colnames(raw.data)=="Cell")#cols of meta data
+ncol_raw.data <- ncol(raw.data)#cols of raw.data
 
 #remove background
-Cells_bgsub<-raw.data[which(raw.data$CellBg=="Cell"),]
+Cells_bgsub <- raw.data[which(raw.data$CellBg=="Cell"),]
 #Cells_bgsub<-raw.data_bgsub[which(raw.data_bgsub$CellBg=="Cell"),]
 #write.csv(Cells_bgsub,paste(output,"Cells_bg.csv",sep=""),quote = F,row.names = F)
 
 #### perpare hyperSpec object ####
-wavelength<-shift
-data_hyperSpec<-new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
+wavelength <- shift
+data_hyperSpec <- new ("hyperSpec", data=data.frame(Cells_bgsub[,1:ncol_meta]),
                      spc = Cells_bgsub[,(ncol_meta+1):ncol_raw.data], wavelength=wavelength)
 
 ### smooth ###
-data_hyperSpec<-spc.loess(data_hyperSpec,wavelength, normalize=F)
+data_hyperSpec <- spc.loess(data_hyperSpec,wavelength, normalize=F)
 
 ############
 ##baseline##
@@ -124,28 +129,32 @@ data_baseline <- new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
 write.csv(data_baseline,"Cells_bg_baseline.csv",quote = F,row.names = F)
 
 ## Replace negative intensities to zero ##
-data_baseline_zero<-data_baseline$spc
+data_baseline_zero <- data_baseline$spc
 data_baseline_zero[data_baseline_zero<0] <- 0
-data_baseline_zero_hyperSpec<-new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
-                                   spc = data_baseline_zero, wavelength=wavelength)
+data_baseline_zero_hyperSpec <- new ("hyperSpec", data=data.frame (Cells_bgsub[,1:ncol_meta]),
+                                     spc = data_baseline_zero, wavelength=wavelength)
 write.csv(data_baseline_zero_hyperSpec,"Cells_bg_baseline_zero.csv", quote=F, row.names=F)
 
 #output txts
 Cells_bg_baseline_zero <- "Cells_bg_baseline_zero/"
 dir.create(Cells_bg_baseline_zero)
 for (i in (1:nrow(data_baseline_zero_hyperSpec))){
-  Cells<-data.frame(shift=shift,intensity=t(data_baseline_zero_hyperSpec[i]$spc))
+  Cells <- data.frame(shift=shift,intensity=t(data_baseline_zero_hyperSpec[i]$spc))
   write.table(Cells,paste0(Cells_bg_baseline_zero,data_baseline_zero_hyperSpec$ID_Cell[i],".txt"),
-        row.names=F,col.names=F,quote=F,sep = "\t")
+              row.names=F,col.names=F,quote=F,sep = "\t")
 }
 
 #################
 ##normalization##
 #################
-data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowMeans (data_baseline_zero_hyperSpec)
+if (normalize_fp) {
+  data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowMeans (data_baseline_zero_hyperSpec[,,c(500~2000)])
+} else {
+  data_baseline_zero_scale_hyperSpec <- data_baseline_zero_hyperSpec / rowMeans (data_baseline_zero_hyperSpec)
+}
 
 ### remove spectrum which contains cartenoid peaks ###
-keep = c()
+keep <- c()
 for (i in (1:nrow(data_baseline_zero_scale_hyperSpec))){
     peaks <- wavelength[findPeaks(data_baseline_zero_scale_hyperSpec[i]$spc)]
     if ((length(peaks[(peaks>992)&(peaks<1010)])>=1) && (length(peaks[(peaks>1145)&(peaks<1160)])>=1) &&
@@ -165,9 +174,39 @@ write.csv(data_baseline_zero_scale_hyperSpec, "Cells_bg_baseline_zero_scale.csv"
 Cells_bg_baseline_zero_scale <- "Cells_bg_baseline_zero_scale/"
 dir.create(Cells_bg_baseline_zero_scale)
 for (i in (1:nrow(data_baseline_zero_scale_hyperSpec))){
-  Cells<-data.frame(shift=shift,intensity=t(data_baseline_zero_scale_hyperSpec[i]$spc))
+  Cells <- data.frame(shift=shift,intensity=t(data_baseline_zero_scale_hyperSpec[i]$spc))
   write.table(Cells,paste0(Cells_bg_baseline_zero_scale,data_baseline_zero_scale_hyperSpec$ID_Cell[i],".txt"),
-  row.names=F,col.names=F,quote=F,sep = "\t")
+              row.names=F,col.names=F,quote=F,sep = "\t")
+}
+
+######## calc SNR and filter by SNR ##########
+SNR2 <- data_baseline_zero_scale_hyperSpec$spc
+wave_nums <- shift
+SNR_All <- NULL
+for (i in (1:nrow(SNR2)))
+{
+    Baseline_start<-which.min(abs(wave_nums-1730))#1760
+    Baseline_end<-which.min(abs(wave_nums-1800))#1960
+    Baseline<-SNR2[i,Baseline_start:Baseline_end]
+    marker<-max(SNR2[i,which.min(abs(wave_nums-3050)):which.min(abs(wave_nums-2800))]) # C-H peak
+    SNR<-(marker-sum(Baseline)/length(Baseline))/sqrt(marker)
+    SNR_All<-rbind(SNR_All,SNR) 
+}
+#str(data.frame(Cells_bgsub[,1:ncol_meta]))
+#str(data.frame(SNR=SNR_All))
+Meta_All <- cbind(data.frame(Cells_bgsub[keep,1:ncol_meta]), data.frame(SNR=SNR_All))
+
+data_baseline_zero_scale_hyperSpec2 <- new ("hyperSpec", data=Meta_All, spc = SNR2, wavelength=wave_nums)
+
+data_baseline_zero_scale_hyperSpec <- data_baseline_zero_scale_hyperSpec2[data_baseline_zero_scale_hyperSpec2$SNR>2.5]
+
+write.csv(data_baseline_zero_scale_hyperSpec, "Cells_bg_baseline_zero_scale_hq.csv", quote=F, row.names=F)
+Cells_bg_baseline_zero_scale_hq <- "Cells_bg_baseline_zero_scale_hq/"
+dir.create(Cells_bg_baseline_zero_scale_hq)
+for (i in (1:nrow(data_baseline_zero_scale_hyperSpec))){
+   Cells <- data.frame(shift=shift,intensity=t(data_baseline_zero_scale_hyperSpec[i]$spc))
+   write.table(Cells,paste0(Cells_bg_baseline_zero_scale_hq,data_baseline_zero_scale_hyperSpec$ID_Cell[i],".txt"),
+               row.names=F,col.names=F,quote=F,sep = "\t")
 }
 
 #############

@@ -32,8 +32,7 @@ install:
   - sudo apt-get install graphviz
 
 env:
-  #- NXF_VER='0.32.0' # Specify a minimum NF version that should be tested and work
-  - NXF_VER='19.01.0' # Plus: get the latest NF version and check that it works
+  - NXF_VER='20.01.0'
 
 script:
   # Lint the pipeline code
