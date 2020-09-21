@@ -914,7 +914,7 @@ process spades {
  */
 process quast_ref {
     label "quast"
-    publishDir path: "${params.outdir}", mode: 'copy'
+    publishDir path: "${params.outdir}", mode: 'copy', overwrite: true
 
     input:
     file fasta from fasta
@@ -944,7 +944,7 @@ process quast_ref {
 
 process quast_denovo {
     label "quast"
-    publishDir path: "${params.outdir}", mode: 'copy'
+    publishDir path: "${params.outdir}", mode: 'copy', overwrite: true
 
     input:
     file ("*") from contigs_for_quast2.collect()
@@ -1063,7 +1063,7 @@ process diamond_uniprot {
  */
 process blobtools {
    tag "${prefix}"
-   publishDir "${params.outdir}/blob", mode: 'copy'
+   publishDir "${params.outdir}/blob", mode: 'copy', overwrite: true
 
    input:
    file contigs from contigs_for_blob
@@ -1122,7 +1122,7 @@ if (!euk) {
  */
 process prokka {
    tag "$prefix"
-   publishDir "${params.outdir}/prokka", mode: 'copy'
+   publishDir "${params.outdir}/prokka", mode: 'copy', overwrite: true
 
    input:
    file contigs from contigs_for_prokka
@@ -1178,7 +1178,7 @@ prokka_for_mqc2 = file('/dev/null')
  */
 process funannotate {
    tag "$prefix"
-   publishDir "${params.outdir}/funanno", mode: 'copy'
+   publishDir "${params.outdir}/funanno", mode: 'copy', overwrite: true
 
    input:
    file contigs from contigs_for_funannotate
