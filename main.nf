@@ -1072,8 +1072,8 @@ process blobtools {
    file uniprot_anno from uniprot_for_blobtools
 
    output:
-   file "${prefix}"
    file "${prefix}/${prefix}.blobDB*table.txt" into blob_tax
+   file "${prefix}"
 
    script:
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
@@ -1185,8 +1185,8 @@ process funannotate {
    file db from funannotate_db
 
    output:
-   file "${prefix}/predict_results"
    file "${prefix}/predict_results/*.proteins.fa" into faa_eggnog, faa_kofam
+   file "${prefix}/predict_results"
 
    when:
    euk && funannotate_db
