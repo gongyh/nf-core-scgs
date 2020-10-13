@@ -28,8 +28,8 @@ RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
 # Download GATK3 and setting
 #RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
 #    tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
-#COPY GenomeAnalysisTK.jar /
-#RUN gatk3-register /GenomeAnalysisTK.jar && rm -rf /GenomeAnalysisTK.jar
+COPY GenomeAnalysisTK.jar /
+RUN gatk3-register /GenomeAnalysisTK.jar && rm -rf /GenomeAnalysisTK.jar
 
 # Install conda environment py27
 COPY py27_env.yml /
