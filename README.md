@@ -21,7 +21,7 @@ Git, Java 8 or later, Docker
 ## Install Nextflow
 $ curl -s https://get.nextflow.io | bash
 ## Pull docker container
-$ docker pull gongyh/scgs:v1.0-rc
+$ docker pull gongyh/scgs
 ## Get the pipeline
 $ git clone https://github.com/gongyh/nf-core-scgs.git
 ## Test (16 cpu cores, 48G memory)

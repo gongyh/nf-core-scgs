@@ -43,6 +43,7 @@ dependencies:
   - bioconda::ete3=3.1.1
   - bioconda::drep=2.6.2
   - bioconda::comparem=0.1.1
+  - bioconda::eukcc=0.2
   - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
   - conda-forge::colorama=0.4.3
