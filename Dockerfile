@@ -78,6 +78,10 @@ RUN cd /opt && git clone https://github.com/gongyh/ezTree.git
 RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/plasmidfinder.git
 RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/virulencefinder.git
 
+# Install tantatn
+RUN cd /opt && wget http://cbrc3.cbrc.jp/~martin/tantan/tantan-23.zip && unzip tantan-23.zip && \
+    cd tantan-23/src && make && make install && rm -rf /opt/tantan-23*
+
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/
 

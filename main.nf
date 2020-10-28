@@ -881,7 +881,7 @@ process spades {
 
     output:
     file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_funannotate, contigs_for_eukcc
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_augustus, contigs_for_eukcc
 
     when:
     params.ass
@@ -1182,36 +1182,35 @@ process prodigal {
 } else {
 prokka_for_mqc1 = file('/dev/null')
 prokka_for_mqc2 = file('/dev/null')
+
 /*
- * STEP 11.2 - Find genes using Funannotate
+ * STEP 11.2 - Find genes using Augustus
  */
-process funannotate {
+process augustus {
    tag "$prefix"
-   publishDir "${params.outdir}/funanno", mode: 'copy', overwrite: true
+   publishDir "${params.outdir}/augustus", mode: 'copy', overwrite: true
 
    input:
-   file contigs from contigs_for_funannotate
-   file db from funannotate_db
+   file contigs from contigs_for_augustus
 
    output:
-   file "${prefix}/predict_results/*.proteins.fa" into faa_eukcc, faa_eggnog, faa_kofam
-   file "${prefix}/predict_results"
+   file "${prefix}.aa" into faa_eukcc, faa_eggnog, faa_kofam
+   file "${prefix}*"
 
    when:
-   euk && funannotate_db
+   euk
 
    script:
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
    """
    # clean id
    cat $contigs | sed 's/_length.*\$//g' > ${prefix}_clean.fasta
-   export FUNANNOTATE_DB=\$PWD/$db
-   set +u && source activate scgs_py27
-   # mask
-   funannotate mask -i ${prefix}_clean.fasta -o ${prefix}_mask.fasta --cpus ${task.cpus}
-   # predict
-   funannotate predict -i ${prefix}_mask.fasta -o ${prefix} --species ${prefix} \
-     --busco_seed_species ${params.busco_seed_species} --cpus ${task.cpus}
+   # mask genome
+   tantan ${prefix}_clean.fasta > ${prefix}_mask.fasta
+   # gene prediction
+   augustus --species=${params.busco_seed_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on ${prefix}_mask.fasta > ${prefix}.gff
+   # generate proteins
+   getAnnoFasta.pl ${prefix}.gff
    """
 }
 
