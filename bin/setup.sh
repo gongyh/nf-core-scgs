@@ -17,6 +17,7 @@ The following databases are supported by gongyh/scgs pipeline:
   10) PlasmidFinder database (latest)
   11) VirulenceFinder database (latest)
   12) Pfam-A database (Pfam31.0)
+  13) EukCC database (V1.1, 20191023_1)
 
 Current working directory is ${PWD}.
 All database files will be downloaded into ${PWD}.
@@ -120,6 +121,12 @@ if [ $choice -eq 12 ]; then
   gzip -d Pfam-A.hmm.gz
   hmmpress Pfam-A.hmm 1>/dev/null 2>/dev/null
   echo "Please set system environment variable PFAMDB_PATH to $PWD/PFAMDB before using ezTree."
+fi
+
+if [ $choice -eq 13 ]; then
+  wget http://ftp.ebi.ac.uk/pub/databases/metagenomics/eukcc/eukcc_db_v1.1.tar.gz
+  tar -xzvf eukcc_db_v1.1.tar.gz
+  mv eukcc_db_20191023_1 eukcc_db
 fi
 
 echo "Done!"

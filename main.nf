@@ -50,6 +50,7 @@ def helpMessage() {
       --kofam_kolist                KOfam ko_list file
       --funannotate_db              Funannotate database
       --busco_seed_species          busco_seed_species for funannotate predict, default 'saccharomyces'
+      --eukcc_db                    EukCC database
 
     Trimming options:
       --notrim                      Specifying --notrim will skip the adapter trimming step.
@@ -120,6 +121,7 @@ params.readPaths = null
 params.uniprot_db = null
 params.uniprot_taxids = null
 params.eggnog_db = null
+params.eukcc_db = null
 params.snv = false
 params.cnv = false
 params.saturation = false
@@ -226,6 +228,13 @@ funannotate_db = false
 if ( params.funannotate_db ) {
     funannotate_db  = file(params.funannotate_db)
     if ( !funannotate_db.exists() ) exit 1, "Funannotate database not found: ${params.funannotate_db}"
+}
+
+// Configure EukCC database
+eukcc_db = false
+if ( params.eukcc_db ) {
+    eukcc_db  = file(params.eukcc_db)
+    if ( !eukcc_db.exists() ) exit 1, "EukCC database not found: ${params.eukcc_db}"
 }
 
 // Configure KOfam search database
@@ -872,7 +881,7 @@ process spades {
 
     output:
     file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_funannotate
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_funannotate, contigs_for_eukcc
 
     when:
     params.ass
@@ -966,7 +975,7 @@ process quast_denovo {
 }
 
 /*
- * STEP 8 - Completeness and contamination evaluation using CheckM
+ * STEP 8.1 - Completeness and contamination evaluation using CheckM
  */
 process checkm {
    publishDir "${params.outdir}/CheckM", mode: 'copy'
@@ -1185,7 +1194,7 @@ process funannotate {
    file db from funannotate_db
 
    output:
-   file "${prefix}/predict_results/*.proteins.fa" into faa_eggnog, faa_kofam
+   file "${prefix}/predict_results/*.proteins.fa" into faa_eukcc, faa_eggnog, faa_kofam
    file "${prefix}/predict_results"
 
    when:
@@ -1205,6 +1214,30 @@ process funannotate {
      --busco_seed_species ${params.busco_seed_species} --cpus ${task.cpus}
    """
 }
+
+/*
+ * STEP 11.3 - Completeness and contamination evaluation using EukCC for euk
+ */
+process eukcc {
+   publishDir "${params.outdir}/EukCC", mode: 'copy'
+
+   input:
+   file faa from faa_eukcc
+   file db from eukcc_db
+
+   output:
+   file "${prefix}"
+
+   when:
+   euk && eukcc_db
+
+   script:
+   prefix = faa.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   """
+   eukcc --db ${db} --ncores ${task.cpus} --plot --outdir ${prefix} --protein ${faa}
+   """
+}
+
 }
 
 /*
