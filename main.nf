@@ -1222,8 +1222,14 @@ process eukcc {
    euk && eukcc_db
 
    script:
-   prefix = faa.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   prefix = faa.toString() - ~/(\.faa)?(\.aa)?(\.fasta)?(\.fa)?$/
    """
+   export HOME=/tmp/
+   if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
+     echo "NCBI taxa database exist!"
+   else
+     python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
+   fi
    eukcc --db ${db} --ncores ${task.cpus} --plot --outdir ${prefix} --protein ${faa}
    """
 }
