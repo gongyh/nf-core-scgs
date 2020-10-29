@@ -48,8 +48,7 @@ def helpMessage() {
       --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
       --kofam_profile               KOfam profile database
       --kofam_kolist                KOfam ko_list file
-      --funannotate_db              Funannotate database
-      --busco_seed_species          busco_seed_species for funannotate predict, default 'saccharomyces'
+      --augustus_species            Augustus species, default 'saccharomyces'
       --eukcc_db                    EukCC database
 
     Trimming options:
@@ -137,8 +136,7 @@ params.resfinder_db = null
 params.pointfinder_db = null
 params.kofam_profile = null
 params.kofam_kolist = null
-params.funannotate_db = null
-params.busco_seed_species = "saccharomyces"
+params.augustus_species = "saccharomyces"
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -221,13 +219,6 @@ pointfinder_db = false
 if ( params.pointfinder_db ) {
     pointfinder_db = file(params.pointfinder_db)
     if( !pointfinder_db.exists() ) exit 1, "PointFinder database not found: ${params.pointfinder_db}"
-}
-
-// Configure Funannotate database
-funannotate_db = false
-if ( params.funannotate_db ) {
-    funannotate_db  = file(params.funannotate_db)
-    if ( !funannotate_db.exists() ) exit 1, "Funannotate database not found: ${params.funannotate_db}"
 }
 
 // Configure EukCC database
@@ -1208,7 +1199,7 @@ process augustus {
    # mask genome
    tantan ${prefix}_clean.fasta > ${prefix}_mask.fasta
    # gene prediction
-   augustus --species=${params.busco_seed_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on ${prefix}_mask.fasta > ${prefix}.gff
+   augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on ${prefix}_mask.fasta > ${prefix}.gff
    # generate proteins
    getAnnoFasta.pl ${prefix}.gff
    """
