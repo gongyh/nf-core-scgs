@@ -59,10 +59,12 @@ RUN cd /opt && wget https://github.com/takaram/kofam_scan/archive/v1.1.0.tar.gz 
 # Install R packages
 RUN R -e "install.packages(c('magicaxis','ape','gridExtra','genoPlotR','hyperSpec','baseline','permute','ggpubr','rstatix'), repos='https://cloud.r-project.org')"
 
+# Install packages
+RUN apt update && apt install -y autoconf automake unzip zlib1g-dev libncurses5-dev libncursesw5-dev fastx-toolkit \
+    augustus augustus-data augustus-doc && apt-get autoremove --purge && apt-get clean && apt-get autoremove
+
 # Install mccortex
-RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && apt update && \
-    apt install -y autoconf automake unzip zlib1g-dev libncurses5-dev libncursesw5-dev fastx-toolkit && \
-    make all && apt-get autoremove --purge && apt-get clean && apt-get autoremove
+RUN cd /opt && git clone --recursive https://github.com/mcveanlab/mccortex && cd mccortex && make all
 
 # Install fastp
 RUN cd /usr/local/bin && wget http://opengene.org/fastp/fastp && chmod a+x ./fastp
