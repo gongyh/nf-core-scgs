@@ -1230,7 +1230,7 @@ process eukcc {
    else
      python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
    fi
-   eukcc --db ${db} --ncores ${task.cpus} --plot --outdir ${prefix} --protein ${faa}
+   eukcc --db ${db} --ncores ${task.cpus} --outdir ${prefix} --protein ${faa} || echo "Ignore minor errors of eukcc!"
    """
 }
 
