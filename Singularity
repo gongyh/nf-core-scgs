@@ -1,5 +1,5 @@
 Bootstrap: docker
-FROM: gongyh/scgs:latest
+FROM: gongyh/scgs:v1.0
 IncludeCmd: yes
 
 %help

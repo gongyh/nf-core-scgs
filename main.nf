@@ -530,7 +530,7 @@ process kraken {
     file db from kraken_db
 
     output:
-    file "${prefix}.report"
+    file "${prefix}.report" into kraken_for_mqc1, kraken_for_mqc2
     file "${prefix}.krona.html"
 
     when:
@@ -1090,6 +1090,11 @@ process blobtools {
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
    blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format png -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format png -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
+   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
    """
 }
 
@@ -1252,8 +1257,9 @@ process multiqc_ref {
     file ('samtools/*') from samtools_stats.collect()
     file ('preseq/*') from preseq_for_multiqc.collect()
     file ('*') from qualimap_for_multiqc.collect()
-    file ('quast/*') from quast_report1.collect()
-    file ('prokka/*') from prokka_for_mqc1.collect()
+    file ('quast/*') from quast_report1.collect().ifEmpty([])
+    file ('prokka/*') from prokka_for_mqc1.collect().ifEmpty([])
+    file ('kraken/*') from kraken_for_mqc1.collect().ifEmpty([])
     file workflow_summary from create_workflow_summary(summary)
 
     output:
@@ -1280,7 +1286,8 @@ process multiqc_denovo {
     file ('trimgalore/*') from trimgalore_results2.collect()
     file ('fastqc2/*') from trimgalore_fastqc_reports2.collect()
     file ('quast/*') from quast_report2.collect()
-    file ('prokka/*') from prokka_for_mqc2.collect()
+    file ('prokka/*') from prokka_for_mqc2.collect().ifEmpty([])
+    file ('kraken/*') from kraken_for_mqc2.collect().ifEmpty([])
     file workflow_summary from create_workflow_summary(summary)
 
     output:
