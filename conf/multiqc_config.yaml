@@ -75,11 +75,11 @@ report_header_info:
     - Sequencing Platform: 'HiSeq'
     - Sequencing Setup: '2x125 or 2x150'
 
-prokka:
-    prokka_table: True
-    prokka_fn_snames: True
+prokka_table: True
+prokka_fn_snames: True
 
 kraken:
+  fn: '*.report'
   contents_re: '^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKPCOFGS-]{1,3})\t(\d+)\s+(.+)'
   num_lines: 2
 
