@@ -674,7 +674,7 @@ process samtools {
     picard MarkDuplicates I=${prefix}.sorted.bam O=${prefix}.markdup.bam M=metrics.txt AS=true
     samtools index ${prefix}.markdup.bam
     bedtools bamtobed -i ${prefix}.markdup.bam | sort -T /tmp -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${prefix}.markdup.bed
-    samtools stats ${prefix}.markdup.bam > ${prefix}.stats.txt
+    samtools stats -t ${genome} ${prefix}.markdup.bam > ${prefix}.stats.txt
     # uniformity
     cut -f1,3 ${genome} > ref.genome
     genomeCoverageBed -ibam ${prefix}.markdup.bam -d -g ref.genome > ${prefix}.raw.cov
@@ -808,7 +808,7 @@ process monovar {
     """
     set +u && source activate scgs_py27
     ls *.bam > bams.txt
-    samtools mpileup -BQ0 -d 10000 -q 40 -f $fa -b bams.txt | monovar -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
+    samtools mpileup -B -d 10000 -q 40 -f $fa -b bams.txt | monovar -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
     """
 }
 
@@ -861,18 +861,16 @@ process circlize {
 }
 
 /*
- * STEP 6 - Assemble using SPAdes
+ * STEP 6.0 - Normalize reads for assembly
  */
-process spades {
+process normalize {
     tag "${prefix}"
-    publishDir path: "${params.outdir}/spades", mode: 'copy'
 
     input:
     file clean_reads from trimmed_reads_for_spades
 
     output:
-    file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_augustus, contigs_for_eukcc
+    file "*_norm*.fastq.gz" into normalized_reads_for_assembly
 
     when:
     params.ass
@@ -884,24 +882,63 @@ process spades {
     if (params.singleEnd) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      spades.py -s $R1 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      ln -s $R1 ${prefix}_norm.fastq.gz
     else
       normalize-by-median.py -k 31 -C 40 --gzip -M 4e+9 -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz $R1
-      spades.py --sc -s ${prefix}_norm.fastq.gz --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
-    ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
-    faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     """
     } else {
     R2 = clean_reads[1].toString()
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      ln -s $R1 ${prefix}_norm_R1.fastq.gz
+      ln -s $R2 ${prefix}_norm_R2.fastq.gz
     else
       gzip -cd $R1 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R1_fq.gz
       gzip -cd $R2 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R2_fq.gz
       interleave-reads.py ${prefix}_rename_R1_fq.gz ${prefix}_rename_R2_fq.gz | normalize-by-median.py -k 31 -C 40 -M 4e+9 -p --gzip -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz /dev/stdin
-      spades.py --sc --12 ${prefix}_norm.fastq.gz --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    fi
+    """
+    }
+}
+
+/*
+ * STEP 6 - Assemble using SPAdes
+ */
+process spades {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/spades", mode: 'copy'
+
+    input:
+    file clean_reads from normalized_reads_for_assembly
+
+    output:
+    file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_augustus, contigs_for_eukcc
+
+    when:
+    params.ass
+
+    script:
+    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_norm)?(_combined)?(\.1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
+    R1 = clean_reads[0].toString()
+    mode = params.bulk ? "bulk" : "mda"
+    if (params.singleEnd) {
+    """
+    if [ \"${mode}\" == \"bulk\" ]; then
+      spades.py -s $R1 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    else
+      spades.py --sc -s $R1 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    fi
+    ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
+    faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
+    """
+    } else {
+    """
+    if [ \"${mode}\" == \"bulk\" ]; then
+      spades.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R1.fastq.gz --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    else
+      spades.py --sc --12 $R1 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
@@ -1256,10 +1293,10 @@ process multiqc_ref {
     file ('fastqc2/*') from trimgalore_fastqc_reports1.collect()
     file ('samtools/*') from samtools_stats.collect()
     file ('preseq/*') from preseq_for_multiqc.collect()
-    file ('*') from qualimap_for_multiqc.collect()
-    file ('quast/*') from quast_report1.collect().ifEmpty([])
-    file ('prokka/*') from prokka_for_mqc1.collect().ifEmpty([])
-    file ('kraken/*') from kraken_for_mqc1.collect().ifEmpty([])
+    file ('*') from qualimap_for_multiqc
+    file ('quast/*') from quast_report1
+    file ('prokka/*') from prokka_for_mqc1.collect()
+    file ('kraken/*') from kraken_for_mqc1.collect()
     file workflow_summary from create_workflow_summary(summary)
 
     output:
@@ -1285,9 +1322,9 @@ process multiqc_denovo {
     file ('software_versions/*') from software_versions_yaml2
     file ('trimgalore/*') from trimgalore_results2.collect()
     file ('fastqc2/*') from trimgalore_fastqc_reports2.collect()
-    file ('quast/*') from quast_report2.collect()
-    file ('prokka/*') from prokka_for_mqc2.collect().ifEmpty([])
-    file ('kraken/*') from kraken_for_mqc2.collect().ifEmpty([])
+    file ('quast/*') from quast_report2
+    file ('prokka/*') from prokka_for_mqc2.collect()
+    file ('kraken/*') from kraken_for_mqc2.collect()
     file workflow_summary from create_workflow_summary(summary)
 
     output:
