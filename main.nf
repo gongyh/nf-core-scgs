@@ -914,7 +914,7 @@ process spades {
 
     output:
     file "${prefix}.ctg200.fasta" into contigs_for_nt
-    file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_augustus, contigs_for_eukcc
+    file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
 
     when:
     params.ass
@@ -1157,6 +1157,28 @@ process acdc {
     """
     cat $tax | grep -v '^#' | cut -f1,18 > genus.txt
     /usr/local/bin/acdc -i $contigs -m 1000 -b 100 -o $prefix -K $db -x genus.txt -T ${task.cpus}
+    """
+}
+
+/*
+ * STEP 10.3 - tSNE
+ */
+process tsne {
+    tag "${prefix}"
+    publishDir "${params.outdir}/tsne", mode: 'copy'
+
+    input:
+    file contigs from contigs_for_tsne
+
+    output:
+    file "${prefix}_tsne.tsv"
+
+    script:
+    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
+    """
+    faFilterByLen.pl ${contigs} 1000 > ${prefix}.ctg1k.fasta
+    kpal count -k 4 -r ${prefix}.ctg1k.fasta ${prefix}.4mer
+    kmer_tsne.py ${prefix}.4mer ${prefix}_tsne.tsv ${task.cpus}
     """
 }
 
