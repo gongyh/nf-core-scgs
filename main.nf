@@ -913,8 +913,8 @@ process spades {
     file clean_reads from normalized_reads_for_assembly
 
     output:
-    file "${prefix}.contigs.fasta" into contigs_for_quast1, contigs_for_quast2
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_augustus, contigs_for_eukcc
+    file "${prefix}.ctg200.fasta" into contigs_for_nt
+    file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_augustus, contigs_for_eukcc
 
     when:
     params.ass
@@ -932,6 +932,7 @@ process spades {
     fi
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
+    cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
     """
     } else {
     """
@@ -942,6 +943,7 @@ process spades {
     fi
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
+    cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
     """
     }
 }
@@ -973,7 +975,7 @@ process quast_ref {
     gene = gff.exists() ? "--features gene:$gff" : ""
     """
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
-    labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
+    labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
     bams=\$(ls *.markdup.bam | paste -sd "," -)
     quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
     """
@@ -997,7 +999,7 @@ process quast_denovo {
     euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
     """
     contigs=\$(ls *.contigs.fasta | paste -sd " " -)
-    labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.contigs.fasta//g')
+    labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
     quast.py -o quast -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
     """
 }
@@ -1151,7 +1153,7 @@ process acdc {
     file "${prefix}"
 
     script:
-    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
     """
     cat $tax | grep -v '^#' | cut -f1,18 > genus.txt
     /usr/local/bin/acdc -i $contigs -m 1000 -b 100 -o $prefix -K $db -x genus.txt -T ${task.cpus}
@@ -1177,7 +1179,7 @@ process prokka {
    !euk
 
    script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
    """
    if [ \$(id -u) -eq 0 ]; then
      wget -c -q -t 1 -T 60 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -O linux64.tbl2asn.gz && gunzip linux64.tbl2asn.gz && chmod +x linux64.tbl2asn && mv linux64.tbl2asn /opt/conda/envs/scgs_py36/bin/tbl2asn
@@ -1185,6 +1187,8 @@ process prokka {
    cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
    prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa || echo "Ignore minor errors of prokka!"
    sed '/^##FASTA/Q' ${prefix}/${prefix}.gff > ${prefix}/${prefix}_noseq.gff
+   gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | grep -v gene > ${prefix}/${prefix}_ctg_genes.tsv
+   prokka_postprocess.py ${prefix}/${prefix}_ctg_genes.tsv ${prefix}/${prefix}.tsv > ${prefix}/${prefix}_all.tsv
    """
 }
 /*
@@ -1204,7 +1208,7 @@ process prodigal {
    !euk
 
    script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
    """
    mkdir -p ${prefix}
    prodigal -i $contigs -o ${prefix}/${prefix}.gbk -a ${prefix}/${prefix}.proteins.faa -p meta
@@ -1234,7 +1238,7 @@ process augustus {
    euk
 
    script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
    """
    # clean id
    cat $contigs | sed 's/_length.*\$//g' > ${prefix}_clean.fasta
@@ -1389,6 +1393,7 @@ process kofam {
    /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
    /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
    /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
+   kofam_postprocess.py ${baseDir}/assets/ko_KO.txt ${prefix}_KOs_mapper.txt > ${prefix}_KOs_ko.txt
    """
 }
 
@@ -1410,7 +1415,7 @@ process resfinder {
     !euk && params.acquired && resfinder_db
 
     script:
-    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
     """
     mkdir -p $prefix
     python /opt/resfinder/resfinder.py -i $contigs -o $prefix -p $db -mp blastn -x
@@ -1436,7 +1441,7 @@ process pointfinder {
     !euk && params.point && pointfinder_db
 
     script:
-    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
     species = params.pointfinder_species
     known_snp = params.only_known ? "" : "-l 0.4 -r all -u"
     """
