@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:4.5.4
+FROM quay.io/gongyh/miniconda3:4.5.4
 LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
