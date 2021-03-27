@@ -32,7 +32,7 @@ install:
   - sudo apt-get install graphviz
 
 env:
-  - NXF_VER='20.01.0'
+  - NXF_VER='20.10.0'
 
 script:
   # Lint the pipeline code
