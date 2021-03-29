@@ -12,9 +12,10 @@ RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder
 RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
 
 # Install conda environments
+RUN conda install -y python=3.6 conda nomkl && conda install -y mamba -c conda-forge && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 COPY environment.yml /
-RUN conda install -y python=3.6 conda=4.7.12 nomkl && conda install -y mamba -c conda-forge && conda clean -y -a && rm -rf /opt/conda/pkgs/*
-RUN mamba env create -n scgs_py36 -f /environment.yml && conda clean -y -a && rm -rf /opt/conda/pkgs/*
+RUN conda config --set channel_priority strict &&  mamba env create -n scgs_py36 -f /environment.yml && \
+    conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 RUN echo 'conda activate scgs_py36' >> ~/.bashrc
 ENV PATH /opt/conda/envs/scgs_py36/bin:$PATH
