@@ -418,8 +418,7 @@ process save_reference {
     """
     ln -s ${fasta} genome.fa
     ln -s ${gff} genome.gff
-    set +u && source activate scgs_py27
-    fa2bed.py genome.fa
+    set +u && source activate scgs_py27 && fa2bed.py genome.fa && source deactivate
     cat genome.gff | grep \$'\tgene\t' | bedtools sort | cut -f1,4,5,7 > genes.bed
     """
 }
