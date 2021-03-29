@@ -87,6 +87,9 @@ RUN cd /opt && wget http://cbrc3.cbrc.jp/~martin/tantan/tantan-23.zip && unzip t
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/
 
+# Copy conda activate script to global PATH
+RUN cp /opt/conda/bin/activate /usr/local/bin/
+
 # Add default container command
 CMD ["/bin/bash"]
 

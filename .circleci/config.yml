@@ -9,7 +9,12 @@ jobs:
      - checkout
      - run:
          name: test
-         command: mkdir -p tests && cd tests && nextflow run ../ -profile test -w work --cnv false --snv false --outdir result && cd ..
+         environment:
+           NXF_VER: 20.12.1-edge
+         command: |
+           mkdir -p tests && cd tests
+           curl -fsSL https://get.nextflow.io | bash
+           ./nextflow run ../ -profile test
          no_output_timeout: 30m
      - store_artifacts:
          path: /root/project/tests/result/pipeline_info

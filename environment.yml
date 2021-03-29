@@ -34,7 +34,7 @@ dependencies:
   - bioconda::cutadapt=2
   - bioconda::gatk=3.8
   - anaconda::tabulate=0.8.3
-  - bioconda::nextflow
+  - bioconda::nextflow=20.10.0
   - bioconda::checkm-genome=1.1.2
   - bioconda::muscle=3.8.1551
   - bioconda::gblocks=0.91b
