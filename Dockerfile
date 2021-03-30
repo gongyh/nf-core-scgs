@@ -1,4 +1,4 @@
-FROM quay.io/gongyh/miniconda3:4.5.4
+FROM quay.io/gongyh/miniconda3:4.9.2
 LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
@@ -12,9 +12,9 @@ RUN cd /opt && git clone https://git@bitbucket.org/genomicepidemiology/resfinder
 RUN cd /opt && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
 
 # Install conda environments
-RUN conda install -y python=3.6 conda nomkl && conda install -y mamba -c conda-forge && conda clean -y -a && rm -rf /opt/conda/pkgs/*
+RUN conda install -y mamba nomkl -c conda-forge && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 COPY environment.yml /
-RUN conda config --set channel_priority strict &&  mamba env create -n scgs_py36 -f /environment.yml && \
+RUN mamba env create -n scgs_py36 -f /environment.yml && \
     conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 RUN echo 'conda activate scgs_py36' >> ~/.bashrc
