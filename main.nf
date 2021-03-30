@@ -570,14 +570,14 @@ process saturation {
     """
     fastp -i $R1 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
     for i in {1..10}; do
-      /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
-       --seq \${i}.${prefix}_split.fq.gz \${i}.k31.ctx
+      mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
+        --seq \${i}.${prefix}_split.fq.gz \${i}.k31.ctx
       if [ \$i == 1 ]; then
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
+        mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
         cp -f 1.k31.ctx tmp_clean31.ctx
       else
-        /opt/mccortex/bin/mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
+        mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
+        mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
         mv -f merged_clean31.ctx tmp_clean31.ctx
       fi
     done
@@ -588,14 +588,14 @@ process saturation {
     """
     fastp -i $R1 -I $R2 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split_R1.fq.gz -O ${prefix}_split_R2.fq.gz
     for i in {1..10}; do
-      /opt/mccortex/bin/mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
+      mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
         --seq2 \${i}.${prefix}_split_R1.fq.gz:\${i}.${prefix}_split_R2.fq.gz \${i}.k31.ctx
       if [ \$i == 1 ]; then
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
+        mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
         cp -f 1.k31.ctx tmp_clean31.ctx
       else
-        /opt/mccortex/bin/mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
-        /opt/mccortex/bin/mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
+        mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
+        mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
         mv -f merged_clean31.ctx tmp_clean31.ctx
       fi
     done
@@ -1411,9 +1411,9 @@ process kofam {
    script:
    prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?$/
    """
-   /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
-   /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
-   /opt/kofam_scan-1.1.0/exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
+   exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
+   exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
+   exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
    kofam_postprocess.py ${baseDir}/assets/ko_KO.txt ${prefix}_KOs_mapper.txt > ${prefix}_KOs_ko.txt
    """
 }

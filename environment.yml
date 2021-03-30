@@ -48,6 +48,11 @@ dependencies:
   - bioconda::comparem=0.1.1
   - bioconda::eukcc=0.2
   - bioconda::kpal=2.1
+  - bioconda::mccortex=1
+  - bioconda::fastp=0
+  - bioconda::kofamscan=1
+  - bioconda::tantan=26
+  - bioconda::plasmidfinder=2
   - conda-forge::opentsne=0.5
   - conda-forge::graphviz=2.40
   - conda-forge::typer=0.2.1
