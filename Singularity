@@ -1,5 +1,5 @@
 Bootstrap: docker
-FROM: quay.io/gongyh/nf-core-scgs:v1.1.1
+FROM: quay.io/gongyh/nf-core-scgs:v1.1.2
 IncludeCmd: yes
 
 %help
