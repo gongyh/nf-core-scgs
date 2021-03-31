@@ -2,7 +2,7 @@ version: 2.0
 jobs:
  build:
    docker:
-     - image: quay.io/gongyh/nf-core-scgs:v1.1
+     - image: quay.io/gongyh/nf-core-scgs:v1.1.1
    environment:
      - GIT_LFS_SKIP_SMUDGE: 1
    steps:
