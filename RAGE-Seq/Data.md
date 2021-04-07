@@ -1,6 +1,7 @@
 # Phenome-Genome Profiling of Single Bacterial Cell by Raman-activated Gravity-driven Encapsulation and Sequencing
 
 ## Abstract
+
 The small size and low DNA amount of bacterial cells have hindered establishing
 phenome-genome links in a precisely indexed, one-cell-per-reaction manner. Here we
 present Raman-Activated Gravity-driven single-cell Encapsulation and Sequencing
@@ -41,5 +42,5 @@ genome sequences at one-cell resolution suggests broad application of RAGESeq.
 | *E. coli* UTI  | RAGE | A10 | A10.ctg200.fasta | SRR10848967 |
 
 ## Detailed analysis results
-Please refer to [http://single-cell.cn/RAGE-Seq/](http://single-cell.cn/RAGE-Seq/).
 
+Please refer to [http://single-cell.cn/RAGE-Seq/](http://single-cell.cn/RAGE-Seq/).
