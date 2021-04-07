@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y procps libpng16
 RUN conda install -y mamba nomkl -c conda-forge && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 COPY environment.yml /
 
-RUN conda env create --quiet -f /environment.yml && conda clean -a
+RUN mamba env create --quiet -f /environment.yml && conda clean -a
 RUN echo 'conda activate nf-core-gongyh-scgs-1.1.3' >> ~/.bashrc
 ENV PATH /opt/conda/envs/nf-core-gongyh-scgs-1.1.3/bin:$PATH
 
