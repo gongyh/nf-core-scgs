@@ -11,6 +11,12 @@
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
             "properties": {
+                "input": {
+                    "type": "string",
+                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://nf-co.re/rnaseq/usage#samplesheet-input).",
+                    "fa_icon": "fas fa-file-csv"
+                },
                 "outdir": {
                     "type": "string",
                     "description": "The output directory where the results will be saved.",
@@ -205,9 +211,6 @@
         "awsregion": {
             "type": "string",
             "default": "eu-west-1"
-        },
-        "igenomesIgnore": {
-            "type": "string"
         },
         "gff": {
             "type": "string"

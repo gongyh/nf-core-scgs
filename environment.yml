@@ -1,11 +1,11 @@
-name: scgs-py36
+name: nf-core-gongyh-scgs-1.1.3
 channels:
   - conda-forge
   - bioconda
   - defaults
 dependencies:
-  - python=3.6
-  - nomkl
+  - python=3.6.10
+  - nomkl=3.0
   - fastqc=0.11.8
   - emboss=6.6.0
   - tbb=2020.2
@@ -25,19 +25,19 @@ dependencies:
   - perl-bioperl=1.7.2
   - minced=0.3.0
   - prokka=1.12
-  - diamond=0.9
+  - diamond=0.9.24
   - biopython=1.73
   - seaborn=0.10.1
   - cgecore=1.5.1
   - seqtk=1.3
   - khmer=2.1.2
-  - pymdown-extensions=8
-  - bioconda::nextflow
-  - bioconda::cutadapt=2
+  - pymdown-extensions=8.1.1
+  - bioconda::nextflow=20.04.1
+  - bioconda::cutadapt=2.10
   - bioconda::gatk=3.8
   - anaconda::tabulate=0.8.3
   - bioconda::checkm-genome=1.1.2
-  - bioconda::bedops=2.4
+  - bioconda::bedops=2.4.39
   - bioconda::muscle=3.8.1551
   - bioconda::gblocks=0.91b
   - bioconda::fasttree=2.1.10
@@ -49,14 +49,14 @@ dependencies:
   - bioconda::drep=2.6.2
   - bioconda::comparem=0.1.1
   - bioconda::eukcc=0.2
-  - bioconda::kpal=2.1
-  - bioconda::mccortex=1
-  - bioconda::fastp=0
-  - bioconda::kofamscan=1
+  - bioconda::kpal=2.1.1
+  - bioconda::mccortex=1.0
+  - bioconda::fastp=0.20.1
+  - bioconda::kofamscan=1.3.0
   - bioconda::tantan=26
-  - bioconda::plasmidfinder=2
-  - conda-forge::opentsne=0.5
-  - conda-forge::graphviz=2.40
+  - bioconda::plasmidfinder=2.1.1
+  - conda-forge::opentsne=0.5.1
+  - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
   - conda-forge::colorama=0.4.3
   - conda-forge::shellingham=1.3.2
@@ -65,20 +65,20 @@ dependencies:
   - ruby=2.6.5
   - r-base=3.6.1
   - r-essentials=3.6
-  - r-rcurl
-  - bioconductor-rhtslib
-  - bioconductor-biobase
-  - bioconductor-biocgenerics
-  - bioconductor-s4vectors
-  - bioconductor-iranges
-  - bioconductor-zlibbioc
-  - bioconductor-genomicranges
-  - bioconductor-xvector
-  - bioconductor-biocparallel
-  - bioconductor-genomeinfodb
-  - bioconductor-biostrings
-  - bioconductor-summarizedexperiment
-  - bioconductor-rsamtools
-  - bioconductor-genomicalignments
-  - bioconductor-delayedarray
-  - bioconductor-dnacopy
+  - r-rcurl=1.98_1.2
+  - bioconductor-rhtslib=1.18.0
+  - bioconductor-biobase=2.46.0
+  - bioconductor-biocgenerics=0.32.0
+  - bioconductor-s4vectors=0.24.0
+  - bioconductor-iranges=2.20.0
+  - bioconductor-zlibbioc=1.32.0
+  - bioconductor-genomicranges=1.38.0
+  - bioconductor-xvector=0.26.0
+  - bioconductor-biocparallel=1.20.0
+  - bioconductor-genomeinfodb=1.22.0
+  - bioconductor-biostrings=2.54.0
+  - bioconductor-summarizedexperiment=1.16.0
+  - bioconductor-rsamtools=2.2.0
+  - bioconductor-genomicalignments=1.22.0
+  - bioconductor-delayedarray=0.12.0
+  - bioconductor-dnacopy=1.60.0

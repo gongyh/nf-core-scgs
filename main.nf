@@ -104,7 +104,9 @@ if (params.help){
 }
 
 // default values
+params.name = false
 params.genome = false
+params.singleEnd = false
 params.fasta = false
 params.gff = false
 params.notrim = false

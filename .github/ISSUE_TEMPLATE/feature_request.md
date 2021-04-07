@@ -1,11 +1,11 @@
 ---
 name: Feature request
-about: Suggest an idea for the nf-core/scgs pipeline
+about: Suggest an idea for the nf-core/gongyh-scgs pipeline
 labels: enhancement
 ---
 
 <!--
-# nf-core/scgs feature request
+# nf-core/gongyh-scgs feature request
 
 Hi there!
 
