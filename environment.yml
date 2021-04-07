@@ -36,6 +36,7 @@ dependencies:
   - bioconda::gatk=3.8
   - anaconda::tabulate=0.8.3
   - bioconda::checkm-genome=1.1.2
+  - bioconda::bedops=2.4
   - bioconda::muscle=3.8.1551
   - bioconda::gblocks=0.91b
   - bioconda::fasttree=2.1.10

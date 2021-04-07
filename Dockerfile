@@ -67,6 +67,10 @@ RUN cd /opt && git clone https://github.com/gongyh/ezTree.git && git clone https
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/
 
+# store conda environments
+RUN conda env export --name scgs-py36 > scgs-py36.yml
+RUN conda env export --name scgs-py27 > scgs-py27.yml
+
 # Copy conda (de)activate script to global PATH
 RUN cp /opt/conda/bin/activate /usr/local/bin/ && cp /opt/conda/bin/deactivate /usr/local/bin/
 

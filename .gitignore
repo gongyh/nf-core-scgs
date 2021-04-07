@@ -4,4 +4,6 @@ data/
 results/
 .DS_Store
 tests/
-.*.swp
+testing/
+testing*
+*.pyc

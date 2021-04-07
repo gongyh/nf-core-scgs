@@ -973,8 +973,8 @@ process quast_ref {
     ref = fasta.exists() ? "-r $fasta" : ""
     gene = gff.exists() ? "--features gene:$gff" : ""
     """
-    contigs=\$(ls *.contigs.fasta | paste -sd " " -)
-    labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
+    contigs=\$(ls *.ctgs.fasta | paste -sd " " -)
+    labels=\$(ls *.ctgs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
     bams=\$(ls *.markdup.bam | paste -sd "," -)
     quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
     """
@@ -997,8 +997,8 @@ process quast_denovo {
     script:
     euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
     """
-    contigs=\$(ls *.contigs.fasta | paste -sd " " -)
-    labels=\$(ls *.contigs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
+    contigs=\$(ls *.ctgs.fasta | paste -sd " " -)
+    labels=\$(ls *.ctgs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
     quast.py -o quast -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
     """
 }
@@ -1488,7 +1488,7 @@ process output_documentation {
 
     script:
     """
-    markdown_to_html.r $output_docs results_description.html
+    markdown_to_html.py -o results_description.html $output_docs
     """
 }
 
