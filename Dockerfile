@@ -1,4 +1,4 @@
-FROM quay.io/gongyh/miniconda3:4.9.2
+FROM nfcore/base:1.13.3
 LABEL authors="Yanhai Gong" \
       description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
@@ -10,11 +10,15 @@ RUN apt-get update && apt-get install --no-install-recommends -y procps libpng16
 # Install conda environments
 RUN conda install -y mamba nomkl -c conda-forge && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 COPY environment.yml /
-RUN mamba env create -n scgs_py36 -f /environment.yml && \
-    conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
-RUN echo 'conda activate scgs_py36' >> ~/.bashrc
-ENV PATH /opt/conda/envs/scgs_py36/bin:$PATH
+RUN conda env create --quiet -f /environment.yml && conda clean -a
+RUN echo 'conda activate nf-core-gongyh-scgs-1.1.3' >> ~/.bashrc
+ENV PATH /opt/conda/envs/nf-core-gongyh-scgs-1.1.3/bin:$PATH
+
+#RUN mamba env create -n scgs_py36 -f /environment.yml && \
+#    conda clean -y -a && rm -rf /opt/conda/pkgs/*
+#RUN echo 'conda activate scgs_py36' >> ~/.bashrc
+#ENV PATH /opt/conda/envs/scgs_py36/bin:$PATH
 
 # Install Bioconductor packages
 RUN R -e "install.packages(c('BiocManager','stringi'), repos='https://cloud.r-project.org'); BiocManager::install('GenomeInfoDbData'); BiocManager::install('AneuFinder')"
@@ -68,7 +72,7 @@ RUN cd /opt && git clone https://github.com/gongyh/ezTree.git && git clone https
 COPY . /opt/nf-core-scgs/
 
 # store conda environments
-RUN conda env export --name scgs-py36 > scgs-py36.yml
+RUN conda env export --name nf-core-gongyh-scgs-1.1.3 > nf-core-gongyh-scgs-1.1.3.yml
 RUN conda env export --name scgs-py27 > scgs-py27.yml
 
 # Copy conda (de)activate script to global PATH

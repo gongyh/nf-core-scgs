@@ -387,7 +387,7 @@ process get_software_versions {
     multiqc --version &> v_multiqc.txt
     diamond version &> v_diamond.txt
     kraken --version | grep Kraken &> v_kraken.txt
-    head -n 1 /opt/conda/envs/scgs_py36/lib/python3.6/site-packages/checkm/VERSION &> v_checkm.txt
+    head -n 1 /opt/conda/envs/nf-core-gongyh-scgs-1.1.3/lib/python3.6/site-packages/checkm/VERSION &> v_checkm.txt
     prokka -v &> v_prokka.txt
     cat /opt/conda/envs/scgs_py27/lib/python2.7/site-packages/eggnogmapper/version.py | grep VERSION &> v_eggnogmapper.txt
     set +u
@@ -1205,7 +1205,7 @@ process prokka {
    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
    """
    if [ \$(id -u) -eq 0 ]; then
-     wget -c -q -t 1 -T 60 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -O linux64.tbl2asn.gz && gunzip linux64.tbl2asn.gz && chmod +x linux64.tbl2asn && mv linux64.tbl2asn /opt/conda/envs/scgs_py36/bin/tbl2asn
+     wget -c -q -t 1 -T 60 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -O linux64.tbl2asn.gz && gunzip linux64.tbl2asn.gz && chmod +x linux64.tbl2asn && mv linux64.tbl2asn /opt/conda/envs/nf-core-gongyh-scgs-1.1.3/bin/tbl2asn
    fi
    cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
    prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa || echo "Ignore minor errors of prokka!"
