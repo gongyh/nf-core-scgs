@@ -192,10 +192,10 @@
             "type": "string",
             "default": "data/*{1,2}.fastq.gz"
         },
-        "singleEnd": {
+        "single_end": {
             "type": "string"
         },
-        "name": {
+        "igenomes_ignore": {
             "type": "string"
         },
         "maxMultiqcEmailFileSize": {
