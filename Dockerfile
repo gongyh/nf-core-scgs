@@ -37,7 +37,7 @@ COPY py27_env.yml /
 RUN mamba env create -n scgs_py27 -f /py27_env.yml nomkl && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Install ACDC
-RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/scgs_py36/ && \
+RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/nf-core-gongyh-scgs-1.1.3/ && \
     make -j $(nproc) && make install && rm -rf /tmp/acdc
 
 # Install rnammer
@@ -54,7 +54,7 @@ RUN [ "/bin/bash", "-c", "source activate scgs_py27 && blobtools-build_nodesdb &
 #RUN [ "/bin/bash", "-c", "source activate scgs_py27 && mamba install -y -c bioconda -c conda-forge trnascan-se=1.3.1 funannotate=1.7.2 && conda clean -y -a && rm -rf /opt/conda/pkgs/* && source deactivate" ]
 
 # Install R packages
-RUN R -e "install.packages(c('magicaxis','ape','gridExtra','genoPlotR','hyperSpec','baseline','permute','ggpubr','rstatix'), repos='https://cloud.r-project.org')"
+RUN R -e "install.packages(c('magicaxis','ape','gridExtra','genoPlotR','ggpubr','rstatix'), repos='https://cloud.r-project.org')"
 
 # Install packages
 RUN apt update && apt install -y autoconf automake unzip zlib1g-dev libncurses5-dev libncursesw5-dev fastx-toolkit \
