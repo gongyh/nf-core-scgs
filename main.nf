@@ -1436,8 +1436,7 @@ process resfinder {
     prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
     """
     mkdir -p $prefix
-    git clone -b 3.2.1 https://git@bitbucket.org/genomicepidemiology/resfinder.git
-    python resfinder/resfinder.py -i $contigs -o $prefix -p $db -mp blastn -x
+    python /opt/resfinder/resfinder.py -i $contigs -o $prefix -p $db -mp blastn -x
     rm -rf $prefix/tmp
     """
 }
