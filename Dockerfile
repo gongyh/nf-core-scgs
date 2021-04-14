@@ -65,8 +65,8 @@ ADD ANIcalculator_v1.tgz /usr/local/bin/
 RUN cd /usr/local/bin && cp ANIcalculator_v1/ANIcalculator . && cp ANIcalculator_v1/nsimscan . && rm -rf ANIcalculator_v1
 
 # Install packages from git source
-RUN cd /opt && git clone https://github.com/gongyh/ezTree.git && git clone https://bitbucket.org/genomicepidemiology/virulencefinder.git && \
-    git clone https://git@bitbucket.org/genomicepidemiology/resfinder.git && git clone https://bitbucket.org/genomicepidemiology/pointfinder.git
+RUN cd /opt && git clone https://github.com/gongyh/ezTree.git && git clone -b 2.0.4 https://bitbucket.org/genomicepidemiology/virulencefinder.git && \
+    git clone -b 3.2.1 https://git@bitbucket.org/genomicepidemiology/resfinder.git && git clone -b 3.1.1 https://bitbucket.org/genomicepidemiology/pointfinder.git
 
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/

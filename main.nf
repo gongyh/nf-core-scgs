@@ -762,6 +762,9 @@ process IndelRealign {
     file '*.realign.bam' into bam_for_monovar
     file '*.realign.bam.bai' into bai_for_monovar
 
+    when:
+    params.snv
+
     script:
     pp_outdir = "${params.outdir}/gatk"
     prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/
@@ -770,8 +773,8 @@ process IndelRealign {
     picard CreateSequenceDictionary R=$fa
     picard AddOrReplaceReadGroups I=$bam O=${prefix}_rg.bam RGLB=lib RGPL=illumina RGPU=run RGSM=${prefix}
     samtools index ${prefix}_rg.bam
-    gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}_rg.bam -o indels.intervals
-    gatk3 -T IndelRealigner -R $fa -I ${prefix}_rg.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
+    gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}_rg.bam -o indels.intervals --fix_misencoded_quality_scores
+    gatk3 -T IndelRealigner -R $fa -I ${prefix}_rg.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam --fix_misencoded_quality_scores
     #java -Xmx4g -jar ${workflow.projectDir}/bin/srma-0.1.15.jar I=${prefix}_rg.bam O=${prefix}.realign.bam R=${fa}
     samtools index ${prefix}.realign.bam
     """
@@ -1433,7 +1436,8 @@ process resfinder {
     prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
     """
     mkdir -p $prefix
-    python /opt/resfinder/resfinder.py -i $contigs -o $prefix -p $db -mp blastn -x
+    git clone -b 3.2.1 https://git@bitbucket.org/genomicepidemiology/resfinder.git
+    python resfinder/resfinder.py -i $contigs -o $prefix -p $db -mp blastn -x
     rm -rf $prefix/tmp
     """
 }
