@@ -58,7 +58,7 @@ RUN R -e "install.packages(c('magicaxis','ape','gridExtra','genoPlotR','ggpubr',
 
 # Install packages
 RUN apt update && apt install -y autoconf automake unzip zlib1g-dev libncurses5-dev libncursesw5-dev fastx-toolkit \
-    augustus augustus-data augustus-doc && apt-get autoremove --purge && apt-get clean && apt-get autoremove
+    augustus augustus-data augustus-doc libidn11 && apt-get autoremove --purge && apt-get clean && apt-get autoremove
 
 # Install ANIcalculator
 ADD ANIcalculator_v1.tgz /usr/local/bin/
