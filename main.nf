@@ -530,7 +530,7 @@ process kraken {
     params.kraken_db
 
     script:
-    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     mode = params.single_end ? "" : "--paired"
     """
     kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed ${mode} --check-names --output ${prefix}.krk $reads
@@ -558,7 +558,7 @@ process saturation {
     params.saturation
 
     script:
-    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = reads[0].toString()
     if (params.single_end) {
     """
@@ -618,7 +618,7 @@ process bowtie2 {
     denovo == false
 
     script:
-    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
     R1 = reads[0].toString()
     if (params.single_end) {
@@ -872,7 +872,7 @@ process normalize {
     params.ass
 
     script:
-    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
+    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
     R1 = clean_reads[0].toString()
     mode = params.bulk ? "bulk" : "mda"
     if (params.single_end) {
@@ -916,7 +916,7 @@ process spades {
     params.ass
 
     script:
-    prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_norm)?(_combined)?(\.1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
+    prefix = clean_reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
     R1 = clean_reads[0].toString()
     mode = params.bulk ? "bulk" : "mda"
     if (params.single_end) {
@@ -933,7 +933,7 @@ process spades {
     } else {
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      spades.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R1.fastq.gz --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      spades.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R2.fastq.gz --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     else
       spades.py --sc --12 $R1 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
@@ -1411,7 +1411,7 @@ process kofam {
    exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -o ${prefix}_KOs_detail.txt ${faa}
    exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
    exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
-   kofam_postprocess.py ${baseDir}/assets/ko_KO.txt ${prefix}_KOs_mapper.txt > ${prefix}_KOs_ko.txt
+   kofam_postprocess.py /opt/nf-core-scgs/assets/ko_KO.txt ${prefix}_KOs_mapper.txt > ${prefix}_KOs_ko.txt
    """
 }
 
