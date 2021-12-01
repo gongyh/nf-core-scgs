@@ -34,6 +34,7 @@ def helpMessage() {
       --cnv                         Enable detection of copy number variation
       --saturation                  Enable sequencing saturation analysis
       --ass                         Assemble using SPAdes
+      --split                       Split the draft genomes and annotation
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the references.
       --fasta                       Path to Fasta reference
@@ -137,6 +138,7 @@ params.pointfinder_db = null
 params.kofam_profile = null
 params.kofam_kolist = null
 params.augustus_species = "saccharomyces"
+params.split = false
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -909,8 +911,8 @@ process spades {
     file clean_reads from normalized_reads_for_assembly
 
     output:
-    file "${prefix}.ctg200.fasta" into contigs_for_nt
-    file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_acdc, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split
+    file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
 
     when:
     params.ass
@@ -1108,7 +1110,8 @@ process blobtools {
 
    output:
    file "${prefix}/${prefix}.blobDB*table.txt" into blob_tax
-   file "${prefix}"
+   file "${contigs}" into contigs_for_acdc
+   file "${prefix}" into blob_tax_for_split
 
    script:
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
@@ -1198,7 +1201,7 @@ process prokka {
    file contigs from contigs_for_prokka
 
    output:
-   file "$prefix" into prokka_for_mqc1, prokka_for_mqc2
+   file "$prefix" into prokka_for_mqc1, prokka_for_mqc2, prokka_for_split
    file "$prefix/${prefix}.faa" into faa_eggnog, faa_kofam
 
    when:
@@ -1308,6 +1311,7 @@ process eukcc {
 
 }
 
+
 /*
  * STEP 12 - MultiQC
  */
@@ -1408,7 +1412,7 @@ process kofam {
    file ko_list from kofam_kolist
 
    output:
-   file "${prefix}_KOs_*.txt"
+   file "${prefix}_KOs_*.txt" into kofam_for_split
 
    when:
    kofam_profile && kofam_kolist
@@ -1476,6 +1480,38 @@ process pointfinder {
       -m blastn -m_p /opt/conda/bin/blastn $known_snp \
       -i $contigs -o $prefix -s $species
     rm -rf $prefix/tmp
+    """
+}
+
+
+/*
+ * Split the genome by contig annotation and checkm for each genus
+ */
+
+process split_checkm {
+    publishDir "${params.outdir}/", mode: 'copy'
+
+    input:
+    file "results/spades/*" from contigs_for_split.collect()
+    file "results/blob/*" from blob_tax_for_split.collect()
+    file "results/prokka/*" from prokka_for_split.collect()
+    file "results/kofam/*" from kofam_for_split.collect()
+
+    output:
+    file "split/*"
+
+    when:
+    params.split
+
+    script:
+    """
+    cli.py tools scgs_split
+    cd split
+    samples=(`ls -d *_genus | sed 's/_genus//g'`)
+    for sample in \${samples[*]}; do
+      mkdir -p \${sample}_genus_checkM
+      checkm lineage_wf -t ${task.cpus} -f \${sample}_genus_checkM.txt -x fasta \${sample}_genus \${sample}_genus_checkM || echo "Ignore internal errors!" 
+    done
     """
 }
 
