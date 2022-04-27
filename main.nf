@@ -64,6 +64,9 @@ def helpMessage() {
       --allow_multi_align           Secondary alignments and unmapped reads are also reported in addition to primary alignments
       --saveAlignedIntermediates    Save the intermediate BAM files from the Alignment step  - not done by default
 
+    Assembly options:
+      --no_normalize                Specifying --no_normalize will skip the reads normalizing step.
+
     Quast options:
       --euk                         Euk genome
       --fungus                      Fungal genome
@@ -112,6 +115,7 @@ params.notrim = false
 params.saveTrimmed = false
 params.allow_multi_align = false
 params.saveAlignedIntermediates = false
+params.no_normalize = false
 params.euk = false
 params.fungus = false
 params.genus = null
@@ -129,7 +133,7 @@ params.bulk = false
 params.ass = false
 params.evalue = 1e-25
 params.blockSize = 2.0
-params.acquired = true
+params.acquired = false
 params.point = false
 params.only_known = true
 params.pointfinder_species = "escherichia_coli"
@@ -472,12 +476,12 @@ process fastqc {
  * STEP 2 - Trim Galore!
  */
 if(params.notrim){
-    trimmed_reads = read_files_trimming
-    trimmed_reads_for_spades = read_files_trimming
-    trimmed_reads_for_kraken = read_files_trimming
-    trimmed_reads_for_kmer = read_files_trimming
-    trimgalore_results = []
-    trimgalore_fastqc_reports = []
+    read_files_trimming.map {name, reads -> reads}
+        .into { trimmed_reads; trimmed_reads_for_spades; trimmed_reads_for_kraken; trimmed_reads_for_kmer }
+    trimgalore_results1 = []
+    trimgalore_results2 = []
+    trimgalore_fastqc_reports1 = []
+    trimgalore_fastqc_reports2 = []
 } else {
     process trim_galore {
         tag "$name"
@@ -861,6 +865,10 @@ process circlize {
 /*
  * STEP 6.0 - Normalize reads for assembly
  */
+if (params.no_normalize) {
+    trimmed_reads_for_spades.set { normalized_reads_for_assembly }
+} else {
+
 process normalize {
     tag "${prefix}"
 
@@ -899,6 +907,9 @@ process normalize {
     """
     }
 }
+
+}
+
 
 /*
  * STEP 6 - Assemble using SPAdes

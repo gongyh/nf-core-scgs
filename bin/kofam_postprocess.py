@@ -25,6 +25,7 @@ with open(mapper) as fh:
         cl = line.strip().split("\t")
         if len(cl)==1:
             continue
+        gene = cl[0]
         KO = cl[1]
         detail = KO_dict[KO].split("\t")
         ko = "ko" + detail[0]
@@ -32,5 +33,5 @@ with open(mapper) as fh:
         KO_details = detail[3].split("; ")
         KO_detail = detail[2]+" "+KO_details[0]
         KO_definition = KO_details[1]
-        print(pathway_detail+"\t"+KO_detail+"\t"+KO_definition)
+        print(gene+"\t"+pathway_detail+"\t"+KO_detail+"\t"+KO_definition)
 
