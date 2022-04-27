@@ -12,8 +12,8 @@ RUN conda install -y mamba nomkl -c conda-forge && conda clean -y -a && rm -rf /
 COPY environment.yml /
 
 RUN mamba env create --quiet -f /environment.yml && conda clean -a
-RUN echo 'conda activate nf-core-gongyh-scgs-1.1.3' >> ~/.bashrc
-ENV PATH /opt/conda/envs/nf-core-gongyh-scgs-1.1.3/bin:$PATH
+RUN echo 'conda activate nf-core-gongyh-scgs' >> ~/.bashrc
+ENV PATH /opt/conda/envs/nf-core-gongyh-scgs/bin:$PATH
 
 #RUN mamba env create -n scgs_py36 -f /environment.yml && \
 #    conda clean -y -a && rm -rf /opt/conda/pkgs/*
@@ -29,15 +29,17 @@ RUN quast-download-silva && ktUpdateTaxonomy.sh #&& quast-download-busco
 # Download GATK3 and setting
 #RUN wget "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-0-ge9d806836" -O GenomeAnalysisTK-3.8.tar.bz2 && \
 #    tar xjvf GenomeAnalysisTK-3.8.tar.bz2 && gatk3-register GenomeAnalysisTK-3.8-0-ge9d806836/GenomeAnalysisTK.jar && rm -rf ./GenomeAnalysisTK-3.8*
-COPY GenomeAnalysisTK.jar /
-RUN gatk3-register /GenomeAnalysisTK.jar && rm -rf /GenomeAnalysisTK.jar
+#COPY GenomeAnalysisTK.jar /
+#RUN cp /GenomeAnalysisTK.jar /opt/conda/envs/nf-core-gongyh-scgs/opt/gatk-3.8/GenomeAnalysisTK.jar
+#RUN gatk3-register /GenomeAnalysisTK.jar && rm -rf /GenomeAnalysisTK.jar
 
 # Install conda environment py27
 COPY py27_env.yml /
 RUN mamba env create -n scgs_py27 -f /py27_env.yml nomkl && conda clean -y -a && rm -rf /opt/conda/pkgs/*
 
 # Install ACDC
-RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/nf-core-gongyh-scgs-1.1.3/ && \
+RUN git clone https://github.com/mlux86/acdc.git /tmp/acdc && cd /tmp/acdc && \
+    mkdir build && cd build && cmake .. -DBOOST_ROOT=/opt/conda/envs/nf-core-gongyh-scgs/ && \
     make -j $(nproc) && make install && rm -rf /tmp/acdc
 
 # Install rnammer
@@ -72,7 +74,7 @@ RUN cd /opt && git clone https://github.com/gongyh/ezTree.git && git clone -b 2.
 COPY . /opt/nf-core-scgs/
 
 # store conda environments
-RUN conda env export --name nf-core-gongyh-scgs-1.1.3 > nf-core-gongyh-scgs-1.1.3.yml
+RUN conda env export --name nf-core-gongyh-scgs > nf-core-gongyh-scgs.yml
 RUN conda env export --name scgs-py27 > scgs-py27.yml
 
 # Copy conda (de)activate script to global PATH
