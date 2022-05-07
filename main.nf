@@ -28,8 +28,9 @@ def helpMessage() {
 
     Options:
       --bulk                        WGS of bulk DNA, not MDA
+      --nanopore                    Nanopore sequencing data, force single_end, assembly using Canu
       --genome                      Name of iGenomes reference
-      --single_end                   Specifies that the input is single end reads
+      --single_end                  Specifies that the input is single end reads
       --snv                         Enable detection of single nucleotide variation
       --cnv                         Enable detection of copy number variation
       --saturation                  Enable sequencing saturation analysis
@@ -108,6 +109,7 @@ if (params.help){
 
 // default values
 params.genome = false
+params.nanopore = false
 params.single_end = false
 params.fasta = false
 params.gff = false
@@ -167,6 +169,13 @@ gff = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 if ( params.gff ) {
     gff = file(params.gff)
     if( !gff.exists() ) exit 1, "GFF file not found: ${params.gff}"
+}
+
+single_end = false
+if ( params.nanopore ) {
+    single_end = true
+} else {
+    single_end = params.single_end
 }
 
 euk = false
@@ -276,7 +285,7 @@ denovo = (params.genome && params.genomes[ params.genome ].bowtie2) || params.fa
  * Create a channel for input read files
  */
 if(params.readPaths){
-    if(params.single_end){
+    if(single_end){
         Channel
             .from(params.readPaths)
             .map { row -> [ row[0], [file(row[1][0])]] }
@@ -291,7 +300,7 @@ if(params.readPaths){
     }
 } else {
     Channel
-        .fromFilePairs( params.reads, size: params.single_end ? 1 : 2 )
+        .fromFilePairs( params.reads, size: single_end ? 1 : 2 )
         .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
         .into { read_files_fastqc; read_files_trimming }
 }
@@ -304,7 +313,7 @@ summary['Run Name']         = custom_runName ?: workflow.runName
 // TODO nf-core: Report custom parameters here
 summary['Reads']            = params.reads
 summary['Fasta Ref']        = params.fasta
-summary['Data Type']        = params.single_end ? 'Single-End' : 'Paired-End'
+summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
 summary['Bulk']             = params.bulk ? 'Yes' : 'No'
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -380,17 +389,17 @@ process get_software_versions {
     #gatk3 -version &> v_gatk.txt
     Rscript -e 'print(packageVersion("AneuFinder"))' &> v_AneuFinder.txt
     spades.py --version &> v_spades.txt
+    canu -version &> v_canu.txt
     blastn -version &> v_blast.txt
     quast.py --version &> v_quast.txt
     multiqc --version &> v_multiqc.txt
     diamond version &> v_diamond.txt
     kraken --version | grep Kraken &> v_kraken.txt
-    head -n 1 /opt/conda/envs/nf-core-gongyh-scgs-1.1.3/lib/python3.6/site-packages/checkm/VERSION &> v_checkm.txt
+    head -n 1 /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/checkm/VERSION &> v_checkm.txt
     prokka -v &> v_prokka.txt
-    cat /opt/conda/envs/scgs_py27/lib/python2.7/site-packages/eggnogmapper/version.py | grep VERSION &> v_eggnogmapper.txt
-    set +u
-    source activate scgs_py27 && conda list | grep monovar | awk '{print \$2}' &> v_monovar.txt
-    source activate scgs_py27 && blobtools -v &> v_blobtools.txt
+    emapper.py --version | grep emapper &> v_eggnogmapper.txt
+    echo 'v0.0.1' > v_monovar.txt
+    blobtools -v &> v_blobtools.txt
     scrape_software_versions.py > software_versions_mqc.yaml
     """
 }
@@ -418,7 +427,7 @@ process save_reference {
     """
     ln -s ${fasta} genome.fa
     ln -s ${gff} genome.gff
-    set +u && source activate scgs_py27 && fa2bed.py genome.fa && source deactivate
+    fa2bed.py genome.fa
     cat genome.gff | grep \$'\tgene\t' | bedtools sort | cut -f1,4,5,7 > genes.bed
     """
 }
@@ -478,10 +487,10 @@ process fastqc {
 if(params.notrim){
     read_files_trimming.map {name, reads -> reads}
         .into { trimmed_reads; trimmed_reads_for_spades; trimmed_reads_for_kraken; trimmed_reads_for_kmer }
-    trimgalore_results1 = []
-    trimgalore_results2 = []
-    trimgalore_fastqc_reports1 = []
-    trimgalore_fastqc_reports2 = []
+    trimgalore_results1 = file('/dev/null')
+    trimgalore_results2 = file('/dev/null')
+    trimgalore_fastqc_reports1 = file('/dev/null')
+    trimgalore_fastqc_reports2 = file('/dev/null')
 } else {
     process trim_galore {
         tag "$name"
@@ -505,7 +514,7 @@ if(params.notrim){
         c_r2 = params.clip_r2 > 0 ? "--clip_r2 ${params.clip_r2}" : ''
         tpc_r1 = params.three_prime_clip_r1 > 0 ? "--three_prime_clip_r1 ${params.three_prime_clip_r1}" : ''
         tpc_r2 = params.three_prime_clip_r2 > 0 ? "--three_prime_clip_r2 ${params.three_prime_clip_r2}" : ''
-        if (params.single_end) {
+        if (single_end) {
             """
             trim_galore --fastqc --gzip $c_r1 $tpc_r1 $reads
             """
@@ -537,7 +546,7 @@ process kraken {
 
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    mode = params.single_end ? "" : "--paired"
+    mode = single_end ? "" : "--paired"
     """
     kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed ${mode} --check-names --output ${prefix}.krk $reads
     kraken-report -db $db ${prefix}.krk > ${prefix}.report
@@ -566,7 +575,7 @@ process saturation {
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = reads[0].toString()
-    if (params.single_end) {
+    if (single_end) {
     """
     fastp -i $R1 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
     for i in {1..10}; do
@@ -627,7 +636,7 @@ process bowtie2 {
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
     R1 = reads[0].toString()
-    if (params.single_end) {
+    if (single_end) {
     """
     bowtie2 -x ${index}/genome -p ${task.cpus} -U $R1 | samtools view -bT $index - $filtering > ${prefix}.bam
     """
@@ -705,7 +714,7 @@ process preseq {
     script:
     pp_outdir = "${params.outdir}/preseq"
     prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
-    mode = params.single_end ? "" : "-P"
+    mode = single_end ? "" : "-P"
     if (params.bulk) {
     """
     preseq c_curve ${mode} -s 1e+5 -o ${prefix}_c.txt $sbed
@@ -808,9 +817,8 @@ process monovar {
     script:
     pp_outdir = "${params.outdir}/monovar"
     """
-    set +u && source activate scgs_py27
     ls *.bam > bams.txt
-    samtools mpileup -B -d 10000 -q 40 -f $fa -b bams.txt | monovar -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
+    samtools mpileup -B -d 10000 -q 40 -f $fa -b bams.txt | /opt/MonoVar/src/monovar.py -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
     """
 }
 
@@ -828,7 +836,7 @@ process aneufinder {
     file 'CNV_output' into cnv_output
 
     when:
-    !params.bulk && params.cnv && !params.single_end
+    !params.bulk && params.cnv && !single_end
 
     script:
     pp_outdir = "${params.outdir}/aneufinder"
@@ -885,7 +893,7 @@ process normalize {
     prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
     R1 = clean_reads[0].toString()
     mode = params.bulk ? "bulk" : "mda"
-    if (params.single_end) {
+    if (single_end) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then
       ln -s $R1 ${prefix}_norm.fastq.gz
@@ -914,6 +922,45 @@ process normalize {
 /*
  * STEP 6 - Assemble using SPAdes
  */
+if ( params.nanopore ) {
+
+process canu {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/spades", mode: 'copy'
+
+    input:
+    file clean_reads from normalized_reads_for_assembly
+
+    output:
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split
+    file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
+
+    when:
+    params.ass
+
+    script:
+    prefix = clean_reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
+    R1 = clean_reads[0].toString()
+    mode = params.bulk ? "bulk" : "mda"
+    """
+    if [ \"${mode}\" == \"bulk\" ]; then
+      #canu -d ${prefix}.spades_out -p ${prefix} genomeSize=4m useGrid=false maxThreads=${task.cpus} maxMemory=${task.memory.toGiga()}g -nanopore $R1
+      flye --nano-raw $R1 --out-dir ${prefix}.spades_out --threads ${task.cpus} --scaffold
+    else
+      #canu -d ${prefix}.spades_out -p ${prefix} genomeSize=4m corOutCoverage=999 corMhapSensitivity=high useGrid=false maxThreads=${task.cpus} maxMemory=${task.memory.toGiga()}g -nanopore $R1
+      flye --nano-raw $R1 --out-dir ${prefix}.spades_out --threads ${task.cpus} --scaffold --meta
+    fi
+    #ln -s ${prefix}.spades_out/${prefix}.contigs.fasta ${prefix}.contigs.fasta # for canu
+    cut -f1,2,3 ${prefix}.spades_out/assembly_info.txt | awk -F'\t' 'NR>1{print \$1"\t"\$1"_length_"\$2"_cov_"\$3}' > flyeID_spadesID.txt
+    fasta_tool --swap_ids flyeID_spadesID.txt ${prefix}.spades_out/assembly.fasta > ${prefix}.contigs.fasta
+    ##ln -s ${prefix}.spades_out/assembly.fasta ${prefix}.contigs.fasta # for flye
+    faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
+    cat ${prefix}.ctg200.fasta | sed 's/ len=.*\$//g' > ${prefix}.ctgs.fasta
+    """
+}
+
+} else {
+
 process spades {
     tag "${prefix}"
     publishDir path: "${params.outdir}/spades", mode: 'copy'
@@ -932,7 +979,7 @@ process spades {
     prefix = clean_reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
     R1 = clean_reads[0].toString()
     mode = params.bulk ? "bulk" : "mda"
-    if (params.single_end) {
+    if (single_end) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then
       spades.py -s $R1 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
@@ -955,6 +1002,8 @@ process spades {
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
     """
     }
+}
+
 }
 
 /*
@@ -1100,7 +1149,6 @@ process diamond_uniprot {
      """
      diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
        --outfmt 6 --sensitive --max-target-seqs 1 --evalue ${params.evalue} -b ${params.blockSize}
-     set +u && source activate scgs_py27
      blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
      """
    }
@@ -1128,22 +1176,20 @@ process blobtools {
    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
    uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
    """
-   set +u
-   source activate scgs_py27
    mkdir -p ${prefix}
    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
-     --db /opt/conda/envs/scgs_py27/opt/blobtools-1.0.1/data/nodesDB.txt
+     --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format png -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format png -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
-   blobtools blobplot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format png -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format png -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
+   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
    """
 }
 
@@ -1222,7 +1268,7 @@ process prokka {
    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
    """
    if [ \$(id -u) -eq 0 ]; then
-     wget -c -q -t 1 -T 60 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -O linux64.tbl2asn.gz && gunzip linux64.tbl2asn.gz && chmod +x linux64.tbl2asn && mv linux64.tbl2asn /opt/conda/envs/nf-core-gongyh-scgs-1.1.3/bin/tbl2asn
+     wget -c -q -t 1 -T 60 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -O linux64.tbl2asn.gz && gunzip linux64.tbl2asn.gz && chmod +x linux64.tbl2asn && mv linux64.tbl2asn /opt/conda/envs/nf-core-gongyh-scgs/bin/tbl2asn
    fi
    cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
    prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa || echo "Ignore minor errors of prokka!"
@@ -1367,7 +1413,7 @@ process multiqc_denovo {
     file ('software_versions/*') from software_versions_yaml2
     file ('trimgalore/*') from trimgalore_results2.collect()
     file ('fastqc2/*') from trimgalore_fastqc_reports2.collect()
-    file ('quast/*') from quast_report2
+    file ('quast/*') from quast_report2.ifEmpty('/dev/null')
     file ('prokka/*') from prokka_for_mqc2.collect()
     file ('kraken/*') from kraken_for_mqc2.collect()
     file workflow_summary from create_workflow_summary(summary)
@@ -1405,7 +1451,8 @@ process eggnog {
    script:
    prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?$/
    """
-   set +u && source activate scgs_py27
+   set +u
+   source activate base
    emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond --cpu ${task.cpus}
    """
 }

@@ -54,7 +54,7 @@ def real_split(fa, ann, level, out_dir, gff=None, ko_file=None):
                 for item in cl:
                     il = item.split(".")
                     if len(il)==3 and il[0]==level and il[1]=="t": # eg. order.t.12
-                        annCol = int(il[2])-1
+                        annCol = int(il[2].rstrip("%s"))-1
                 continue
             cl = line.strip().split("\t")
             contig_id = cl[0]

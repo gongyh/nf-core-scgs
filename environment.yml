@@ -5,6 +5,8 @@ channels:
   - defaults
 dependencies:
   - python=3.6.10
+  - dataclasses
+  - boost=1.68
   - fastqc=0.11.8
   - emboss=6.6.0
   - tbb=2020.2
@@ -17,6 +19,7 @@ dependencies:
   - bedtools=2.27.1
   - picard=2.19.0
   - spades=3.13.0
+  - bioconda::flye=2.9
   - bioconda::canu=2.2
   - quast=5.0.2
   - multiqc=1.6
@@ -55,6 +58,8 @@ dependencies:
   - bioconda::kofamscan=1.3.0
   - bioconda::tantan=26
   - bioconda::plasmidfinder=2.1.1
+  - bioconda::blobtools=1.1.1
+  - bioconda::perl-io-all
   - conda-forge::opentsne=0.5.1
   - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
@@ -66,6 +71,12 @@ dependencies:
   - r-base=3.6.1
   - r-essentials=3.6
   - r-rcurl=1.98_1.2
+  - r-magicaxis
+  - r-ape
+  - r-gridextra
+  - r-genoplotr
+  - r-ggpubr
+  - r-rstatix
   - bioconductor-rhtslib=1.18.0
   - bioconductor-biobase=2.46.0
   - bioconductor-biocgenerics=0.32.0
@@ -76,9 +87,11 @@ dependencies:
   - bioconductor-xvector=0.26.0
   - bioconductor-biocparallel=1.20.0
   - bioconductor-genomeinfodb=1.22.0
+  - bioconductor-genomeinfodbdata=1
   - bioconductor-biostrings=2.54.0
   - bioconductor-summarizedexperiment=1.16.0
   - bioconductor-rsamtools=2.2.0
   - bioconductor-genomicalignments=1.22.0
   - bioconductor-delayedarray=0.12.0
   - bioconductor-dnacopy=1.60.0
+  - bioconductor-aneufinder=1.14
