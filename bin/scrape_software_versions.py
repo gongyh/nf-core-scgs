@@ -11,6 +11,7 @@ regexes = {
     'FastQC': ['v_fastqc.txt', r"FastQC v(\S+)"],
     'Trim Galore!': ['v_trim_galore.txt', r"version (\S+)"],
     'Bowtie2': ['v_bowtie2.txt', r"bowtie2-align-s version (\S+)"],
+    'Minimap2': ['v_minimap2.txt', r"(\S+)"],
     'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
     'BEDTools': ['v_bedtools.txt', r"bedtools v(\S+)"],
     'Preseq': ['v_preseq.txt', r"Version: (\S+)"],
@@ -36,6 +37,7 @@ results['Nextflow'] = '<span style="color:#999999;\">N/A</span>'
 results['FastQC'] = '<span style="color:#999999;\">N/A</span>'
 results['Trim Galore!'] = '<span style="color:#999999;\">N/A</span>'
 results['Bowtie2'] = '<span style="color:#999999;\">N/A</span>'
+results['Minimap2'] = '<span style="color:#999999;\">N/A</span>'
 results['Samtools'] = '<span style="color:#999999;\">N/A</span>'
 results['BEDTools'] = '<span style="color:#999999;\">N/A</span>'
 results['Preseq'] = '<span style="color:#999999;\">N/A</span>'

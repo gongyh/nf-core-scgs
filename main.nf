@@ -381,6 +381,7 @@ process get_software_versions {
     fastqc --version > v_fastqc.txt
     trim_galore --version &> v_trim_galore.txt
     bowtie2 --version &> v_bowtie2.txt
+    minimap2 -V &> v_minimap2.txt
     samtools --version &> v_samtools.txt
     bedtools --version &> v_bedtools.txt
     preseq &> v_preseq.txt
@@ -617,6 +618,33 @@ process saturation {
 /*
  * STEP 3 - align with bowtie2
  */
+if ( params.nanopore ) {
+
+process minimap2 {
+    tag "$prefix"
+    publishDir path: { params.saveAlignedIntermediates ? "${params.outdir}/bowtie2" : params.outdir }, mode: 'copy',
+               saveAs: {filename -> params.saveAlignedIntermediates ? filename : null }
+    input:
+    file reads from trimmed_reads
+    file fasta from fasta
+    
+    output:
+    file '*.bam' into bb_bam
+    
+    when:
+    denovo == false
+    
+    script:
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    filtering = params.allow_multi_align ? '' : "-F 256"
+    R1 = reads[0].toString()
+    """
+    minimap2 -x map-ont -a $fasta $R1 | samtools view -b -q 40 -F 4 $filtering - > ${prefix}.bam
+    """
+}
+
+} else {
+
 process bowtie2 {
     tag "$prefix"
     publishDir path: { params.saveAlignedIntermediates ? "${params.outdir}/bowtie2" : params.outdir }, mode: 'copy',
@@ -646,6 +674,8 @@ process bowtie2 {
     bowtie2 --no-mixed --no-discordant -X 1000 -x ${index}/genome -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
     """
     }
+}
+
 }
 
 /*

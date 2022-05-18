@@ -10,7 +10,7 @@ import click
 @click.command()
 @click.option('--window', default=10000, help='length of sliding window (default: 10Kbp)')
 @click.option('--step', default=200, help='length of step window (default: 200bp)')
-@click.argument('fa', type=click.File('rb'))
+@click.argument('fa', type=click.Path(exists=True))
 def fa2bed(fa, window, step):
 
     # genome bed file
@@ -39,8 +39,8 @@ def fa2bed(fa, window, step):
         for i in range(0, length, step_len):
             start0 = i
             end0 = i+step_len if i+step_len<=length else length
-            start = i-window_len/2 if i-window_len/2>=0 else 0
-            end = i+window_len/2 if i+window_len/2<=length else length
+            start = int(i-window_len/2) if i-window_len/2>=0 else 0
+            end = int(i+window_len/2) if i+window_len/2<=length else length
             s = chrom_seq[start : end]
             gc = GC(s)
             skew = GC_skew(s, window_len)[0]
