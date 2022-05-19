@@ -27,7 +27,7 @@ regexes = {
     'CheckM': ['v_checkm.txt', r"(\S+)"],
     'Prokka': ['v_prokka.txt', r"prokka (\S+)"],
     'eggNOG-mapper': ['v_eggnogmapper.txt', r"emapper-(\S+)"],
-    'BlobTools': ['v_blobtools.txt', r"blobtools v(\S+)"],
+    'BlobTools': ['v_blobtools.txt', r"(\S+)"],
     'Quast': ['v_quast.txt', r"QUAST v(\S+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],
 }

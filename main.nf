@@ -741,6 +741,9 @@ process preseq {
     file '*.txt' into preseq_for_multiqc
     file '*.pdf'
 
+    when:
+    !params.nanopore
+
     script:
     pp_outdir = "${params.outdir}/preseq"
     prefix = sbed.toString() - ~/(\.markdup\.bed)?(\.markdup)?(\.bed)?$/
@@ -787,7 +790,7 @@ process qualimap {
       ln -s multi-bamqc Sample.markdup_stats
     else
       cat bams.txt | awk '{split(\$1,a,".markdup.bam"); print a[1]"\t"\$1}' > inputs.txt
-      qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir multi-bamqc
+      JAVA_MEM_SIZE=${task.memory.toGiga()}G qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir multi-bamqc
     fi
     """
 }
@@ -1402,6 +1405,7 @@ process eukcc {
 /*
  * STEP 12 - MultiQC
  */
+preseq_for_multiqc = file('/dev/null')
 process multiqc_ref {
     label "multiqc"
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
