@@ -811,7 +811,7 @@ process IndelRealign {
     file '*.realign.bam.bai' into bai_for_monovar
 
     when:
-    params.snv
+    params.snv && !params.nanopore
 
     script:
     pp_outdir = "${params.outdir}/gatk"
@@ -845,7 +845,7 @@ process monovar {
     file 'monovar.vcf' into monovar_vcf
 
     when:
-    !params.bulk && params.snv
+    !params.bulk && params.snv && !params.nanopore
 
     script:
     pp_outdir = "${params.outdir}/monovar"
@@ -869,7 +869,7 @@ process aneufinder {
     file 'CNV_output' into cnv_output
 
     when:
-    !params.bulk && params.cnv && !single_end
+    !params.bulk && params.cnv && !single_end && !params.nanopore
 
     script:
     pp_outdir = "${params.outdir}/aneufinder"
