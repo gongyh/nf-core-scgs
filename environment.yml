@@ -12,7 +12,7 @@ dependencies:
   - tbb=2020.2
   - bowtie2=2.3.4.3
   - bwa=0.7.17
-  - trim-galore=0.4.5
+  - trim-galore=0.6
   - kraken=1.1
   - krona=2.7.1
   - samtools=1.9

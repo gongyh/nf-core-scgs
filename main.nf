@@ -517,11 +517,11 @@ if(params.notrim){
         tpc_r2 = params.three_prime_clip_r2 > 0 ? "--three_prime_clip_r2 ${params.three_prime_clip_r2}" : ''
         if (single_end) {
             """
-            trim_galore --fastqc --gzip $c_r1 $tpc_r1 $reads
+            trim_galore --trim-n --max_n 0 --fastqc --gzip --cores 4 $c_r1 $tpc_r1 $reads
             """
         } else {
             """
-            trim_galore --paired --fastqc --gzip $c_r1 $c_r2 $tpc_r1 $tpc_r2 $reads
+            trim_galore --paired --trim-n --max_n 0 --fastqc --gzip --cores 4 $c_r1 $c_r2 $tpc_r1 $tpc_r2 $reads
             """
         }
     }
@@ -1338,7 +1338,7 @@ process prodigal {
 } else {
 prokka_for_mqc1 = file('/dev/null')
 prokka_for_mqc2 = file('/dev/null')
-
+prokka_for_split = file('/dev/null')
 /*
  * STEP 11.2 - Find genes using Augustus
  */
