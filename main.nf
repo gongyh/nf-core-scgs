@@ -478,7 +478,7 @@ process fastqc {
 
     script:
     """
-    fastqc -q $reads
+    fastqc --threads ${task.cpus} -q $reads
     """
 }
 
@@ -506,7 +506,7 @@ if(params.notrim){
         set val(name), file(reads) from read_files_trimming
 
         output:
-        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer
+        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer, trimmed_reads_for_remap
         file '*trimming_report.txt' into trimgalore_results1, trimgalore_results2
         file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports1, trimgalore_fastqc_reports2
 
@@ -517,11 +517,11 @@ if(params.notrim){
         tpc_r2 = params.three_prime_clip_r2 > 0 ? "--three_prime_clip_r2 ${params.three_prime_clip_r2}" : ''
         if (single_end) {
             """
-            trim_galore --trim-n --max_n 0 --fastqc --gzip --cores 4 $c_r1 $tpc_r1 $reads
+            trim_galore --trim-n --max_n 0 --fastqc --gzip --fastqc_args \"--threads ${task.cpus}\" --cores 4 $c_r1 $tpc_r1 $reads
             """
         } else {
             """
-            trim_galore --paired --trim-n --max_n 0 --fastqc --gzip --cores 4 $c_r1 $c_r2 $tpc_r1 $tpc_r2 $reads
+            trim_galore --paired --trim-n --max_n 0 --fastqc --gzip --fastqc_args \"--threads ${task.cpus}\" --cores 4 $c_r1 $c_r2 $tpc_r1 $tpc_r2 $reads
             """
         }
     }
@@ -541,6 +541,7 @@ process kraken {
     output:
     file "${prefix}.report" into kraken_for_mqc1, kraken_for_mqc2
     file "${prefix}.krona.html"
+
 
     when:
     params.kraken_db
@@ -943,7 +944,8 @@ process normalize {
     else
       gzip -cd $R1 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R1_fq.gz
       gzip -cd $R2 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R2_fq.gz
-      interleave-reads.py ${prefix}_rename_R1_fq.gz ${prefix}_rename_R2_fq.gz | normalize-by-median.py -k 31 -C 40 -M 4e+9 -p --gzip -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz /dev/stdin
+      interleave-reads.py ${prefix}_rename_R1_fq.gz ${prefix}_rename_R2_fq.gz | normalize-by-median.py -k 31 -C 40 -M 4e+9 -p --gzip -R ${prefix}_norm.report -o ${prefix}_nbm.fastq.gz /dev/stdin
+      split-paired-reads.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R2.fastq.gz --gzip ${prefix}_nbm.fastq.gz
     fi
     """
     }
@@ -965,7 +967,7 @@ process canu {
     file clean_reads from normalized_reads_for_assembly
 
     output:
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split, contigs_for_remap
     file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
 
     when:
@@ -996,13 +998,14 @@ process canu {
 
 process spades {
     tag "${prefix}"
-    publishDir path: "${params.outdir}/spades", mode: 'copy'
+    publishDir path: "${params.outdir}/spades", mode: 'copy',
+		           saveAs: {filename -> if(filename.indexOf(".fq.gz") > 0) null else "$filename"}
 
     input:
     file clean_reads from normalized_reads_for_assembly
 
     output:
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split, contigs_for_remap
     file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
 
     when:
@@ -1024,11 +1027,12 @@ process spades {
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
     """
     } else {
+    R2 = clean_reads[1].toString()
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      spades.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R2.fastq.gz --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     else
-      spades.py --sc --12 $R1 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
@@ -1039,8 +1043,66 @@ process spades {
 
 }
 
+/* 
+ * STEP 7 - Build Bowtie2Index for Remap 
+ */
+process prepare_bowtie2_remap {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/remap_bowtie2_index", mode: 'copy'
+
+    input:
+    file contigs from contigs_for_remap
+
+    output:
+    file "${prefix}Bowtie2Index" into remap_bowtie2_index
+
+		when:
+		params.ass
+
+    script:
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta?)(\.ctgs\.fasta)?(\.ctgs)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    """
+    mkdir -p ${prefix}Bowtie2Index; cd ${prefix}Bowtie2Index
+    ln -s ../${contigs} ${prefix}.fa
+    bowtie2-build ${prefix}.fa ${prefix}
+    """
+}
+
+/* 
+ * STEP 8 - Remap 
+ */
+process remap {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/remap", mode: 'copy'
+
+    input:
+    file reads from trimmed_reads_for_remap
+    file index from remap_bowtie2_index.collect()
+
+    output:
+    file "${prefix}_ass.bam" into bam_ass
+
+		when:
+		params.ass
+
+    script:
+    prefix = reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    R1 = reads[0].toString()
+    filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
+		if (single_end) {
+      """
+      bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U $R1 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+      """
+    } else {
+			R2 = reads[1].toString()
+      """
+      bowtie2 --no-mixed --no-discordant -X 1000 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+      """
+    }
+}
+
 /*
- * STEP 7 - Evaluation using QUAST
+ * STEP 9 - Evaluation using QUAST
  */
 process quast_ref {
     label "quast"
@@ -1096,7 +1158,7 @@ process quast_denovo {
 }
 
 /*
- * STEP 8.1 - Completeness and contamination evaluation using CheckM
+ * STEP 10.1 - Completeness and contamination evaluation using CheckM
  */
 process checkm {
    publishDir "${params.outdir}/CheckM", mode: 'copy'
@@ -1122,7 +1184,7 @@ process checkm {
 }
 
 /*
- * STEP 9.1 - Annotate contigs using NT database
+ * STEP 11.1 - Annotate contigs using NT database
  */
 process blast_nt {
    tag "${prefix}"
@@ -1150,7 +1212,7 @@ process blast_nt {
 }
 
 /*
- * STEP 9.2 - Annotate contigs using Uniprot proteomes database
+ * STEP 11.2 - Annotate contigs using Uniprot proteomes database
  */
 process diamond_uniprot {
    tag "${prefix}"
@@ -1163,10 +1225,10 @@ process diamond_uniprot {
    file "uniprot.taxids" from uniprot_taxids
 
    output:
-   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools
-   file "${contigs}" into contigs_for_blob
-   file "${nt_out}" into nt_for_blobtools
-   val used into uniprot_real
+   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools, uniprot_for_reblobtools
+   file "${contigs}" into contigs_for_blob, contigs_for_reblob
+   file "${nt_out}" into nt_for_blobtools, nt_for_reblobtools
+   val used into uniprot_real, uniprot_real_reblob
    file "${prefix}_uniprot.*"
 
    script:
@@ -1188,7 +1250,7 @@ process diamond_uniprot {
 }
 
 /*
- * STEP 10.1 - Blobplot
+ * STEP 12.1 - Blobplot
  */
 process blobtools {
    tag "${prefix}"
@@ -1227,7 +1289,52 @@ process blobtools {
 }
 
 /*
- * STEP 10.2 - ACDC
+ * STEP 12.2 - Blobplot using bam files
+ */
+process reblobtools {
+   tag "${prefix}"
+   publishDir "${params.outdir}/reblob", mode: 'copy'
+
+   input:
+   file contigs from contigs_for_reblob
+   file anno from nt_for_reblobtools
+   val has_uniprot from uniprot_real_reblob
+   file uniprot_anno from uniprot_for_reblobtools
+   file bam from bam_ass.collect()
+
+	 output:
+	 file "${prefix}/${prefix}.blobDB*table.txt"
+	 file "${contigs}"
+	 file "${prefix}"
+
+   when:
+	 params.ass
+
+   script:
+   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
+    """
+    mkdir -p ${prefix}
+		samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
+		samtools index ${prefix}_ass.sort.bam
+    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -b ${prefix}_ass.sort.bam -o ${prefix}/${prefix} \
+      --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
+    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
+    """
+}
+
+/*
+ * STEP 12.2 - ACDC
  */
 process acdc {
     tag "${prefix}"
@@ -1253,7 +1360,7 @@ process acdc {
 }
 
 /*
- * STEP 10.3 - tSNE
+ * STEP 12.3 - tSNE
  */
 process tsne {
     tag "${prefix}"
@@ -1281,7 +1388,7 @@ process tsne {
 
 if (!euk) {
 /*
- * STEP 11 - Find genes using Prokka
+ * STEP 13 - Find genes using Prokka
  */
 process prokka {
    tag "$prefix"
@@ -1311,7 +1418,7 @@ process prokka {
    """
 }
 /*
- * STEP 11.2 - Find genes using prodigal
+ * STEP 13.2 - Find genes using prodigal
  */
 process prodigal {
    tag "$prefix"
@@ -1340,7 +1447,7 @@ prokka_for_mqc1 = file('/dev/null')
 prokka_for_mqc2 = file('/dev/null')
 prokka_for_split = file('/dev/null')
 /*
- * STEP 11.2 - Find genes using Augustus
+ * STEP 13.2 - Find genes using Augustus
  */
 process augustus {
    tag "$prefix"
@@ -1371,7 +1478,7 @@ process augustus {
 }
 
 /*
- * STEP 11.3 - Completeness and contamination evaluation using EukCC for euk
+ * STEP 13.3 - Completeness and contamination evaluation using EukCC for euk
  */
 process eukcc {
    publishDir "${params.outdir}/EukCC", mode: 'copy'
@@ -1403,7 +1510,7 @@ process eukcc {
 
 
 /*
- * STEP 12 - MultiQC
+ * STEP 14 - MultiQC
  */
 preseq_for_multiqc = file('/dev/null')
 process multiqc_ref {
@@ -1466,7 +1573,7 @@ process multiqc_denovo {
 }
 
 /*
- * STEP 13 - Annotate genes using EggNOG
+ * STEP 15 - Annotate genes using EggNOG
  */
 process eggnog {
    tag "$prefix"
@@ -1492,7 +1599,7 @@ process eggnog {
 }
 
 /*
- * STEP 13.1 - Annotate genes using KOfamKOALA
+ * STEP 15.1 - Annotate genes using KOfamKOALA
  */
 process kofam {
    tag "$prefix"
@@ -1520,7 +1627,7 @@ process kofam {
 }
 
 /*
- * STEP 14 - Find ARGs
+ * STEP 16 - Find ARGs
  */
 process resfinder {
     tag "$prefix"
@@ -1546,7 +1653,7 @@ process resfinder {
 }
 
 /*
- * STEP 15 - Find point mutations
+ * STEP 17 - Find point mutations
  */
 process pointfinder {
     tag "$prefix"
@@ -1608,7 +1715,7 @@ process split_checkm {
 }
 
 /*
- * STEP 16 - Output Description HTML
+ * STEP 18 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
