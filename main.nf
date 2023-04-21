@@ -478,7 +478,7 @@ process fastqc {
 
     script:
     """
-    fastqc -q $reads
+    fastqc --threads ${task.cpus} -q $reads
     """
 }
 
@@ -811,7 +811,7 @@ process IndelRealign {
     file '*.realign.bam.bai' into bai_for_monovar
 
     when:
-    params.snv
+    params.snv && !params.nanopore
 
     script:
     pp_outdir = "${params.outdir}/gatk"
@@ -845,7 +845,7 @@ process monovar {
     file 'monovar.vcf' into monovar_vcf
 
     when:
-    !params.bulk && params.snv
+    !params.bulk && params.snv && !params.nanopore
 
     script:
     pp_outdir = "${params.outdir}/monovar"
@@ -869,7 +869,7 @@ process aneufinder {
     file 'CNV_output' into cnv_output
 
     when:
-    !params.bulk && params.cnv && !single_end
+    !params.bulk && params.cnv && !single_end && !params.nanopore
 
     script:
     pp_outdir = "${params.outdir}/aneufinder"
@@ -1024,9 +1024,10 @@ process spades {
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
     """
     } else {
+    R2 = clean_reads[1].toString()
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      spades.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R2.fastq.gz --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+      spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     else
       spades.py --sc --12 $R1 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
@@ -1338,6 +1339,7 @@ process prodigal {
 } else {
 prokka_for_mqc1 = file('/dev/null')
 prokka_for_mqc2 = file('/dev/null')
+prokka_for_split = file('/dev/null')
 
 /*
  * STEP 11.2 - Find genes using Augustus

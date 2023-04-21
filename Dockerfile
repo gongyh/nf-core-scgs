@@ -49,7 +49,7 @@ RUN cd /opt && git config --global http.sslVerify false && \
 # Install Monovar
 RUN cd /opt && git config --global http.sslVerify false && \
     git clone https://github.com/gongyh/MonoVar.git && \
-    cd MonoVar && python setup.py install
+    cd MonoVar && python setup.py install ## bug fix
 
 # Keep a copy of current pipeline to container
 COPY . /opt/nf-core-scgs/

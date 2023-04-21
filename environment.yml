@@ -60,6 +60,8 @@ dependencies:
   - bioconda::plasmidfinder=2.1.1
   - bioconda::blobtools=1.1.1
   - bioconda::perl-io-all
+  - bioconda::pyvcf
+  - bioconda::vg
   - conda-forge::opentsne=0.5.1
   - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
