@@ -1341,10 +1341,6 @@ process prodigal {
 prokka_for_mqc1 = file('/dev/null')
 prokka_for_mqc2 = file('/dev/null')
 prokka_for_split = file('/dev/null')
-<<<<<<< HEAD
-
-=======
->>>>>>> a18b324e73c50580a1253027c7670d23ce8c2321
 /*
  * STEP 11.2 - Find genes using Augustus
  */
