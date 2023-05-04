@@ -1512,7 +1512,7 @@ process kofam {
    kofam_profile && kofam_kolist
 
    script:
-   prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?$/
+   prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?(\.aa)?$/
    """
    exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -o ${prefix}_KOs_detail.txt ${faa}
    exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
