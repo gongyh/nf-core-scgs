@@ -27,6 +27,7 @@ def helpMessage() {
                                     Available: conda, docker, singularity, awsbatch, test and more.
 
     Options:
+      --vcf                         Variantion graph construction
       --bulk                        WGS of bulk DNA, not MDA
       --nanopore                    Nanopore sequencing data, force single_end, assembly using Canu
       --genome                      Name of iGenomes reference
@@ -113,6 +114,7 @@ params.nanopore = false
 params.single_end = false
 params.fasta = false
 params.gff = false
+params.vcf = false
 params.notrim = false
 params.saveTrimmed = false
 params.allow_multi_align = false
@@ -169,6 +171,12 @@ gff = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 if ( params.gff ) {
     gff = file(params.gff)
     if( !gff.exists() ) exit 1, "GFF file not found: ${params.gff}"
+}
+
+graph_vcf = false
+if ( params.vcf ) {
+  graph_vcf = file(params.vcf)
+  if ( !graph_vcf.exists()) exit 1, "VCF file to construct graph not found: ${params.graph_vcf}"
 }
 
 single_end = false
@@ -677,6 +685,81 @@ process bowtie2 {
 }
 
 }
+
+process vg_construct_graph {
+    publishDir path: "${params.outdir}/vg_graph", mode: 'copy'
+
+    input:
+    file fasta from fasta
+    file graph_vcf from graph_vcf
+
+    output:
+    file "graph.vg" into graph_for_map, graph_for_call
+
+    when:
+    params.vcf
+
+    script:
+    """
+    tabix ${graph_vcf}
+    vg construct -t ${task.cpus} -r ${fasta} -v ${graph_vcf} > graph.vg
+    """
+}
+
+
+process vg_graph_map {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/vg_map", mode: 'copy'
+
+    input:
+    file vg from graph_for_map
+    file reads from trimmed_reads_for_vg_map
+
+    output:
+    // file "graph.xg" into graph_xg
+    file "*.gam" into graph_gam
+    file "*.stats.txt"
+
+    script:
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    R1 = reads[0].toString()
+    if (single_end) {
+    """
+    vg index -x graph.xg -g graph.gcsa -k 16 ${vg}
+    vg map -t ${task.cpus} -w 1024 -f $R1 -x graph.xg -g graph.gcsa > ${prefix}.gam
+    vg stats -z -a ${prefix}.gam ${vg} > stats.txt
+    """
+    } else {
+    R2 = reads[1].toString()
+    """
+    vg index -t ${task.cpus} -x graph.xg -g graph.gcsa -k 16 ${vg}
+    vg map -t ${task.cpus} -w 1024 -f $R1 $R2 -x graph.xg -g graph.gcsa > ${prefix}.gam
+    vg stats -z -a ${prefix}.gam ${vg} > ${prefix}.stats.txt
+    """
+    }
+}
+
+process vg_call {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/vg_call", mode: 'copy'
+
+    input:
+    file vg from graph_for_call
+    file gam from graph_gam
+
+    output:
+    file '*.calls.vcf' into vg_calls
+    
+    script:
+    prefix = gam.toString() - ~/(\.gam)?$/
+    """
+    vg augment -t ${task.cpus} ${vg} ${prefix}.gam -A ${prefix}.aug.gam > ${prefix}.aug.vg
+    vg index -t ${task.cpus} ${prefix}.aug.vg -x ${prefix}.aug.xg
+    vg pack -t ${task.cpus} -x ${prefix}.aug.xg -g ${prefix}.aug.gam -Q 5 -s 5 -o ${prefix}.aln_aug.pack
+    vg call -t ${task.cpus} ${prefix}.aug.xg -k ${prefix}.aln_aug.pack > ${prefix}.calls.vcf
+    """
+}
+
 
 /*
  * STEP 4 - post-alignment processing
