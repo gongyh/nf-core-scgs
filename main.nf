@@ -27,6 +27,7 @@ def helpMessage() {
                                     Available: conda, docker, singularity, awsbatch, test and more.
 
     Options:
+      --vcf                         Variantion graph construction
       --bulk                        WGS of bulk DNA, not MDA
       --nanopore                    Nanopore sequencing data, force single_end, assembly using Canu
       --genome                      Name of iGenomes reference
@@ -113,6 +114,7 @@ params.nanopore = false
 params.single_end = false
 params.fasta = false
 params.gff = false
+params.vcf = false
 params.notrim = false
 params.saveTrimmed = false
 params.allow_multi_align = false
@@ -169,6 +171,12 @@ gff = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 if ( params.gff ) {
     gff = file(params.gff)
     if( !gff.exists() ) exit 1, "GFF file not found: ${params.gff}"
+}
+
+graph_vcf = false
+if ( params.vcf ) {
+  graph_vcf = file(params.vcf)
+  if ( !graph_vcf.exists()) exit 1, "VCF file to construct graph not found: ${params.graph_vcf}"
 }
 
 single_end = false
@@ -506,7 +514,7 @@ if(params.notrim){
         set val(name), file(reads) from read_files_trimming
 
         output:
-        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer, trimmed_reads_for_remap
+        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer, trimmed_reads_for_vg_map
         file '*trimming_report.txt' into trimgalore_results1, trimgalore_results2
         file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports1, trimgalore_fastqc_reports2
 
@@ -541,7 +549,6 @@ process kraken {
     output:
     file "${prefix}.report" into kraken_for_mqc1, kraken_for_mqc2
     file "${prefix}.krona.html"
-
 
     when:
     params.kraken_db
@@ -678,6 +685,81 @@ process bowtie2 {
 }
 
 }
+
+process vg_construct_graph {
+    publishDir path: "${params.outdir}/vg_graph", mode: 'copy'
+
+    input:
+    file fasta from fasta
+    file graph_vcf from graph_vcf
+
+    output:
+    file "graph.vg" into graph_for_map, graph_for_call
+
+    when:
+    params.vcf
+
+    script:
+    """
+    tabix ${graph_vcf}
+    vg construct -t ${task.cpus} -r ${fasta} -v ${graph_vcf} > graph.vg
+    """
+}
+
+
+process vg_graph_map {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/vg_map", mode: 'copy'
+
+    input:
+    file vg from graph_for_map
+    file reads from trimmed_reads_for_vg_map
+
+    output:
+    // file "graph.xg" into graph_xg
+    file "*.gam" into graph_gam
+    file "*.stats.txt"
+
+    script:
+    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    R1 = reads[0].toString()
+    if (single_end) {
+    """
+    vg index -x graph.xg -g graph.gcsa -k 16 ${vg}
+    vg map -t ${task.cpus} -w 1024 -f $R1 -x graph.xg -g graph.gcsa > ${prefix}.gam
+    vg stats -z -a ${prefix}.gam ${vg} > stats.txt
+    """
+    } else {
+    R2 = reads[1].toString()
+    """
+    vg index -t ${task.cpus} -x graph.xg -g graph.gcsa -k 16 ${vg}
+    vg map -t ${task.cpus} -w 1024 -f $R1 $R2 -x graph.xg -g graph.gcsa > ${prefix}.gam
+    vg stats -z -a ${prefix}.gam ${vg} > ${prefix}.stats.txt
+    """
+    }
+}
+
+process vg_call {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/vg_call", mode: 'copy'
+
+    input:
+    file vg from graph_for_call
+    file gam from graph_gam
+
+    output:
+    file '*.calls.vcf' into vg_calls
+    
+    script:
+    prefix = gam.toString() - ~/(\.gam)?$/
+    """
+    vg augment -t ${task.cpus} ${vg} ${prefix}.gam -A ${prefix}.aug.gam > ${prefix}.aug.vg
+    vg index -t ${task.cpus} ${prefix}.aug.vg -x ${prefix}.aug.xg
+    vg pack -t ${task.cpus} -x ${prefix}.aug.xg -g ${prefix}.aug.gam -Q 5 -s 5 -o ${prefix}.aln_aug.pack
+    vg call -t ${task.cpus} ${prefix}.aug.xg -k ${prefix}.aln_aug.pack > ${prefix}.calls.vcf
+    """
+}
+
 
 /*
  * STEP 4 - post-alignment processing
@@ -967,7 +1049,7 @@ process canu {
     file clean_reads from normalized_reads_for_assembly
 
     output:
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split, contigs_for_remap
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split
     file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
 
     when:
@@ -998,14 +1080,13 @@ process canu {
 
 process spades {
     tag "${prefix}"
-    publishDir path: "${params.outdir}/spades", mode: 'copy',
-		           saveAs: {filename -> if(filename.indexOf(".fq.gz") > 0) null else "$filename"}
+    publishDir path: "${params.outdir}/spades", mode: 'copy'
 
     input:
     file clean_reads from normalized_reads_for_assembly
 
     output:
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split, contigs_for_remap
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split
     file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
 
     when:
@@ -1043,66 +1124,8 @@ process spades {
 
 }
 
-/* 
- * STEP 7 - Build Bowtie2Index for Remap 
- */
-process prepare_bowtie2_remap {
-    tag "${prefix}"
-    publishDir path: "${params.outdir}/remap_bowtie2_index", mode: 'copy'
-
-    input:
-    file contigs from contigs_for_remap
-
-    output:
-    file "${prefix}Bowtie2Index" into remap_bowtie2_index
-
-		when:
-		params.ass
-
-    script:
-    prefix = contigs.toString() - ~/(\.ctg200\.fasta?)(\.ctgs\.fasta)?(\.ctgs)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-    """
-    mkdir -p ${prefix}Bowtie2Index; cd ${prefix}Bowtie2Index
-    ln -s ../${contigs} ${prefix}.fa
-    bowtie2-build ${prefix}.fa ${prefix}
-    """
-}
-
-/* 
- * STEP 8 - Remap 
- */
-process remap {
-    tag "${prefix}"
-    publishDir path: "${params.outdir}/remap", mode: 'copy'
-
-    input:
-    file reads from trimmed_reads_for_remap
-    file index from remap_bowtie2_index.collect()
-
-    output:
-    file "${prefix}_ass.bam" into bam_ass
-
-		when:
-		params.ass
-
-    script:
-    prefix = reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    R1 = reads[0].toString()
-    filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
-		if (single_end) {
-      """
-      bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U $R1 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
-      """
-    } else {
-			R2 = reads[1].toString()
-      """
-      bowtie2 --no-mixed --no-discordant -X 1000 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
-      """
-    }
-}
-
 /*
- * STEP 9 - Evaluation using QUAST
+ * STEP 7 - Evaluation using QUAST
  */
 process quast_ref {
     label "quast"
@@ -1158,7 +1181,7 @@ process quast_denovo {
 }
 
 /*
- * STEP 10.1 - Completeness and contamination evaluation using CheckM
+ * STEP 8.1 - Completeness and contamination evaluation using CheckM
  */
 process checkm {
    publishDir "${params.outdir}/CheckM", mode: 'copy'
@@ -1184,7 +1207,7 @@ process checkm {
 }
 
 /*
- * STEP 11.1 - Annotate contigs using NT database
+ * STEP 9.1 - Annotate contigs using NT database
  */
 process blast_nt {
    tag "${prefix}"
@@ -1212,7 +1235,7 @@ process blast_nt {
 }
 
 /*
- * STEP 11.2 - Annotate contigs using Uniprot proteomes database
+ * STEP 9.2 - Annotate contigs using Uniprot proteomes database
  */
 process diamond_uniprot {
    tag "${prefix}"
@@ -1225,10 +1248,10 @@ process diamond_uniprot {
    file "uniprot.taxids" from uniprot_taxids
 
    output:
-   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools, uniprot_for_reblobtools
-   file "${contigs}" into contigs_for_blob, contigs_for_reblob
-   file "${nt_out}" into nt_for_blobtools, nt_for_reblobtools
-   val used into uniprot_real, uniprot_real_reblob
+   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools
+   file "${contigs}" into contigs_for_blob
+   file "${nt_out}" into nt_for_blobtools
+   val used into uniprot_real
    file "${prefix}_uniprot.*"
 
    script:
@@ -1250,7 +1273,7 @@ process diamond_uniprot {
 }
 
 /*
- * STEP 12.1 - Blobplot
+ * STEP 10.1 - Blobplot
  */
 process blobtools {
    tag "${prefix}"
@@ -1289,52 +1312,7 @@ process blobtools {
 }
 
 /*
- * STEP 12.2 - Blobplot using bam files
- */
-process reblobtools {
-   tag "${prefix}"
-   publishDir "${params.outdir}/reblob", mode: 'copy'
-
-   input:
-   file contigs from contigs_for_reblob
-   file anno from nt_for_reblobtools
-   val has_uniprot from uniprot_real_reblob
-   file uniprot_anno from uniprot_for_reblobtools
-   file bam from bam_ass.collect()
-
-	 output:
-	 file "${prefix}/${prefix}.blobDB*table.txt"
-	 file "${contigs}"
-	 file "${prefix}"
-
-   when:
-	 params.ass
-
-   script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
-    """
-    mkdir -p ${prefix}
-		samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
-		samtools index ${prefix}_ass.sort.bam
-    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -b ${prefix}_ass.sort.bam -o ${prefix}/${prefix} \
-      --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
-    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format png -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format png -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
-    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
-    """
-}
-
-/*
- * STEP 12.2 - ACDC
+ * STEP 10.2 - ACDC
  */
 process acdc {
     tag "${prefix}"
@@ -1360,7 +1338,7 @@ process acdc {
 }
 
 /*
- * STEP 12.3 - tSNE
+ * STEP 10.3 - tSNE
  */
 process tsne {
     tag "${prefix}"
@@ -1388,7 +1366,7 @@ process tsne {
 
 if (!euk) {
 /*
- * STEP 13 - Find genes using Prokka
+ * STEP 11 - Find genes using Prokka
  */
 process prokka {
    tag "$prefix"
@@ -1418,7 +1396,7 @@ process prokka {
    """
 }
 /*
- * STEP 13.2 - Find genes using prodigal
+ * STEP 11.2 - Find genes using prodigal
  */
 process prodigal {
    tag "$prefix"
@@ -1447,7 +1425,7 @@ prokka_for_mqc1 = file('/dev/null')
 prokka_for_mqc2 = file('/dev/null')
 prokka_for_split = file('/dev/null')
 /*
- * STEP 13.2 - Find genes using Augustus
+ * STEP 11.2 - Find genes using Augustus
  */
 process augustus {
    tag "$prefix"
@@ -1478,7 +1456,7 @@ process augustus {
 }
 
 /*
- * STEP 13.3 - Completeness and contamination evaluation using EukCC for euk
+ * STEP 11.3 - Completeness and contamination evaluation using EukCC for euk
  */
 process eukcc {
    publishDir "${params.outdir}/EukCC", mode: 'copy'
@@ -1510,7 +1488,7 @@ process eukcc {
 
 
 /*
- * STEP 14 - MultiQC
+ * STEP 12 - MultiQC
  */
 preseq_for_multiqc = file('/dev/null')
 process multiqc_ref {
@@ -1573,7 +1551,7 @@ process multiqc_denovo {
 }
 
 /*
- * STEP 15 - Annotate genes using EggNOG
+ * STEP 13 - Annotate genes using EggNOG
  */
 process eggnog {
    tag "$prefix"
@@ -1599,7 +1577,7 @@ process eggnog {
 }
 
 /*
- * STEP 15.1 - Annotate genes using KOfamKOALA
+ * STEP 13.1 - Annotate genes using KOfamKOALA
  */
 process kofam {
    tag "$prefix"
@@ -1627,7 +1605,7 @@ process kofam {
 }
 
 /*
- * STEP 16 - Find ARGs
+ * STEP 14 - Find ARGs
  */
 process resfinder {
     tag "$prefix"
@@ -1653,7 +1631,7 @@ process resfinder {
 }
 
 /*
- * STEP 17 - Find point mutations
+ * STEP 15 - Find point mutations
  */
 process pointfinder {
     tag "$prefix"
@@ -1715,7 +1693,7 @@ process split_checkm {
 }
 
 /*
- * STEP 18 - Output Description HTML
+ * STEP 16 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
