@@ -514,7 +514,7 @@ if(params.notrim){
         set val(name), file(reads) from read_files_trimming
 
         output:
-        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer
+        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer, trimmed_reads_for_vg_map
         file '*trimming_report.txt' into trimgalore_results1, trimgalore_results2
         file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports1, trimgalore_fastqc_reports2
 
