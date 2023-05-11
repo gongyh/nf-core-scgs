@@ -59,7 +59,7 @@ def real_split(fa, ann, level, out_dir, gff=None, ko_file=None):
             cl = line.strip().split("\t")
             contig_id = cl[0]
             ctg_id_short = contig_id.split("_length_")[0]
-            annotation = cl[annCol]
+            annotation = cl[annCol].replace("/","_")
             gname = annotation.replace(" ","_")+".gids"
             kname = annotation.replace(" ","_")+".ko"
             kofh = out_dir.joinpath(kname).open('a')
