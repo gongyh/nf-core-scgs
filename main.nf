@@ -1664,8 +1664,7 @@ process pointfinder {
 /*
  * Split the genome by contig annotation and checkm for each genus
  */
-
-process split_checkm {
+process split_checkm_eukcc {
     publishDir "${params.outdir}/", mode: 'copy'
 
     input:
@@ -1673,24 +1672,53 @@ process split_checkm {
     file "results/blob/*" from blob_tax_for_split.collect()
     file "results/prokka/*" from prokka_for_split.collect()
     file "results/kofam/*" from kofam_for_split.collect()
+    file db from eukcc_db
 
     output:
     file "split/*"
 
     when:
-    params.split
+    params.split && euk && eukcc_db
 
     script:
     """
+		export HOME=/tmp/
+		if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
+			echo "NCBI taxa database exist!"
+		else
+			python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
+		fi
     cli.py tools scgs_split
     cd split
     samples=(`ls -d *_genus | sed 's/_genus//g'`)
     for sample in \${samples[*]}; do
       mkdir -p \${sample}_genus_checkM
-      checkm lineage_wf -t ${task.cpus} -f \${sample}_genus_checkM.txt -x fasta \${sample}_genus \${sample}_genus_checkM || echo "Ignore internal errors!" 
-    done
+      checkm lineage_wf -t ${task.cpus} -f \${sample}_genus_checkM.txt -x fasta \${sample}_genus/Bacteria \${sample}_genus_checkM || echo "Ignore internal errors!" 
+			cd \${sample}_genus/Eukaryota
+			ln -s ../../../${db} eukcc_db
+			contigs=(`ls -d *.fasta`)
+			for contig in \${contigs[*]};do
+				prefix=\${contig%.fasta}
+        # clean id
+				cat \$contig | sed 's/_length.*\$//g' > \${prefix}_clean.fasta
+        # mask genome
+				tantan \${prefix}_clean.fasta > \${prefix}_mask.fasta
+        # gene prediction
+        augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on \${prefix}_mask.fasta > \${prefix}.gff
+				# generate proteins
+				getAnnoFasta.pl \${prefix}.gff
+			done
+
+			faas=(`ls -d *.aa`)
+			for faa in \${faas[*]};do
+        faaPrefix=\${faa%.aa}
+				eukcc --db eukcc_db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
+			done	
+			cd ../../
+		done
     """
 }
+
 
 /*
  * STEP 16 - Output Description HTML
