@@ -34,6 +34,7 @@ def helpMessage() {
       --single_end                  Specifies that the input is single end reads
       --snv                         Enable detection of single nucleotide variation
       --cnv                         Enable detection of copy number variation
+      --remap                       Remap trimmed reads to contigs
       --saturation                  Enable sequencing saturation analysis
       --ass                         Assemble using SPAdes
       --split                       Split the draft genomes and annotation
@@ -122,6 +123,7 @@ params.saveAlignedIntermediates = false
 params.no_normalize = false
 params.euk = false
 params.fungus = false
+params.remap = false
 params.genus = null
 params.nt_db = null
 params.kraken_db = null
@@ -514,7 +516,7 @@ if(params.notrim){
         set val(name), file(reads) from read_files_trimming
 
         output:
-        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer, trimmed_reads_for_vg_map
+        file '*.fq.gz' into trimmed_reads, trimmed_reads_for_spades, trimmed_reads_for_kraken, trimmed_reads_for_kmer, trimmed_reads_for_remap, trimmed_reads_for_vg_map
         file '*trimming_report.txt' into trimgalore_results1, trimgalore_results2
         file "*_fastqc.{zip,html}" into trimgalore_fastqc_reports1, trimgalore_fastqc_reports2
 
@@ -1049,7 +1051,7 @@ process canu {
     file clean_reads from normalized_reads_for_assembly
 
     output:
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split, contigs_for_remap
     file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
 
     when:
@@ -1086,7 +1088,7 @@ process spades {
     file clean_reads from normalized_reads_for_assembly
 
     output:
-    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split
+    file "${prefix}.ctg200.fasta" into contigs_for_nt, contigs_for_split, contigs_for_remap
     file "${prefix}.ctgs.fasta" into contigs_for_quast1, contigs_for_quast2, contigs_for_checkm, contigs_for_prokka, contigs_for_prodigal, contigs_for_resfinder, contigs_for_pointfinder, contigs_for_tsne, contigs_for_augustus, contigs_for_eukcc
 
     when:
@@ -1124,8 +1126,67 @@ process spades {
 
 }
 
+/* 
+ * STEP 7 - Build Bowtie2Index for Remap 
+ */
+process prepare_bowtie2_remap {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/remap_bowtie2_index", mode: 'copy'
+
+    input:
+    file contigs from contigs_for_remap
+
+    output:
+    file "${prefix}Bowtie2Index" into remap_bowtie2_index
+
+		when:
+		params.remap
+
+    script:
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta?)(\.ctgs\.fasta)?(\.ctgs)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    """
+    mkdir -p ${prefix}Bowtie2Index; cd ${prefix}Bowtie2Index
+    ln -s ../${contigs} ${prefix}.fa
+    bowtie2-build ${prefix}.fa ${prefix}
+    """
+}
+
+/* 
+ * STEP 8 - Remap 
+ */
+process remap {
+    tag "${prefix}"
+    publishDir path: "${params.outdir}/remap", mode: 'copy'
+
+    input:
+    file reads from trimmed_reads_for_remap
+    file index from remap_bowtie2_index.collect()
+
+    output:
+    file "${prefix}_ass.bam" into bam_ass
+
+		when:
+		params.remap
+
+    script:
+    prefix = reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+    R1 = reads[0].toString()
+    filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
+		if (single_end) {
+      """
+      bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U $R1 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+      """
+    } else {
+			R2 = reads[1].toString()
+      """
+      bowtie2 --no-mixed --no-discordant -X 1000 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+      """
+    }
+}
+
+
 /*
- * STEP 7 - Evaluation using QUAST
+ * STEP 9 - Evaluation using QUAST
  */
 process quast_ref {
     label "quast"
@@ -1181,7 +1242,7 @@ process quast_denovo {
 }
 
 /*
- * STEP 8.1 - Completeness and contamination evaluation using CheckM
+ * STEP 10.1 - Completeness and contamination evaluation using CheckM
  */
 process checkm {
    publishDir "${params.outdir}/CheckM", mode: 'copy'
@@ -1207,7 +1268,7 @@ process checkm {
 }
 
 /*
- * STEP 9.1 - Annotate contigs using NT database
+ * STEP 11.1 - Annotate contigs using NT database
  */
 process blast_nt {
    tag "${prefix}"
@@ -1235,7 +1296,7 @@ process blast_nt {
 }
 
 /*
- * STEP 9.2 - Annotate contigs using Uniprot proteomes database
+ * STEP 11.2 - Annotate contigs using Uniprot proteomes database
  */
 process diamond_uniprot {
    tag "${prefix}"
@@ -1248,10 +1309,10 @@ process diamond_uniprot {
    file "uniprot.taxids" from uniprot_taxids
 
    output:
-   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools
-   file "${contigs}" into contigs_for_blob
-   file "${nt_out}" into nt_for_blobtools
-   val used into uniprot_real
+   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools, uniprot_for_reblobtools
+   file "${contigs}" into contigs_for_blob, contigs_for_reblob
+   file "${nt_out}" into nt_for_blobtools, nt_for_reblobtools
+   val used into uniprot_real, uniprot_real_reblob
    file "${prefix}_uniprot.*"
 
    script:
@@ -1310,6 +1371,49 @@ process blobtools {
    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
    """
 }
+
+process reblobtools {
+   tag "${prefix}"
+   publishDir "${params.outdir}/reblob", mode: 'copy'
+
+   input:
+   file contigs from contigs_for_reblob
+   file anno from nt_for_reblobtools
+   val has_uniprot from uniprot_real_reblob
+   file uniprot_anno from uniprot_for_reblobtools
+   file bam from bam_ass.collect()
+
+	 output:
+	 file "${prefix}/${prefix}.blobDB*table.txt"
+	 file "${contigs}"
+	 file "${prefix}"
+
+   when:
+	 params.remap
+
+   script:
+   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+   uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
+    """
+    mkdir -p ${prefix}
+		samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
+		samtools index ${prefix}_ass.sort.bam
+    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -b ${prefix}_ass.sort.bam -o ${prefix}/${prefix} \
+      --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
+    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
+    """
+}
+
 
 /*
  * STEP 10.2 - ACDC
@@ -1665,6 +1769,69 @@ process pointfinder {
  * Split the genome by contig annotation and checkm for each genus
  */
 
+if (params.eukcc_db) {
+/**
+* checkm_split with Eukaryota
+*/
+process split_checkm_eukcc {
+    publishDir "${params.outdir}/", mode: 'copy'
+
+    input:
+    file "results/spades/*" from contigs_for_split.collect()
+    file "results/blob/*" from blob_tax_for_split.collect()
+    file "results/prokka/*" from prokka_for_split.collect()
+    file "results/kofam/*" from kofam_for_split.collect()
+    file db from eukcc_db
+
+    output:
+    file "split/*"
+
+    when:
+    params.split
+
+    script:
+    """
+    export HOME=/tmp/
+    if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
+      echo "NCBI taxa database exist!"
+    else
+      python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
+    fi
+    cli.py tools scgs_split
+    cd split
+    samples=(`ls -d *_genus | sed 's/_genus//g'`)
+    for sample in \${samples[*]}; do
+      mkdir -p \${sample}_genus_checkM
+      checkm lineage_wf -t ${task.cpus} -f \${sample}_genus_checkM.txt -x fasta \${sample}_genus/Bacteria \${sample}_genus_checkM || echo "Ignore internal errors!" 
+      cd \${sample}_genus/Eukaryota
+      ln -s ../../../${db} eukcc_db
+      contigs=(`ls -d *.fasta`)
+      for contig in \${contigs[*]};do
+      prefix=\${contig%.fasta}
+        # clean id
+        cat \$contig | sed 's/_length.*\$//g' > \${prefix}_clean.fasta
+        # mask genome
+        tantan \${prefix}_clean.fasta > \${prefix}_mask.fasta
+        # gene prediction
+        augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on \${prefix}_mask.fasta > \${prefix}.gff
+        # generate proteins
+        getAnnoFasta.pl \${prefix}.gff
+      done
+
+			faas=(`ls -d *.aa`)
+			for faa in \${faas[*]};do
+        faaPrefix=\${faa%.aa}
+				eukcc --db eukcc_db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
+			done	
+			cd ../../
+		done
+    """
+}
+
+} else {
+    /*
+ * Split the genome by contig annotation and checkm for each genus
+ */
 process split_checkm {
     publishDir "${params.outdir}/", mode: 'copy'
 
@@ -1687,10 +1854,13 @@ process split_checkm {
     samples=(`ls -d *_genus | sed 's/_genus//g'`)
     for sample in \${samples[*]}; do
       mkdir -p \${sample}_genus_checkM
-      checkm lineage_wf -t ${task.cpus} -f \${sample}_genus_checkM.txt -x fasta \${sample}_genus \${sample}_genus_checkM || echo "Ignore internal errors!" 
+      checkm lineage_wf -t ${task.cpus} -f \${sample}_genus_checkM.txt -x fasta \${sample}_genus/Bacteria \${sample}_genus_checkM || echo "Ignore internal errors!" 
     done
     """
 }
+
+}
+
 
 /*
  * STEP 16 - Output Description HTML
@@ -1709,7 +1879,6 @@ process output_documentation {
     markdown_to_html.py -o results_description.html $output_docs
     """
 }
-
 
 
 /*
