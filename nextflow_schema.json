@@ -13,6 +13,10 @@
             "properties": {
                 "input": {
                     "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/csv",
+                    "pattern": "^\\S+\\.csv$",
+                    "schema": "assets/schema_input.json",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://nf-co.re/rnaseq/usage#samplesheet-input).",
                     "default": "metadata.csv",
@@ -202,8 +206,8 @@
             "type": "string"
         },
         "igenomes_ignore": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "maxMultiqcEmailFileSize": {
             "type": "integer",
@@ -345,6 +349,18 @@
         },
         "three_prime_clip_r2": {
             "type": "string"
+        },
+        "show_hidden_params": {
+            "type": "boolean",
+            "default": false
+        },
+        "custom_config_version": {
+            "type": "string",
+            "default": "release"
+        },
+        "custom_config_base": {
+            "type": "string",
+            "default": "http"
         }
     }
 }

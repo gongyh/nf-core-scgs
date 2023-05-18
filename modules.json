@@ -1,17 +1,17 @@
 {
-  "name": "nf-core/gongyh-scgs",
-  "homePage": "https://github.com/nf-core/scgs",
-  "repos": {
-    "https://github.com/nf-core/modules.git": {
-      "modules": {
-        "nf-core": {
-          "fastqc": {
-            "branch": "master",
-            "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
-            "installed_by": ["modules"]
-          }
+    "name": "nf-core/gongyh-scgs",
+    "homePage": "https://github.com/nf-core/scgs",
+    "repos": {
+        "https://github.com/nf-core/modules.git": {
+            "modules": {
+                "nf-core": {
+                    "fastqc": {
+                        "branch": "master",
+                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "installed_by": ["modules"]
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }
