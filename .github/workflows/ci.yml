@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['20.04.0', '22.10.0']
+        NXF_VER: ['20.04.0', '22.10.0']
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
@@ -42,11 +42,9 @@ jobs:
           docker pull quay.io/gongyh/nf-core-scgs:v1.2
 
       - name: Install Nextflow
-        env:
-          CAPSULE_LOG: none
-        run: |
-          wget -qO- get.nextflow.io | bash
-          sudo mv nextflow /usr/local/bin/
+        uses: nf-core/setup-nextflow@v1
+        with:
+          version: "${{ matrix.NXF_VER }}"
 
       - name: Run pipeline with test data
         # TODO nf-core: You can customise CI pipeline run tests as required
