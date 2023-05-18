@@ -10,7 +10,7 @@ jobs:
      - run:
          name: test
          environment:
-           NXF_VER: 21.03.0-edge
+           NXF_VER: 22.10.8
          command: |
            mkdir -p tests && cd tests
            curl -fsSL https://get.nextflow.io | bash
