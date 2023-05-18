@@ -4,16 +4,15 @@
   |\\ | |__  __ /  ` /  \\ |__) |__         }  {
   | \\| |       \\__, \\__/ |  \\ |___     \\`-._,-`-,
                                         `._,._,'
-  nf-core/gongyh-scgs v${version}
+  nf-core/scgs v${version}
 ----------------------------------------------------
-
 Run Name: $runName
 
 <% if (success){
-    out << "## nf-core/gongyh-scgs execution completed successfully! ##"
+    out << "## nf-core/scgs execution completed successfully! ##"
 } else {
     out << """####################################################
-## nf-core/gongyh-scgs execution completed unsuccessfully! ##
+## nf-core/scgs execution completed unsuccessfully! ##
 ####################################################
 The exit status of the task that caused the workflow execution to fail was: $exitStatus.
 The full error message was:
@@ -36,5 +35,5 @@ Pipeline Configuration:
 <% out << summary.collect{ k,v -> " - $k: $v" }.join("\n") %>
 
 --
-nf-core/gongyh-scgs
-https://github.com/nf-core/gongyh-scgs
+nf-core/scgs
+https://github.com/nf-core/scgs
