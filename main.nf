@@ -38,8 +38,8 @@ def helpMessage() {
       --saturation                  Enable sequencing saturation analysis
       --ass                         Assemble using SPAdes
       --split                       Split the draft genomes and annotation
-      --split_bac                   Level of split for Bacteria
-      --split_euk                   Level of split for Eukaryota
+      --split_bac_level             Level of split for Bacteria
+      --split_euk_level             Level of split for Eukaryota
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the references.
       --fasta                       Path to Fasta reference
@@ -151,8 +151,8 @@ params.kofam_profile = null
 params.kofam_kolist = null
 params.augustus_species = "saccharomyces"
 params.split = false
-params.split_bac = null
-params.split_euk = null
+params.split_bac_level = null
+params.split_euk_level = null
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -1794,8 +1794,8 @@ process split_checkm_eukcc {
     params.split
 
     script:
-    split_bac = params.split_bac ? params.split_bac : "genus"
-    split_euk = params.split_euk ? params.split_euk : "genus"
+    split_bac_level = params.split_bac_level ? params.split_bac_level : "genus"
+    split_euk_level = params.split_euk_level ? params.split_euk_level : "genus"
     """
       export HOME=/tmp/
     if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
@@ -1803,13 +1803,13 @@ process split_checkm_eukcc {
     else
       python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
     fi
-    cli.py tools scgs_split --level-bacteria ${split_bac} --level-eukaryota ${split_euk}
+    cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
-    samples=(`ls -d *_${split_bac}_Bacteria | sed 's/_${split_bac}_Bacteria//g'`)
+    samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
     for sample in \${samples[*]}; do
-      mkdir -p \${sample}_${split_bac}_checkM
-      checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac}_checkM.txt -x fasta \${sample}_${split_bac}_Bacteria \${sample}_${split_bac}_checkM || echo "Ignore internal errors!"
-      cd \${sample}_${split_euk}_Eukaryota
+      mkdir -p \${sample}_${split_bac_level}_checkM
+      checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
+      cd \${sample}_${split_euk_level}_Eukaryota
       contigs=(`ls -d *.fasta`)
       for contig in \${contigs[*]};do
         prefix=\${contig%.fasta}
@@ -1853,15 +1853,15 @@ process split_checkm {
     params.split
 
     script:
-    split_bac = params.split_bac ? "genus" : params.split_bac
-    split_euk = params.split_euk ? "genus" : params.split_euk
+    split_bac_level = params.split_bac_level ? "genus" : params.split_bac_level
+    split_euk_level = params.split_euk_level ? "genus" : params.split_euk_level
     """
-    cli.py tools scgs_split --level-bacteria ${split_bac} --level-eukaryota ${split_euk}
+    cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
-    samples=(`ls -d *_${split_bac}_Bacteria | sed 's/_${split_bac}_Bacteria//g'`)
+    samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
     for sample in \${samples[*]}; do
-      mkdir -p \${sample}_${split_bac}_checkM
-      checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac}_checkM.txt -x fasta \${sample}_${split_bac}/Bacteria \${sample}_${split_bac}_checkM || echo "Ignore internal errors!"
+      mkdir -p \${sample}_${split_bac_level}_checkM
+      checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}/Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
     done
     """
 }
