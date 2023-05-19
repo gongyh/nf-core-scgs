@@ -9,7 +9,7 @@ import subprocess
 import numpy as np
 
 
-def real_split(fa, ann, level, out_dir, gff=None, ko_file=None):
+def real_split(fa, ann, level_Bacteria, level_Eukaryota, bac_out_dir, euk_out_dir, gff=None, ko_file=None):
     """
     Split by annotation
     """
@@ -49,6 +49,7 @@ def real_split(fa, ann, level, out_dir, gff=None, ko_file=None):
 
     annCol = -1  # which colum corresponds to the specified level
     eukAnnCol = -1  # which colum corresponds to the superkindom level
+    eukCol = -1
     with open(ann) as fh:
         for line in fh:
             if line[0:2] == "##":  # comment line, skip
@@ -57,43 +58,57 @@ def real_split(fa, ann, level, out_dir, gff=None, ko_file=None):
                 cl = line.strip().split("\t")
                 for item in cl:
                     il = item.split(".")
-                    if (
-                        len(il) == 3 and il[0] == level and il[1] == "t"
-                    ):  # eg. order.t.12
+                    if len(il) == 3 and il[0] == level_Bacteria and il[1] == "t":  # eg. order.t.12
                         annCol = int(il[2].rstrip("%s")) - 1
-                    if len(il) == 3 and il[0] == "superkingdom" and il[1] == "t":
+                    if len(il) == 3 and il[0] == level_Eukaryota and il[1] == "t":
                         eukAnnCol = int(il[2].rstrip("%s")) - 1
+                    if len(il) == 3 and il[0] == "superkingdom" and il[1] == "t":
+                        eukCol = int(il[2].rstrip("%s")) - 1
                 continue
             cl = line.strip().split("\t")
             contig_id = cl[0]
             ctg_id_short = contig_id.split("_length_")[0]
-            annotation = cl[annCol].replace("/", "_")
-            if "_" in annotation:
-                annotation = annotation.split("_")[0]
-            superkingdom = cl[eukAnnCol]
-            gname = annotation.replace(" ", "_") + ".gids"
-            kname = annotation.replace(" ", "_") + ".ko"
-            if superkingdom == "Eukaryota":
-                kofh = out_dir.joinpath("Eukaryota", kname).open("a")
-                gname_path = out_dir.joinpath("Eukaryota", gname)
-            else:
-                kofh = out_dir.joinpath("Bacteria", kname).open("a")
-                gname_path = out_dir.joinpath("Bacteria", gname)
-            with gname_path.open("a") as f:
-                if ctg_id_short in ctg_genes.keys():
-                    for g in ctg_genes[ctg_id_short]:
-                        f.write(g + "\n")
-                        if g in gene_ko.keys():
-                            for v in gene_ko[g]:
-                                kofh.write(g + "\t" + v + "\n")
-            kofh.close()
+            bacAnnotation = cl[annCol].replace("/", "_")
+            eukAnnotation = cl[eukAnnCol].replace("/", "_")
+            if "_" in bacAnnotation:
+                bacAnnotation = bacAnnotation.split("_")[0]
+            if "_" in eukAnnotation:
+                eukAnnotation = eukAnnotation.split("_")[0]
+            superkingdom = cl[eukCol]
+            bac_gname = bacAnnotation.replace(" ", "_") + ".gids"
+            bac_kname = bacAnnotation.replace(" ", "_") + ".ko"
+            euk_gname = eukAnnotation.replace(" ", "_") + ".gids"
+            euk_kname = eukAnnotation.replace(" ", "_") + ".ko"
+            euk_kofh = euk_out_dir.joinpath(euk_kname).open("a")
+            euk_gname_path = euk_out_dir.joinpath(euk_gname)
+            bac_kofh = bac_out_dir.joinpath(bac_kname).open("a")
+            bac_gname_path = bac_out_dir.joinpath(bac_gname)
+            with bac_gname_path.open("a") as f1, euk_gname_path.open('a') as f2:
+                if superkingdom == "Eukaryota":
+                    if ctg_id_short in ctg_genes.keys():
+                        for g in ctg_genes[ctg_id_short]:
+                            f2.write(g + "\n")
+                            if g in gene_ko.keys():
+                                for v in gene_ko[g]:
+                                    euk_kofh.write(g + "\t" + v + "\n")
+                else:
+                    if ctg_id_short in ctg_genes.keys():
+                        for g in ctg_genes[ctg_id_short]:
+                            f1.write(g + "\n")
+                            if g in gene_ko.keys():
+                                for v in gene_ko[g]:
+                                    bac_kofh.write(g + "\t" + v + "\n")
+            bac_kofh.close()
+            euk_kofh.close()
             assert annCol > 0
             assert eukAnnCol > 0
-            fname = annotation.replace(" ", "_") + ".fasta"
+            assert eukCol > 0
+            bac_fname = bacAnnotation.replace(" ", "_") + ".fasta"
+            euk_fname = eukAnnotation.replace(" ", "_") + ".fasta"
             if superkingdom == "Eukaryota":
-                fname_path = out_dir.joinpath("Eukaryota", fname)
+                fname_path = euk_out_dir.joinpath(euk_fname)
             else:
-                fname_path = out_dir.joinpath("Bacteria", fname)
+                fname_path = bac_out_dir.joinpath(bac_fname)
             with fname_path.open("a") as f:
                 SeqIO.write(record_dict[contig_id], f, "fasta")
 
@@ -128,7 +143,10 @@ def tools_split(
         resolve_path=True,
         show_default=True,
     ),
-    level: TaxaLevels = typer.Option(
+    level_Bacteria: TaxaLevels = typer.Option(
+        TaxaLevels.genus, case_sensitive=False, show_default=True
+    ),
+    level_Eukaryota: TaxaLevels = typer.Option(
         TaxaLevels.genus, case_sensitive=False, show_default=True
     ),
     output_dir: Path = typer.Option(
@@ -211,14 +229,10 @@ def tools_split(
         for sample in progress:
             # typer.echo(sample)
             fa = spades_dir.joinpath(sample + ".ctg200.fasta")
-            out_subdir = output_dir.joinpath(sample + "_" + level)
-            out_subdir.mkdir(exist_ok=True)  # create subdir to store fastas
-            euk_subdir = out_subdir.joinpath("Eukaryota")
-            # create subdir to store eukaryota fastas
-            euk_subdir.mkdir(exist_ok=True)
-            bac_subdir = out_subdir.joinpath("Bacteria")
-            # create subdir to store eukaryota fastas
-            bac_subdir.mkdir(exist_ok=True)
+            out_bac_subdir = output_dir.joinpath(sample+"_"+level_Bacteria+"_Bacteria")
+            out_bac_subdir.mkdir(exist_ok=True)  # create subdir to store Bacteria fastas
+            out_euk_subdir = output_dir.joinpath(sample+"_"+level_Eukaryota+"_Eukaryota")
+            out_euk_subdir.mkdir(exist_ok=True)  # create subdir to store Eukaryota fastas
             blob_sub = blob_dir.joinpath(sample)
             blob_table = None
             for child in blob_sub.iterdir():
@@ -242,7 +256,7 @@ def tools_split(
             if ko_exist:
                 ko_file = kofam_dir.joinpath(sample + "_KOs_mapper.txt")
             # perform split
-            real_split(fa, blob_table, level, out_subdir, gff, ko_file)
+            real_split(fa,blob_table, level_Bacteria, level_Eukaryota, out_bac_subdir, out_euk_subdir, gff, ko_file)
         typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
 
 

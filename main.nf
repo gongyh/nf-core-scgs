@@ -38,7 +38,8 @@ def helpMessage() {
       --saturation                  Enable sequencing saturation analysis
       --ass                         Assemble using SPAdes
       --split                       Split the draft genomes and annotation
-      --split_species               Split the draft genomes and annotation by species level
+      --split_bac                   Level of split for Bacteria
+      --split_euk                   Level of split for Eukaryota
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the references.
       --fasta                       Path to Fasta reference
@@ -150,7 +151,8 @@ params.kofam_profile = null
 params.kofam_kolist = null
 params.augustus_species = "saccharomyces"
 params.split = false
-params.split_species = false
+params.split_bac = null
+params.split_euk = null
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -639,13 +641,13 @@ process minimap2 {
     input:
     file reads from trimmed_reads
     file fasta from fasta
-    
+
     output:
     file '*.bam' into bb_bam
-    
+
     when:
     denovo == false
-    
+
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     filtering = params.allow_multi_align ? '' : "-F 256"
@@ -753,7 +755,7 @@ process vg_call {
 
     output:
     file '*.calls.vcf' into vg_calls
-    
+
     script:
     prefix = gam.toString() - ~/(\.gam)?$/
     """
@@ -1128,8 +1130,8 @@ process spades {
 
 }
 
-/* 
- * STEP 7 - Build Bowtie2Index for Remap 
+/*
+ * STEP 7 - Build Bowtie2Index for Remap
  */
 process prepare_bowtie2_remap {
     tag "${prefix}"
@@ -1153,8 +1155,8 @@ process prepare_bowtie2_remap {
     """
 }
 
-/* 
- * STEP 8 - Remap 
+/*
+ * STEP 8 - Remap
  */
 process remap {
     tag "${prefix}"
@@ -1792,78 +1794,43 @@ process split_checkm_eukcc {
     params.split
 
     script:
-    if (params.split_species) {
-      """
+    split_bac = params.split_bac ? params.split_bac : "genus"
+    split_euk = params.split_euk ? params.split_euk : "genus"
+    """
       export HOME=/tmp/
-      if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
-        echo "NCBI taxa database exist!"
-      else
-        python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
-      fi
-      cli.py tools scgs_split --level species
-      cd split
-      samples=(`ls -d *_species | sed 's/_species//g'`)
-      for sample in \${samples[*]}; do
-        mkdir -p \${sample}_species_checkM
-        checkm lineage_wf -t ${task.cpus} -f \${sample}_species_checkM.txt -x fasta \${sample}_species/Bacteria \${sample}_species_checkM || echo "Ignore internal errors!" 
-        cd \${sample}_species/Eukaryota
-        contigs=(`ls -d *.fasta`)
-        for contig in \${contigs[*]};do
-          prefix=\${contig%.fasta}
-          # clean id
-          cat \$contig | sed 's/_length.*\$//g' > \${prefix}_clean.fasta
-          # mask genome
-          tantan \${prefix}_clean.fasta > \${prefix}_mask.fasta
-          # gene prediction
-          augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on \${prefix}_mask.fasta > \${prefix}.gff
-          # generate proteins
-          getAnnoFasta.pl \${prefix}.gff
-        done
-        faas=(`ls -d *.aa`)
-        for faa in \${faas[*]};do
-          faaPrefix=\${faa%.aa}
-          eukcc --db ../../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
-        done	
-        cd ../../
+    if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
+      echo "NCBI taxa database exist!"
+    else
+      python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
+    fi
+    cli.py tools scgs_split --level-bacteria ${split_bac} --level-eukaryota ${split_euk}
+    cd split
+    samples=(`ls -d *_${split_bac}_Bacteria | sed 's/_${split_bac}_Bacteria//g'`)
+    for sample in \${samples[*]}; do
+      mkdir -p \${sample}_${split_bac}_checkM
+      checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac}_checkM.txt -x fasta \${sample}_${split_bac}_Bacteria \${sample}_${split_bac}_checkM || echo "Ignore internal errors!"
+      cd \${sample}_${split_euk}_Eukaryota
+      contigs=(`ls -d *.fasta`)
+      for contig in \${contigs[*]};do
+        prefix=\${contig%.fasta}
+        # clean id
+        cat \$contig | sed 's/_length.*\$//g' > \${prefix}_clean.fasta
+        # mask genome
+        tantan \${prefix}_clean.fasta > \${prefix}_mask.fasta
+        # gene prediction
+        augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on \${prefix}_mask.fasta > \${prefix}.gff
+        # generate proteins
+        getAnnoFasta.pl \${prefix}.gff
       done
-      """
-    } else {
-      """
-        export HOME=/tmp/
-      if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
-        echo "NCBI taxa database exist!"
-      else
-        python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
-      fi
-      cli.py tools scgs_split
-      cd split
-      samples=(`ls -d *_genus | sed 's/_genus//g'`)
-      for sample in \${samples[*]}; do
-        mkdir -p \${sample}_genus_checkM
-        checkm lineage_wf -t ${task.cpus} -f \${sample}_genus_checkM.txt -x fasta \${sample}_genus/Bacteria \${sample}_genus_checkM || echo "Ignore internal errors!" 
-        cd \${sample}_genus/Eukaryota
-        contigs=(`ls -d *.fasta`)
-        for contig in \${contigs[*]};do
-          prefix=\${contig%.fasta}
-          # clean id
-          cat \$contig | sed 's/_length.*\$//g' > \${prefix}_clean.fasta
-          # mask genome
-          tantan \${prefix}_clean.fasta > \${prefix}_mask.fasta
-          # gene prediction
-          augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on \${prefix}_mask.fasta > \${prefix}.gff
-          # generate proteins
-          getAnnoFasta.pl \${prefix}.gff
-        done
 
-        faas=(`ls -d *.aa`)
-        for faa in \${faas[*]};do
-          faaPrefix=\${faa%.aa}
-          eukcc --db ../../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
-        done	
-        cd ../../
+      faas=(`ls -d *.aa`)
+      for faa in \${faas[*]};do
+        faaPrefix=\${faa%.aa}
+        eukcc --db ../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
       done
-      """
-    }
+      cd ../
+    done
+    """
 }
 
 } else {
@@ -1886,25 +1853,17 @@ process split_checkm {
     params.split
 
     script:
-    if (params.split_species) {
-      """
-      cd split
-      samples=(`ls -d *_species | sed 's/_species//g'`)
-      for sample in \${samples[*]}; do
-        mkdir -p \${sample}_species_checkM
-        checkm lineage_wf -t ${task.cpus} -f \${sample}_species_checkM.txt -x fasta \${sample}_species/Bacteria \${sample}_species_checkM || echo "Ignore internal errors!" 
-      done
-      """
-    } else {
-      """
-      cd split
-      samples=(`ls -d *_genus | sed 's/_genus//g'`)
-      for sample in \${samples[*]}; do
-        mkdir -p \${sample}_genus_checkM
-        checkm lineage_wf -t ${task.cpus} -f \${sample}_genus_checkM.txt -x fasta \${sample}_genus/Bacteria \${sample}_genus_checkM || echo "Ignore internal errors!" 
-      done
-      """
-    }
+    split_bac = params.split_bac ? "genus" : params.split_bac
+    split_euk = params.split_euk ? "genus" : params.split_euk
+    """
+    cli.py tools scgs_split --level-bacteria ${split_bac} --level-eukaryota ${split_euk}
+    cd split
+    samples=(`ls -d *_${split_bac}_Bacteria | sed 's/_${split_bac}_Bacteria//g'`)
+    for sample in \${samples[*]}; do
+      mkdir -p \${sample}_${split_bac}_checkM
+      checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac}_checkM.txt -x fasta \${sample}_${split_bac}/Bacteria \${sample}_${split_bac}_checkM || echo "Ignore internal errors!"
+    done
+    """
 }
 
 }
