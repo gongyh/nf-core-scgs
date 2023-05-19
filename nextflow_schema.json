@@ -272,7 +272,7 @@
         "split_bac_level": {
             "type": "string"
         },
-        "split_bac_level": {
+        "split_euk_level": {
             "type": "string"
         },
         "nt_db": {
