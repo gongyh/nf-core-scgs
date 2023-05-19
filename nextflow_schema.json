@@ -13,13 +13,8 @@
             "properties": {
                 "input": {
                     "type": "string",
-                    "format": "file-path",
-                    "mimetype": "text/csv",
-                    "pattern": "^\\S+\\.csv$",
-                    "schema": "assets/schema_input.json",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://nf-co.re/rnaseq/usage#samplesheet-input).",
-                    "default": "metadata.csv",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -31,7 +26,6 @@
                 "email": {
                     "type": "string",
                     "description": "Email address for completion summary.",
-                    "default": "admin@123.com",
                     "fa_icon": "fas fa-envelope",
                     "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
                     "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
@@ -153,28 +147,24 @@
                     "type": "string",
                     "description": "Institutional configs hostname.",
                     "hidden": true,
-                    "default": "localhost",
                     "fa_icon": "fas fa-users-cog"
                 },
                 "config_profile_description": {
                     "type": "string",
                     "description": "Institutional config description.",
                     "hidden": true,
-                    "default": "Institutional config description.",
                     "fa_icon": "fas fa-users-cog"
                 },
                 "config_profile_contact": {
                     "type": "string",
                     "description": "Institutional config contact information.",
                     "hidden": true,
-                    "default": "Institutional config contact information.",
                     "fa_icon": "fas fa-users-cog"
                 },
                 "config_profile_url": {
                     "type": "string",
                     "description": "Institutional config URL link.",
                     "hidden": true,
-                    "default": "Institutional config URL link.",
                     "fa_icon": "fas fa-users-cog"
                 }
             }
@@ -206,20 +196,17 @@
             "type": "string"
         },
         "igenomes_ignore": {
-            "type": "boolean",
-            "default": false
+            "type": "string"
         },
         "maxMultiqcEmailFileSize": {
             "type": "integer",
             "default": 26214400
         },
         "clusterOptions": {
-            "type": "string",
-            "default": "false"
+            "type": "string"
         },
         "awsqueue": {
-            "type": "string",
-            "default": "false"
+            "type": "string"
         },
         "awsregion": {
             "type": "string",
@@ -240,26 +227,6 @@
         "saveAlignedIntermediates": {
             "type": "string"
         },
-        "nanopore": {
-            "type": "string",
-            "default": "false"
-        },
-        "vcf": {
-            "type": "string",
-            "default": "false"
-        },
-        "no_normalize": {
-            "type": "string",
-            "default": "false"
-        },
-        "remap": {
-            "type": "string",
-            "default": "false"
-        },
-        "split": {
-            "type": "string",
-            "default": "false"
-        },
         "euk": {
             "type": "string"
         },
@@ -269,6 +236,12 @@
         "genus": {
             "type": "string"
         },
+				"split_bac_level": {
+					  "type": "string"
+				},
+				"split_euk_level": {
+					  "type": "string"
+				},
         "nt_db": {
             "type": "string"
         },
@@ -349,18 +322,6 @@
         },
         "three_prime_clip_r2": {
             "type": "string"
-        },
-        "show_hidden_params": {
-            "type": "boolean",
-            "default": false
-        },
-        "custom_config_version": {
-            "type": "string",
-            "default": "release"
-        },
-        "custom_config_base": {
-            "type": "string",
-            "default": "http"
         }
     }
 }
