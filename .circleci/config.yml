@@ -9,12 +9,9 @@ jobs:
      - checkout
      - run:
          name: test
-         environment:
-           NXF_VER: 21.03.0-edge
          command: |
            mkdir -p tests && cd tests
-           curl -fsSL https://get.nextflow.io | bash
-           ./nextflow run ../ -profile test
+           nextflow run ../ -profile test
          no_output_timeout: 30m
      - store_artifacts:
          path: /root/project/tests/result/pipeline_info
