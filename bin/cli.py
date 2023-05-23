@@ -421,7 +421,7 @@ def tools_fastANI(
 ):
     """
     This is a wrapper script for fastANI. FastANI is a fast alignment-free implementation
-      for computing whole-genome Average Nucleotide Identity (ANI) between genomes.
+    for computing whole-genome Average Nucleotide Identity (ANI) between genomes.
     """
 
     if query_genome is not None and query_list is not None:
@@ -550,7 +550,7 @@ def tools_roary(
 ):
     """
     This is a wrapper script for Roary. All GFF3 files created by Prokka are valid with Roary
-      and this is the recommended way of generating the input files.
+    and this is the recommended way of generating the input files.
     """
     typer.echo(f"Checking input.")
     gffs = []

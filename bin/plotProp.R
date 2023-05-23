@@ -21,9 +21,8 @@ d <- density(data)
 
 pdf(paste0(output_prefix,"_pdrc.pdf"), useDingbats = FALSE, width = 6, height = 6)
 
-plot(d, main=paste0("PDRC-",output_prefix), xlab="Relative Coverage", ylab="Probability Density", 
-     lwd=2, log="x", axes=FALSE, col="red",xaxs="i",yaxs="i")
+plot(d, main=paste0("PDRC-",output_prefix), xlab="Relative Coverage", ylab="Probability Density",
+    lwd=2, log="x", axes=FALSE, col="red",xaxs="i",yaxs="i")
 magaxis(1:4)
 
 dev.off()
-

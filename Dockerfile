@@ -1,6 +1,6 @@
 FROM nfcore/base:1.13.3
 LABEL authors="Yanhai Gong" \
-      description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
+    description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
 # Install procps so that Nextflow can poll CPU usage, set locale en_US.UTF-8 used by Picard
 RUN apt-get update && apt-get install --no-install-recommends -y procps libpng16-16 \
@@ -62,4 +62,3 @@ RUN cp /opt/conda/bin/activate /usr/local/bin/ && cp /opt/conda/bin/deactivate /
 
 # Add default container command
 CMD ["/bin/bash"]
-

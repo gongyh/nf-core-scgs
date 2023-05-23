@@ -10,4 +10,3 @@ if [ "$3" != "lineage_wf" ]; then
 else
   checkm lineage_wf -t $5 -r -f $6 -x $2 $1 $4
 fi
-

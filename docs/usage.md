@@ -50,7 +50,7 @@ It is recommended to limit the Nextflow Java virtual machines memory. We recomme
 NXF_OPTS='-Xms1g -Xmx4g'
 ```
 
-<!-- TODO nf-core: Document required command line parameters to run the pipeline-->
+<!-- nf-core: Document required command line parameters to run the pipeline-->
 
 ## Running the pipeline
 
@@ -110,7 +110,7 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
   - A profile with a complete configuration for automated testing
   - Includes links to test data so needs no other parameters
 
-<!-- TODO nf-core: Document required command line parameters -->
+<!-- nf-core: Document required command line parameters -->
 
 ### `--reads`
 
@@ -163,7 +163,7 @@ Note that you can use the same configuration setup to save sets of reference fil
 
 The syntax for this reference configuration is as follows:
 
-<!-- TODO nf-core: Update reference genome example according to what is needed -->
+<!-- nf-core: Update reference genome example according to what is needed -->
 
 ```nextflow
 params {
@@ -176,7 +176,7 @@ params {
 }
 ```
 
-<!-- TODO nf-core: Describe reference path flags -->
+<!-- nf-core: Describe reference path flags -->
 
 ### `--fasta`
 
@@ -220,7 +220,7 @@ Please make sure to also set the `-w/--work-dir` and `--outdir` parameters to a 
 
 ## Other command line parameters
 
-<!-- TODO nf-core: Describe any other command line flags here -->
+<!-- nf-core: Describe any other command line flags here -->
 
 ### `--outdir`
 

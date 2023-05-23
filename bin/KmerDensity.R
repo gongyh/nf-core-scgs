@@ -42,7 +42,7 @@ data <- df[df$group=="10%",]
 lgds <- c("10%")
 pNK <- c(pNK, data[which.max(data$NumKmers[2:100]),"NumKmers"])
 plot(data$Covg, data$NumKmers, main="", xlab="Kmer coverage", ylab="Number of Kmers", lwd=2,
-     xlim=c(0,100), ylim=c(0, maxNK*1.05),axes=FALSE, col=cols[1],xaxs="i",yaxs="i",type="l")
+    xlim=c(0,100), ylim=c(0, maxNK*1.05),axes=FALSE, col=cols[1],xaxs="i",yaxs="i",type="l")
 
 magaxis(1:4)
 
@@ -60,4 +60,3 @@ par(opar)
 plot((0:10)*10, pNK, type='b', xlab="Fraction of reads (%)", ylab="# Kmers at Peak Coverage")
 
 dev.off()
-
