@@ -3,9 +3,9 @@
 ========================================================================================
                         gongyh/nf-core-scgs
 ========================================================================================
- gongyh/nf-core-scgs Analysis Pipeline.
- #### Homepage / Documentation
- https://github.com/gongyh/nf-core-scgs
+   gongyh/nf-core-scgs Analysis Pipeline.
+   #### Homepage / Documentation
+   https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
 
@@ -179,8 +179,8 @@ if ( params.gff ) {
 
 graph_vcf = false
 if ( params.vcf ) {
-  graph_vcf = file(params.vcf)
-  if ( !graph_vcf.exists()) exit 1, "VCF file to construct graph not found: ${params.graph_vcf}"
+    graph_vcf = file(params.vcf)
+    if ( !graph_vcf.exists()) exit 1, "VCF file to construct graph not found: ${params.graph_vcf}"
 }
 
 single_end = false
@@ -271,12 +271,12 @@ if ( params.kofam_kolist ) {
 custom_runName = workflow.runName
 
 if( workflow.profile == 'awsbatch') {
-  // AWSBatch sanity checking
-  if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
-  if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
-  // Check workDir/outdir paths to be S3 buckets if running on AWSBatch
-  // related: https://github.com/nextflow-io/nextflow/issues/813
-  if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
+    // AWSBatch sanity checking
+    if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
+    if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
+    // Check workDir/outdir paths to be S3 buckets if running on AWSBatch
+    // related: https://github.com/nextflow-io/nextflow/issues/813
+    if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
 }
 
 // Stage config files
@@ -350,8 +350,8 @@ if(params.config_profile_description) summary['Config Description'] = params.con
 if(params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
 if(params.config_profile_url)         summary['Config URL']         = params.config_profile_url
 if(params.email) {
-  summary['E-mail Address']  = params.email
-  summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
+    summary['E-mail Address']  = params.email
+    summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
 }
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "\033[2m----------------------------------------------------\033[0m"
