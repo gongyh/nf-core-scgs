@@ -67,9 +67,7 @@ def get_options():
         help="First N columns of Roary's output to exclude [Default: 14]",
     )
 
-    parser.add_argument(
-        "--version", action="version", version="%(prog)s " + __version__
-    )
+    parser.add_argument("--version", action="version", version="%(prog)s " + __version__)
 
     return parser.parse_args()
 
@@ -197,18 +195,11 @@ if __name__ == "__main__":
     # Plot the pangenome pie chart
     plt.figure(figsize=(10, 10))
 
-    core = roary[
-        (roary.sum(axis=1) >= roary.shape[1] * 0.99)
-        & (roary.sum(axis=1) <= roary.shape[1])
-    ].shape[0]
-    softcore = roary[
-        (roary.sum(axis=1) >= roary.shape[1] * 0.95)
-        & (roary.sum(axis=1) < roary.shape[1] * 0.99)
-    ].shape[0]
-    shell = roary[
-        (roary.sum(axis=1) >= roary.shape[1] * 0.15)
-        & (roary.sum(axis=1) < roary.shape[1] * 0.95)
-    ].shape[0]
+    core = roary[(roary.sum(axis=1) >= roary.shape[1] * 0.99) & (roary.sum(axis=1) <= roary.shape[1])].shape[0]
+    softcore = roary[(roary.sum(axis=1) >= roary.shape[1] * 0.95) & (roary.sum(axis=1) < roary.shape[1] * 0.99)].shape[
+        0
+    ]
+    shell = roary[(roary.sum(axis=1) >= roary.shape[1] * 0.15) & (roary.sum(axis=1) < roary.shape[1] * 0.95)].shape[0]
     cloud = roary[roary.sum(axis=1) < roary.shape[1] * 0.15].shape[0]
 
     total = roary.shape[0]
@@ -221,10 +212,8 @@ if __name__ == "__main__":
         [core, softcore, shell, cloud],
         labels=[
             "core\n(%d <= strains <= %d)" % (roary.shape[1] * 0.99, roary.shape[1]),
-            "soft-core\n(%d <= strains < %d)"
-            % (roary.shape[1] * 0.95, roary.shape[1] * 0.99),
-            "shell\n(%d <= strains < %d)"
-            % (roary.shape[1] * 0.15, roary.shape[1] * 0.95),
+            "soft-core\n(%d <= strains < %d)" % (roary.shape[1] * 0.95, roary.shape[1] * 0.99),
+            "shell\n(%d <= strains < %d)" % (roary.shape[1] * 0.15, roary.shape[1] * 0.95),
             "cloud\n(strains < %d)" % (roary.shape[1] * 0.15),
         ],
         explode=[0.1, 0.05, 0.02, 0],

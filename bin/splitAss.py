@@ -7,9 +7,7 @@ import sys
 from Bio import SeqIO
 
 if len(sys.argv) != 5:
-    print(
-        "Usage: python splitAss.py RG1.ctg200.fasta RG1.blobDB.bestsum.table.txt family out_dir"
-    )
+    print("Usage: python splitAss.py RG1.ctg200.fasta RG1.blobDB.bestsum.table.txt family out_dir")
     exit(0)
 
 fa = sys.argv[1]

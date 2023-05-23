@@ -1,6 +1,6 @@
 # gongyh/nf-core-scgs: Troubleshooting
 
-<!-- TODO nf-core: Change this documentation if these parameters/errors are not relevant for your workflow -->
+<!-- nf-core: Change this documentation if these parameters/errors are not relevant for your workflow -->
 
 ## Can not use docker
 

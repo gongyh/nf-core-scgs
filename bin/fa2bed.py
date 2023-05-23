@@ -9,9 +9,7 @@ import click
 
 
 @click.command()
-@click.option(
-    "--window", default=10000, help="length of sliding window (default: 10Kbp)"
-)
+@click.option("--window", default=10000, help="length of sliding window (default: 10Kbp)")
 @click.option("--step", default=200, help="length of step window (default: 200bp)")
 @click.argument("fa", type=click.Path(exists=True))
 def fa2bed(fa, window, step):
