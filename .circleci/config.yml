@@ -1,20 +1,20 @@
 version: 2.0
 jobs:
- build:
-   docker:
-     - image: quay.io/gongyh/nf-core-scgs:v1.2
-   environment:
-     - GIT_LFS_SKIP_SMUDGE: 1
-   steps:
-     - checkout
-     - run:
-         name: test
-         command: |
-           mkdir -p tests && cd tests
-           nextflow run ../ -profile test
-         no_output_timeout: 30m
-     - store_artifacts:
-         path: /root/project/tests/result/pipeline_info
-     - store_artifacts:
-         path: /root/project/tests/.nextflow.log
-         destination: nextflow-log
+  build:
+    docker:
+      - image: quay.io/gongyh/nf-core-scgs:v1.2
+    environment:
+      - GIT_LFS_SKIP_SMUDGE: 1
+    steps:
+      - checkout
+      - run:
+          name: test
+          command: |
+            mkdir -p tests && cd tests
+            nextflow run ../ -profile test
+          no_output_timeout: 30m
+      - store_artifacts:
+          path: /root/project/tests/result/pipeline_info
+      - store_artifacts:
+          path: /root/project/tests/.nextflow.log
+          destination: nextflow-log

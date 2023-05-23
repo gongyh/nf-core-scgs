@@ -13,7 +13,6 @@ import click
 @click.option("--step", default=200, help="length of step window (default: 200bp)")
 @click.argument("fa", type=click.Path(exists=True))
 def fa2bed(fa, window, step):
-
     # genome bed file
     genomeBed = open("genome.bed", "w")
     # genomeBed.write("chr\tstart\tend\n")

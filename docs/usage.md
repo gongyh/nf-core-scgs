@@ -4,40 +4,41 @@
 
 <!-- Install Atom plugin markdown-toc-auto for this ToC to auto-update on save -->
 <!-- TOC START min:2 max:3 link:true asterisk:true update:true -->
-* [Table of contents](#table-of-contents)
-* [Introduction](#introduction)
-* [Running the pipeline](#running-the-pipeline)
-  * [Updating the pipeline](#updating-the-pipeline)
-  * [Reproducibility](#reproducibility)
-* [Main arguments](#main-arguments)
-  * [`-profile`](#-profile)
-  * [`--reads`](#--reads)
-  * [`--singleEnd`](#--singleend)
-* [Reference genomes](#reference-genomes)
-  * [`--genome` (using iGenomes)](#--genome-using-igenomes)
-  * [`--fasta`](#--fasta)
-  * [`--igenomesIgnore`](#--igenomesignore)
-* [Job resources](#job-resources)
-  * [Automatic resubmission](#automatic-resubmission)
-  * [Custom resource requests](#custom-resource-requests)
-* [AWS Batch specific parameters](#aws-batch-specific-parameters)
-  * [`--awsqueue`](#--awsqueue)
-  * [`--awsregion`](#--awsregion)
-* [Other command line parameters](#other-command-line-parameters)
-  * [`--outdir`](#--outdir)
-  * [`--email`](#--email)
-  * [`-name`](#-name)
-  * [`-resume`](#-resume)
-  * [`-c`](#-c)
-  * [`--custom_config_version`](#--custom_config_version)
-  * [`--custom_config_base`](#--custom_config_base)
-  * [`--max_memory`](#--max_memory)
-  * [`--max_time`](#--max_time)
-  * [`--max_cpus`](#--max_cpus)
-  * [`--plaintext_email`](#--plaintext_email)
-  * [`--monochrome_logs`](#--monochrome_logs)
-  * [`--multiqc_config`](#--multiqc_config)
-<!-- TOC END -->
+
+- [Table of contents](#table-of-contents)
+- [Introduction](#introduction)
+- [Running the pipeline](#running-the-pipeline)
+  - [Updating the pipeline](#updating-the-pipeline)
+  - [Reproducibility](#reproducibility)
+- [Main arguments](#main-arguments)
+  - [`-profile`](#-profile)
+  - [`--reads`](#--reads)
+  - [`--singleEnd`](#--singleend)
+- [Reference genomes](#reference-genomes)
+  - [`--genome` (using iGenomes)](#--genome-using-igenomes)
+  - [`--fasta`](#--fasta)
+  - [`--igenomesIgnore`](#--igenomesignore)
+- [Job resources](#job-resources)
+  - [Automatic resubmission](#automatic-resubmission)
+  - [Custom resource requests](#custom-resource-requests)
+- [AWS Batch specific parameters](#aws-batch-specific-parameters)
+  - [`--awsqueue`](#--awsqueue)
+  - [`--awsregion`](#--awsregion)
+- [Other command line parameters](#other-command-line-parameters)
+  - [`--outdir`](#--outdir)
+  - [`--email`](#--email)
+  - [`-name`](#-name)
+  - [`-resume`](#-resume)
+  - [`-c`](#-c)
+  - [`--custom_config_version`](#--custom_config_version)
+  - [`--custom_config_base`](#--custom_config_base)
+  - [`--max_memory`](#--max_memory)
+  - [`--max_time`](#--max_time)
+  - [`--max_cpus`](#--max_cpus)
+  - [`--plaintext_email`](#--plaintext_email)
+  - [`--monochrome_logs`](#--monochrome_logs)
+  - [`--multiqc_config`](#--multiqc_config)
+  <!-- TOC END -->
 
 ## Introduction
 
@@ -94,20 +95,20 @@ Use this parameter to choose a configuration profile. Profiles can give configur
 
 If `-profile` is not specified at all the pipeline will be run locally and expects all software to be installed and available on the `PATH`.
 
-* `awsbatch`
-  * A generic configuration profile to be used with AWS Batch.
-* `conda`
-  * A generic configuration profile to be used with [conda](https://conda.io/docs/)
-  * Pulls most software from [Bioconda](https://bioconda.github.io/)
-* `docker`
-  * A generic configuration profile to be used with [Docker](http://docker.com/)
-  * Pulls software from dockerhub: [`nfcore/scgs`](http://hub.docker.com/r/nfcore/scgs/)
-* `singularity`
-  * A generic configuration profile to be used with [Singularity](http://singularity.lbl.gov/)
-  * Pulls software from DockerHub
-* `test`
-  * A profile with a complete configuration for automated testing
-  * Includes links to test data so needs no other parameters
+- `awsbatch`
+  - A generic configuration profile to be used with AWS Batch.
+- `conda`
+  - A generic configuration profile to be used with [conda](https://conda.io/docs/)
+  - Pulls most software from [Bioconda](https://bioconda.github.io/)
+- `docker`
+  - A generic configuration profile to be used with [Docker](http://docker.com/)
+  - Pulls software from dockerhub: [`nfcore/scgs`](http://hub.docker.com/r/nfcore/scgs/)
+- `singularity`
+  - A generic configuration profile to be used with [Singularity](http://singularity.lbl.gov/)
+  - Pulls software from DockerHub
+- `test`
+  - A profile with a complete configuration for automated testing
+  - Includes links to test data so needs no other parameters
 
 <!-- TODO nf-core: Document required command line parameters -->
 
@@ -147,14 +148,14 @@ There are 31 different species supported in the iGenomes references. To run the 
 
 You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
 
-* Human
-  * `--genome GRCh37`
-* Mouse
-  * `--genome GRCm38`
-* _Drosophila_
-  * `--genome BDGP6`
-* _S. cerevisiae_
-  * `--genome 'R64-1-1'`
+- Human
+  - `--genome GRCh37`
+- Mouse
+  - `--genome GRCm38`
+- _Drosophila_
+  - `--genome BDGP6`
+- _S. cerevisiae_
+  - `--genome 'R64-1-1'`
 
 > There are numerous others - check the config file for more.
 

@@ -4,17 +4,18 @@ To start using the gongyh/nf-core-scgs pipeline, follow the steps below:
 
 <!-- Install Atom plugin markdown-toc-auto for this ToC -->
 <!-- TOC START min:2 max:3 link:true asterisk:true -->
-* [Install NextFlow](#install-nextflow)
-* [Install the pipeline](#install-the-pipeline)
-  * [Automatic](#automatic)
-  * [Offline](#offline)
-  * [Development](#development)
-* [Pipeline configuration](#pipeline-configuration)
-  * [Docker](#docker)
-  * [Singularity](#singularity)
-  * [Conda](#conda)
-  * [Configuration profiles](#configuration-profiles)
-* [Reference genomes](#reference-genomes)
+
+- [Install NextFlow](#install-nextflow)
+- [Install the pipeline](#install-the-pipeline)
+  - [Automatic](#automatic)
+  - [Offline](#offline)
+  - [Development](#development)
+- [Pipeline configuration](#pipeline-configuration)
+  - [Docker](#docker)
+  - [Singularity](#singularity)
+  - [Conda](#conda)
+  - [Configuration profiles](#configuration-profiles)
+- [Reference genomes](#reference-genomes)
 <!-- TOC END -->
 
 ## Install NextFlow
@@ -73,10 +74,10 @@ on a simple (if powerful!) local server.
 Be warned of two important points about this default configuration:
 
 1. The default profile uses the `local` executor
-    * All jobs are run in the login session. If you're using a simple server, this may be fine. If you're using a compute cluster, this is bad as all jobs will run on the head node.
-    * See the [nextflow docs](https://www.nextflow.io/docs/latest/executor.html) for information about running with other hardware backends. Most job scheduler systems are natively supported.
+   - All jobs are run in the login session. If you're using a simple server, this may be fine. If you're using a compute cluster, this is bad as all jobs will run on the head node.
+   - See the [nextflow docs](https://www.nextflow.io/docs/latest/executor.html) for information about running with other hardware backends. Most job scheduler systems are natively supported.
 2. Nextflow will expect all software to be installed and available on the `PATH`
-    * It's expected to use an additional config profile for docker, singularity or conda support. See below.
+   - It's expected to use an additional config profile for docker, singularity or conda support. See below.
 
 ### Docker
 

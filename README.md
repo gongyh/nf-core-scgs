@@ -36,19 +36,18 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 
 1. [Installation](docs/installation.md)
 2. Pipeline configuration
-    * [Local installation](docs/configuration/local.md)
-    * [Adding your own system](docs/configuration/adding_your_own.md)
-    * [Reference genomes](docs/configuration/reference_genomes.md)  
+   - [Local installation](docs/configuration/local.md)
+   - [Adding your own system](docs/configuration/adding_your_own.md)
+   - [Reference genomes](docs/configuration/reference_genomes.md)
 3. [Running the pipeline](docs/usage.md)
 4. [Output and how to interpret the results](docs/output.md)
 5. [Troubleshooting](docs/troubleshooting.md)
 
-
 ## Related publications
 
-[1]  Xu, T., Gong, Y., Su, X., Zhu, P., Dai, J., Xu, J., Ma, B., Phenome-Genome Profiling of Single Bacterial Cell by Raman-Activated Gravity-Driven Encapsulation and Sequencing. *Small* 2020, 2001172. [https://doi.org/10.1002/smll.202001172](https://doi.org/10.1002/smll.202001172) [Details](https://github.com/gongyh/nf-core-scgs/blob/master/RAGE-Seq/Data.md)
+[1] Xu, T., Gong, Y., Su, X., Zhu, P., Dai, J., Xu, J., Ma, B., Phenome-Genome Profiling of Single Bacterial Cell by Raman-Activated Gravity-Driven Encapsulation and Sequencing. _Small_ 2020, 2001172. [https://doi.org/10.1002/smll.202001172](https://doi.org/10.1002/smll.202001172) [Details](https://github.com/gongyh/nf-core-scgs/blob/master/RAGE-Seq/Data.md)
 
-[2] Su, X., Gong, Y., Gou, H., Jing, X., Xu, T., Zheng, X., Chen, R., Li, Y., Ji, Y., Ma, B., Xu, J., Rational Optimization of Raman-Activated Cell Ejection and Sequencing for Bacteria. *Analytical Chemistry*, 2020. [https://doi.org/10.1021/acs.analchem.9b05345](https://doi.org/10.1021/acs.analchem.9b05345)
+[2] Su, X., Gong, Y., Gou, H., Jing, X., Xu, T., Zheng, X., Chen, R., Li, Y., Ji, Y., Ma, B., Xu, J., Rational Optimization of Raman-Activated Cell Ejection and Sequencing for Bacteria. _Analytical Chemistry_, 2020. [https://doi.org/10.1021/acs.analchem.9b05345](https://doi.org/10.1021/acs.analchem.9b05345)
 
 ## Contact
 
