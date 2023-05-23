@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# Visualize fastANI one to one genome comparison. 
+# Visualize fastANI one to one genome comparison.
 # This script was modified from https://github.com/ParBLiSS/FastANI/blob/master/scripts/visualize.R
 
 # Command line argument processing
@@ -33,4 +33,3 @@ pdf(paste0(fastANI_visual_file,".pdf"), useDingbats = FALSE, width = 10, height 
 plot_gene_map(dna_segs=list(Query, Ref), comparisons=list(comparison), main=plotTitle, scale=FALSE, scale_cex=1, n_scale_ticks=4)
 
 dev.off()
-

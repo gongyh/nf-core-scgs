@@ -20,4 +20,3 @@ pdf(paste0(output_prefix,".pdf"), useDingbats = FALSE, width = 6, height = 6)
 plot(x,y, xlab=xl, ylab=yl, lwd=1, col="red", type="b")
 
 dev.off()
-

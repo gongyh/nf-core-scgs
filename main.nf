@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 /*
 ========================================================================================
-                         gongyh/nf-core-scgs
+                        gongyh/nf-core-scgs
 ========================================================================================
- gongyh/nf-core-scgs Analysis Pipeline.
- #### Homepage / Documentation
- https://github.com/gongyh/nf-core-scgs
+    gongyh/nf-core-scgs Analysis Pipeline.
+    #### Homepage / Documentation
+    https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
 
@@ -21,82 +21,82 @@ def helpMessage() {
     nextflow run gongyh/nf-core-scgs --reads '*_R{1,2}.fastq.gz' -profile docker
 
     Mandatory arguments:
-      --reads                       Path to input data (must be surrounded with quotes)
-      -profile                      Configuration profile to use. Can use multiple (comma separated)
+    --reads                       Path to input data (must be surrounded with quotes)
+    -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: conda, docker, singularity, awsbatch, test and more.
 
     Options:
-      --vcf                         Variantion graph construction
-      --bulk                        WGS of bulk DNA, not MDA
-      --nanopore                    Nanopore sequencing data, force single_end, assembly using Canu
-      --genome                      Name of iGenomes reference
-      --single_end                  Specifies that the input is single end reads
-      --snv                         Enable detection of single nucleotide variation
-      --cnv                         Enable detection of copy number variation
-      --remap                       Remap trimmed reads to contigs
-      --saturation                  Enable sequencing saturation analysis
-      --ass                         Assemble using SPAdes
-      --split                       Split the draft genomes and annotation
-      --split_bac_level             Level of split for Bacteria
-      --split_euk_level             Level of split for Eukaryota
+    --vcf                         Variantion graph construction
+    --bulk                        WGS of bulk DNA, not MDA
+    --nanopore                    Nanopore sequencing data, force single_end, assembly using Canu
+    --genome                      Name of iGenomes reference
+    --single_end                  Specifies that the input is single end reads
+    --snv                         Enable detection of single nucleotide variation
+    --cnv                         Enable detection of copy number variation
+    --remap                       Remap trimmed reads to contigs
+    --saturation                  Enable sequencing saturation analysis
+    --ass                         Assemble using SPAdes
+    --split                       Split the draft genomes and annotation
+    --split_bac_level             Level of split for Bacteria
+    --split_euk_level             Level of split for Eukaryota
 
     References:                     If not specified in the configuration file or you wish to overwrite any of the references.
-      --fasta                       Path to Fasta reference
-      --gff                         Path to GFF reference
-      --genus                       Genus information for use in CheckM
+    --fasta                       Path to Fasta reference
+    --gff                         Path to GFF reference
+    --genus                       Genus information for use in CheckM
 
     External databases:
-      --nt_db                       NCBI Nt database (BLAST)
-      --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
-      --uniprot_taxids              Sequence id to taxa id mapping file
-      --kraken_db                   Kraken database
-      --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
-      --kofam_profile               KOfam profile database
-      --kofam_kolist                KOfam ko_list file
-      --augustus_species            Augustus species, default 'saccharomyces'
-      --eukcc_db                    EukCC database
+    --nt_db                       NCBI Nt database (BLAST)
+    --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
+    --uniprot_taxids              Sequence id to taxa id mapping file
+    --kraken_db                   Kraken database
+    --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
+    --kofam_profile               KOfam profile database
+    --kofam_kolist                KOfam ko_list file
+    --augustus_species            Augustus species, default 'saccharomyces'
+    --eukcc_db                    EukCC database
 
     Trimming options:
-      --notrim                      Specifying --notrim will skip the adapter trimming step.
-      --saveTrimmed                 Save the trimmed Fastq files in the the Results directory.
-      --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1 (or single-end reads)
-      --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2 (paired-end reads only)
-      --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1 AFTER adapter/quality trimming has been performed
-      --three_prime_clip_r2 [int]   Instructs Trim Galore to re move bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed
+    --notrim                      Specifying --notrim will skip the adapter trimming step.
+    --saveTrimmed                 Save the trimmed Fastq files in the the Results directory.
+    --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1 (or single-end reads)
+    --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2 (paired-end reads only)
+    --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1 AFTER adapter/quality trimming has been performed
+    --three_prime_clip_r2 [int]   Instructs Trim Galore to re move bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed
 
     Mapping options:
-      --allow_multi_align           Secondary alignments and unmapped reads are also reported in addition to primary alignments
-      --saveAlignedIntermediates    Save the intermediate BAM files from the Alignment step  - not done by default
+    --allow_multi_align           Secondary alignments and unmapped reads are also reported in addition to primary alignments
+    --saveAlignedIntermediates    Save the intermediate BAM files from the Alignment step  - not done by default
 
     Assembly options:
-      --no_normalize                Specifying --no_normalize will skip the reads normalizing step.
+    --no_normalize                Specifying --no_normalize will skip the reads normalizing step.
 
     Quast options:
-      --euk                         Euk genome
-      --fungus                      Fungal genome
+    --euk                         Euk genome
+    --fungus                      Fungal genome
 
     Taxa annotation options:
-      --evalue                      E-value for blasting NCBI-nt and uniprot reference proteomes database (default=1e-25)
+    --evalue                      E-value for blasting NCBI-nt and uniprot reference proteomes database (default=1e-25)
 
     Diamond options:
-      --blockSize                   Sequence block size in billions of letters (default=2.0)
+    --blockSize                   Sequence block size in billions of letters (default=2.0)
 
     ARG related options:
-      --acquired                    Enable ARG analysis
-      --point                       Enable point mutation analysis
-      --only_known                  Only analyze known SNPs
-      --resfinder_db                Database path for resfinder
-      --pointfinder_db              Database path for pointfinder
-      --pointfinder_species         Species for pointfinder, default 'escherichia_coli'
+    --acquired                    Enable ARG analysis
+    --point                       Enable point mutation analysis
+    --only_known                  Only analyze known SNPs
+    --resfinder_db                Database path for resfinder
+    --pointfinder_db              Database path for pointfinder
+    --pointfinder_species         Species for pointfinder, default 'escherichia_coli'
 
     Output options:
-      --outdir                      The output directory where the results will be saved
-      --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
-      --maxMultiqcEmailFileSize     Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB)
+    --outdir                      The output directory where the results will be saved
+    --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
+    --maxMultiqcEmailFileSize     Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB)
 
     AWSBatch options:
-      --awsqueue                    The AWSBatch JobQueue that needs to be set when running on AWSBatch
-      --awsregion                   The AWS Region for your AWS Batch job to run on
+    --awsqueue                    The AWSBatch JobQueue that needs to be set when running on AWSBatch
+    --awsregion                   The AWS Region for your AWS Batch job to run on
     """.stripIndent()
 }
 
@@ -179,8 +179,8 @@ if ( params.gff ) {
 
 graph_vcf = false
 if ( params.vcf ) {
-  graph_vcf = file(params.vcf)
-  if ( !graph_vcf.exists()) exit 1, "VCF file to construct graph not found: ${params.graph_vcf}"
+    graph_vcf = file(params.vcf)
+    if ( !graph_vcf.exists()) exit 1, "VCF file to construct graph not found: ${params.graph_vcf}"
 }
 
 single_end = false
@@ -271,12 +271,12 @@ if ( params.kofam_kolist ) {
 custom_runName = workflow.runName
 
 if( workflow.profile == 'awsbatch') {
-  // AWSBatch sanity checking
-  if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
-  if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
-  // Check workDir/outdir paths to be S3 buckets if running on AWSBatch
-  // related: https://github.com/nextflow-io/nextflow/issues/813
-  if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
+    // AWSBatch sanity checking
+    if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
+    if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
+    // Check workDir/outdir paths to be S3 buckets if running on AWSBatch
+    // related: https://github.com/nextflow-io/nextflow/issues/813
+    if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
 }
 
 // Stage config files
@@ -342,16 +342,16 @@ if( params.notrim ){
     summary["Trim 3' R2"] = params.three_prime_clip_r2
 }
 if(workflow.profile == 'awsbatch'){
-   summary['AWS Region']    = params.awsregion
-   summary['AWS Queue']     = params.awsqueue
+    summary['AWS Region']    = params.awsregion
+    summary['AWS Queue']     = params.awsqueue
 }
 summary['Config Profile'] = workflow.profile
 if(params.config_profile_description) summary['Config Description'] = params.config_profile_description
 if(params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
 if(params.config_profile_url)         summary['Config URL']         = params.config_profile_url
 if(params.email) {
-  summary['E-mail Address']  = params.email
-  summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
+    summary['E-mail Address']  = params.email
+    summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
 }
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "\033[2m----------------------------------------------------\033[0m"
@@ -373,7 +373,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
         </dl>
     """.stripIndent()
 
-   return yaml_file
+    return yaml_file
 }
 
 
@@ -590,16 +590,16 @@ process saturation {
     """
     fastp -i $R1 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
     for i in {1..10}; do
-      mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
+    mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
         --seq \${i}.${prefix}_split.fq.gz \${i}.k31.ctx
-      if [ \$i == 1 ]; then
+    if [ \$i == 1 ]; then
         mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
         cp -f 1.k31.ctx tmp_clean31.ctx
-      else
+    else
         mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
         mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
         mv -f merged_clean31.ctx tmp_clean31.ctx
-      fi
+    fi
     done
     KmerDensity.R \$PWD ${prefix}
     """
@@ -608,16 +608,16 @@ process saturation {
     """
     fastp -i $R1 -I $R2 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split_R1.fq.gz -O ${prefix}_split_R2.fq.gz
     for i in {1..10}; do
-      mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
+    mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
         --seq2 \${i}.${prefix}_split_R1.fq.gz:\${i}.${prefix}_split_R2.fq.gz \${i}.k31.ctx
-      if [ \$i == 1 ]; then
+    if [ \$i == 1 ]; then
         mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:\${i}.k31.ctx
         cp -f 1.k31.ctx tmp_clean31.ctx
-      else
+    else
         mccortex31 join -m 8G --out merged_clean31.ctx 0:\${i}.k31.ctx 0:tmp_clean31.ctx
         mccortex31 clean -t ${task.cpus} -m 8G -U10 -T16 -f -o null -C ${prefix}_cov31_p\${i}.csv 0:merged_clean31.ctx
         mv -f merged_clean31.ctx tmp_clean31.ctx
-      fi
+    fi
     done
     KmerDensity.R \$PWD ${prefix}
     """
@@ -633,7 +633,7 @@ if ( params.nanopore ) {
 process minimap2 {
     tag "$prefix"
     publishDir path: { params.saveAlignedIntermediates ? "${params.outdir}/bowtie2" : params.outdir }, mode: 'copy',
-               saveAs: {filename -> params.saveAlignedIntermediates ? filename : null }
+                saveAs: {filename -> params.saveAlignedIntermediates ? filename : null }
     input:
     file reads from trimmed_reads
     file fasta from fasta
@@ -658,7 +658,7 @@ process minimap2 {
 process bowtie2 {
     tag "$prefix"
     publishDir path: { params.saveAlignedIntermediates ? "${params.outdir}/bowtie2" : params.outdir }, mode: 'copy',
-               saveAs: {filename -> params.saveAlignedIntermediates ? filename : null }
+                saveAs: {filename -> params.saveAlignedIntermediates ? filename : null }
 
     input:
     file reads from trimmed_reads
@@ -769,12 +769,12 @@ process vg_call {
 process samtools {
     tag "${prefix}"
     publishDir path: "${pp_outdir}", mode: 'copy',
-               saveAs: { filename ->
-                   if (filename.indexOf(".stats.txt") > 0) "stats/$filename"
-                   else if (filename.indexOf("_bins.txt") > 0) filename
-                   else if (filename.indexOf("_pdrc.pdf") > 0) filename
-                   else params.saveAlignedIntermediates ? filename : null
-               }
+                saveAs: { filename ->
+                    if (filename.indexOf(".stats.txt") > 0) "stats/$filename"
+                    else if (filename.indexOf("_bins.txt") > 0) filename
+                    else if (filename.indexOf("_pdrc.pdf") > 0) filename
+                    else params.saveAlignedIntermediates ? filename : null
+                }
 
     input:
     file bam from bb_bam
@@ -814,10 +814,10 @@ process samtools {
 process preseq {
     tag "${prefix}"
     publishDir path: "${pp_outdir}", mode: 'copy',
-               saveAs: { filename ->
-                   if (filename.indexOf(".txt") > 0) filename
-                   else if (filename.indexOf(".pdf") > 0) filename
-                   else null }
+                saveAs: { filename ->
+                    if (filename.indexOf(".txt") > 0) filename
+                    else if (filename.indexOf(".pdf") > 0) filename
+                    else null }
 
     input:
     file sbed from bed_for_preseq
@@ -871,11 +871,11 @@ process qualimap {
     ls *.markdup.bam > bams.txt
     let num=`ls *.bam | wc -l`
     if [ \$num == 1 ]; then
-      qualimap bamqc -c -bam *.markdup.bam -gff $gff -outdir multi-bamqc
-      ln -s multi-bamqc Sample.markdup_stats
+    qualimap bamqc -c -bam *.markdup.bam -gff $gff -outdir multi-bamqc
+    ln -s multi-bamqc Sample.markdup_stats
     else
-      cat bams.txt | awk '{split(\$1,a,".markdup.bam"); print a[1]"\t"\$1}' > inputs.txt
-      JAVA_MEM_SIZE=${task.memory.toGiga()}G qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir multi-bamqc
+    cat bams.txt | awk '{split(\$1,a,".markdup.bam"); print a[1]"\t"\$1}' > inputs.txt
+    JAVA_MEM_SIZE=${task.memory.toGiga()}G qualimap multi-bamqc -r -c -d inputs.txt -gff $gff -outdir multi-bamqc
     fi
     """
 }
@@ -918,8 +918,8 @@ process IndelRealign {
  */
 process monovar {
     publishDir path: "${pp_outdir}", mode: 'copy',
-               saveAs: { filename ->
-                   if (filename.indexOf(".vcf") > 0) "$filename" else null }
+                saveAs: { filename ->
+                    if (filename.indexOf(".vcf") > 0) "$filename" else null }
 
     input:
     file ("*") from bam_for_monovar.collect()
@@ -1014,22 +1014,22 @@ process normalize {
     if (single_end) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      ln -s $R1 ${prefix}_norm.fastq.gz
+    ln -s $R1 ${prefix}_norm.fastq.gz
     else
-      normalize-by-median.py -k 31 -C 40 --gzip -M 4e+9 -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz $R1
+    normalize-by-median.py -k 31 -C 40 --gzip -M 4e+9 -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz $R1
     fi
     """
     } else {
     R2 = clean_reads[1].toString()
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      ln -s $R1 ${prefix}_norm_R1.fastq.gz
-      ln -s $R2 ${prefix}_norm_R2.fastq.gz
+    ln -s $R1 ${prefix}_norm_R1.fastq.gz
+    ln -s $R2 ${prefix}_norm_R2.fastq.gz
     else
-      gzip -cd $R1 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R1_fq.gz
-      gzip -cd $R2 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R2_fq.gz
-      interleave-reads.py ${prefix}_rename_R1_fq.gz ${prefix}_rename_R2_fq.gz | normalize-by-median.py -k 31 -C 40 -M 4e+9 -p --gzip -R ${prefix}_norm.report -o ${prefix}_nbm.fastq.gz /dev/stdin
-      split-paired-reads.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R2.fastq.gz --gzip ${prefix}_nbm.fastq.gz
+    gzip -cd $R1 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R1_fq.gz
+    gzip -cd $R2 | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R2_fq.gz
+    interleave-reads.py ${prefix}_rename_R1_fq.gz ${prefix}_rename_R2_fq.gz | normalize-by-median.py -k 31 -C 40 -M 4e+9 -p --gzip -R ${prefix}_norm.report -o ${prefix}_nbm.fastq.gz /dev/stdin
+    split-paired-reads.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R2.fastq.gz --gzip ${prefix}_nbm.fastq.gz
     fi
     """
     }
@@ -1063,11 +1063,11 @@ process canu {
     mode = params.bulk ? "bulk" : "mda"
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      #canu -d ${prefix}.spades_out -p ${prefix} genomeSize=4m useGrid=false maxThreads=${task.cpus} maxMemory=${task.memory.toGiga()}g -nanopore $R1
-      flye --nano-raw $R1 --out-dir ${prefix}.spades_out --threads ${task.cpus} --scaffold
+    #canu -d ${prefix}.spades_out -p ${prefix} genomeSize=4m useGrid=false maxThreads=${task.cpus} maxMemory=${task.memory.toGiga()}g -nanopore $R1
+    flye --nano-raw $R1 --out-dir ${prefix}.spades_out --threads ${task.cpus} --scaffold
     else
-      #canu -d ${prefix}.spades_out -p ${prefix} genomeSize=4m corOutCoverage=999 corMhapSensitivity=high useGrid=false maxThreads=${task.cpus} maxMemory=${task.memory.toGiga()}g -nanopore $R1
-      flye --nano-raw $R1 --out-dir ${prefix}.spades_out --threads ${task.cpus} --scaffold --meta
+    #canu -d ${prefix}.spades_out -p ${prefix} genomeSize=4m corOutCoverage=999 corMhapSensitivity=high useGrid=false maxThreads=${task.cpus} maxMemory=${task.memory.toGiga()}g -nanopore $R1
+    flye --nano-raw $R1 --out-dir ${prefix}.spades_out --threads ${task.cpus} --scaffold --meta
     fi
     #ln -s ${prefix}.spades_out/${prefix}.contigs.fasta ${prefix}.contigs.fasta # for canu
     cut -f1,2,3 ${prefix}.spades_out/assembly_info.txt | awk -F'\t' 'NR>1{print \$1"\t"\$1"_length_"\$2"_cov_"\$3}' > flyeID_spadesID.txt
@@ -1101,9 +1101,9 @@ process spades {
     if (single_end) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      spades.py -s $R1 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    spades.py -s $R1 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     else
-      spades.py --sc -s $R1 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    spades.py --sc -s $R1 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
@@ -1113,9 +1113,9 @@ process spades {
     R2 = clean_reads[1].toString()
     """
     if [ \"${mode}\" == \"bulk\" ]; then
-      spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     else
-      spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    spades.py --sc -1 $R1 -2 $R2 --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
@@ -1139,8 +1139,8 @@ process prepare_bowtie2_remap {
     output:
     file "${prefix}Bowtie2Index" into remap_bowtie2_index
 
-		when:
-		params.remap
+        when:
+        params.remap
 
     script:
     prefix = contigs.toString() - ~/(\.ctg200\.fasta?)(\.ctgs\.fasta)?(\.ctgs)?(\.ctg200)?(\.fasta)?(\.fa)?$/
@@ -1165,22 +1165,22 @@ process remap {
     output:
     file "${prefix}_ass.bam" into bam_ass
 
-		when:
-		params.remap
+        when:
+        params.remap
 
     script:
     prefix = reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
     R1 = reads[0].toString()
     filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
-		if (single_end) {
-      """
-      bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U $R1 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
-      """
+        if (single_end) {
+    """
+    bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U $R1 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    """
     } else {
-			R2 = reads[1].toString()
-      """
-      bowtie2 --no-mixed --no-discordant -X 1000 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
-      """
+            R2 = reads[1].toString()
+    """
+    bowtie2 --no-mixed --no-discordant -X 1000 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    """
     }
 }
 
@@ -1245,161 +1245,161 @@ process quast_denovo {
  * STEP 10.1 - Completeness and contamination evaluation using CheckM
  */
 process checkm {
-   publishDir "${params.outdir}/CheckM", mode: 'copy'
+    publishDir "${params.outdir}/CheckM", mode: 'copy'
 
-   input:
-   file ('spades/*') from contigs_for_checkm.collect()
+    input:
+    file ('spades/*') from contigs_for_checkm.collect()
 
-   output:
-   file 'spades_checkM.txt'
+    output:
+    file 'spades_checkM.txt'
 
-   when:
-   !euk
+    when:
+    !euk
 
-   script:
-   checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
-   """
-   if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
-     checkm taxonomy_wf -t ${task.cpus} --tab_table -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
-   else
-     checkm lineage_wf -t ${task.cpus} -r --tab_table -f spades_checkM.txt -x fasta spades spades_checkM
-   fi
-   """
+    script:
+    checkm_wf = params.genus ? "taxonomy_wf" : "lineage_wf"
+    """
+    if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
+    checkm taxonomy_wf -t ${task.cpus} --tab_table -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
+    else
+    checkm lineage_wf -t ${task.cpus} -r --tab_table -f spades_checkM.txt -x fasta spades spades_checkM
+    fi
+    """
 }
 
 /*
  * STEP 11.1 - Annotate contigs using NT database
  */
 process blast_nt {
-   tag "${prefix}"
-   publishDir "${params.outdir}/blob", mode: 'copy'
+    tag "${prefix}"
+    publishDir "${params.outdir}/blob", mode: 'copy'
 
-   input:
-   file contigs from contigs_for_nt
-   file nt from nt_db
+    input:
+    file contigs from contigs_for_nt
+    file nt from nt_db
 
-   output:
-   file "${prefix}_nt.out" into nt_for_blobtools_original
-   file "${contigs}" into contigs_for_uniprot
+    output:
+    file "${prefix}_nt.out" into nt_for_blobtools_original
+    file "${contigs}" into contigs_for_uniprot
 
-   when:
-   params.nt_db
+    when:
+    params.nt_db
 
-   script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   """
-   export BLASTDB=$nt
-   blastn -query $contigs -db $nt/nt -outfmt '6 qseqid staxids bitscore std' \
-     -max_target_seqs 1 -max_hsps 1 -evalue ${params.evalue} \
-     -num_threads ${task.cpus} -out ${prefix}_nt.out
-   """
+    script:
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    """
+    export BLASTDB=$nt
+    blastn -query $contigs -db $nt/nt -outfmt '6 qseqid staxids bitscore std' \
+    -max_target_seqs 1 -max_hsps 1 -evalue ${params.evalue} \
+    -num_threads ${task.cpus} -out ${prefix}_nt.out
+    """
 }
 
 /*
  * STEP 11.2 - Annotate contigs using Uniprot proteomes database
  */
 process diamond_uniprot {
-   tag "${prefix}"
-   publishDir "${params.outdir}/blob", mode: 'copy'
+    tag "${prefix}"
+    publishDir "${params.outdir}/blob", mode: 'copy'
 
-   input:
-   file contigs from contigs_for_uniprot
-   file nt_out from nt_for_blobtools_original
-   file uniprot from uniprot_db
-   file "uniprot.taxids" from uniprot_taxids
+    input:
+    file contigs from contigs_for_uniprot
+    file nt_out from nt_for_blobtools_original
+    file uniprot from uniprot_db
+    file "uniprot.taxids" from uniprot_taxids
 
-   output:
-   file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools, uniprot_for_reblobtools
-   file "${contigs}" into contigs_for_blob, contigs_for_reblob
-   file "${nt_out}" into nt_for_blobtools, nt_for_reblobtools
-   val used into uniprot_real, uniprot_real_reblob
-   file "${prefix}_uniprot.*"
+    output:
+    file "${prefix}_uniprot.taxified.out" into uniprot_for_blobtools, uniprot_for_reblobtools
+    file "${contigs}" into contigs_for_blob, contigs_for_reblob
+    file "${nt_out}" into nt_for_blobtools, nt_for_reblobtools
+    val used into uniprot_real, uniprot_real_reblob
+    file "${prefix}_uniprot.*"
 
-   script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ) {
-     used = false
-     """
-     touch ${prefix}_uniprot.out
-     touch ${prefix}_uniprot.taxified.out
-     """
-   } else {
-     used = true
-     """
-     diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
-       --outfmt 6 --sensitive --max-target-seqs 1 --evalue ${params.evalue} -b ${params.blockSize}
-     blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
-     """
-   }
+    script:
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ) {
+    used = false
+    """
+    touch ${prefix}_uniprot.out
+    touch ${prefix}_uniprot.taxified.out
+    """
+    } else {
+    used = true
+    """
+    diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
+        --outfmt 6 --sensitive --max-target-seqs 1 --evalue ${params.evalue} -b ${params.blockSize}
+    blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
+    """
+    }
 }
 
 /*
  * STEP 10.1 - Blobplot
  */
 process blobtools {
-   tag "${prefix}"
-   publishDir "${params.outdir}/blob", mode: 'copy'
+    tag "${prefix}"
+    publishDir "${params.outdir}/blob", mode: 'copy'
 
-   input:
-   file contigs from contigs_for_blob
-   file anno from nt_for_blobtools
-   val has_uniprot from uniprot_real
-   file uniprot_anno from uniprot_for_blobtools
+    input:
+    file contigs from contigs_for_blob
+    file anno from nt_for_blobtools
+    val has_uniprot from uniprot_real
+    file uniprot_anno from uniprot_for_blobtools
 
-   output:
-   file "${prefix}/${prefix}.blobDB*table.txt" into blob_tax
-   file "${contigs}" into contigs_for_acdc
-   file "${prefix}" into blob_tax_for_split
+    output:
+    file "${prefix}/${prefix}.blobDB*table.txt" into blob_tax
+    file "${contigs}" into contigs_for_acdc
+    file "${prefix}" into blob_tax_for_split
 
-   script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
-   """
-   mkdir -p ${prefix}
-   blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
-     --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
-   blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format png -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format png -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
-   blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
-   """
+    script:
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
+    """
+    mkdir -p ${prefix}
+    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
+    --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
+    blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format pdf -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
+    blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
+    """
 }
 
 process reblobtools {
-   tag "${prefix}"
-   publishDir "${params.outdir}/reblob", mode: 'copy'
+    tag "${prefix}"
+    publishDir "${params.outdir}/reblob", mode: 'copy'
 
-   input:
-   file contigs from contigs_for_reblob
-   file anno from nt_for_reblobtools
-   val has_uniprot from uniprot_real_reblob
-   file uniprot_anno from uniprot_for_reblobtools
-   file bam from bam_ass.collect()
+    input:
+    file contigs from contigs_for_reblob
+    file anno from nt_for_reblobtools
+    val has_uniprot from uniprot_real_reblob
+    file uniprot_anno from uniprot_for_reblobtools
+    file bam from bam_ass.collect()
 
-	 output:
-	 file "${prefix}/${prefix}.blobDB*table.txt"
-	 file "${contigs}"
-	 file "${prefix}"
+    output:
+    file "${prefix}/${prefix}.blobDB*table.txt"
+    file "${contigs}"
+    file "${prefix}"
 
-   when:
-	 params.remap
+    when:
+    params.remap
 
-   script:
-   prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
-   uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
+    script:
+    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
     """
     mkdir -p ${prefix}
-		samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
-		samtools index ${prefix}_ass.sort.bam
+        samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
+        samtools index ${prefix}_ass.sort.bam
     blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -b ${prefix}_ass.sort.bam -o ${prefix}/${prefix} \
-      --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
+    --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
     blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
@@ -1460,10 +1460,10 @@ process tsne {
     faFilterByLen.pl ${contigs} 1000 > ${prefix}.ctg1k.fasta
     if [ -s ${prefix}.ctg1k.fasta ]
     then
-      kpal count -k 4 -r ${prefix}.ctg1k.fasta ${prefix}.4mer
-      kmer_tsne.py ${prefix}.4mer ${prefix}_tsne.tsv ${task.cpus}
+    kpal count -k 4 -r ${prefix}.ctg1k.fasta ${prefix}.4mer
+    kmer_tsne.py ${prefix}.4mer ${prefix}_tsne.tsv ${task.cpus}
     else
-      touch ${prefix}_tsne.tsv
+    touch ${prefix}_tsne.tsv
     fi
     """
 }
@@ -1473,54 +1473,54 @@ if (!euk) {
  * STEP 11 - Find genes using Prokka
  */
 process prokka {
-   tag "$prefix"
-   publishDir "${params.outdir}/prokka", mode: 'copy'
+    tag "$prefix"
+    publishDir "${params.outdir}/prokka", mode: 'copy'
 
-   input:
-   file contigs from contigs_for_prokka
+    input:
+    file contigs from contigs_for_prokka
 
-   output:
-   file "$prefix" into prokka_for_mqc1, prokka_for_mqc2, prokka_for_split
-   file "$prefix/${prefix}.faa" into faa_eggnog, faa_kofam
+    output:
+    file "$prefix" into prokka_for_mqc1, prokka_for_mqc2, prokka_for_split
+    file "$prefix/${prefix}.faa" into faa_eggnog, faa_kofam
 
-   when:
-   !euk
+    when:
+    !euk
 
-   script:
-   prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
-   """
-   if [ \$(id -u) -eq 0 ]; then
-     wget -c -q -t 1 -T 60 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -O linux64.tbl2asn.gz && gunzip linux64.tbl2asn.gz && chmod +x linux64.tbl2asn && mv linux64.tbl2asn /opt/conda/envs/nf-core-gongyh-scgs/bin/tbl2asn
-   fi
-   cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
-   prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa || echo "Ignore minor errors of prokka!"
-   sed '/^##FASTA/Q' ${prefix}/${prefix}.gff > ${prefix}/${prefix}_noseq.gff
-   gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | grep -v gene > ${prefix}/${prefix}_ctg_genes.tsv
-   prokka_postprocess.py ${prefix}/${prefix}_ctg_genes.tsv ${prefix}/${prefix}.tsv > ${prefix}/${prefix}_all.tsv
-   """
+    script:
+    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
+    """
+    if [ \$(id -u) -eq 0 ]; then
+    wget -c -q -t 1 -T 60 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -O linux64.tbl2asn.gz && gunzip linux64.tbl2asn.gz && chmod +x linux64.tbl2asn && mv linux64.tbl2asn /opt/conda/envs/nf-core-gongyh-scgs/bin/tbl2asn
+    fi
+    cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
+    prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa || echo "Ignore minor errors of prokka!"
+    sed '/^##FASTA/Q' ${prefix}/${prefix}.gff > ${prefix}/${prefix}_noseq.gff
+    gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | grep -v gene > ${prefix}/${prefix}_ctg_genes.tsv
+    prokka_postprocess.py ${prefix}/${prefix}_ctg_genes.tsv ${prefix}/${prefix}.tsv > ${prefix}/${prefix}_all.tsv
+    """
 }
 /*
  * STEP 11.2 - Find genes using prodigal
  */
 process prodigal {
-   tag "$prefix"
-   publishDir "${params.outdir}/prodigal", mode: 'copy'
+    tag "$prefix"
+    publishDir "${params.outdir}/prodigal", mode: 'copy'
 
-   input:
-   file contigs from contigs_for_prodigal
+    input:
+    file contigs from contigs_for_prodigal
 
-   output:
-   file "$prefix"
+    output:
+    file "$prefix"
 
-   when:
-   !euk
+    when:
+    !euk
 
-   script:
-   prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
-   """
-   mkdir -p ${prefix}
-   prodigal -i $contigs -o ${prefix}/${prefix}.gbk -a ${prefix}/${prefix}.proteins.faa -p meta
-   """
+    script:
+    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
+    """
+    mkdir -p ${prefix}
+    prodigal -i $contigs -o ${prefix}/${prefix}.gbk -a ${prefix}/${prefix}.proteins.faa -p meta
+    """
 }
 
 
@@ -1532,60 +1532,60 @@ prokka_for_split = file('/dev/null')
  * STEP 11.2 - Find genes using Augustus
  */
 process augustus {
-   tag "$prefix"
-   publishDir "${params.outdir}/augustus", mode: 'copy'
+    tag "$prefix"
+    publishDir "${params.outdir}/augustus", mode: 'copy'
 
-   input:
-   file contigs from contigs_for_augustus
+    input:
+    file contigs from contigs_for_augustus
 
-   output:
-   file "${prefix}.aa" into faa_eukcc, faa_eggnog, faa_kofam
-   file "${prefix}*"
+    output:
+    file "${prefix}.aa" into faa_eukcc, faa_eggnog, faa_kofam
+    file "${prefix}*"
 
-   when:
-   euk
+    when:
+    euk
 
-   script:
-   prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
-   """
-   # clean id
-   cat $contigs | sed 's/_length.*\$//g' > ${prefix}_clean.fasta
-   # mask genome
-   tantan ${prefix}_clean.fasta > ${prefix}_mask.fasta
-   # gene prediction
-   augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on ${prefix}_mask.fasta > ${prefix}.gff
-   # generate proteins
-   getAnnoFasta.pl ${prefix}.gff
-   """
+    script:
+    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
+    """
+    # clean id
+    cat $contigs | sed 's/_length.*\$//g' > ${prefix}_clean.fasta
+    # mask genome
+    tantan ${prefix}_clean.fasta > ${prefix}_mask.fasta
+    # gene prediction
+    augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on ${prefix}_mask.fasta > ${prefix}.gff
+    # generate proteins
+    getAnnoFasta.pl ${prefix}.gff
+    """
 }
 
 /*
  * STEP 11.3 - Completeness and contamination evaluation using EukCC for euk
  */
 process eukcc {
-   publishDir "${params.outdir}/EukCC", mode: 'copy'
+    publishDir "${params.outdir}/EukCC", mode: 'copy'
 
-   input:
-   file faa from faa_eukcc
-   file db from eukcc_db
+    input:
+    file faa from faa_eukcc
+    file db from eukcc_db
 
-   output:
-   file "${prefix}"
+    output:
+    file "${prefix}"
 
-   when:
-   euk && eukcc_db
+    when:
+    euk && eukcc_db
 
-   script:
-   prefix = faa.toString() - ~/(\.faa)?(\.aa)?(\.fasta)?(\.fa)?$/
-   """
-   export HOME=/tmp/
-   if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
-     echo "NCBI taxa database exist!"
-   else
-     python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
-   fi
-   eukcc --db ${db} --ncores ${task.cpus} --outdir ${prefix} --protein ${faa} || echo "Ignore minor errors of eukcc!"
-   """
+    script:
+    prefix = faa.toString() - ~/(\.faa)?(\.aa)?(\.fasta)?(\.fa)?$/
+    """
+    export HOME=/tmp/
+    if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
+    echo "NCBI taxa database exist!"
+    else
+    python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
+    fi
+    eukcc --db ${db} --ncores ${task.cpus} --outdir ${prefix} --protein ${faa} || echo "Ignore minor errors of eukcc!"
+    """
 }
 
 }
@@ -1658,54 +1658,54 @@ process multiqc_denovo {
  * STEP 13 - Annotate genes using EggNOG
  */
 process eggnog {
-   tag "$prefix"
-   publishDir "${params.outdir}/eggnog", mode: 'copy'
+    tag "$prefix"
+    publishDir "${params.outdir}/eggnog", mode: 'copy'
 
-   input:
-   file faa from faa_eggnog
-   file db from eggnog_db
+    input:
+    file faa from faa_eggnog
+    file db from eggnog_db
 
-   output:
-   file "${prefix}.emapper.annotations"
+    output:
+    file "${prefix}.emapper.annotations"
 
-   when:
-   eggnog_db
+    when:
+    eggnog_db
 
-   script:
-   prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?$/
-   """
-   set +u
-   source activate base
-   emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond --cpu ${task.cpus}
-   """
+    script:
+    prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?$/
+    """
+    set +u
+    source activate base
+    emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond --cpu ${task.cpus}
+    """
 }
 
 /*
  * STEP 13.1 - Annotate genes using KOfamKOALA
  */
 process kofam {
-   tag "$prefix"
-   publishDir "${params.outdir}/kofam", mode: 'copy'
+    tag "$prefix"
+    publishDir "${params.outdir}/kofam", mode: 'copy'
 
-   input:
-   file faa from faa_kofam
-   file profile from kofam_profile
-   file ko_list from kofam_kolist
+    input:
+    file faa from faa_kofam
+    file profile from kofam_profile
+    file ko_list from kofam_kolist
 
-   output:
-   file "${prefix}_KOs_*.txt" into kofam_for_split
+    output:
+    file "${prefix}_KOs_*.txt" into kofam_for_split
 
-   when:
-   kofam_profile && kofam_kolist
+    when:
+    kofam_profile && kofam_kolist
 
-   script:
-   prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?(\.aa)?$/
-   """
-   exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -o ${prefix}_KOs_detail.txt ${faa}
-   exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
-   exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
-   kofam_postprocess.py /opt/nf-core-scgs/assets/ko_KO.txt ${prefix}_KOs_mapper.txt > ${prefix}_KOs_ko.txt
-   """
+    script:
+    prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?(\.aa)?$/
+    """
+    exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -o ${prefix}_KOs_detail.txt ${faa}
+    exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
+    exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
+    kofam_postprocess.py /opt/nf-core-scgs/assets/ko_KO.txt ${prefix}_KOs_mapper.txt > ${prefix}_KOs_ko.txt
+    """
 }
 
 /*
@@ -1758,8 +1758,8 @@ process pointfinder {
     """
     mkdir -p $prefix
     python /opt/pointfinder/PointFinder.py -p $db \
-      -m blastn -m_p /opt/conda/bin/blastn $known_snp \
-      -i $contigs -o $prefix -s $species
+    -m blastn -m_p /opt/conda/bin/blastn $known_snp \
+    -i $contigs -o $prefix -s $species
     rm -rf $prefix/tmp
     """
 }
@@ -1793,21 +1793,21 @@ process split_checkm_eukcc {
     split_bac_level = params.split_bac_level ? params.split_bac_level : "genus"
     split_euk_level = params.split_euk_level ? params.split_euk_level : "genus"
     """
-      export HOME=/tmp/
+    export HOME=/tmp/
     if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
-      echo "NCBI taxa database exist!"
+    echo "NCBI taxa database exist!"
     else
-      python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
+    python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
     fi
     cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
     samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
     for sample in \${samples[*]}; do
-      mkdir -p \${sample}_${split_bac_level}_checkM
-      checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
-      cd \${sample}_${split_euk_level}_Eukaryota
-      contigs=(`ls -d *.fasta`)
-      for contig in \${contigs[*]};do
+    mkdir -p \${sample}_${split_bac_level}_checkM
+    checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
+    cd \${sample}_${split_euk_level}_Eukaryota
+    contigs=(`ls -d *.fasta`)
+    for contig in \${contigs[*]};do
         prefix=\${contig%.fasta}
         # clean id
         cat \$contig | sed 's/_length.*\$//g' > \${prefix}_clean.fasta
@@ -1817,14 +1817,14 @@ process split_checkm_eukcc {
         augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on \${prefix}_mask.fasta > \${prefix}.gff
         # generate proteins
         getAnnoFasta.pl \${prefix}.gff
-      done
+    done
 
-      faas=(`ls -d *.aa`)
-      for faa in \${faas[*]};do
+    faas=(`ls -d *.aa`)
+    for faa in \${faas[*]};do
         faaPrefix=\${faa%.aa}
         eukcc --db ../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
-      done
-      cd ../
+    done
+    cd ../
     done
     """
 }
@@ -1856,8 +1856,8 @@ process split_checkm {
     cd split
     samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
     for sample in \${samples[*]}; do
-      mkdir -p \${sample}_${split_bac_level}_checkM
-      checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}/Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
+    mkdir -p \${sample}_${split_bac_level}_checkM
+    checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}/Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
     done
     """
 }
@@ -1892,7 +1892,7 @@ workflow.onComplete {
     // Set up the e-mail variables
     def subject = "[gongyh/nf-core-scgs] Successful: $workflow.runName"
     if(!workflow.success){
-      subject = "[gongyh/nf-core-scgs] FAILED: $workflow.runName"
+    subject = "[gongyh/nf-core-scgs] FAILED: $workflow.runName"
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
@@ -1957,21 +1957,21 @@ workflow.onComplete {
     // Send the HTML e-mail
     if (params.email) {
         try {
-          if( params.plaintext_email ){ throw GroovyException('Send plaintext e-mail, not HTML') }
-          // Try to send HTML e-mail using sendmail
-          [ 'sendmail', '-t' ].execute() << sendmail_html
-          log.info "[gongyh/nf-core-scgs] Sent summary e-mail to $params.email (sendmail)"
+        if( params.plaintext_email ){ throw GroovyException('Send plaintext e-mail, not HTML') }
+        // Try to send HTML e-mail using sendmail
+        [ 'sendmail', '-t' ].execute() << sendmail_html
+        log.info "[gongyh/nf-core-scgs] Sent summary e-mail to $params.email (sendmail)"
         } catch (all) {
-          // Catch failures and try with plaintext
-          [ 'mail', '-s', subject, params.email ].execute() << email_txt
-          log.info "[gongyh/nf-core-scgs] Sent summary e-mail to $params.email (mail)"
+        // Catch failures and try with plaintext
+        [ 'mail', '-s', subject, params.email ].execute() << email_txt
+        log.info "[gongyh/nf-core-scgs] Sent summary e-mail to $params.email (mail)"
         }
     }
 
     // Write summary e-mail HTML to a file
     def output_d = new File( "${params.outdir}/pipeline_info/" )
     if( !output_d.exists() ) {
-      output_d.mkdirs()
+    output_d.mkdirs()
     }
     def output_hf = new File( output_d, "pipeline_report.html" )
     output_hf.withWriter { w -> w << email_html }

@@ -18,7 +18,7 @@ option_list = list(
     make_option(c("-K", "--KO"), type="character", default="ko_KO.txt", help="ko-KO definition file name [default= %default]", metavar="character"),
     make_option(c("-o", "--out"), type="character", default="RG1_annotations.txt", help="output file name [default= %default]", metavar="character")
 )
- 
+
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
 
@@ -75,6 +75,5 @@ ko_KOs <- sapply(data$KOs, function(item) {
 
 data$KO_def <- ko_KOs
 
-write.table(data, file=opt$out, append=F, quote=F, sep = "\t", 
+write.table(data, file=opt$out, append=F, quote=F, sep = "\t",
             eol = "\n", na = "NA", dec = ".", row.names=F, col.names=T)
-

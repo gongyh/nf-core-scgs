@@ -1,13 +1,13 @@
 FROM nfcore/base:1.13.3
 LABEL authors="Yanhai Gong" \
-      description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
+    description="Docker image containing all requirements for gongyh/nf-core-scgs pipeline"
 
 # Install procps so that Nextflow can poll CPU usage, set locale en_US.UTF-8 used by Picard
 RUN apt-get update && apt-get install --no-install-recommends -y procps libpng16-16 \
     cmake gcc g++ hmmer2 locales autoconf automake unzip zlib1g-dev libncurses5-dev \
     libncursesw5-dev fastx-toolkit augustus augustus-data augustus-doc libidn11 libgl1 && \
-  apt-get autoremove --purge && apt-get clean -y && apt-get autoremove && rm -rf /var/lib/apt/lists/* && \
-  sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
+    apt-get autoremove --purge && apt-get clean -y && apt-get autoremove && rm -rf /var/lib/apt/lists/* && \
+    sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
 
 # Install conda environments
 RUN conda install -y mamba nomkl eggnog-mapper=2.1 -c conda-forge -c bioconda && conda clean -y -a && rm -rf /opt/conda/pkgs/*
@@ -62,4 +62,3 @@ RUN cp /opt/conda/bin/activate /usr/local/bin/ && cp /opt/conda/bin/deactivate /
 
 # Add default container command
 CMD ["/bin/bash"]
-

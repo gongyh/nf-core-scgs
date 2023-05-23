@@ -6,7 +6,7 @@
 # This script is used by the braker.pl pipeline.
 # Please be extremely careful when changing this script because the braker.pl
 # pipeline may fail upon custom modification of this script.
-# In case of doubt, contact katharina.hoff@uni-greifswald.de  
+# In case of doubt, contact katharina.hoff@uni-greifswald.de
 #
 # Mario Stanke, 10.05.2007, last modification by Katharina J. Hoff on Feb 21st 2018
 #
@@ -35,7 +35,7 @@ GetOptions('seqfile=s'=>\$seqfile, 'chop_cds!'=>\$chop_cds);
 if ($#ARGV != 0) {
     print $usage;
     exit;
-} 
+}
 
 my $separator = ";";
 my $augustusfilename = $ARGV[0];
@@ -51,15 +51,15 @@ if ($seqfile){
     open (SEQ, "<$seqfile") or die ("Could not open sequence file $seqfile\n");
     $/=">";
     while (<SEQ>){
-	s/>$//;
-	next unless /\S+/;
-	/(.*)\n/;
-	
-	$seqname = $1;
-	my $sequencepart = $'; #'
-	$seqname =~ s/\s.*//; # seqname only up to first white space
-	$sequencepart =~ s/\s//g;
-	$sequence{$seqname} = $sequencepart;
+    s/>$//;
+    next unless /\S+/;
+    /(.*)\n/;
+
+    $seqname = $1;
+    my $sequencepart = $'; #'
+    $seqname =~ s/\s.*//; # seqname only up to first white space
+    $sequencepart =~ s/\s//g;
+    $sequence{$seqname} = $sequencepart;
     }
     print "Read in " . (scalar keys %sequence) . " sequence(s) from $seqfile.\n";
 }
@@ -82,100 +82,100 @@ my %frameTx = (); #keys transcript id, values frames
 
 while(<AUG>) {
     if ($seqfile && (/^(\S+)\t\S+\t(\S+)\t(\d+)\t(\d+)\t\S+\t(\S+)\t(\S+)\ttranscript_id "([^"]*)"; gene_id "([^"]*)";$/
-                 || /^(\S+)\t\S+\t(\S+)\t(\d+)\t(\d+)\t\S+\t(\S+)\t(\S+)\t.*Parent=([^;]+)/)){
-	my $feat = $2;
-	$seqname = $1;
-	my $start = $3;
-	my $end = $4;
-	my $strand = $5;
-	my $frame = $6;
-	$trid=$7;
-	$trid =~ s/\s$//;
-	next unless ($feat eq "CDS" || $feat =~ /UTR/ || $feat eq "exon");
-	# decide whether to use exon or UTR format for mRNA by whether we see UTR or exon first
-	$UTRFormat = 1 if (!$exonUTRFormat && $feat =~ /UTR/);
-	$exonUTRFormat = 1 if (!$UTRFormat && $feat eq "exon");
-	$cdsnr{$trid}++ if ($feat eq "CDS");
-	my $seqpart = lc(substr($sequence{$seqname}, $start-1, $end - $start + 1));
-	#print "$seqname $trid CDS $cdsnr{$trid} $start -> $end $seqpart\n";
-	if ($seqpart ne "") {
-	    # add mRNA if applicable
-	    if (($exonUTRFormat && $feat eq "exon") ||
-		($UTRFormat && ($feat eq "CDS" || $feat =~ /UTR/))) {
-		$mrnaTx{$trid} = "" if (!defined($mrnaTx{$trid}));
-		$mrnaTx{$trid} .= $seqpart;
-	    }
-	    if ($feat eq "CDS"){
-		if (!$haveCDS) {
-		    open (CDSEXON, ">$stemfilename.cdsexons");
-		    $haveCDS++;
-		}
-		$cdsTx{$trid} = "" if (!defined($cdsTx{$trid}));
-		$cdsTx{$trid} .= $seqpart;
-		push(@{$frameTx{$trid}}, $frame);
-		if ($strand eq '-') {
-		    $seqpart = rc($seqpart);
-		    $strandTx{$trid} = $strand;
-		}
-		print CDSEXON ">$trid.cds" . $cdsnr{$trid} . "\n$seqpart\n";
-	    }
-	}
+                || /^(\S+)\t\S+\t(\S+)\t(\d+)\t(\d+)\t\S+\t(\S+)\t(\S+)\t.*Parent=([^;]+)/)){
+    my $feat = $2;
+    $seqname = $1;
+    my $start = $3;
+    my $end = $4;
+    my $strand = $5;
+    my $frame = $6;
+    $trid=$7;
+    $trid =~ s/\s$//;
+    next unless ($feat eq "CDS" || $feat =~ /UTR/ || $feat eq "exon");
+    # decide whether to use exon or UTR format for mRNA by whether we see UTR or exon first
+    $UTRFormat = 1 if (!$exonUTRFormat && $feat =~ /UTR/);
+    $exonUTRFormat = 1 if (!$UTRFormat && $feat eq "exon");
+    $cdsnr{$trid}++ if ($feat eq "CDS");
+    my $seqpart = lc(substr($sequence{$seqname}, $start-1, $end - $start + 1));
+    #print "$seqname $trid CDS $cdsnr{$trid} $start -> $end $seqpart\n";
+    if ($seqpart ne "") {
+        # add mRNA if applicable
+        if (($exonUTRFormat && $feat eq "exon") ||
+        ($UTRFormat && ($feat eq "CDS" || $feat =~ /UTR/))) {
+        $mrnaTx{$trid} = "" if (!defined($mrnaTx{$trid}));
+        $mrnaTx{$trid} .= $seqpart;
+        }
+        if ($feat eq "CDS"){
+        if (!$haveCDS) {
+            open (CDSEXON, ">$stemfilename.cdsexons");
+            $haveCDS++;
+        }
+        $cdsTx{$trid} = "" if (!defined($cdsTx{$trid}));
+        $cdsTx{$trid} .= $seqpart;
+        push(@{$frameTx{$trid}}, $frame);
+        if ($strand eq '-') {
+            $seqpart = rc($seqpart);
+            $strandTx{$trid} = $strand;
+        }
+        print CDSEXON ">$trid.cds" . $cdsnr{$trid} . "\n$seqpart\n";
+        }
+    }
     }
     if (/^(\S+)\t.*\ttranscript_id "([^"]*)"; gene_id "([^"]*)";$/ ||
-	/^(\S+)\t.*Parent=([^;]+)/){
-	$seqname=$1;
-	$trid=$2;
-	$trid =~ s/\s$//;
-	$status=1;
+    /^(\S+)\t.*Parent=([^;]+)/){
+    $seqname=$1;
+    $trid=$2;
+    $trid =~ s/\s$//;
+    $status=1;
     } elsif (/coding sequence = \[(.*)/ && $status == 1){
-	if ($haveCod == 0) {
-	    open (COD, ">$stemfilename.codingseq");
-	}
-	$haveCod++;
-	$seq = $1;
-	$seq =~ s/\]$//;
-	print COD ">$seqname.$trid\n$seq\n";
-	$status=2;
+    if ($haveCod == 0) {
+        open (COD, ">$stemfilename.codingseq");
+    }
+    $haveCod++;
+    $seq = $1;
+    $seq =~ s/\]$//;
+    print COD ">$seqname.$trid\n$seq\n";
+    $status=2;
     } elsif ($status == 2 && /^\# ([\w\]]*)$/){
-	$seq = $1;
-	$seq =~ s/\]$//;
-	print COD "$seq\n";
-	$status=2;
+    $seq = $1;
+    $seq =~ s/\]$//;
+    print COD "$seq\n";
+    $status=2;
     } elsif (/protein sequence = \[(.*)/ && $status >= 1){
-	if ($haveAA == 0) {
-	    open (AA, ">$stemfilename.aa");
-	}
-	$haveAA++;
-	$seq = $1;
-	$seq =~ s/\]$//;
+    if ($haveAA == 0) {
+        open (AA, ">$stemfilename.aa");
+    }
+    $haveAA++;
+    $seq = $1;
+    $seq =~ s/\]$//;
 #	print AA ">$seqname$separator$trid\n$seq\n";
 #	print AA ">$trid\n";
-	$aaSeq .= $seq;
-	if (!/\]/){
-	    $status=3;
-	} else {
-	    if ($aaSeq ne ""){
- 		print AA ">$trid\n";
-		print AA getFa($aaSeq, 100);
-	    }
-	    $aaSeq = "";
-	    $status=1;
-	}
+    $aaSeq .= $seq;
+    if (!/\]/){
+        $status=3;
+    } else {
+        if ($aaSeq ne ""){
+        print AA ">$trid\n";
+        print AA getFa($aaSeq, 100);
+        }
+        $aaSeq = "";
+        $status=1;
+    }
     } elsif ($status == 3 && /^\# (.*)/){
-	$seq = $1;
-	$seq =~ s/\]$//;
+    $seq = $1;
+    $seq =~ s/\]$//;
 #	print AA "$seq\n";
-	$aaSeq .= $seq;
-	if (!/\]/){
-	    $status=3;
-	} else {
-	    if ($aaSeq ne ""){
-		print AA ">$trid\n";
-		print AA getFa($aaSeq, 100);
-	    }
-	    $aaSeq = "";
-	    $status=1;
-	}
+    $aaSeq .= $seq;
+    if (!/\]/){
+        $status=3;
+    } else {
+        if ($aaSeq ne ""){
+        print AA ">$trid\n";
+        print AA getFa($aaSeq, 100);
+        }
+        $aaSeq = "";
+        $status=1;
+    }
     }
 }
 
@@ -185,21 +185,21 @@ while(<AUG>) {
 if (!$haveCod && scalar(keys %cdsTx)>0){
     open (COD, ">$stemfilename.codingseq") or die ("Could not open $stemfilename.codingseq for writing.");
     foreach my $trid (sort by_id keys %cdsTx){
-	print COD ">$trid\n";
-	my $codingseq = $cdsTx{$trid};
-	$codingseq = rc($codingseq)  if ($strandTx{$trid} eq "-");
-	if($chop_cds){
-	    if ($strandTx{$trid} eq "-"){
-		if($frameTx{$trid}[-1] != 0){
-		    $codingseq = substr($codingseq, $frameTx{$trid}[-1]);
-		}
-	    }else{
-		if($frameTx{$trid}[0] != 0){
-		    $codingseq = substr($codingseq, $frameTx{$trid}[0]);
-		}
-	    } 
-	}
-	print COD getFa($codingseq);
+    print COD ">$trid\n";
+    my $codingseq = $cdsTx{$trid};
+    $codingseq = rc($codingseq)  if ($strandTx{$trid} eq "-");
+    if($chop_cds){
+        if ($strandTx{$trid} eq "-"){
+        if($frameTx{$trid}[-1] != 0){
+            $codingseq = substr($codingseq, $frameTx{$trid}[-1]);
+        }
+        }else{
+        if($frameTx{$trid}[0] != 0){
+            $codingseq = substr($codingseq, $frameTx{$trid}[0]);
+        }
+        }
+    }
+    print COD getFa($codingseq);
     }
 }
 
@@ -209,10 +209,10 @@ if (!$haveCod && scalar(keys %cdsTx)>0){
 if (scalar(keys %mrnaTx)>0){
     open (MRNA, ">$stemfilename.mrna") or die ("Could not open $stemfilename.mrna for writing.");
     foreach my $trid (sort by_id keys %mrnaTx){
-	print MRNA ">$trid\n";
-	my $mrnaseq = $mrnaTx{$trid};
-	$mrnaseq = rc($mrnaseq) if ($strandTx{$trid} eq "-");
-	print MRNA getFa($mrnaseq);
+    print MRNA ">$trid\n";
+    my $mrnaseq = $mrnaTx{$trid};
+    $mrnaseq = rc($mrnaseq) if ($strandTx{$trid} eq "-");
+    print MRNA getFa($mrnaseq);
     }
 }
 
@@ -226,11 +226,11 @@ sub by_id{
     $b =~ /g(\d+)\.t(\d+)/;
     my ($bg,$bt)=($1,$2);
     if ($ag>$bg){
-	return 1;
+    return 1;
     } elsif ($bg>$ag){
-	return -1;
+    return -1;
     } else {
-	return $at <=> $bt;
+    return $at <=> $bt;
     }
 }
 
@@ -252,13 +252,13 @@ sub getFa{
     my $seq = shift;
     my $cols = 100;
     $cols = shift if (@_);
-    
+
     my $start = 0;
     my $ret = "";
     while (length($seq)-$start >= $cols) {
-	my $shortline = substr($seq, $start, $cols);
-	$ret .= "$shortline\n";
-	$start += $cols;
+    my $shortline = substr($seq, $start, $cols);
+    $ret .= "$shortline\n";
+    $start += $cols;
     }
     $ret .= substr($seq, $start, $cols) . "\n" if ($start<length($seq));
     return $ret;
