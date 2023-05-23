@@ -23,8 +23,18 @@ indent_size = unset
 [/assets/email*]
 indent_size = unset
 
-[*/rnammer-1.2.src.tar.Z]
-generated_code = true
+[*rnammer-1.2.src.tar.Z]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
 
-[*/bin/fasta_tool]
-generated_code = true
+[*bin/fasta_tool]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
