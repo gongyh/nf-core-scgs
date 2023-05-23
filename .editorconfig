@@ -23,5 +23,8 @@ indent_size = unset
 [/assets/email*]
 indent_size = unset
 
-[/rnammer-1.2.src.tar.Z]
+[*/rnammer-1.2.src.tar.Z]
+generated_code = true
+
+[*/bin/fasta_tool]
 generated_code = true

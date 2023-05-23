@@ -3,9 +3,9 @@
 ========================================================================================
                         gongyh/nf-core-scgs
 ========================================================================================
-   gongyh/nf-core-scgs Analysis Pipeline.
-   #### Homepage / Documentation
-   https://github.com/gongyh/nf-core-scgs
+    gongyh/nf-core-scgs Analysis Pipeline.
+    #### Homepage / Documentation
+    https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
 
