@@ -16,9 +16,9 @@ with open(prokka_tsv) as fh:
     for line in fh:
         cl = line.strip().split("\t")
         if header:
-            print("ctg_id\t"+line.strip())
+            print("ctg_id\t" + line.strip())
             header = False
             continue
         if cl[1] != "gene":
             ctg_id = ctg_gene_dict[cl[0]]
-            print(ctg_id+"\t"+line.strip())
+            print(ctg_id + "\t" + line.strip())

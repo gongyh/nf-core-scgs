@@ -9,7 +9,16 @@ import subprocess
 import numpy as np
 
 
-def real_split(fa, ann, level_Bacteria, level_Eukaryota, bac_out_dir, euk_out_dir, gff=None, ko_file=None):
+def real_split(
+    fa,
+    ann,
+    level_Bacteria,
+    level_Eukaryota,
+    bac_out_dir,
+    euk_out_dir,
+    gff=None,
+    ko_file=None,
+):
     """
     Split by annotation
     """
@@ -58,7 +67,9 @@ def real_split(fa, ann, level_Bacteria, level_Eukaryota, bac_out_dir, euk_out_di
                 cl = line.strip().split("\t")
                 for item in cl:
                     il = item.split(".")
-                    if len(il) == 3 and il[0] == level_Bacteria and il[1] == "t":  # eg. order.t.12
+                    if (
+                        len(il) == 3 and il[0] == level_Bacteria and il[1] == "t"
+                    ):  # eg. order.t.12
                         annCol = int(il[2].rstrip("%s")) - 1
                     if len(il) == 3 and il[0] == level_Eukaryota and il[1] == "t":
                         eukAnnCol = int(il[2].rstrip("%s")) - 1
@@ -83,7 +94,7 @@ def real_split(fa, ann, level_Bacteria, level_Eukaryota, bac_out_dir, euk_out_di
             euk_gname_path = euk_out_dir.joinpath(euk_gname)
             bac_kofh = bac_out_dir.joinpath(bac_kname).open("a")
             bac_gname_path = bac_out_dir.joinpath(bac_gname)
-            with bac_gname_path.open("a") as f1, euk_gname_path.open('a') as f2:
+            with bac_gname_path.open("a") as f1, euk_gname_path.open("a") as f2:
                 if superkingdom == "Eukaryota":
                     if ctg_id_short in ctg_genes.keys():
                         for g in ctg_genes[ctg_id_short]:
@@ -229,10 +240,18 @@ def tools_split(
         for sample in progress:
             # typer.echo(sample)
             fa = spades_dir.joinpath(sample + ".ctg200.fasta")
-            out_bac_subdir = output_dir.joinpath(sample+"_"+level_Bacteria+"_Bacteria")
-            out_bac_subdir.mkdir(exist_ok=True)  # create subdir to store Bacteria fastas
-            out_euk_subdir = output_dir.joinpath(sample+"_"+level_Eukaryota+"_Eukaryota")
-            out_euk_subdir.mkdir(exist_ok=True)  # create subdir to store Eukaryota fastas
+            out_bac_subdir = output_dir.joinpath(
+                sample + "_" + level_Bacteria + "_Bacteria"
+            )
+            out_bac_subdir.mkdir(
+                exist_ok=True
+            )  # create subdir to store Bacteria fastas
+            out_euk_subdir = output_dir.joinpath(
+                sample + "_" + level_Eukaryota + "_Eukaryota"
+            )
+            out_euk_subdir.mkdir(
+                exist_ok=True
+            )  # create subdir to store Eukaryota fastas
             blob_sub = blob_dir.joinpath(sample)
             blob_table = None
             for child in blob_sub.iterdir():
@@ -256,7 +275,16 @@ def tools_split(
             if ko_exist:
                 ko_file = kofam_dir.joinpath(sample + "_KOs_mapper.txt")
             # perform split
-            real_split(fa,blob_table, level_Bacteria, level_Eukaryota, out_bac_subdir, out_euk_subdir, gff, ko_file)
+            real_split(
+                fa,
+                blob_table,
+                level_Bacteria,
+                level_Eukaryota,
+                out_bac_subdir,
+                out_euk_subdir,
+                gff,
+                ko_file,
+            )
         typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
 
 

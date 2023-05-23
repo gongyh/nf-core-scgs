@@ -11,24 +11,26 @@ if len(sys.argv) < 3:
     print("Usage: python kmer_tsne.py 4mer.hdf5 out_tsne.tsv [8]")
     exit(0)
 
-kmer_hdf = sys.argv[1] # from kPAL count
-outfile = sys.argv[2] # e.g. tsne.tsv
+kmer_hdf = sys.argv[1]  # from kPAL count
+outfile = sys.argv[2]  # e.g. tsne.tsv
 
 cores = 8
 if len(sys.argv) >= 4:
-    cores = sys.argv[3] # cpu threads
+    cores = sys.argv[3]  # cpu threads
 
 ## 1. first read h5 and convert to matrix
-f = h5py.File(kmer_hdf, 'r')
-fp = f['profiles']
+f = h5py.File(kmer_hdf, "r")
+fp = f["profiles"]
 ctgs = fp.keys()
 total = len(ctgs)
 profile = np.ones((total, 256), dtype=np.float)
 i = 0
 for ctg in ctgs:
     raw = fp[ctg][:]
-    norm = raw*256.0/sum(raw)
-    profile[i, ] = norm
+    norm = raw * 256.0 / sum(raw)
+    profile[
+        i,
+    ] = norm
     i = i + 1
 
 ## 2. Run t-SNE
@@ -57,6 +59,5 @@ embedding2 = embedding1.optimize(n_iter=750, exaggeration=1, momentum=0.8)
 embedding_multiscale = embedding2.view(np.ndarray)
 
 ## 3. Save matrix
-df = pd.DataFrame(embedding_multiscale, columns=['Dim1','Dim2'], index=ctgs)
-df.to_csv(outfile, sep='\t', float_format='%.3f')
-
+df = pd.DataFrame(embedding_multiscale, columns=["Dim1", "Dim2"], index=ctgs)
+df.to_csv(outfile, sep="\t", float_format="%.3f")

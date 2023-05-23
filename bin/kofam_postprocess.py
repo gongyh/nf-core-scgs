@@ -2,7 +2,7 @@
 
 import sys
 
-if len(sys.argv)!=3:
+if len(sys.argv) != 3:
     print("Usage: python3 kofam_postprocess.py ko_KO.txt test_KOs_mapper.txt")
     exit(0)
 
@@ -23,15 +23,14 @@ with open(mapper) as fh:
             header -= 1
             continue
         cl = line.strip().split("\t")
-        if len(cl)==1:
+        if len(cl) == 1:
             continue
         gene = cl[0]
         KO = cl[1]
         detail = KO_dict[KO].split("\t")
         ko = "ko" + detail[0]
-        pathway_detail = ko +" "+ detail[1].split(" [")[0]
+        pathway_detail = ko + " " + detail[1].split(" [")[0]
         KO_details = detail[3].split("; ")
-        KO_detail = detail[2]+" "+KO_details[0]
+        KO_detail = detail[2] + " " + KO_details[0]
         KO_definition = KO_details[1]
-        print(gene+"\t"+pathway_detail+"\t"+KO_detail+"\t"+KO_definition)
-
+        print(gene + "\t" + pathway_detail + "\t" + KO_detail + "\t" + KO_definition)
