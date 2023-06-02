@@ -8,7 +8,6 @@
     https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
-nextflow.enable.dsl=2
 
 def helpMessage() {
     log.info nfcoreHeader()
@@ -481,7 +480,7 @@ process fastqc {
         saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
 
     input:
-    tuple val(name), file(reads) from read_files_fastqc
+    set val(name), file(reads) from read_files_fastqc
 
     output:
     file "*_fastqc.{zip,html}" into fastqc_results1, fastqc_results2
