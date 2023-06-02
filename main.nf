@@ -8,7 +8,7 @@
     https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
-
+nextflow.enable.dsl=2
 
 def helpMessage() {
     log.info nfcoreHeader()
@@ -62,7 +62,7 @@ def helpMessage() {
     --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1 (or single-end reads)
     --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2 (paired-end reads only)
     --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1 AFTER adapter/quality trimming has been performed
-    --three_prime_clip_r2 [int]   Instructs Trim Galore to re move bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed
+    --three_prime_clip_r2 [int]   Instructs Trim Galore to remove bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed
 
     Mapping options:
     --allow_multi_align           Secondary alignments and unmapped reads are also reported in addition to primary alignments
@@ -481,7 +481,7 @@ process fastqc {
         saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
 
     input:
-    set val(name), file(reads) from read_files_fastqc
+    tuple val(name), file(reads) from read_files_fastqc
 
     output:
     file "*_fastqc.{zip,html}" into fastqc_results1, fastqc_results2
@@ -1139,8 +1139,8 @@ process prepare_bowtie2_remap {
     output:
     file "${prefix}Bowtie2Index" into remap_bowtie2_index
 
-        when:
-        params.remap
+    when:
+    params.remap
 
     script:
     prefix = contigs.toString() - ~/(\.ctg200\.fasta?)(\.ctgs\.fasta)?(\.ctgs)?(\.ctg200)?(\.fasta)?(\.fa)?$/
