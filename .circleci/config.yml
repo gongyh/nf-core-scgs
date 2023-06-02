@@ -12,6 +12,7 @@ jobs:
           command: |
             mkdir -p tests && cd tests
             nextflow run ../ -profile test
+            nextflow run ../main_v2.nf -profile test
           no_output_timeout: 30m
       - store_artifacts:
           path: /root/project/tests/result/pipeline_info
