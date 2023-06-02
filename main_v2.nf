@@ -371,7 +371,6 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
 }
 
 
-include { GET_SOFTWARE_VERSIONS } from './modules/local/get_versions'
 include { SAVE_REFERENCE        } from './modules/local/save_reference'
 include { BOWTIE2_BUILD         } from './modules/local/bowtie2/build/main'
 include { FASTQC                } from './modules/local/fastqc/main'
@@ -420,8 +419,11 @@ include { OUTPUT_DOCUMENTATION  } from './modules/local/output_documentation'
 
 
 workflow {
-    GET_SOFTWARE_VERSIONS()
+    ch_versions = Channel.empty()
+
+    // FASTQC
     FASTQC(read_files_fastqc)
+    ch_versions = ch_versions.mix(FASTQC.out.version.first().ifEmpty(null))
 
     if (params.fasta && params.gff) {
         SAVE_REFERENCE(fasta, gff)
@@ -447,6 +449,7 @@ workflow {
         TRIMGALORE(read_files_trimming, single_end)
         trimmed_reads = TRIMGALORE.out.trimmed_reads
     }
+    ch_versions = ch_software_versions.mix(TRIMGALORE.out.version.first().ifEmpty(null))
 
     // KRAKEN
     if (params.kraken_db) {
@@ -550,13 +553,32 @@ workflow {
         EUKCC(faa, eukcc_db)
     }
 
+    GET_SOFTWARE_VERSIONS (
+        ch_software_versions.map { it }.collect()
+    )
+
+    //
+    // MODULE: Pipeline reporting
+    //
+    ch_versions
+        .map { it -> if (it) [ it.baseName, it ] }
+        .groupTuple()
+        .map { it[1][0] }
+        .flatten()
+        .collect()
+        .set { ch_versions }
+
+    GET_SOFTWARE_VERSIONS (
+        ch_versions.map { it }.collect()
+    )
+
     // MULTIQC
     preseq_for_multiqc = file('/dev/null')
 
     MULTIQC_REF(
                 ch_multiqc_config1,
                 FASTQC.out.result.collect(),
-                GET_SOFTWARE_VERSIONS.out.versions,
+                GET_SOFTWARE_VERSIONS.out.yaml.collect(),
                 TRIMGALORE.out.results.collect(),
                 TRIMGALORE.out.reports.collect(),
                 SAMTOOLS.out.stats.collect(),
@@ -570,7 +592,7 @@ workflow {
     MULTIQC_DENOVO(
                 ch_multiqc_config2,
                 FASTQC.out.result.collect(),
-                GET_SOFTWARE_VERSIONS.out.versions,
+                GET_SOFTWARE_VERSIONS.out.yaml.collect(),
                 TRIMGALORE.out.results.collect(),
                 TRIMGALORE.out.reports.collect(),
                 quast_denovo.ifEmpty('/dev/null'),
@@ -613,6 +635,7 @@ workflow {
             KOFAM.out.txt.collect()
         )
     }
+
     OUTPUT_DOCUMENTATION(ch_output_docs)
 
 }

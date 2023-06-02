@@ -22,6 +22,7 @@ process TRIMGALORE {
     path("*.fq.gz"),                      emit: trimmed_reads
     path("*trimming_report.txt"),         emit: results
     path("*_fastqc.{zip,html}"),          emit: reports
+    path "*.version.txt",                 emit: version
 
     script:
     def c_r1 = params.clip_r1 > 0 ? "--clip_r1 ${params.clip_r1}" : ''
