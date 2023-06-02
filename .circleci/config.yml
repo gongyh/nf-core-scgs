@@ -17,7 +17,8 @@ jobs:
           name: test2
           command: |
             mkdir -p tests && cd tests
-            NXF_VER=23.04.1 nextflow run ../main_v2.nf -profile test
+            mamba install -c bioconda -c conda-forge -y nextflow=22.10
+            nextflow run ../main_v2.nf -profile test
           no_output_timeout: 30m
       - store_artifacts:
           path: /root/project/tests/result/pipeline_info
