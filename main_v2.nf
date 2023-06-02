@@ -508,7 +508,7 @@ workflow {
     }
 
     // QUAST
-		quast_denovo = Channel.empty()
+    quast_denovo = Channel.empty()
     if (denovo == false) {
         QUAST_REF(fasta, gff, ctg, SAMTOOLS.out.bam.collect(), SAMTOOLS.out.bai.collect(), euk)
     } else {
@@ -568,16 +568,16 @@ workflow {
                 create_workflow_summary(summary)
                 )
     MULTIQC_DENOVO(
-                  ch_multiqc_config2,
-                  FASTQC.out.result.collect(),
-                  GET_SOFTWARE_VERSIONS.out.versions,
-                  TRIMGALORE.out.results.collect(),
-                  TRIMGALORE.out.reports.collect(),
-                  quast_denovo.ifEmpty('/dev/null'),
-                  prokka_for_mqc2.collect(),
-                  KRAKEN.out.report.collect(),
-                  create_workflow_summary(summary)
-                  )
+                ch_multiqc_config2,
+                FASTQC.out.result.collect(),
+                GET_SOFTWARE_VERSIONS.out.versions,
+                TRIMGALORE.out.results.collect(),
+                TRIMGALORE.out.reports.collect(),
+                quast_denovo.ifEmpty('/dev/null'),
+                prokka_for_mqc2.collect(),
+                KRAKEN.out.report.collect(),
+                create_workflow_summary(summary)
+                )
 
     if (params.eggnog) {
         EGGNOG(faa, eggnog_db)

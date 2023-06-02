@@ -10,9 +10,9 @@ process REBLOBTOOLS {
     path bam
 
     output:
-    path("${prefix}/${prefix}.blobDB*table.txt") 
-    path("${contigs}") 
-    path("${prefix}") 
+    path("${prefix}/${prefix}.blobDB*table.txt")
+    path("${contigs}")
+    path("${prefix}")
 
     when:
     params.remap
