@@ -13,7 +13,7 @@ process NORMALIZE {
 
     script:
     prefix = clean_reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
-    def R1 = clean_reads[0].toString()
+    R1 = clean_reads[0].toString()
     def mode = params.bulk ? "bulk" : "mda"
     if (single_end) {
     """
@@ -24,7 +24,7 @@ process NORMALIZE {
     fi
     """
     } else {
-    def R2 = clean_reads[1].toString()
+    R2 = clean_reads[1].toString()
     """
     if [ \"${mode}\" == \"bulk\" ]; then
     ln -s $R1 ${prefix}_norm_R1.fastq.gz

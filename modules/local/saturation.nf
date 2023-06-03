@@ -15,7 +15,7 @@ process SATURATION {
 
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    def R1 = reads[0].toString()
+    R1 = reads[0].toString()
     if (single_end) {
     """
     fastp -i $R1 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
@@ -34,7 +34,7 @@ process SATURATION {
     KmerDensity.R \$PWD ${prefix}
     """
     } else {
-    def R2 = reads[1].toString()
+    R2 = reads[1].toString()
     """
     fastp -i $R1 -I $R2 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split_R1.fq.gz -O ${prefix}_split_R2.fq.gz
     for i in {1..10}; do

@@ -22,14 +22,14 @@ process BOWTIE2_ALIGN {
 
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    def filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
-    def R1 = reads[0].toString()
+    filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
+    R1 = reads[0].toString()
     if (single_end) {
     """
     bowtie2 -x ${index}/genome -p ${task.cpus} -U $R1 | samtools view -bT $index - $filtering > ${prefix}.bam
     """
     } else {
-    def R2 = reads[1].toString()
+    R2 = reads[1].toString()
     """
     bowtie2 --no-mixed --no-discordant -X 1000 -x ${index}/genome -p ${task.cpus} -1 $R1 -2 $R2 | samtools view -bT $index - $filtering > ${prefix}.bam
     """

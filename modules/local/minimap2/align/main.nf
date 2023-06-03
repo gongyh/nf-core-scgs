@@ -22,8 +22,8 @@ process MINIMAP2_ALIGN {
 
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    def filtering = params.allow_multi_align ? '' : "-F 256"
-    def R1 = reads[0].toString()
+    filtering = params.allow_multi_align ? '' : "-F 256"
+    R1 = reads[0].toString()
     """
     minimap2 -x map-ont -a $fasta $R1 | samtools view -b -q 40 -F 4 $filtering - > ${prefix}.bam
     """

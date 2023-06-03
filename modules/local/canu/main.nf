@@ -20,7 +20,7 @@ process CANU {
 
     script:
     prefix = clean_reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
-    def R1 = clean_reads[0].toString()
+    R1 = clean_reads[0].toString()
     def mode = params.bulk ? "bulk" : "mda"
     """
     if [ \"${mode}\" == \"bulk\" ]; then

@@ -15,7 +15,7 @@ process SPADES {
 
     script:
     prefix = clean_reads[0].toString() - ~/(_trimmed)?(_norm)?(_combined)?(\.R1)?(_1)?(_R1)?(\.1_val_1)?(_1_val_1)?(_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?(\.bz2)?$/
-    def R1 = clean_reads[0].toString()
+    R1 = clean_reads[0].toString()
     def mode = params.bulk ? "bulk" : "mda"
     if (single_end) {
     """
@@ -29,7 +29,7 @@ process SPADES {
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
     """
     } else {
-    def R2 = clean_reads[1].toString()
+    R2 = clean_reads[1].toString()
     """
     if [ \"${mode}\" == \"bulk\" ]; then
     spades.py -1 $R1 -2 $R2 --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out

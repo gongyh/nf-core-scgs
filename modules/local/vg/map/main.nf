@@ -20,7 +20,7 @@ process VG_MAP {
 
     script:
     prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    def R1 = reads[0].toString()
+    R1 = reads[0].toString()
     if (single_end) {
     """
     vg index -x graph.xg -g graph.gcsa -k 16 ${vg}
@@ -28,7 +28,7 @@ process VG_MAP {
     vg stats -z -a ${prefix}.gam ${vg} > stats.txt
     """
     } else {
-    def R2 = reads[1].toString()
+    R2 = reads[1].toString()
     """
     vg index -t ${task.cpus} -x graph.xg -g graph.gcsa -k 16 ${vg}
     vg map -t ${task.cpus} -w 1024 -f $R1 $R2 -x graph.xg -g graph.gcsa > ${prefix}.gam
