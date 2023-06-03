@@ -1,24 +1,26 @@
 version: 2.0
 jobs:
   build:
-    docker:
-      - image: quay.io/gongyh/nf-core-scgs:v1.2
+    machine:
+      image: ubuntu-2204:2023.04.2
+      resource_class: large
+      docker_layer_caching: true
     environment:
       - GIT_LFS_SKIP_SMUDGE: 1
     steps:
       - checkout
       - run:
-          name: test1
+          name: install
           command: |
-            mkdir -p tests && cd tests
-            nextflow run ../ -profile test
-          no_output_timeout: 30m
+            apt-get update && apt-get install openjdk-11-jdk -y
+            curl -s https://get.nextflow.io | bash && chmod +x nextflow
+      - run: apt list --installed
       - run:
-          name: test2
+          name: test
           command: |
             mkdir -p tests && cd tests
-            mamba install -c bioconda -c conda-forge -y nextflow=22.10
-            /opt/conda/bin/nextflow run ../main_v2.nf -profile test
+            ../nextflow run ../main.nf -profile test,docker
+            ../nextflow run ../main_v2.nf -profile test,docker
           no_output_timeout: 30m
       - store_artifacts:
           path: /root/project/tests/result/pipeline_info
