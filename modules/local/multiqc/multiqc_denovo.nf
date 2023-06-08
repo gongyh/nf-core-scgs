@@ -5,9 +5,8 @@ process MULTIQC_DENOVO {
     input:
     path multiqc_config
     path('fastqc/*')
-    path('software_versions/*')
     path('trimgalore/*')
-    path('fastqc2/*')
+    path('software_versions/*')
     path('quast/*')
     path('prokka/*')
     path('kraken/*')

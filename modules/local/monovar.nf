@@ -9,7 +9,7 @@ process MONOVAR {
     path fa
 
     output:
-    path('monovar.vcf'),                     emit: vcf
+    path('monovar.vcf'),  emit: vcf
 
     when:
     !params.bulk && params.snv && !params.nanopore

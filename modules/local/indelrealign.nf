@@ -1,22 +1,22 @@
 process INDELREALIGN {
-    tag "${prefix}"
+    tag "${meta.id}"
     label 'process_single'
     publishDir "${pp_outdir}", mode: 'copy'
 
     input:
-    path bam
+    tuple val(meta), path(bam)
     path fa
 
     output:
-    path('*.realign.bam'),                           emit: bam
-    path('*.realign.bam.bai'),                       emit: bai
+    tuple val(meta), path("*.realign.bam"),         emit: bam
+    tuple val(meta), path("*.realign.bam.bai"),     emit: bai
 
     when:
     params.snv && !params.nanopore
 
     script:
     pp_outdir = "${params.outdir}/gatk"
-    prefix = bam.toString() - ~/(\.markdup\.bam)?(\.markdup)?(\.bam)?$/
+    def prefix   = task.ext.prefix ?: "${meta.id}"
     """
     samtools faidx $fa
     picard CreateSequenceDictionary R=$fa

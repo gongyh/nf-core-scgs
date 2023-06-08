@@ -162,6 +162,7 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
 if ( params.fasta ){
     fasta = file(params.fasta)
+    ref = params.fasta - ~/(\.fasta)?(\.fna)?(\.fa)?$/
     if( !fasta.exists() ) exit 1, "Fasta file not found: ${params.fasta}"
 }
 //
@@ -294,22 +295,45 @@ params.three_prime_clip_r2 = 0
 denovo = (params.genome && params.genomes[ params.genome ].bowtie2) || params.fasta ? false : true
 bowtie2 = params.genome ? params.genomes[ params.genome ].bowtie2 ?: false : false
 
+
 /*
  * Create a channel for input read files
  */
 if(params.readPaths){
     if(single_end){
-        read_files_fastqc = read_files_trimming = Channel
-            .fromPath(params.readPaths, checkIfExists: true)
-            .map { row -> [ row[0], [file(row[1][0])]] }
+        read_files_fastqc = read_files_trimming =
+        Channel.fromPath(params.readPaths, checkIfExists: true)
+            .map { it ->
+                    def meta = [:];
+                    meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                    meta.single_end = true;
+                    [meta, [file(it[1][0])]]}
     } else {
-        read_files_fastqc = read_files_trimming = Channel
-            .fromPath(params.readPaths, checkIfExists: true)
-            .map { row -> [ row[0], [file(row[1][0]), file(row[1][1])]] }
+        read_files_fastqc = read_files_trimming =
+        Channel.fromPath(params.readPaths, checkIfExists: true)
+            .map { it ->
+                def meta = [:]; meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');meta.single_end = false
+                [meta, [file(it[1][0]), file(it[1][1])]]}
     }
 } else {
-    read_files_fastqc = read_files_trimming = Channel
-        .fromFilePairs( params.reads, size: single_end ? 1 : 2, checkIfExists: true)
+    if (single_end) {
+        read_files_fastqc = read_files_trimming =
+        Channel.fromFilePairs( params.reads, size:1, checkIfExists: true)
+            .map { it ->
+                def meta = [:];
+                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                meta.single_end = single_end;
+                [meta, [file(it[1][0])]]}
+
+        } else {
+            read_files_fastqc = read_files_trimming =
+            Channel.fromFilePairs( params.reads, size:2, checkIfExists: true)
+                .map { it ->
+                    def meta = [:];
+                    meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                    meta.single_end = single_end;
+                    [meta, [file(it[1][0]), file(it[1][1])]]}
+        }
 }
 
 // Header log info
@@ -370,32 +394,35 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
     return yaml_file
 }
 
+// Import modules from nf-core
+include { FASTQC                } from './modules/nf-core/fastqc/main'
+include { TRIMGALORE            } from './modules/nf-core/trimgalore/main'
+include { BOWTIE2_BUILD         } from './modules/nf-core/bowtie2/build/main'
+include { BOWTIE2_ALIGN         } from './modules/nf-core/bowtie2/align/main'
+include { MINIMAP2_ALIGN        } from './modules/nf-core/minimap2/align/main'
+include { VG_CONSTRUCT          } from './modules/nf-core/vg/construct/main'
+include { VG_INDEX              } from './modules/nf-core/vg/index/main'
+include { QUALIMAP_BAMQC        } from './modules/nf-core/qualimap/bamqc/main'
 
+// Import modules from local
+// include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions'
 include { SAVE_REFERENCE        } from './modules/local/save_reference'
-include { BOWTIE2_BUILD         } from './modules/local/bowtie2/build/main'
-include { FASTQC                } from './modules/local/fastqc/main'
-include { TRIMGALORE            } from './modules/local/trimgalore/main'
 include { KRAKEN                } from './modules/local/kraken'
 include { SATURATION            } from './modules/local/saturation'
-include { MINIMAP2_ALIGN        } from './modules/local/minimap2/align/main'
-include { BOWTIE2_ALIGN         } from './modules/local/bowtie2/align/main'
-include { VG_CONSTRUCT          } from './modules/local/vg/construct/main'
-include { VG_MAP                } from './modules/local/vg/map/main'
-include { VG_CALL               } from './modules/local/vg/call/main'
-include { SAMTOOLS              } from './modules/local/samtools/main'
-include { PRESEQ                } from './modules/local/preseq/main'
-include { QUALIMAP              } from './modules/local/qualimap/bamqc/main'
+include { VG_CALL               } from './modules/local/vg_call'
+include { SAMTOOLS              } from './modules/local/samtools'
+include { PRESEQ                } from './modules/local/preseq'
 include { INDELREALIGN          } from './modules/local/indelrealign'
 include { MONOVAR               } from './modules/local/monovar'
 include { ANEUFINDER            } from './modules/local/aneufinder'
 include { CIRCLIZE              } from './modules/local/circlize'
 include { NORMALIZE             } from './modules/local/normalize'
-include { CANU                  } from './modules/local/canu/main'
+include { CANU                  } from './modules/local/canu'
 include { SPADES                } from './modules/local/spades'
 include { BOWTIE2_REMAP         } from './modules/local/bowtie2_remap'
 include { REMAP                 } from './modules/local/remap'
-include { QUAST_REF             } from './modules/local/quast/quast_ref/main'
-include { QUAST_DENOVO          } from './modules/local/quast/quast_denovo/main'
+include { QUAST_REF             } from './modules/local/quast_ref'
+include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 include { CHECKM_LINEAGEWF      } from './modules/local/checkm/lineagewf/main'
 include { BLASTN                } from './modules/local/blastn'
 include { DIAMOND_BLASTX        } from './modules/local/diamond/blastx/main'
@@ -423,22 +450,22 @@ workflow {
 
     // FASTQC
     FASTQC(read_files_fastqc)
-    ch_versions = ch_versions.mix(FASTQC.out.version.first().ifEmpty(null))
+    ch_versions = ch_versions.mix(FASTQC.out.versions.first().ifEmpty(null))
 
     if (params.fasta && params.gff) {
         SAVE_REFERENCE(fasta, gff)
     }
 
     if (bowtie2) {
-        bowtie2_index = file(bowtie2)
+        bowtie2_index = [bowtie2, file(bowtie2)]
     } else {
         if (params.fasta) {
-            BOWTIE2_BUILD(fasta)
-            bowtie2_index = BOWTIE2_BUILD.out.bowtie2_index
+            BOWTIE2_BUILD([ref, fasta])
+            bowtie2_index = BOWTIE2_BUILD.out.index
         }
     }
     // TRIM_GALORE
-    trimmed_reads = Channel.empty()
+		trimmed_reads = Channel.empty()
     if (params.notrim) {
         trimmed_reads = read_files_trimming.map {name, reads -> reads}
         trimgalore_results1 = file('/dev/null')
@@ -446,41 +473,48 @@ workflow {
         trimgalore_fastqc_reports1 = file('/dev/null')
         trimgalore_fastqc_reports2 = file('/dev/null')
     } else {
-        TRIMGALORE(read_files_trimming, single_end)
-        trimmed_reads = TRIMGALORE.out.trimmed_reads
+        TRIMGALORE(read_files_trimming)
+        trimmed_reads = TRIMGALORE.out.reads
     }
-    ch_versions = ch_software_versions.mix(TRIMGALORE.out.version.first().ifEmpty(null))
+    ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first().ifEmpty(null))
 
     // KRAKEN
     if (params.kraken_db) {
-        KRAKEN(trimmed_reads, kraken_db, single_end)
+        KRAKEN(trimmed_reads, kraken_db)
     }
-    SATURATION(trimmed_reads, single_end)
+    SATURATION(trimmed_reads)
 
     // ALIGN
     if (denovo == false) {
         bb_bam = Channel.empty()
         if (params.nanopore) {
-            MINIMAP2_ALIGN(trimmed_reads, fasta)
+            MINIMAP2_ALIGN(trimmed_reads,
+                            fasta,
+                            true,
+                            false,
+                            false)
+            MINIMAP2_ALIGN.out.bam
+                        .set { bb_bam }
         } else {
-            BOWTIE2_ALIGN(trimmed_reads, bowtie2_index, single_end)
+            BOWTIE2_ALIGN(trimmed_reads,
+                            bowtie2_index,
+                            false,
+                            true)
+            BOWTIE2_ALIGN.out.bam
+                        .set { bb_bam }
         }
     }
 
     // VG
-    if (params.vcf) {
-        VG_CONSTRUCT(fasta, vcf)
-        VG_MAP(VG_CONSTRUCT.out.vg, trimmed_reads, single_end)
-        VG_CALL(VG_CONSTRUCT.out.vg, VG_MAP.out.gam)
-    }
+
 
     if (params.fasta && params.gff) {
         SAMTOOLS(bb_bam, SAVE_REFERENCE.out.bed)
-        PRESEQ(SAMTOOLS.out.bed, single_end)
-        QUALIMAP(SAMTOOLS.out.bam.collect(), SAMTOOLS.out.bai.collect(), gff)
+        PRESEQ(SAMTOOLS.out.bed)
+        QUALIMAP_BAMQC(SAMTOOLS.out.bam , gff)
         INDELREALIGN(SAMTOOLS.out.bam, fasta)
-        MONOVAR(INDELREALIGN.out.bam.collect(), INDELREALIGN.out.bai.collect(), fasta)
-        ANEUFINDER(SAMTOOLS.out.bam.collect(), SAMTOOLS.out.bai.collect())
+        MONOVAR(INDELREALIGN.out.bam.map { meta,bam -> return bam}.collect(), INDELREALIGN.out.bai.map {meta, bai -> return bai}.collect(), fasta)
+        ANEUFINDER(SAMTOOLS.out.bam.map { meta,bam -> return bam}.collect(), SAMTOOLS.out.bai.map {meta, bai -> return bai}.collect())
         CIRCLIZE(SAMTOOLS.out.bed, SAVE_REFERENCE.out.bed)
     }
 
@@ -491,13 +525,13 @@ workflow {
         trimmed_reads.set { normalized_reads }
     } else {
         if (params.ass) {
-            NORMALIZE(trimmed_reads, single_end)
+            NORMALIZE(trimmed_reads)
             if (params.nanopore) {
                 CANU(NORMALIZE.out.reads)
                 ctg200 = CANU.out.ctg200
                 ctg = CANU.out.ctg
             } else {
-                SPADES(NORMALIZE.out.reads, single_end)
+                SPADES(NORMALIZE.out.reads)
                 ctg200 = SPADES.out.ctg200
                 ctg = SPADES.out.ctg
             }
@@ -507,7 +541,7 @@ workflow {
     // REMAP
     if (params.remap) {
         BOWTIE2_REMAP(ctg200)
-        REMAP(trimmed_reads, BOWTIE2_REMAP.out.index.collet(), single_end)
+        REMAP(trimmed_reads, BOWTIE2_REMAP.out.index.collet())
     }
 
     // QUAST
@@ -519,6 +553,7 @@ workflow {
         quast_denovo = QUAST_DENOVO.out.report
     }
 
+    /**
     // CHECKM
     if (!params.euk) {
         CHECKM_LINEAGEWF(ctg.collect())
@@ -553,13 +588,6 @@ workflow {
         EUKCC(faa, eukcc_db)
     }
 
-    GET_SOFTWARE_VERSIONS (
-        ch_software_versions.map { it }.collect()
-    )
-
-    //
-    // MODULE: Pipeline reporting
-    //
     ch_versions
         .map { it -> if (it) [ it.baseName, it ] }
         .groupTuple()
@@ -577,13 +605,12 @@ workflow {
 
     MULTIQC_REF(
                 ch_multiqc_config1,
-                FASTQC.out.result.collect(),
+                FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
+                TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
                 GET_SOFTWARE_VERSIONS.out.yaml.collect(),
-                TRIMGALORE.out.results.collect(),
-                TRIMGALORE.out.reports.collect(),
                 SAMTOOLS.out.stats.collect(),
                 preseq_for_multiqc.collect(),
-                QUALIMAP.out.qualimap,
+                QUALIMAP_BAMQC.out.results,
                 QUAST_REF.out.report,
                 prokka_for_mqc1.collect(),
                 KRAKEN.out.report.collect(),
@@ -591,10 +618,9 @@ workflow {
                 )
     MULTIQC_DENOVO(
                 ch_multiqc_config2,
-                FASTQC.out.result.collect(),
+                FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
+                TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
                 GET_SOFTWARE_VERSIONS.out.yaml.collect(),
-                TRIMGALORE.out.results.collect(),
-                TRIMGALORE.out.reports.collect(),
                 quast_denovo.ifEmpty('/dev/null'),
                 prokka_for_mqc2.collect(),
                 KRAKEN.out.report.collect(),
@@ -637,6 +663,7 @@ workflow {
     }
 
     OUTPUT_DOCUMENTATION(ch_output_docs)
+    */
 
 }
 
@@ -746,7 +773,6 @@ workflow.onComplete {
     }
 
 }
-
 
 def nfcoreHeader(){
     // Log colors ANSI codes

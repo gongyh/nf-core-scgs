@@ -1,10 +1,9 @@
 process SATURATION {
-    tag { $prefix }
+    tag "${meta.id}"
     publishDir path: "${params.outdir}/saturation", mode: 'copy'
 
     input:
-    path(reads)
-    val(single_end)
+    tuple val(meta), path(reads)
 
     output:
     path("${prefix}_kmer.pdf")
@@ -14,11 +13,10 @@ process SATURATION {
     params.saturation
 
     script:
-    prefix = reads[0].toString() - ~/(\.R1)?(_1)?(_R1)?(_trimmed)?(_combined)?(\.1_val_1)?(_1_val_1)?(_R1_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
-    R1 = reads[0].toString()
-    if (single_end) {
+    prefix = task.ext.prefix ?: "${meta.id}"
+    if (meta.single_end) {
     """
-    fastp -i $R1 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
+    fastp -i ${reads[0]} -A -G -Q -L -s 10 -d 0 -o ${prefix}_split.fq.gz
     for i in {1..10}; do
     mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
         --seq \${i}.${prefix}_split.fq.gz \${i}.k31.ctx
@@ -34,9 +32,8 @@ process SATURATION {
     KmerDensity.R \$PWD ${prefix}
     """
     } else {
-    R2 = reads[1].toString()
     """
-    fastp -i $R1 -I $R2 -A -G -Q -L -s 10 -d 0 -o ${prefix}_split_R1.fq.gz -O ${prefix}_split_R2.fq.gz
+    fastp -i ${reads[0]} -I ${reads[1]} -A -G -Q -L -s 10 -d 0 -o ${prefix}_split_R1.fq.gz -O ${prefix}_split_R2.fq.gz
     for i in {1..10}; do
     mccortex31 build --kmer 31 --sample \$i -t ${task.cpus} -Q 20 -m 8G \
         --seq2 \${i}.${prefix}_split_R1.fq.gz:\${i}.${prefix}_split_R2.fq.gz \${i}.k31.ctx

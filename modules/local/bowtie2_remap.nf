@@ -1,18 +1,18 @@
 process BOWTIE2_REMAP {
-    tag "${prefix}"
+    tag "${meta.id}"
     publishDir "${params.outdir}/remap_bowtie2_index", mode: 'copy'
 
     input:
-    path contigs
+    tuple val(meta), path(contigs)
 
     output:
-    path("${prefix}Bowtie2Index"),                 emit: index
+    tuple val(meta), path("${prefix}Bowtie2Index"),    emit: index
 
     when:
     params.remap
 
     script:
-    prefix = contigs.toString() - ~/(\.ctg200\.fasta?)(\.ctgs\.fasta)?(\.ctgs)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}Bowtie2Index; cd ${prefix}Bowtie2Index
     ln -s ../${contigs} ${prefix}.fa

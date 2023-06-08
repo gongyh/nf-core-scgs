@@ -6,7 +6,7 @@ process ANEUFINDER {
     path("bams/*")
 
     output:
-    path('CNV_output'),                     emit: cnv
+    path('CNV_output'),  emit: cnv
 
     when:
     !params.bulk && params.cnv && !single_end && !params.nanopore
