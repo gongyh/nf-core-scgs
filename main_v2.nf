@@ -304,7 +304,7 @@ if(params.readPaths){
         read_files_fastqc = read_files_trimming =
         Channel.from(params.readPaths, checkIfExists: true)
             .map { row -> def meta=[:];
-                    meta.id = row[0].replaceFirst(~/\.[^\.]+$/, '');
+                    meta.id = row[0];
                     meta.single_end = single_end;
                     [meta, [file(row[1][0]), file(row[1][1])]]}
             .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
@@ -312,7 +312,7 @@ if(params.readPaths){
         read_files_fastqc = read_files_trimming =
         Channel.from(params.readPaths)
             .map { row -> def meta=[:];
-                    meta.id = row[0].replaceFirst(~/\.[^\.]+$/, '');
+                    meta.id = row[0];
                     meta.single_end = single_end;
                     [meta, [file(row[1][0]), file(row[1][1])]]}
             .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
