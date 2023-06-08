@@ -465,7 +465,7 @@ workflow {
         }
     }
     // TRIM_GALORE
-		trimmed_reads = Channel.empty()
+    trimmed_reads = Channel.empty()
     if (params.notrim) {
         trimmed_reads = read_files_trimming.map {name, reads -> reads}
         trimgalore_results1 = file('/dev/null')
