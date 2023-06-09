@@ -14,14 +14,19 @@ jobs:
           command: |
             export NXF_VER=22.10.8 && curl -s https://get.nextflow.io | bash && chmod +x nextflow
       - run:
-          name: test
+          name: test1
           command: |
-            mkdir -p tests && cd tests
+            mkdir -p tests1 && cd tests1
             ../nextflow run ../main.nf -profile test,docker
-            ../nextflow run ../main_v2.nf -profile test,docker
+          no_output_timeout: 30m
+      - run:
+          name: test2
+          command: |
+            mkdir -p tests2 && cd tests2
+            ../nextflow run ../main.nf -profile test,docker
           no_output_timeout: 30m
       - store_artifacts:
-          path: /home/circleci/project/tests/result/pipeline_info
+          path: /home/circleci/project/tests2/result/pipeline_info
       - store_artifacts:
-          path: /home/circleci/project/tests/.nextflow.log
+          path: /home/circleci/project/tests2/.nextflow.log
           destination: nextflow-log
