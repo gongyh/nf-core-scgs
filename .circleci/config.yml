@@ -23,7 +23,7 @@ jobs:
           name: test2
           command: |
             mkdir -p tests2 && cd tests2
-            ../nextflow run ../main.nf -profile test,docker
+            ../nextflow run ../main_v2.nf -profile test,docker
           no_output_timeout: 30m
       - store_artifacts:
           path: /home/circleci/project/tests2/result/pipeline_info

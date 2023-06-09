@@ -1891,7 +1891,7 @@ workflow.onComplete {
     // Set up the e-mail variables
     def subject = "[gongyh/nf-core-scgs] Successful: $workflow.runName"
     if(!workflow.success){
-    subject = "[gongyh/nf-core-scgs] FAILED: $workflow.runName"
+        subject = "[gongyh/nf-core-scgs] FAILED: $workflow.runName"
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
