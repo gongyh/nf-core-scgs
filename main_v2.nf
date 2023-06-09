@@ -405,6 +405,9 @@ include { MINIMAP2_ALIGN        } from './modules/nf-core/minimap2/align/main'
 include { VG_CONSTRUCT          } from './modules/nf-core/vg/construct/main'
 include { VG_INDEX              } from './modules/nf-core/vg/index/main'
 include { QUALIMAP_BAMQC        } from './modules/nf-core/qualimap/bamqc/main'
+include { CHECKM_LINEAGEWF      } from './modules/nf-core/checkm/lineagewf/main'
+include { QUAST                 } from './modules/nf-core/quast/main'
+
 
 // Import modules from local
 // include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions'
@@ -423,9 +426,9 @@ include { CANU                  } from './modules/local/canu'
 include { SPADES                } from './modules/local/spades'
 include { BOWTIE2_REMAP         } from './modules/local/bowtie2_remap'
 include { REMAP                 } from './modules/local/remap'
-include { QUAST_REF             } from './modules/local/quast_ref'
-include { QUAST_DENOVO          } from './modules/local/quast_denovo'
-include { CHECKM_LINEAGEWF      } from './modules/local/checkm/lineagewf/main'
+// include { QUAST_REF             } from './modules/local/quast_ref'
+// include { QUAST_DENOVO          } from './modules/local/quast_denovo'
+// include { CHECKM_LINEAGEWF      } from './modules/local/checkm_lineagewf/'
 include { BLASTN                } from './modules/local/blastn'
 include { DIAMOND_BLASTX        } from './modules/local/diamond/blastx/main'
 include { BLOBTOOLS             } from './modules/local/blobtools'
@@ -515,7 +518,9 @@ workflow {
         PRESEQ(SAMTOOLS.out.bed)
         QUALIMAP_BAMQC(SAMTOOLS.out.bam , gff)
         INDELREALIGN(SAMTOOLS.out.bam, fasta)
-        MONOVAR(INDELREALIGN.out.bam.map { meta,bam -> return bam}.collect(), INDELREALIGN.out.bai.map {meta, bai -> return bai}.collect(), fasta)
+        MONOVAR(INDELREALIGN.out.bam.map { meta,bam -> return bam}.collect(), INDELREALIGN.out.bai.map {meta, bai -> return bai}
+                            .collect(),
+                            fasta)
         ANEUFINDER(SAMTOOLS.out.bam.map { meta,bam -> return bam}.collect(), SAMTOOLS.out.bai.map {meta, bai -> return bai}.collect())
         CIRCLIZE(SAMTOOLS.out.bed, SAVE_REFERENCE.out.bed)
     }
@@ -547,20 +552,25 @@ workflow {
     }
 
     // QUAST
-    quast_denovo = Channel.empty()
-    if (denovo == false) {
-        QUAST_REF(fasta, gff, ctg, SAMTOOLS.out.bam.collect(), SAMTOOLS.out.bai.collect(), euk)
-    } else {
-        QUAST_DENOVO(ctg, euk)
-        quast_denovo = QUAST_DENOVO.out.report
-    }
+    quast_report = Channel.empty()
+    QUAST(ctg.map { meta,ctg -> return ctg}.collect(),
+        fasta,
+        gff,
+        denovo ? false: true,
+        denovo ? false: true,
+        )
+    quast_report = QUAST.out.tsv
 
-    /**
+
     // CHECKM
     if (!params.euk) {
-        CHECKM_LINEAGEWF(ctg.collect())
+        CHECKM_LINEAGEWF(ctg,
+                        'fasta',
+                        Channel.empty()
+                        )
     }
 
+    /*
     // NT
     if (params.nt_db) {
         BLASTN(ctg200, nt_db)
@@ -666,7 +676,6 @@ workflow {
 
     OUTPUT_DOCUMENTATION(ch_output_docs)
     */
-
 }
 
 /*
