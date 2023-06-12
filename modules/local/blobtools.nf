@@ -2,9 +2,9 @@ process BLOBTOOLS {
     tag "$meta.id"
 
     input:
-    tuple val(meta), path contigs
-    tuple val(meta), path anno
-    tuple val(meta), path uniprot_anno
+    tuple val(meta), path(contigs)
+    tuple val(meta), path(anno)
+    tuple val(meta), path(uniprot_anno)
     val has_uniprot
 
     output:

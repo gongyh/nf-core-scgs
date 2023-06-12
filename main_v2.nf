@@ -405,7 +405,7 @@ include { MINIMAP2_ALIGN        } from './modules/nf-core/minimap2/align/main'
 include { VG_CONSTRUCT          } from './modules/nf-core/vg/construct/main'
 include { VG_INDEX              } from './modules/nf-core/vg/index/main'
 include { QUALIMAP_BAMQC        } from './modules/nf-core/qualimap/bamqc/main'
-include { CHECKM_LINEAGEWF      } from './modules/nf-core/checkm/lineagewf/main'
+//include { CHECKM_LINEAGEWF      } from './modules/nf-core/checkm/lineagewf/main'
 include { QUAST                 } from './modules/nf-core/quast/main'
 
 
@@ -428,7 +428,7 @@ include { BOWTIE2_REMAP         } from './modules/local/bowtie2_remap'
 include { REMAP                 } from './modules/local/remap'
 // include { QUAST_REF             } from './modules/local/quast_ref'
 // include { QUAST_DENOVO          } from './modules/local/quast_denovo'
-// include { CHECKM_LINEAGEWF      } from './modules/local/checkm_lineagewf/'
+include { CHECKM_LINEAGEWF      } from './modules/local/checkm_lineagewf'
 include { BLASTN                } from './modules/local/blastn'
 include { DIAMOND_BLASTX        } from './modules/local/diamond_blastx'
 include { BLOBTOOLS             } from './modules/local/blobtools'
@@ -485,53 +485,77 @@ workflow {
 
     // KRAKEN
     if (params.kraken_db) {
-        KRAKEN(trimmed_reads, kraken_db)
+        KRAKEN(
+            trimmed_reads,
+            kraken_db
+        )
     }
     SATURATION(trimmed_reads)
 
     // ALIGN
     if (denovo == false) {
         bb_bam = Channel.empty()
-        if (params.nanopore) {
-            MINIMAP2_ALIGN(trimmed_reads,
-                            fasta,
-                            true,
-                            false,
-                            false)
+        if ( params.nanopore ) {
+            MINIMAP2_ALIGN (
+                trimmed_reads,
+                fasta,
+                true,
+                false,
+                false
+            )
             MINIMAP2_ALIGN.out.bam
-                        .set { bb_bam }
+                    .set { bb_bam }
         } else {
-            BOWTIE2_ALIGN(trimmed_reads,
-                            bowtie2_index,
-                            false,
-                            true)
+            BOWTIE2_ALIGN (
+                trimmed_reads,
+                bowtie2_index,
+                false,
+                true
+            )
             BOWTIE2_ALIGN.out.bam
-                        .set { bb_bam }
+                    .set { bb_bam }
         }
     }
 
     // VG
 
 
-    if (params.fasta && params.gff) {
-        SAMTOOLS(bb_bam, SAVE_REFERENCE.out.bed)
+    if ( params.fasta && params.gff ) {
+        SAMTOOLS (
+            bb_bam,
+            SAVE_REFERENCE.out.bed
+        )
         PRESEQ(SAMTOOLS.out.bed)
-        QUALIMAP_BAMQC(SAMTOOLS.out.bam , gff)
-        INDELREALIGN(SAMTOOLS.out.bam, fasta)
-        MONOVAR(INDELREALIGN.out.bam.map { meta,bam -> return bam}.collect(), INDELREALIGN.out.bai.map {meta, bai -> return bai}
-                            .collect(),
-                            fasta)
-        ANEUFINDER(SAMTOOLS.out.bam.map { meta,bam -> return bam}.collect(), SAMTOOLS.out.bai.map {meta, bai -> return bai}.collect())
-        CIRCLIZE(SAMTOOLS.out.bed, SAVE_REFERENCE.out.bed)
+        QUALIMAP_BAMQC (
+            SAMTOOLS.out.bam ,
+            gff
+        )
+        INDELREALIGN (
+            SAMTOOLS.out.bam,
+            fasta
+        )
+        MONOVAR (
+            INDELREALIGN.out.bam.map { meta,bam -> return bam}.collect(), INDELREALIGN.out.bai.map {meta, bai -> return bai}
+                .collect(),
+            fasta
+        )
+        ANEUFINDER (
+            SAMTOOLS.out.bam.map { meta,bam -> return bam}.collect(),
+            SAMTOOLS.out.bai.map {meta, bai -> return bai}.collect()
+        )
+        CIRCLIZE (
+            SAMTOOLS.out.bed,
+            SAVE_REFERENCE.out.bed
+        )
     }
 
     // NORMALIZE
     ctg200 = Channel.empty()
     ctg = Channel.empty()
-    if (params.no_normalize) {
+    if ( params.no_normalize ) {
         trimmed_reads.set { normalized_reads }
     } else {
-        if (params.ass) {
+        if ( params.ass ) {
             NORMALIZE(trimmed_reads)
             if (params.nanopore) {
                 CANU(NORMALIZE.out.reads)
@@ -546,56 +570,67 @@ workflow {
     }
 
     // REMAP
-    if (params.remap) {
+    if ( params.remap ) {
         BOWTIE2_REMAP(ctg200)
-        REMAP(trimmed_reads,
-                BOWTIE2_REMAP.out.index.collect()
-                )
+        REMAP (
+            trimmed_reads,
+            BOWTIE2_REMAP.out.index.collect()
+        )
     }
 
     // QUAST
     quast_report = Channel.empty()
-    QUAST(ctg.map { meta,ctg -> return ctg}.collect(),
+    QUAST (
+        ctg.map { meta,ctg -> return ctg}.collect(),
         fasta,
         gff,
         denovo ? false: true,
         denovo ? false: true,
-        )
+    )
     quast_report = QUAST.out.tsv
 
 
     // CHECKM
-    if (!params.euk) {
-        CHECKM_LINEAGEWF(ctg,
-                        'fasta',
-                        Channel.empty()
-                        )
+    if ( !euk ) {
+        CHECKM_LINEAGEWF (
+            ctg.map { meta,ctg -> return ctg}.collect(),
+            params.genus
+        )
     }
 
     // NT
-    if (params.nt_db) {
-        BLASTN(ctg200,
-                nt_db,
-                params.evalue
-                )
-        DIAMOND_BLASTX(BLASTN.out.contigs,
-                        BLASTN.out.nt,
-                        uniprot_db,
-                        uniprot_taxids)
-        BLOBTOOLS(DIAMOND_BLASTX.out.contigs,
-                    DIAMOND_BLASTX.out.nt,
-                    DIAMOND_BLASTX.out.real,
-                    DIAMOND_BLASTX.out.uniprot)
-        if (params.remap) {
-            REBOLBTOOLS(DIAMOND_BLASTX.out.contigs,
-                        DIAMOND_BLASTX.out.nt,
-                        DIAMOND_BLASTX.out.real,
-                        DIAMOND_BLASTX.out.uniprot,
-                        REMAP.out.bam.collect())
+    if ( params.nt_db ) {
+        BLASTN (
+            ctg200,
+            nt_db,
+            params.evalue
+        )
+        DIAMOND_BLASTX (
+            BLASTN.out.contigs,
+            BLASTN.out.nt,
+            uniprot_db,
+            uniprot_taxids
+        )
+        BLOBTOOLS (
+            DIAMOND_BLASTX.out.contigs,
+            DIAMOND_BLASTX.out.nt,
+            DIAMOND_BLASTX.out.uniprot,
+            DIAMOND_BLASTX.out.real
+        )
+        if ( params.remap ) {
+            REBOLBTOOLS (
+                DIAMOND_BLASTX.out.contigs,
+                DIAMOND_BLASTX.out.nt,
+                DIAMOND_BLASTX.out.real,
+                DIAMOND_BLASTX.out.uniprot,
+                REMAP.out.bam.collect()
+            )
         }
-        ACDC(BLOBTOOLS.out.contigs,
-                BLOBTOOLS.out.tax,
-                kraken_db)
+        ACDC (
+            BLOBTOOLS.out.contigs,
+            BLOBTOOLS.out.tax,
+            kraken_db
+        )
     }
 
     /**

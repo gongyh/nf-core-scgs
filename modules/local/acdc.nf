@@ -2,8 +2,8 @@ process ACDC {
     tag "$meta.id"
 
     input:
-    tuple val(meta), path contigs
-    tuple val(meta), path tax
+    tuple val(meta), path(contigs)
+    tuple val(meta), path(tax)
     path db
 
     output:
