@@ -8,8 +8,8 @@ process DIAMOND_BLASTX {
         'biocontainers/diamond:2.0.15--hb97b32f_0' }"
 
     input:
-    tuple val(meta), path contigs
-    tuple val(meta), path nt_out
+    tuple val(meta), path(contigs)
+    tuple val(meta), path(nt_out)
     path uniprot
     path("uniprot.taxids")
 
@@ -23,13 +23,13 @@ process DIAMOND_BLASTX {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ) {
-    def used = false
+    used = false
     """
     touch ${prefix}_uniprot.out
     touch ${prefix}_uniprot.taxified.out
     """
     } else {
-    def used = true
+    used = true
     """
     diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
         --outfmt 6 --sensitive --max-target-seqs 1 --evalue ${params.evalue} -b ${params.blockSize}
