@@ -1,4 +1,7 @@
 #!/usr/bin/env nextflow
+
+nextflow.enable.dsl=1
+
 /*
 ========================================================================================
                         gongyh/nf-core-scgs
@@ -8,7 +11,6 @@
     https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
-
 
 def helpMessage() {
     log.info nfcoreHeader()
@@ -62,7 +64,7 @@ def helpMessage() {
     --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1 (or single-end reads)
     --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2 (paired-end reads only)
     --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1 AFTER adapter/quality trimming has been performed
-    --three_prime_clip_r2 [int]   Instructs Trim Galore to re move bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed
+    --three_prime_clip_r2 [int]   Instructs Trim Galore to remove bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed
 
     Mapping options:
     --allow_multi_align           Secondary alignments and unmapped reads are also reported in addition to primary alignments
@@ -380,7 +382,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
 /*
  * Parse software version numbers
  */
-process get_software_versions {
+process GET_SOFTWARE_VERSIONS {
     output:
     file 'software_versions_mqc.yaml' into software_versions_yaml1, software_versions_yaml2
 
@@ -418,7 +420,7 @@ process get_software_versions {
 /*
  * Store reference
  */
-process save_reference {
+process SAVE_REFERENCE {
     publishDir path: "${params.outdir}/reference_genome", mode: 'copy'
 
     input:
@@ -451,7 +453,7 @@ bowtie2 = params.genome ? params.genomes[ params.genome ].bowtie2 ?: false : fal
 if(bowtie2){
     bowtie2_index = file(bowtie2)
 } else {
-process prepare_bowtie2 {
+process BOWTIE2_BUILD {
     publishDir path: "${params.outdir}/reference_genome", mode: 'copy'
 
     input:
@@ -475,7 +477,7 @@ process prepare_bowtie2 {
 /*
  * STEP 1 - FastQC
  */
-process fastqc {
+process FASTQC {
     tag "$name"
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
@@ -503,7 +505,7 @@ if(params.notrim){
     trimgalore_fastqc_reports1 = file('/dev/null')
     trimgalore_fastqc_reports2 = file('/dev/null')
 } else {
-    process trim_galore {
+    process TRIMGALORE {
         tag "$name"
         publishDir "${params.outdir}/trim_galore", mode: 'copy',
             saveAs: {filename ->
@@ -540,7 +542,7 @@ if(params.notrim){
 /*
  * STEP 2.1 - kraken
  */
-process kraken {
+process KRAKEN {
     tag "$prefix"
     publishDir path: "${params.outdir}/kraken", mode: 'copy'
 
@@ -569,7 +571,7 @@ process kraken {
 /*
  * STEP 2.2 - saturation
  */
-process saturation {
+process SATURATION {
     tag "$prefix"
     publishDir path: "${params.outdir}/saturation", mode: 'copy'
 
@@ -630,7 +632,7 @@ process saturation {
  */
 if ( params.nanopore ) {
 
-process minimap2 {
+process MINIMAP2_ALIGN {
     tag "$prefix"
     publishDir path: { params.saveAlignedIntermediates ? "${params.outdir}/bowtie2" : params.outdir }, mode: 'copy',
                 saveAs: {filename -> params.saveAlignedIntermediates ? filename : null }
@@ -655,7 +657,7 @@ process minimap2 {
 
 } else {
 
-process bowtie2 {
+process BOWTIE2_ALIGN {
     tag "$prefix"
     publishDir path: { params.saveAlignedIntermediates ? "${params.outdir}/bowtie2" : params.outdir }, mode: 'copy',
                 saveAs: {filename -> params.saveAlignedIntermediates ? filename : null }
@@ -688,7 +690,7 @@ process bowtie2 {
 
 }
 
-process vg_construct_graph {
+process VG_CONSTRUCT {
     publishDir path: "${params.outdir}/vg_graph", mode: 'copy'
 
     input:
@@ -709,7 +711,7 @@ process vg_construct_graph {
 }
 
 
-process vg_graph_map {
+process VG_INDEX {
     tag "${prefix}"
     publishDir path: "${params.outdir}/vg_map", mode: 'copy'
 
@@ -741,7 +743,7 @@ process vg_graph_map {
     }
 }
 
-process vg_call {
+process VG_CALL {
     tag "${prefix}"
     publishDir path: "${params.outdir}/vg_call", mode: 'copy'
 
@@ -766,7 +768,7 @@ process vg_call {
 /*
  * STEP 4 - post-alignment processing
  */
-process samtools {
+process SAMTOOLS {
     tag "${prefix}"
     publishDir path: "${pp_outdir}", mode: 'copy',
                 saveAs: { filename ->
@@ -811,7 +813,7 @@ process samtools {
 /*
  * STEP 4.1 - predicting library complexity and genome coverage using preseq
  */
-process preseq {
+process PRESEQ {
     tag "${prefix}"
     publishDir path: "${pp_outdir}", mode: 'copy',
                 saveAs: { filename ->
@@ -853,7 +855,7 @@ process preseq {
 /*
  * STEP 4.2 - quality control of alignment sequencing data using QualiMap
  */
-process qualimap {
+process QUALIMAP_BAMQC {
     publishDir path: "${pp_outdir}", mode: 'copy'
 
     input:
@@ -883,7 +885,7 @@ process qualimap {
 /*
  * STEP 4.3.0 - Realign InDels
  */
-process IndelRealign {
+process INDELREALIGN {
     tag "${prefix}"
     publishDir path: "${pp_outdir}", mode: 'copy'
 
@@ -916,7 +918,7 @@ process IndelRealign {
 /*
  * STEP 4.3 - SNV detection using MonoVar
  */
-process monovar {
+process MONOVAR {
     publishDir path: "${pp_outdir}", mode: 'copy',
                 saveAs: { filename ->
                     if (filename.indexOf(".vcf") > 0) "$filename" else null }
@@ -943,7 +945,7 @@ process monovar {
 /*
  * STEP 4.4 - CNV detection using AneuFinder
  */
-process aneufinder {
+process ANEUFINDER {
     publishDir path: "${pp_outdir}", mode: 'copy'
 
     input:
@@ -966,7 +968,7 @@ process aneufinder {
 /*
  * STEP 5 - Prepare files for Circlize
  */
-process circlize {
+process CIRCLIZE {
     tag "${prefix}"
     publishDir "${params.outdir}/circlize", mode: 'copy',
             saveAs: {filename ->
@@ -995,7 +997,7 @@ if (params.no_normalize) {
     trimmed_reads_for_spades.set { normalized_reads_for_assembly }
 } else {
 
-process normalize {
+process NORMALIZE {
     tag "${prefix}"
 
     input:
@@ -1043,7 +1045,7 @@ process normalize {
  */
 if ( params.nanopore ) {
 
-process canu {
+process CANU {
     tag "${prefix}"
     publishDir path: "${params.outdir}/spades", mode: 'copy'
 
@@ -1080,7 +1082,7 @@ process canu {
 
 } else {
 
-process spades {
+process SPADES {
     tag "${prefix}"
     publishDir path: "${params.outdir}/spades", mode: 'copy'
 
@@ -1129,7 +1131,7 @@ process spades {
 /*
  * STEP 7 - Build Bowtie2Index for Remap
  */
-process prepare_bowtie2_remap {
+process BOWTIE2_REMAP {
     tag "${prefix}"
     publishDir path: "${params.outdir}/remap_bowtie2_index", mode: 'copy'
 
@@ -1139,8 +1141,8 @@ process prepare_bowtie2_remap {
     output:
     file "${prefix}Bowtie2Index" into remap_bowtie2_index
 
-        when:
-        params.remap
+    when:
+    params.remap
 
     script:
     prefix = contigs.toString() - ~/(\.ctg200\.fasta?)(\.ctgs\.fasta)?(\.ctgs)?(\.ctg200)?(\.fasta)?(\.fa)?$/
@@ -1154,7 +1156,7 @@ process prepare_bowtie2_remap {
 /*
  * STEP 8 - Remap
  */
-process remap {
+process REMAP {
     tag "${prefix}"
     publishDir path: "${params.outdir}/remap", mode: 'copy'
 
@@ -1188,8 +1190,8 @@ process remap {
 /*
  * STEP 9 - Evaluation using QUAST
  */
-process quast_ref {
-    label "quast"
+process QUAST_REF {
+    label "QUAST"
     publishDir path: "${params.outdir}", mode: 'copy'
 
     input:
@@ -1218,8 +1220,8 @@ process quast_ref {
     """
 }
 
-process quast_denovo {
-    label "quast"
+process QUAST_DENOVO {
+    label "QUAST"
     publishDir path: "${params.outdir}", mode: 'copy'
 
     input:
@@ -1244,7 +1246,7 @@ process quast_denovo {
 /*
  * STEP 10.1 - Completeness and contamination evaluation using CheckM
  */
-process checkm {
+process CHECKM_LINEAGEWF {
     publishDir "${params.outdir}/CheckM", mode: 'copy'
 
     input:
@@ -1270,7 +1272,7 @@ process checkm {
 /*
  * STEP 11.1 - Annotate contigs using NT database
  */
-process blast_nt {
+process BLASTN {
     tag "${prefix}"
     publishDir "${params.outdir}/blob", mode: 'copy'
 
@@ -1298,7 +1300,7 @@ process blast_nt {
 /*
  * STEP 11.2 - Annotate contigs using Uniprot proteomes database
  */
-process diamond_uniprot {
+process DIAMOND_BLASTX {
     tag "${prefix}"
     publishDir "${params.outdir}/blob", mode: 'copy'
 
@@ -1336,7 +1338,7 @@ process diamond_uniprot {
 /*
  * STEP 10.1 - Blobplot
  */
-process blobtools {
+process BLOBTOOLS {
     tag "${prefix}"
     publishDir "${params.outdir}/blob", mode: 'copy'
 
@@ -1372,7 +1374,7 @@ process blobtools {
     """
 }
 
-process reblobtools {
+process REBLOBTOOLS {
     tag "${prefix}"
     publishDir "${params.outdir}/reblob", mode: 'copy'
 
@@ -1418,7 +1420,7 @@ process reblobtools {
 /*
  * STEP 10.2 - ACDC
  */
-process acdc {
+process ACDC {
     tag "${prefix}"
     publishDir "${params.outdir}/acdc", mode: 'copy'
 
@@ -1444,7 +1446,7 @@ process acdc {
 /*
  * STEP 10.3 - tSNE
  */
-process tsne {
+process TSNE {
     tag "${prefix}"
     publishDir "${params.outdir}/tsne", mode: 'copy'
 
@@ -1472,7 +1474,7 @@ if (!euk) {
 /*
  * STEP 11 - Find genes using Prokka
  */
-process prokka {
+process PROKKA {
     tag "$prefix"
     publishDir "${params.outdir}/prokka", mode: 'copy'
 
@@ -1502,7 +1504,7 @@ process prokka {
 /*
  * STEP 11.2 - Find genes using prodigal
  */
-process prodigal {
+process PRODIGAL {
     tag "$prefix"
     publishDir "${params.outdir}/prodigal", mode: 'copy'
 
@@ -1531,7 +1533,7 @@ prokka_for_split = file('/dev/null')
 /*
  * STEP 11.2 - Find genes using Augustus
  */
-process augustus {
+process AUGUSTUS {
     tag "$prefix"
     publishDir "${params.outdir}/augustus", mode: 'copy'
 
@@ -1562,7 +1564,7 @@ process augustus {
 /*
  * STEP 11.3 - Completeness and contamination evaluation using EukCC for euk
  */
-process eukcc {
+process EUKCC {
     publishDir "${params.outdir}/EukCC", mode: 'copy'
 
     input:
@@ -1595,8 +1597,8 @@ process eukcc {
  * STEP 12 - MultiQC
  */
 preseq_for_multiqc = file('/dev/null')
-process multiqc_ref {
-    label "multiqc"
+process MULTIQC_REF {
+    label "MULTIQC"
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
     input:
@@ -1626,8 +1628,8 @@ process multiqc_ref {
     """
 }
 
-process multiqc_denovo {
-    label "multiqc"
+process MULTIQC_DENOVO {
+    label "MULTIQC"
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
     input:
@@ -1657,7 +1659,7 @@ process multiqc_denovo {
 /*
  * STEP 13 - Annotate genes using EggNOG
  */
-process eggnog {
+process EGGNOG {
     tag "$prefix"
     publishDir "${params.outdir}/eggnog", mode: 'copy'
 
@@ -1683,7 +1685,7 @@ process eggnog {
 /*
  * STEP 13.1 - Annotate genes using KOfamKOALA
  */
-process kofam {
+process KOFAM {
     tag "$prefix"
     publishDir "${params.outdir}/kofam", mode: 'copy'
 
@@ -1711,7 +1713,7 @@ process kofam {
 /*
  * STEP 14 - Find ARGs
  */
-process resfinder {
+process RESFINDER {
     tag "$prefix"
     publishDir "${params.outdir}/ARG", mode: 'copy'
 
@@ -1737,7 +1739,7 @@ process resfinder {
 /*
  * STEP 15 - Find point mutations
  */
-process pointfinder {
+process POINTFINDER {
     tag "$prefix"
     publishDir "${params.outdir}/ARG", mode: 'copy'
 
@@ -1773,7 +1775,7 @@ if (params.eukcc_db) {
 /**
 * checkm_split with Eukaryota
 */
-process split_checkm_eukcc {
+process SPLIT_CHECKM_EUKCC {
     publishDir "${params.outdir}/", mode: 'copy'
 
     input:
@@ -1833,7 +1835,7 @@ process split_checkm_eukcc {
     /*
  * Split the genome by contig annotation and checkm for each genus
  */
-process split_checkm {
+process SPLIT_CHECKM {
     publishDir "${params.outdir}/", mode: 'copy'
 
     input:
@@ -1868,7 +1870,7 @@ process split_checkm {
 /*
  * STEP 16 - Output Description HTML
  */
-process output_documentation {
+process OUTPUT_DOCUMENTATION {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
     input:
@@ -1892,7 +1894,7 @@ workflow.onComplete {
     // Set up the e-mail variables
     def subject = "[gongyh/nf-core-scgs] Successful: $workflow.runName"
     if(!workflow.success){
-    subject = "[gongyh/nf-core-scgs] FAILED: $workflow.runName"
+        subject = "[gongyh/nf-core-scgs] FAILED: $workflow.runName"
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
@@ -1949,7 +1951,7 @@ workflow.onComplete {
     def email_html = html_template.toString()
 
     // Render the sendmail template
-    def smail_fields = [ email: params.email, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.maxMultiqcEmailFileSize ]
+    def smail_fields = [ email: params.email, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: workflow.projectDir, mqcFile: mqc_report, mqcMaxSize: params.maxMultiqcEmailFileSize ]
     def sf = new File("$baseDir/assets/sendmail_template.txt")
     def sendmail_template = engine.createTemplate(sf).make(smail_fields)
     def sendmail_html = sendmail_template.toString()

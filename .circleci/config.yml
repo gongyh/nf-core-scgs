@@ -1,20 +1,32 @@
 version: 2.0
 jobs:
   build:
-    docker:
-      - image: quay.io/gongyh/nf-core-scgs:v1.2
+    machine:
+      image: ubuntu-2204:2023.04.2
+      resource_class: large
+      docker_layer_caching: true
     environment:
       - GIT_LFS_SKIP_SMUDGE: 1
     steps:
       - checkout
       - run:
-          name: test
+          name: install nextflow
           command: |
-            mkdir -p tests && cd tests
-            nextflow run ../ -profile test
+            export NXF_VER=22.10.8 && curl -s https://get.nextflow.io | bash && chmod +x nextflow
+      - run:
+          name: test1
+          command: |
+            mkdir -p tests1 && cd tests1
+            ../nextflow run ../main.nf -profile test,docker
+          no_output_timeout: 30m
+      - run:
+          name: test2
+          command: |
+            mkdir -p tests2 && cd tests2
+            ../nextflow run ../main_v2.nf -profile test,docker
           no_output_timeout: 30m
       - store_artifacts:
-          path: /root/project/tests/result/pipeline_info
+          path: /home/circleci/project/tests2/result/pipeline_info
       - store_artifacts:
-          path: /root/project/tests/.nextflow.log
+          path: /home/circleci/project/tests2/.nextflow.log
           destination: nextflow-log
