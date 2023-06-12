@@ -1,12 +1,11 @@
 process BOWTIE2_REMAP {
-    tag "${meta.id}"
-    publishDir "${params.outdir}/remap_bowtie2_index", mode: 'copy'
+    tag "$meta.id"
 
     input:
     tuple val(meta), path(contigs)
 
     output:
-    tuple val(meta), path("${prefix}Bowtie2Index"),    emit: index
+    path("${prefix}Bowtie2Index"),    emit: index
 
     when:
     params.remap

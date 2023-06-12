@@ -1,10 +1,10 @@
 process REMAP {
-    tag "${prefix}"
-    publishDir "${params.outdir}/remap", mode: 'copy'
+    tag "$meta.id"
 
     input:
     tuple val(meta), path(reads)
-    tuple val(meta), path(index)
+    path(index)
+    val(allow_multi_align)
 
     output:
     tuple val(meta), path("${prefix}_ass.bam"),  emit: bam
@@ -14,8 +14,8 @@ process REMAP {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def filtering = params.allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
-    if (single_end) {
+    def filtering = allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
+    if (meta.single_end) {
     """
     bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U ${reads[0]} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
     """

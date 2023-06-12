@@ -1,11 +1,10 @@
 process ACDC {
-    tag "${prefix}"
-    publishDir "${params.outdir}/acdc", mode: 'copy'
+    tag "$meta.id"
 
     input:
-    path contigs
+    tuple val(meta), path contigs
+    tuple val(meta), path tax
     path db
-    path tax
 
     output:
     path("${prefix}")
@@ -14,7 +13,7 @@ process ACDC {
     false
 
     script:
-    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     cat $tax | grep -v '^#' | cut -f1,18 > genus.txt
     /usr/local/bin/acdc -i $contigs -m 1000 -b 100 -o $prefix -K $db -x genus.txt -T ${task.cpus}

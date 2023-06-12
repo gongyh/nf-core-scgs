@@ -430,7 +430,7 @@ include { REMAP                 } from './modules/local/remap'
 // include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 // include { CHECKM_LINEAGEWF      } from './modules/local/checkm_lineagewf/'
 include { BLASTN                } from './modules/local/blastn'
-include { DIAMOND_BLASTX        } from './modules/local/diamond/blastx/main'
+include { DIAMOND_BLASTX        } from './modules/local/diamond_blastx'
 include { BLOBTOOLS             } from './modules/local/blobtools'
 include { REBLOBTOOLS           } from './modules/local/reblobtools'
 include { ACDC                  } from './modules/local/acdc'
@@ -548,7 +548,9 @@ workflow {
     // REMAP
     if (params.remap) {
         BOWTIE2_REMAP(ctg200)
-        REMAP(trimmed_reads, BOWTIE2_REMAP.out.index.collet())
+        REMAP(trimmed_reads,
+                BOWTIE2_REMAP.out.index.collect()
+                )
     }
 
     // QUAST
@@ -570,19 +572,36 @@ workflow {
                         )
     }
 
-    /*
     // NT
     if (params.nt_db) {
-        BLASTN(ctg200, nt_db)
-        DIAMOND_BLASTX(BLASTN.out.contigs, BLASTN.out.nt, uniprot_db, uniprot_taxids)
-        BLOBTOOLS(DIAMOND_BLASTX.out.contigs, DIAMOND_BLASTX.out.nt, DIAMOND_BLASTX.out.real, DIAMOND_BLASTX.out.uniprot)
+        BLASTN(ctg200,
+                nt_db,
+                params.evalue
+                )
+        DIAMOND_BLASTX(BLASTN.out.contigs,
+                        BLASTN.out.nt,
+                        uniprot_db,
+                        uniprot_taxids)
+        BLOBTOOLS(DIAMOND_BLASTX.out.contigs,
+                    DIAMOND_BLASTX.out.nt,
+                    DIAMOND_BLASTX.out.real,
+                    DIAMOND_BLASTX.out.uniprot)
         if (params.remap) {
-            REBOLBTOOLS(DIAMOND_BLASTX.out.contigs, DIAMOND_BLASTX.out.nt, DIAMOND_BLASTX.out.real, DIAMOND_BLASTX.out.uniprot, REMAP.out.bam.collect())
+            REBOLBTOOLS(DIAMOND_BLASTX.out.contigs,
+                        DIAMOND_BLASTX.out.nt,
+                        DIAMOND_BLASTX.out.real,
+                        DIAMOND_BLASTX.out.uniprot,
+                        REMAP.out.bam.collect())
         }
-        ACDC(BLOBTOOLS.out.contigs, kraken_db, BLOBTOOLS.out.tax)
+        ACDC(BLOBTOOLS.out.contigs,
+                BLOBTOOLS.out.tax,
+                kraken_db)
     }
+
+    /**
     TSNE(ctg)
 
+    /**
     faa = Channel.empty()
     if (!params.euk) {
         PROKKA(ctg)

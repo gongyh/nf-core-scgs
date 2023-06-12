@@ -1,7 +1,6 @@
 process DIAMOND_BLASTX {
-    tag "${prefix}"
+    tag "$meta.id"
     label 'process_medium'
-    publishDir "${params.outdir}/blob", mode: 'copy'
 
     conda "bioconda::diamond=2.0.15"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -9,20 +8,20 @@ process DIAMOND_BLASTX {
         'biocontainers/diamond:2.0.15--hb97b32f_0' }"
 
     input:
-    path contigs
-    path nt_out
+    tuple val(meta), path contigs
+    tuple val(meta), path nt_out
     path uniprot
     path("uniprot.taxids")
 
     output:
-    path("${prefix}_uniprot.taxified.out"),           emit: uniprot
-    path("${contigs}"),                               emit: contigs
-    path("${nt_out}"),                                emit: nt
-    val used,                                         emit: real
+    tuple val(meta), path("${prefix}_uniprot.taxified.out") , emit: uniprot
+    tuple val(meta), path("${contigs}") ,                     emit: contigs
+    tuple val(meta), path("${nt_out}") ,                      emit: nt
+    val used ,                                                emit: real
     path("${prefix}_uniprot.*")
 
     script:
-    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    prefix = task.ext.prefix ?: "${meta.id}"
     if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ) {
     def used = false
     """

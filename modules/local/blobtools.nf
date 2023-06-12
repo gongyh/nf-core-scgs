@@ -1,20 +1,19 @@
 process BLOBTOOLS {
-    tag "${prefix}"
-    publishDir "${params.outdir}/blob", mode: 'copy'
+    tag "$meta.id"
 
     input:
-    path contigs
-    path anno
+    tuple val(meta), path contigs
+    tuple val(meta), path anno
+    tuple val(meta), path uniprot_anno
     val has_uniprot
-    path uniprot_anno
 
     output:
-    path("${prefix}/${prefix}.blobDB*table.txt"),              emit: tax
-    path("${contigs}"),                                        emit: contigs
-    path("${prefix}"),                                         emit: tax_split
+    tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt") , emit: tax
+    tuple val(meta), path("${contigs}") ,                           emit: contigs
+    tuple val(meta), path("${prefix}") ,                            emit: tax_split
 
     script:
-    prefix = contigs.toString() - ~/(\.ctg200\.fasta)?(\.ctg200)?(\.fasta)?(\.fa)?$/
+    prefix = task.ext.prefix ?: "${meta.id}"
     def uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
     """
     mkdir -p ${prefix}
