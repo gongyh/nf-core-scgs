@@ -1,19 +1,16 @@
 process RESFINDER {
-    tag "$prefix"
-    publishDir "${params.outdir}/ARG", mode: 'copy'
+    tag "$meta.id"
+    label 'process_low'
 
     input:
-    path contigs
+    tuple val(meta), path(contigs)
     path db
 
     output:
     path("${prefix}/*")
 
-    when:
-    !euk && params.acquired && resfinder_db
-
     script:
-    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p $prefix
     python /opt/resfinder/resfinder.py -i $contigs -o $prefix -p $db -mp blastn -x

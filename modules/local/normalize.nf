@@ -7,9 +7,6 @@ process NORMALIZE {
     output:
     tuple val(meta), path("*_norm*.fastq.gz"),  emit: reads
 
-    when:
-    params.ass
-
     script:
     def prefix   = task.ext.prefix ?: "${meta.id}"
     def mode = params.bulk ? "bulk" : "mda"

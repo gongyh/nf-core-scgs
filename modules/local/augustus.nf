@@ -1,19 +1,16 @@
 process AUGUSTUS {
-    tag "$prefix"
-    publishDir "${params.outdir}/augustus", mode: 'copy'
+    tag "$meta.id"
+    label 'process_medium'
 
     input:
-    path contigs
+    tuple val(meta), path(contigs)
 
     output:
-    path("${prefix}.aa"),                      emit: faa_eukcc
+    tuple val(meta), path("${prefix}.aa"), emit: faa
     path("${prefix}*")
 
-    when:
-    euk
-
     script:
-    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     # clean id
     cat $contigs | sed 's/_length.*\$//g' > ${prefix}_clean.fasta

@@ -16,9 +16,6 @@ process BLASTN {
     tuple val(meta), path("${contigs}" )      , emit: contigs
     tuple val(meta), path("${prefix}_nt.out") , emit: nt
 
-    when:
-    params.nt_db
-
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """

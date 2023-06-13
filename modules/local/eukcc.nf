@@ -1,18 +1,16 @@
 process EUKCC {
-    publishDir "${params.outdir}/EukCC", mode: 'copy'
+    tag "$meta.id"
+    label 'process_medium'
 
     input:
-    path faa
+    tuple val(meta), path(faa)
     path db
 
     output:
     path("${prefix}")
 
-    when:
-    euk && eukcc_db
-
     script:
-    prefix = faa.toString() - ~/(\.faa)?(\.aa)?(\.fasta)?(\.fa)?$/
+    prefix   = task.ext.prefix ?: "${meta.id}"
     """
     export HOME=/tmp/
     if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then

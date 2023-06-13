@@ -10,9 +10,6 @@ process KRAKEN {
     tuple val(meta), path("*.report")     , emit: report
     tuple val(meta), path("*.krona.html") , emit: html
 
-    when:
-    params.kraken_db
-
     script:
     def mode = meta.single_end ? "" : "--paired"
     def prefix = task.ext.prefix ?: "${meta.id}"

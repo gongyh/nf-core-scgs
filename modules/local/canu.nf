@@ -10,9 +10,6 @@ process CANU {
     tuple val(meta), path("${prefix}.ctg200.fasta"),  emit: ctg200
     tuple val(meta), path("${prefix}.ctgs.fasta"),    emit: ctg
 
-    when:
-    params.ass
-
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     def mode = params.bulk ? "bulk" : "mda"

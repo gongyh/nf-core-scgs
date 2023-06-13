@@ -1685,7 +1685,7 @@ process EGGNOG {
 /*
  * STEP 13.1 - Annotate genes using KOfamKOALA
  */
-process KOFAM {
+process KOFAMSCAN {
     tag "$prefix"
     publishDir "${params.outdir}/kofam", mode: 'copy'
 
