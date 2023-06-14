@@ -8,7 +8,7 @@ process KOFAMSCAN {
     path ko_list
 
     output:
-    path("${prefix}_KOs_*.txt"), emit: txt
+    tuple val(meta), path("${prefix}_KOs_*.txt"), emit: txt
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

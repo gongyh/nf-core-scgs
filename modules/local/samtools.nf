@@ -1,13 +1,6 @@
 process SAMTOOLS {
     tag "${meta.id}"
     label 'process_medium'
-    publishDir path: "${pp_outdir}", mode: 'copy',
-                saveAs: { filename ->
-                    if (filename.indexOf(".stats.txt") > 0) "stats/$filename"
-                    else if (filename.indexOf("_bins.txt") > 0) filename
-                    else if (filename.indexOf("_pdrc.pdf") > 0) filename
-                    else params.saveAlignedIntermediates ? filename : null
-                }
 
     input:
     tuple val(meta), path(bam)
@@ -18,8 +11,9 @@ process SAMTOOLS {
     tuple val(meta), path("*.markdup.bam.bai"), emit: bai
     tuple val(meta), path("*.markdup.bed"),     emit: bed
     tuple val(meta), path("*.stats.txt"),       optional:true, emit: stats
-    path "${prefix}_1k_bins.txt"
-    path "${prefix}_pdrc.pdf"
+    path  "versions.yml",                       emit: versions
+    path("${prefix}_1k_bins.txt")
+    path("${prefix}_pdrc.pdf")
 
     script:
     pp_outdir = "${params.outdir}/bowtie2"
@@ -38,5 +32,9 @@ process SAMTOOLS {
     awk -v mc=\$meanCov -F'\t' '{print \$1"\t"\$2"\t"\$3/mc}' ${prefix}.raw.cov > ${prefix}.relative.cov
     awk '{sum+=\$3} (NR%1000)==0{print sum/1000; sum=0;}' ${prefix}.relative.cov > ${prefix}_1k_bins.txt
     plotProp.R ${prefix}_1k_bins.txt ${prefix}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+    END_VERSIONS
     """
 }

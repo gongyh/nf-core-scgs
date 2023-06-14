@@ -397,18 +397,18 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
 }
 
 // Import modules from nf-core
-include { FASTQC                } from './modules/nf-core/fastqc/main'
-include { TRIMGALORE            } from './modules/nf-core/trimgalore/main'
-include { BOWTIE2_BUILD         } from './modules/nf-core/bowtie2/build/main'
-include { BOWTIE2_ALIGN         } from './modules/nf-core/bowtie2/align/main'
-include { MINIMAP2_ALIGN        } from './modules/nf-core/minimap2/align/main'
-include { VG_CONSTRUCT          } from './modules/nf-core/vg/construct/main'
-include { VG_INDEX              } from './modules/nf-core/vg/index/main'
-include { QUALIMAP_BAMQC        } from './modules/nf-core/qualimap/bamqc/main'
-include { QUAST                 } from './modules/nf-core/quast/main'
-//include { PRODIGAL              } from './modules/nf-core/prodigal/main'
-//include { CHECKM_LINEAGEWF      } from './modules/nf-core/checkm/lineagewf/main'
-//include { KOFAMSCAN             } from './modules/nf-core/kofamscan/main'
+include { FASTQC                      } from './modules/nf-core/fastqc/main'
+include { TRIMGALORE                  } from './modules/nf-core/trimgalore/main'
+include { BOWTIE2_BUILD               } from './modules/nf-core/bowtie2/build/main'
+include { BOWTIE2_ALIGN               } from './modules/nf-core/bowtie2/align/main'
+include { MINIMAP2_ALIGN              } from './modules/nf-core/minimap2/align/main'
+include { VG_CONSTRUCT                } from './modules/nf-core/vg/construct/main'
+include { VG_INDEX                    } from './modules/nf-core/vg/index/main'
+include { QUALIMAP_BAMQC              } from './modules/nf-core/qualimap/bamqc/main'
+include { QUAST                       } from './modules/nf-core/quast/main'
+//include { PRODIGAL                  } from './modules/nf-core/prodigal/main'
+//include { CHECKM_LINEAGEWF          } from './modules/nf-core/checkm/lineagewf/main'
+//include { KOFAMSCAN                 } from './modules/nf-core/kofamscan/main'
 
 
 // Import modules from local
@@ -447,7 +447,7 @@ include { POINTFINDER           } from './modules/local/pointfinder'
 include { SPLIT_CHECKM          } from './modules/local/split_checkm'
 include { SPLIT_CHECKM_EUKCC    } from './modules/local/split_checkm_eukcc'
 include { OUTPUT_DOCUMENTATION  } from './modules/local/output_documentation'
-// include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions'
+include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions/main'
 // include { QUAST_REF             } from './modules/local/quast_ref'
 // include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 
@@ -457,7 +457,7 @@ workflow {
 
     // FASTQC
     FASTQC(read_files_fastqc)
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first().ifEmpty(null))
+    ch_versions = ch_versions.mix(FASTQC.out.versions.ifEmpty(null))
 
     if (params.fasta && params.gff) {
         SAVE_REFERENCE(fasta, gff)
@@ -483,7 +483,7 @@ workflow {
         TRIMGALORE(read_files_trimming)
         trimmed_reads = TRIMGALORE.out.reads
     }
-    ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first().ifEmpty(null))
+    ch_versions = ch_versions.mix(TRIMGALORE.out.versions.ifEmpty(null))
 
     // KRAKEN
     if (params.kraken_db) {
@@ -507,6 +507,7 @@ workflow {
             )
             MINIMAP2_ALIGN.out.bam
                     .set{ bb_bam }
+            ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions.ifEmpty(null))
         } else {
             BOWTIE2_ALIGN (
                 trimmed_reads,
@@ -516,6 +517,7 @@ workflow {
             )
             BOWTIE2_ALIGN.out.bam
                     .set { bb_bam }
+            ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions.ifEmpty(null))
         }
     }
 
@@ -549,6 +551,13 @@ workflow {
             SAMTOOLS.out.bed,
             SAVE_REFERENCE.out.bed
         )
+        ch_versions = ch_versions.mix(SAMTOOLS.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(PRESEQ.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(INDELREALIGN.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(MONOVAR.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(ANEUFINDER.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(CIRCLIZE.out.versions.ifEmpty(null))
     }
 
     // NORMALIZE
@@ -563,10 +572,12 @@ workflow {
                 CANU(NORMALIZE.out.reads)
                 ctg200 = CANU.out.ctg200
                 ctg = CANU.out.ctg
+                ch_versions = ch_versions.mix(CANU.out.versions.ifEmpty(null))
             } else {
                 SPADES(NORMALIZE.out.reads)
                 ctg200 = SPADES.out.ctg200
                 ctg = SPADES.out.ctg
+                ch_versions = ch_versions.mix(SPADES.out.versions.ifEmpty(null))
             }
         }
     }
@@ -591,6 +602,7 @@ workflow {
         denovo ? false: true,
     )
     quast_report = QUAST.out.tsv
+    ch_versions = ch_versions.mix(QUAST.out.versions.ifEmpty(null))
 
 
     // CHECKM
@@ -599,6 +611,7 @@ workflow {
             ctg.map{ meta,ctg -> return ctg }.collect(),
             params.genus
         )
+        ch_versions = ch_versions.mix(CHECKM_LINEAGEWF.out.versions.ifEmpty(null))
     }
 
     // NT
@@ -634,6 +647,9 @@ workflow {
             BLOBTOOLS.out.tax,
             kraken_db
         )
+        ch_versions = ch_versions.mix(BLASTN.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(BLOBTOOLS.out.versions.ifEmpty(null))
     }
     TSNE(ctg)
 
@@ -646,6 +662,8 @@ workflow {
         prokka_for_mqc1 = PROKKA.out.prokka_for_split
         prokka_for_mqc2 = PROKKA.out.prokka_for_split
         prokka_for_split = PROKKA.out.prokka_for_split
+        ch_versions = ch_versions.mix(PROKKA.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(PRODIGAL.out.versions.ifEmpty(null))
     } else {
         prokka_for_mqc1 = file('/dev/null')
         prokka_for_mqc2 = file('/dev/null')
@@ -663,6 +681,7 @@ workflow {
             faa,
             eggnog_db
         )
+        ch_versions = ch_versions.mix(EGGNOG.out.versions.ifEmpty(null))
     }
 
     if ( params.kofam_profile && params.kofam_kolist ) {
@@ -690,7 +709,7 @@ workflow {
     if ( params.split && params.eukcc_db ) {
         SPLIT_CHECKM_EUKCC(
             ctg200.map { meta, ctg200 -> return ctg200}.collect(),
-            BLOBTOOLS.out.tax.map{ meta, tax -> return tax }.collect(),
+            BLOBTOOLS.out.tax_split.map{ meta, tax -> return tax }.collect(),
             PROKKA.out.prokka_for_split.map{ meta, data -> data }.collect(),
             KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect(),
             eukcc_db,
@@ -701,35 +720,28 @@ workflow {
 
     if ( params.split && !params.eukcc_db ) {
         SPLIT_CHECKM(
-            ctg200.map{ meta,ctg200 -> return ctg200}.collect(),
-            BLOBTOOLS.out.tax.map{ meta, tax-> return tax }.collect(),
+            ctg200.map{ meta, ctg200 -> return ctg200 }.collect(),
+            BLOBTOOLS.out.tax_split.map{ meta, tax-> return tax }.collect(),
             PROKKA.out.prokka_for_split.map{ meta, data -> data }.collect(),
-            KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect()
+            KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect(),
+            params.split_bac_level ? params.split_bac_level : "genus",
+            params.split_euk_level ? params.split_euk_level : "genus"
         )
     }
 
-    /**
-    ch_versions
-        .map { it -> if (it) [ it.baseName, it ] }
-        .groupTuple()
-        .map { it[1][0] }
-        .flatten()
-        .collect()
-        .set { ch_versions }
-
     GET_SOFTWARE_VERSIONS (
-        ch_versions.map { it }.collect()
+        ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
-
 
     // MULTIQC
     preseq_for_multiqc = file('/dev/null')
 
+    /**
     MULTIQC_REF(
                 ch_multiqc_config1,
                 FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
                 TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-                GET_SOFTWARE_VERSIONS.out.yaml.collect(),
+                GET_SOFTWARE_VERSIONS.out.yml.collect(),
                 SAMTOOLS.out.stats.collect(),
                 preseq_for_multiqc.collect(),
                 QUALIMAP_BAMQC.out.results,
@@ -742,13 +754,12 @@ workflow {
                 ch_multiqc_config2,
                 FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
                 TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-                GET_SOFTWARE_VERSIONS.out.yaml.collect(),
+                GET_SOFTWARE_VERSIONS.out.yml.collect(),
                 quast_denovo.ifEmpty('/dev/null'),
                 prokka_for_mqc2.collect(),
                 KRAKEN.out.report.collect(),
                 create_workflow_summary(summary)
                 )
-
     */
 
     OUTPUT_DOCUMENTATION(ch_output_docs)

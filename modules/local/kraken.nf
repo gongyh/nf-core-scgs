@@ -9,6 +9,7 @@ process KRAKEN {
     output:
     tuple val(meta), path("*.report")     , emit: report
     tuple val(meta), path("*.krona.html") , emit: html
+    path "versions.yml",                    emit: versions
 
     script:
     def mode = meta.single_end ? "" : "--paired"
@@ -18,5 +19,9 @@ process KRAKEN {
     kraken-report -db $db ${prefix}.krk > ${prefix}.report
     cut -f2,3 ${prefix}.krk > ${prefix}.f23
     ktImportTaxonomy -o ${prefix}.krona.html ${prefix}.f23
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        kraken: \$(echo \$(kraken --version 2>&1) | sed 's/^.*kraken //; s/Using.*\$//')
+    END_VERSIONS
     """
 }

@@ -18,6 +18,7 @@ process DIAMOND_BLASTX {
     tuple val(meta), path("${contigs}") ,                     emit: contigs
     tuple val(meta), path("${nt_out}") ,                      emit: nt
     val used ,                                                emit: real
+    path "versions.yml",                                      emit: versions
     path("${prefix}_uniprot.*")
 
     script:
@@ -27,6 +28,10 @@ process DIAMOND_BLASTX {
     """
     touch ${prefix}_uniprot.out
     touch ${prefix}_uniprot.taxified.out
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond //; s/Using.*\$//')
+    END_VERSIONS
     """
     } else {
     used = true
@@ -34,6 +39,10 @@ process DIAMOND_BLASTX {
     diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
         --outfmt 6 --sensitive --max-target-seqs 1 --evalue ${params.evalue} -b ${params.blockSize}
     blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond //; s/Using.*\$//')
+    END_VERSIONS
     """
     }
 }

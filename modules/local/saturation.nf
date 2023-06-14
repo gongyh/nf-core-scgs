@@ -1,6 +1,5 @@
 process SATURATION {
     tag "${meta.id}"
-    publishDir path: "${params.outdir}/saturation", mode: 'copy'
 
     input:
     tuple val(meta), path(reads)

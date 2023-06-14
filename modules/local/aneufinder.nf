@@ -7,6 +7,7 @@ process ANEUFINDER {
 
     output:
     path('CNV_output'),  emit: cnv
+    path "versions.yml", emit: versions
 
     when:
     !params.bulk && params.cnv && !single_end && !params.nanopore
@@ -15,5 +16,9 @@ process ANEUFINDER {
     pp_outdir = "${params.outdir}/aneufinder"
     """
     aneuf.R ./bams CNV_output ${task.cpus}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        aneufinder: \$(Rscript -e 'print(packageVersion("AneuFinder"))' | sed 's/^.*AneuFinder //;')
+    END_VERSIONS
     """
 }

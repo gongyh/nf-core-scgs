@@ -12,6 +12,7 @@ process PRODIGAL {
 
     output:
     path("$prefix")
+    path "versions.yml",  emit: versions
 
     when:
     !euk
@@ -21,5 +22,9 @@ process PRODIGAL {
     """
     mkdir -p ${prefix}
     prodigal -i $contigs -o ${prefix}/${prefix}.gbk -a ${prefix}/${prefix}.proteins.faa -p meta
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        prodigal: \$(prodigal -v 2>&1 | sed -n 's/Prodigal V\\(.*\\):.*/\\1/p')
+    END_VERSIONS
     """
 }
