@@ -1,5 +1,5 @@
 process SPLIT_CHECKM_EUKCC {
-    publishDir "${params.outdir}/", mode: 'copy'
+    label 'process_medium'
 
     input:
     path("results/spades/*")
@@ -12,9 +12,6 @@ process SPLIT_CHECKM_EUKCC {
 
     output:
     path("split/*")
-
-    when:
-    params.split
 
     script:
     """

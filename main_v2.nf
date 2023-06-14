@@ -405,12 +405,13 @@ include { MINIMAP2_ALIGN        } from './modules/nf-core/minimap2/align/main'
 include { VG_CONSTRUCT          } from './modules/nf-core/vg/construct/main'
 include { VG_INDEX              } from './modules/nf-core/vg/index/main'
 include { QUALIMAP_BAMQC        } from './modules/nf-core/qualimap/bamqc/main'
-//include { CHECKM_LINEAGEWF      } from './modules/nf-core/checkm/lineagewf/main'
 include { QUAST                 } from './modules/nf-core/quast/main'
+//include { PRODIGAL              } from './modules/nf-core/prodigal/main'
+//include { CHECKM_LINEAGEWF      } from './modules/nf-core/checkm/lineagewf/main'
+//include { KOFAMSCAN             } from './modules/nf-core/kofamscan/main'
 
 
 // Import modules from local
-// include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions'
 include { SAVE_REFERENCE        } from './modules/local/save_reference'
 include { KRAKEN                } from './modules/local/kraken'
 include { SATURATION            } from './modules/local/saturation'
@@ -426,8 +427,6 @@ include { CANU                  } from './modules/local/canu'
 include { SPADES                } from './modules/local/spades'
 include { BOWTIE2_REMAP         } from './modules/local/bowtie2_remap'
 include { REMAP                 } from './modules/local/remap'
-// include { QUAST_REF             } from './modules/local/quast_ref'
-// include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 include { CHECKM_LINEAGEWF      } from './modules/local/checkm_lineagewf'
 include { BLASTN                } from './modules/local/blastn'
 include { DIAMOND_BLASTX        } from './modules/local/diamond_blastx'
@@ -435,19 +434,22 @@ include { BLOBTOOLS             } from './modules/local/blobtools'
 include { REBLOBTOOLS           } from './modules/local/reblobtools'
 include { ACDC                  } from './modules/local/acdc'
 include { TSNE                  } from './modules/local/tsne'
-include { PROKKA                } from './modules/local/prokka/main'
-include { PRODIGAL              } from './modules/local/prodigal/main'
+include { PROKKA                } from './modules/local/prokka'
+include { PRODIGAL              } from './modules/local/prodigal'
 include { AUGUSTUS              } from './modules/local/augustus'
 include { EUKCC                 } from './modules/local/eukcc'
-include { MULTIQC_DENOVO        } from './modules/local/multiqc/multiqc_denovo'
-include { MULTIQC_REF           } from './modules/local/multiqc/multiqc_ref'
+include { MULTIQC_DENOVO        } from './modules/local/multiqc_denovo'
+include { MULTIQC_REF           } from './modules/local/multiqc_ref'
 include { EGGNOG                } from './modules/local/eggnog'
-include { KOFAM                 } from './modules/local/kofam'
+include { KOFAMSCAN             } from './modules/local/kofamscan'
 include { RESFINDER             } from './modules/local/resfinder'
 include { POINTFINDER           } from './modules/local/pointfinder'
-include { SPLIT_CHECKM          } from './modules/local/split/split_checkm'
-include { SPLIT_CHECKM_EUKCC    } from './modules/local/split/split_checkm_eukcc'
+include { SPLIT_CHECKM          } from './modules/local/split_checkm'
+include { SPLIT_CHECKM_EUKCC    } from './modules/local/split_checkm_eukcc'
 include { OUTPUT_DOCUMENTATION  } from './modules/local/output_documentation'
+// include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions'
+// include { QUAST_REF             } from './modules/local/quast_ref'
+// include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 
 
 workflow {
@@ -472,7 +474,7 @@ workflow {
     // TRIM_GALORE
     trimmed_reads = Channel.empty()
     if (params.notrim) {
-        trimmed_reads = read_files_trimming.map {name, reads -> reads}
+        trimmed_reads = read_files_trimming.map{name, reads -> reads}
         trimgalore_results1 = file('/dev/null')
         trimgalore_results2 = file('/dev/null')
         trimgalore_fastqc_reports1 = file('/dev/null')
@@ -504,7 +506,7 @@ workflow {
                 false
             )
             MINIMAP2_ALIGN.out.bam
-                    .set { bb_bam }
+                    .set{ bb_bam }
         } else {
             BOWTIE2_ALIGN (
                 trimmed_reads,
@@ -535,13 +537,13 @@ workflow {
             fasta
         )
         MONOVAR (
-            INDELREALIGN.out.bam.map { meta,bam -> return bam}.collect(), INDELREALIGN.out.bai.map {meta, bai -> return bai}
+            INDELREALIGN.out.bam.map{ meta,bam -> return bam }.collect(), INDELREALIGN.out.bai.map{ meta, bai -> return bai }
                 .collect(),
             fasta
         )
         ANEUFINDER (
-            SAMTOOLS.out.bam.map { meta,bam -> return bam}.collect(),
-            SAMTOOLS.out.bai.map {meta, bai -> return bai}.collect()
+            SAMTOOLS.out.bam.map{ meta, bam -> return bam }.collect(),
+            SAMTOOLS.out.bai.map{ meta, bai -> return bai }.collect()
         )
         CIRCLIZE (
             SAMTOOLS.out.bed,
@@ -553,7 +555,7 @@ workflow {
     ctg200 = Channel.empty()
     ctg = Channel.empty()
     if ( params.no_normalize ) {
-        trimmed_reads.set { normalized_reads }
+        trimmed_reads.set{ normalized_reads }
     } else {
         if ( params.ass ) {
             NORMALIZE(trimmed_reads)
@@ -574,14 +576,15 @@ workflow {
         BOWTIE2_REMAP(ctg200)
         REMAP (
             trimmed_reads,
-            BOWTIE2_REMAP.out.index.collect()
+            BOWTIE2_REMAP.out.index.collect(),
+            params.allow_multi_align
         )
     }
 
     // QUAST
     quast_report = Channel.empty()
     QUAST (
-        ctg.map { meta,ctg -> return ctg}.collect(),
+        ctg.map{ meta,ctg -> return ctg }.collect(),
         fasta,
         gff,
         denovo ? false: true,
@@ -593,7 +596,7 @@ workflow {
     // CHECKM
     if ( !euk ) {
         CHECKM_LINEAGEWF (
-            ctg.map { meta,ctg -> return ctg}.collect(),
+            ctg.map{ meta,ctg -> return ctg }.collect(),
             params.genus
         )
     }
@@ -618,12 +621,12 @@ workflow {
             DIAMOND_BLASTX.out.real
         )
         if ( params.remap ) {
-            REBOLBTOOLS (
+            REBLOBTOOLS (
                 DIAMOND_BLASTX.out.contigs,
                 DIAMOND_BLASTX.out.nt,
                 DIAMOND_BLASTX.out.real,
                 DIAMOND_BLASTX.out.uniprot,
-                REMAP.out.bam.collect()
+                REMAP.out.bam.map{ meta, bam -> return bam }.collect()
             )
         }
         ACDC (
@@ -632,13 +635,11 @@ workflow {
             kraken_db
         )
     }
-
-    /**
     TSNE(ctg)
 
-    /**
+
     faa = Channel.empty()
-    if (!params.euk) {
+    if ( !euk ) {
         PROKKA(ctg)
         PRODIGAL(ctg)
         faa = PROKKA.out.faa
@@ -651,9 +652,63 @@ workflow {
         prokka_for_split = file('/dev/null')
         AUGUSTUS(ctg)
         faa = AUGUSTUS.out.faa
-        EUKCC(faa, eukcc_db)
+        EUKCC (
+            faa,
+            eukcc_db
+        )
     }
 
+    if ( params.eggnog_db ) {
+        EGGNOG (
+            faa,
+            eggnog_db
+        )
+    }
+
+    if ( params.kofam_profile && params.kofam_kolist ) {
+        KOFAMSCAN (
+            faa,
+            kofam_profile,
+            kofam_kolist
+        )
+    }
+
+    if ( !params.euk && params.acquired && resfinder_db ) {
+        RESFINDER (
+            ctg,
+            resfinder_db
+        )
+    }
+
+    if ( !params.euk && params.point && pointfinder_db ) {
+        POINTFINDER (
+            ctg,
+            pointfinder_db
+        )
+    }
+
+    if ( params.split && params.eukcc_db ) {
+        SPLIT_CHECKM_EUKCC(
+            ctg200.map { meta, ctg200 -> return ctg200}.collect(),
+            BLOBTOOLS.out.tax.map{ meta, tax -> return tax }.collect(),
+            PROKKA.out.prokka_for_split.map{ meta, data -> data }.collect(),
+            KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect(),
+            eukcc_db,
+            params.split_bac_level ? params.split_bac_level : "genus",
+            params.split_euk_level ? params.split_euk_level : "genus"
+        )
+    }
+
+    if ( params.split && !params.eukcc_db ) {
+        SPLIT_CHECKM(
+            ctg200.map{ meta,ctg200 -> return ctg200}.collect(),
+            BLOBTOOLS.out.tax.map{ meta, tax-> return tax }.collect(),
+            PROKKA.out.prokka_for_split.map{ meta, data -> data }.collect(),
+            KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect()
+        )
+    }
+
+    /**
     ch_versions
         .map { it -> if (it) [ it.baseName, it ] }
         .groupTuple()
@@ -665,6 +720,7 @@ workflow {
     GET_SOFTWARE_VERSIONS (
         ch_versions.map { it }.collect()
     )
+
 
     // MULTIQC
     preseq_for_multiqc = file('/dev/null')
@@ -693,43 +749,9 @@ workflow {
                 create_workflow_summary(summary)
                 )
 
-    if (params.eggnog) {
-        EGGNOG(faa, eggnog_db)
-    }
-
-    if (params.kofam_profile && params.kofam_kolist) {
-        KOFAM(faa, kofam_profile, kofam_kolist)
-    }
-
-    if (!params.euk && params.acquired && resfinder_db) {
-        RESFINDER(ctg, resfinder_db)
-    }
-
-    if (!params.euk && params.point && pointfinder_db) {
-        POINTFINDER(ctg, pointfinder_db)
-    }
-
-    if (params.eukcc_db) {
-        SPLIT_CHECKM_EUKCC(
-            ctg200.collect(),
-            BLOBTOOLS.out.tax.collect(),
-            PROKKA.out.prokka_for_split.collect(),
-            KOFAM.out.txt.collect(),
-            eukcc_db,
-            params.split_bac_level ? params.split_bac_level : "genus",
-            params.split_euk_level ? params.split_euk_level : "genus"
-        )
-    } else {
-        SPLIT_CHECKM(
-            ctg200.collect(),
-            BLOBTOOLS.out.tax.collect(),
-            PROKKA.out.prokka_for_split.collect(),
-            KOFAM.out.txt.collect()
-        )
-    }
+    */
 
     OUTPUT_DOCUMENTATION(ch_output_docs)
-    */
 }
 
 /*

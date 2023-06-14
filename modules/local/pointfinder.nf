@@ -1,19 +1,16 @@
 process POINTFINDER {
-    tag "$prefix"
-    publishDir "${params.outdir}/ARG", mode: 'copy'
+    tag "$meta.id"
+    label 'process_low'
 
     input:
-    path contigs
+    tuple val(meta), path(contigs)
     path db
 
     output:
     path("${prefix}/*")
 
-    when:
-    !euk && params.point && pointfinder_db
-
     script:
-    prefix = contigs.toString() - ~/(\.ctgs\.fasta)?(\.ctgs)?(\.fasta)?(\.fa)?$/
+    prefix = task.ext.prefix ?: "${meta.id}"
     def species = params.pointfinder_species
     def known_snp = params.only_known ? "" : "-l 0.4 -r all -u"
     """

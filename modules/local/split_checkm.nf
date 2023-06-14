@@ -10,9 +10,6 @@ process SPLIT_CHECKM {
     output:
     path("split/*")
 
-    when:
-    params.split
-
     script:
     def split_bac_level = params.split_bac_level ? params.split_bac_level : "genus"
     def split_euk_level = params.split_euk_level ? params.split_euk_level : "genus"

@@ -1,19 +1,16 @@
 process EGGNOG {
-    tag "$prefix"
-    publishDir "${params.outdir}/eggnog", mode: 'copy'
+    tag "$meta.id"
+    label 'process_medium'
 
     input:
-    path faa
+    tuple val(meta), path(faa)
     path db
 
     output:
     path("${prefix}.emapper.annotations")
 
-    when:
-    eggnog_db
-
     script:
-    prefix = faa.toString() - ~/(\.proteins\.fa)?(\.faa)?$/
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     set +u
     source activate base
