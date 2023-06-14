@@ -27,7 +27,7 @@ jobs:
             ../nextflow run ../main_v2.nf -profile test_denovo,docker
           no_output_timeout: 30m
       - store_artifacts:
-          path: /home/circleci/project/tests2/result/pipeline_info
+          path: /home/circleci/project/tests2/results/pipeline_info
       - store_artifacts:
           path: /home/circleci/project/tests2/.nextflow.log
           destination: nextflow-log
