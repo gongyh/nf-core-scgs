@@ -3,7 +3,7 @@ jobs:
   build:
     machine:
       image: ubuntu-2204:2023.04.2
-      resource_class: large
+      resource_class: medium
       docker_layer_caching: true
     environment:
       - GIT_LFS_SKIP_SMUDGE: 1
