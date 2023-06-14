@@ -13,7 +13,7 @@ jobs:
           name: install nextflow
           command: |
             #export NXF_VER=22.10.8 && curl -s https://get.nextflow.io | bash && chmod +x nextflow
-            curl nextflow -o https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
+            curl -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
       - run:
           name: test1
           command: |
