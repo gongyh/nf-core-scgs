@@ -1018,7 +1018,7 @@ process NORMALIZE {
     if [ \"${mode}\" == \"bulk\" ]; then
     ln -s $R1 ${prefix}_norm.fastq.gz
     else
-    normalize-by-median.py -k 31 -C 40 --gzip -M 4e+9 -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz $R1
+    normalize-by-median.py -k 31 -C 40 --gzip -M ${task.memory.toGiga()}G -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz $R1
     fi
     """
     } else {
