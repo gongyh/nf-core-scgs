@@ -41,7 +41,7 @@ process PRESEQ {
     plotPreSeq.R ${prefix}_gc.txt ${prefix}_gc
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        preseq: \$(echo \$(preseq 2>&1) | sed 's/^.*preseq: //; s/Usage:.*\$//')
+        preseq: \$(echo \$(preseq 2>&1) | sed 's/^.*Version: //; s/Usage:.*\$//')
     END_VERSIONS
     """
     }

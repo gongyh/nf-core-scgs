@@ -29,7 +29,7 @@ process INDELREALIGN {
     samtools index ${prefix}.realign.bam
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        picard: \$(echo \$(picard MarkDuplicates --version &>))
+        picard: \$(echo \$(picard MarkDuplicates --version 2>&1) | sed 's/^.*picard //; s/Using.*\$//')
     END_VERSIONS
     """
 }

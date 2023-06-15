@@ -529,34 +529,34 @@ workflow {
             bb_bam,
             SAVE_REFERENCE.out.bed
         )
+        ch_versions = ch_versions.mix(SAMTOOLS.out.versions.ifEmpty(null))
         PRESEQ(SAMTOOLS.out.bed)
+        ch_versions = ch_versions.mix(PRESEQ.out.versions.ifEmpty(null))
         QUALIMAP_BAMQC (
             SAMTOOLS.out.bam ,
             gff
         )
+        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions.ifEmpty(null))
         INDELREALIGN (
             SAMTOOLS.out.bam,
             fasta
         )
+        ch_versions = ch_versions.mix(INDELREALIGN.out.versions.ifEmpty(null))
         MONOVAR (
             INDELREALIGN.out.bam.map{ meta,bam -> return bam }.collect(), INDELREALIGN.out.bai.map{ meta, bai -> return bai }
                 .collect(),
             fasta
         )
+        ch_versions = ch_versions.mix(MONOVAR.out.versions.ifEmpty(null))
         ANEUFINDER (
             SAMTOOLS.out.bam.map{ meta, bam -> return bam }.collect(),
             SAMTOOLS.out.bai.map{ meta, bai -> return bai }.collect()
         )
+        ch_versions = ch_versions.mix(ANEUFINDER.out.versions.ifEmpty(null))
         CIRCLIZE (
             SAMTOOLS.out.bed,
             SAVE_REFERENCE.out.bed
         )
-        ch_versions = ch_versions.mix(SAMTOOLS.out.versions.ifEmpty(null))
-        ch_versions = ch_versions.mix(PRESEQ.out.versions.ifEmpty(null))
-        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions.ifEmpty(null))
-        ch_versions = ch_versions.mix(INDELREALIGN.out.versions.ifEmpty(null))
-        ch_versions = ch_versions.mix(MONOVAR.out.versions.ifEmpty(null))
-        ch_versions = ch_versions.mix(ANEUFINDER.out.versions.ifEmpty(null))
         ch_versions = ch_versions.mix(CIRCLIZE.out.versions.ifEmpty(null))
     }
 
@@ -621,18 +621,21 @@ workflow {
             nt_db,
             params.evalue
         )
+        ch_versions = ch_versions.mix(BLASTN.out.versions.ifEmpty(null))
         DIAMOND_BLASTX (
             BLASTN.out.contigs,
             BLASTN.out.nt,
             uniprot_db,
             uniprot_taxids
         )
+        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions.ifEmpty(null))
         BLOBTOOLS (
             DIAMOND_BLASTX.out.contigs,
             DIAMOND_BLASTX.out.nt,
             DIAMOND_BLASTX.out.uniprot,
             DIAMOND_BLASTX.out.real
         )
+        ch_versions = ch_versions.mix(BLOBTOOLS.out.versions.ifEmpty(null))
         if ( params.remap ) {
             REBLOBTOOLS (
                 DIAMOND_BLASTX.out.contigs,
@@ -647,9 +650,6 @@ workflow {
             BLOBTOOLS.out.tax,
             kraken_db
         )
-        ch_versions = ch_versions.mix(BLASTN.out.versions.ifEmpty(null))
-        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions.ifEmpty(null))
-        ch_versions = ch_versions.mix(BLOBTOOLS.out.versions.ifEmpty(null))
     }
     TSNE(ctg)
 
@@ -657,13 +657,13 @@ workflow {
     faa = Channel.empty()
     if ( !euk ) {
         PROKKA(ctg)
+        ch_versions = ch_versions.mix(PROKKA.out.versions.ifEmpty(null))
         PRODIGAL(ctg)
+        ch_versions = ch_versions.mix(PRODIGAL.out.versions.ifEmpty(null))
         faa = PROKKA.out.faa
         prokka_for_mqc1 = PROKKA.out.prokka_for_split
         prokka_for_mqc2 = PROKKA.out.prokka_for_split
         prokka_for_split = PROKKA.out.prokka_for_split
-        ch_versions = ch_versions.mix(PROKKA.out.versions.ifEmpty(null))
-        ch_versions = ch_versions.mix(PRODIGAL.out.versions.ifEmpty(null))
     } else {
         prokka_for_mqc1 = file('/dev/null')
         prokka_for_mqc2 = file('/dev/null')
