@@ -2,38 +2,38 @@ name: nf-core-gongyh-scgs
 channels:
   - conda-forge
   - bioconda
-  - defaults
+  - r
 dependencies:
-  - python=3.6.10
-  - dataclasses
-  - boost=1.68
-  - fastqc=0.11.8
-  - emboss=6.6.0
-  - tbb=2020.2
-  - bowtie2=2.3.4.3
-  - bwa=0.7.17
-  - trim-galore=0.6
-  - kraken=1.1
-  - krona=2.7.1
-  - samtools=1.9
-  - bedtools=2.27.1
-  - picard=2.19.0
-  - spades=3.13.0
+  - conda-forge::python=3.6.10
+  - conda-forge::dataclasses=0.8
+  - conda-forge::boost=1.68
+  - bioconda::fastqc=0.11.8
+  - bioconda::emboss=6.6.0
+  - conda-forge::tbb=2020.2
+  - bioconda::bowtie2=2.3.4.3
+  - bioconda::bwa=0.7.17
+  - bioconda::trim-galore=0.6
+  - bioconda::kraken=1.1
+  - bioconda::krona=2.7.1
+  - bioconda::samtools=1.9
+  - bioconda::bedtools=2.27.1
+  - bioconda::picard=2.19.0
+  - bioconda::spades=3.13.0
   - bioconda::flye=2.9
   - bioconda::canu=2.2
-  - quast=5.0.2
-  - multiqc=1.6
-  - qualimap=2.2.2a
-  - preseq=2.0.3
-  - perl-bioperl=1.7.2
-  - minced=0.3.0
-  - prokka=1.12
-  - diamond=0.9.24
-  - biopython=1.73
-  - seaborn=0.10.1
-  - cgecore=1.5.1
-  - seqtk=1.3
-  - khmer=2.1.2
+  - bioconda::quast=5.0.2
+  - bioconda::multiqc=1.6
+  - bioconda::qualimap=2.2.2a
+  - bioconda::preseq=2.0.3
+  - bioconda::perl-bioperl=1.7.2
+  - bioconda::minced=0.3.0
+  - bioconda::prokka=1.12
+  - bioconda::diamond=0.9.24
+  - conda-forge::biopython=1.73
+  - conda-forge::seaborn=0.10.1
+  - bioconda::cgecore=1.5.1
+  - bioconda::seqtk=1.3
+  - bioconda::khmer=2.1.2
   - pymdown-extensions=8.1.1
   - bioconda::nextflow=20.04.1
   - bioconda::cutadapt=2.10
@@ -48,7 +48,7 @@ dependencies:
   - bioconda::roary=3.13.0
   - bioconda::ncbi-genome-download=0.3.0
   - bioconda::scoary=1.6.16
-  - ete3=3.1.2
+  - conda-forge::ete3=3.1.2
   - bioconda::drep=2.6.2
   - bioconda::comparem=0.1.1
   - bioconda::eukcc=0.2
@@ -59,9 +59,9 @@ dependencies:
   - bioconda::tantan=26
   - bioconda::plasmidfinder=2.1.1
   - bioconda::blobtools=1.1.1
-  - bioconda::perl-io-all
-  - bioconda::pyvcf
-  - bioconda::vg
+  - bioconda::perl-io-all=0.87
+  - bioconda::pyvcf=0.6.8
+  - bioconda::vg=1
   - conda-forge::opentsne=0.5.1
   - conda-forge::graphviz=2.40.1
   - conda-forge::typer=0.2.1
@@ -69,31 +69,31 @@ dependencies:
   - conda-forge::shellingham=1.3.2
   - conda-forge::click-spinner=0.1.10
   - conda-forge::tqdm=4.46.0
-  - ruby=2.6.5
-  - r-base=3.6.1
-  - r-essentials=3.6
-  - r-rcurl=1.98_1.2
-  - r-magicaxis
-  - r-ape
-  - r-gridextra
-  - r-genoplotr
-  - r-ggpubr
-  - r-rstatix
-  - bioconductor-rhtslib=1.18.0
-  - bioconductor-biobase=2.46.0
-  - bioconductor-biocgenerics=0.32.0
-  - bioconductor-s4vectors=0.24.0
-  - bioconductor-iranges=2.20.0
-  - bioconductor-zlibbioc=1.32.0
-  - bioconductor-genomicranges=1.38.0
-  - bioconductor-xvector=0.26.0
-  - bioconductor-biocparallel=1.20.0
-  - bioconductor-genomeinfodb=1.22.0
-  - bioconductor-genomeinfodbdata=1
-  - bioconductor-biostrings=2.54.0
-  - bioconductor-summarizedexperiment=1.16.0
-  - bioconductor-rsamtools=2.2.0
-  - bioconductor-genomicalignments=1.22.0
-  - bioconductor-delayedarray=0.12.0
-  - bioconductor-dnacopy=1.60.0
-  - bioconductor-aneufinder=1.14
+  - conda-forge::ruby=2.6.5
+  - conda-forge::r-base=3.6.1
+  - conda-forge::r-essentials=3.6
+  - conda-forge::r-rcurl=1.98_1.2
+  - conda-forge::r-magicaxis=2.2
+  - conda-forge::r-ape=5.5
+  - conda-forge::r-gridextra=2.3
+  - r::r-genoplotr=0.8.9
+  - conda-forge::r-ggpubr=0.4
+  - conda-forge::r-rstatix=0.7
+  - bioconda::bioconductor-rhtslib=1.18.0
+  - bioconda::bioconductor-biobase=2.46.0
+  - bioconda::bioconductor-biocgenerics=0.32.0
+  - bioconda::bioconductor-s4vectors=0.24.0
+  - bioconda::bioconductor-iranges=2.20.0
+  - bioconda::bioconductor-zlibbioc=1.32.0
+  - bioconda::bioconductor-genomicranges=1.38.0
+  - bioconda::bioconductor-xvector=0.26.0
+  - bioconda::bioconductor-biocparallel=1.20.0
+  - bioconda::bioconductor-genomeinfodb=1.22.0
+  - bioconda::bioconductor-genomeinfodbdata=1
+  - bioconda::bioconductor-biostrings=2.54.0
+  - bioconda::bioconductor-summarizedexperiment=1.16.0
+  - bioconda::bioconductor-rsamtools=2.2.0
+  - bioconda::bioconductor-genomicalignments=1.22.0
+  - bioconda::bioconductor-delayedarray=0.12.0
+  - bioconda::bioconductor-dnacopy=1.60.0
+  - bioconda::bioconductor-aneufinder=1.14
