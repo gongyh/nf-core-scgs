@@ -11,7 +11,7 @@ process QUAST_REF {
     val(euk)
 
     output:
-    path("quast/report.tsv"),                          emit: report
+    path("quast/report.tsv"),  emit: report
     path("quast")
 
     when:

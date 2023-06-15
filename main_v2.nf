@@ -402,20 +402,19 @@ include { TRIMGALORE                  } from './modules/nf-core/trimgalore/main'
 include { BOWTIE2_BUILD               } from './modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN               } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN              } from './modules/nf-core/minimap2/align/main'
-include { VG_CONSTRUCT                } from './modules/nf-core/vg/construct/main'
-include { VG_INDEX                    } from './modules/nf-core/vg/index/main'
 include { QUALIMAP_BAMQC              } from './modules/nf-core/qualimap/bamqc/main'
 include { QUAST                       } from './modules/nf-core/quast/main'
 //include { PRODIGAL                  } from './modules/nf-core/prodigal/main'
 //include { CHECKM_LINEAGEWF          } from './modules/nf-core/checkm/lineagewf/main'
 //include { KOFAMSCAN                 } from './modules/nf-core/kofamscan/main'
+//include { VG_CONSTRUCT                } from './modules/nf-core/vg/construct/main'
+//include { VG_INDEX                    } from './modules/nf-core/vg/index/main'
 
 
 // Import modules from local
 include { SAVE_REFERENCE        } from './modules/local/save_reference'
 include { KRAKEN                } from './modules/local/kraken'
 include { SATURATION            } from './modules/local/saturation'
-include { VG_CALL               } from './modules/local/vg_call'
 include { SAMTOOLS              } from './modules/local/samtools'
 include { PRESEQ                } from './modules/local/preseq'
 include { INDELREALIGN          } from './modules/local/indelrealign'
@@ -425,6 +424,9 @@ include { CIRCLIZE              } from './modules/local/circlize'
 include { NORMALIZE             } from './modules/local/normalize'
 include { CANU                  } from './modules/local/canu'
 include { SPADES                } from './modules/local/spades'
+include { VG_CONSTRUCT          } from './modules/local/vg/vg_construct'
+include { VG_INDEX              } from './modules/local/vg/vg_index'
+include { VG_CALL               } from './modules/local/vg/vg_call'
 include { BOWTIE2_REMAP         } from './modules/local/bowtie2_remap'
 include { REMAP                 } from './modules/local/remap'
 include { CHECKM_LINEAGEWF      } from './modules/local/checkm_lineagewf'
@@ -451,6 +453,8 @@ include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions/ma
 // include { QUAST_REF             } from './modules/local/quast_ref'
 // include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 
+// MULTIQC
+def multiqc_report = []
 
 workflow {
     ch_versions = Channel.empty()
@@ -486,11 +490,13 @@ workflow {
     ch_versions = ch_versions.mix(TRIMGALORE.out.versions.ifEmpty(null))
 
     // KRAKEN
+    kraken_for_mqc = Channel.empty()
     if (params.kraken_db) {
         KRAKEN(
             trimmed_reads,
             kraken_db
         )
+        kraken_for_mqc = KRAKEN.out.report
     }
     SATURATION(trimmed_reads)
 
@@ -522,7 +528,21 @@ workflow {
     }
 
     // VG
-
+    if ( params.fasta && params.vcf ) {
+        VG_CONSTRUCT (
+            fasta,
+            vcf
+        )
+        ch_versions = ch_versions.mix(VG_CONSTRUCT.out.versions.ifEmpty(null))
+        VG_INDEX (
+            VG_CONSTRUCT.out.vg,
+            trimmed_reads
+        )
+        VG_CALL (
+            VG_CONSTRUCT.out.vg,
+            VG_INDEX.out.gam
+        )
+    }
 
     if ( params.fasta && params.gff ) {
         SAMTOOLS (
@@ -533,7 +553,7 @@ workflow {
         PRESEQ(SAMTOOLS.out.bed)
         ch_versions = ch_versions.mix(PRESEQ.out.versions.ifEmpty(null))
         QUALIMAP_BAMQC (
-            SAMTOOLS.out.bam ,
+            SAMTOOLS.out.bam,
             gff
         )
         ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions.ifEmpty(null))
@@ -734,33 +754,36 @@ workflow {
     )
 
     // MULTIQC
-    preseq_for_multiqc = file('/dev/null')
+    //preseq_for_multiqc = file('/dev/null')
 
-    /**
-    MULTIQC_REF(
-                ch_multiqc_config1,
-                FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
-                TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-                GET_SOFTWARE_VERSIONS.out.yml.collect(),
-                SAMTOOLS.out.stats.collect(),
-                preseq_for_multiqc.collect(),
-                QUALIMAP_BAMQC.out.results,
-                QUAST_REF.out.report,
-                prokka_for_mqc1.collect(),
-                KRAKEN.out.report.collect(),
-                create_workflow_summary(summary)
-                )
-    MULTIQC_DENOVO(
-                ch_multiqc_config2,
-                FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
-                TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-                GET_SOFTWARE_VERSIONS.out.yml.collect(),
-                quast_denovo.ifEmpty('/dev/null'),
-                prokka_for_mqc2.collect(),
-                KRAKEN.out.report.collect(),
-                create_workflow_summary(summary)
-                )
-    */
+    if ( denovo == false) {
+        MULTIQC_REF (
+            ch_multiqc_config1,
+            FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
+            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
+            GET_SOFTWARE_VERSIONS.out.yml,
+            SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
+            PRESEQ.out.txt.collect{it[1]}.ifEmpty([]),
+            QUALIMAP_BAMQC.out.results.collect{it[1]}.ifEmpty([]),
+            quast_report.ifEmpty('/dev/null'),
+            prokka_for_mqc1.collect{it[1]}.ifEmpty([]),
+            kraken_for_mqc.collect{it[1]}.ifEmpty([]),
+            create_workflow_summary(summary)
+        )
+        multiqc_report = MULTIQC_REF.out.report
+    } else {
+        MULTIQC_DENOVO (
+            ch_multiqc_config2,
+            FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
+            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
+            GET_SOFTWARE_VERSIONS.out.yml,
+            quast_report.ifEmpty('/dev/null'),
+            prokka_for_mqc2.collect{it[1]}.ifEmpty([]),
+            kraken_for_mqc.collect{it[1]}.ifEmpty([]),
+            create_workflow_summary(summary)
+        )
+        multiqc_report = MULTIQC_DENOVO.out.report
+    }
 
     OUTPUT_DOCUMENTATION(ch_output_docs)
 }
@@ -769,8 +792,10 @@ workflow {
  * Completion e-mail notification
  */
 workflow.onComplete {
-    //NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    //NfcoreTemplate.summary(workflow, params, log)
+    if ( params.email ){
+        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+    }
+    NfcoreTemplate.summary(workflow, params, log)
 }
 
 def nfcoreHeader(){
