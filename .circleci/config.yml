@@ -15,6 +15,10 @@ jobs:
             #export NXF_VER=22.10.8 && curl -s https://get.nextflow.io | bash && chmod +x nextflow
             curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
       - run:
+          name: pull docker images
+          command: |
+            docker pull quay.io/gongyh/nf-core-scgs:v1.2
+      - run:
           name: test1
           command: |
             mkdir -p tests1 && cd tests1
