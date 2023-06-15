@@ -18,16 +18,18 @@ jobs:
           name: test1
           command: |
             mkdir -p tests1 && cd tests1
-            ../nextflow run ../main.nf -profile test_denovo,docker
+            ../nextflow run ../main.nf -profile test_denovo,docker --saturation --snv --cnv
           no_output_timeout: 30m
       - run:
           name: test2
           command: |
             mkdir -p tests2 && cd tests2
-            ../nextflow run ../main_v2.nf -profile test_denovo,docker
+            ../nextflow run ../main_v2.nf -profile test_denovo,docker --saturation --snv --cnv
           no_output_timeout: 30m
       - store_artifacts:
           path: /home/circleci/project/tests2/results/pipeline_info
+      - store_artifacts:
+          path: /home/circleci/project/tests2/results/MultiQC
       - store_artifacts:
           path: /home/circleci/project/tests2/.nextflow.log
           destination: nextflow-log

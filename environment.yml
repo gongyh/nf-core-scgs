@@ -77,6 +77,7 @@ dependencies:
   - conda-forge::r-ape=5.5
   - conda-forge::r-gridextra=2.3
   - r::r-genoplotr=0.8.9
+  - r::r-stringi=1.4.3
   - conda-forge::r-ggpubr=0.4
   - conda-forge::r-rstatix=0.7
   - bioconda::bioconductor-rhtslib=1.18.0
