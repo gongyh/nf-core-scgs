@@ -25,6 +25,7 @@ process PROKKA {
     sed '/^##FASTA/Q' ${prefix}/${prefix}.gff > ${prefix}/${prefix}_noseq.gff
     gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | grep -v gene > ${prefix}/${prefix}_ctg_genes.tsv
     prokka_postprocess.py ${prefix}/${prefix}_ctg_genes.tsv ${prefix}/${prefix}.tsv > ${prefix}/${prefix}_all.tsv
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         prokka: \$(echo \$(prokka -v 2>&1) | sed 's/^.*prokka //; s/Using.*\$//')

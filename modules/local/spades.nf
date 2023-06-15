@@ -23,6 +23,7 @@ process SPADES {
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes //; s/Using.*\$//')
@@ -38,6 +39,7 @@ process SPADES {
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes //; s/Using.*\$//')
