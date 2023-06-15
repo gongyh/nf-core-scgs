@@ -27,6 +27,7 @@ dependencies:
   - bioconda::preseq=2.0.3
   - bioconda::perl-bioperl=1.7.2
   - bioconda::minced=0.3.0
+  - bioconda::blast=2.9
   - bioconda::prokka=1.12
   - bioconda::diamond=0.9.24
   - conda-forge::biopython=1.73
