@@ -12,6 +12,7 @@ process CHECKM_LINEAGEWF {
 
     output:
     path('spades_checkM.txt')
+    path "versions.yml",       emit: versions
 
     when:
     !euk
@@ -24,5 +25,9 @@ process CHECKM_LINEAGEWF {
     else
     checkm lineage_wf -t ${task.cpus} -r --tab_table -f spades_checkM.txt -x fasta spades spades_checkM
     fi
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        checkm: \$(echo \$( head -n 1 /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/checkm/VERSION))
+    END_VERSIONS
     """
 }

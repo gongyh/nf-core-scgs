@@ -1,18 +1,18 @@
 process SPLIT_CHECKM {
-    publishDir "${params.outdir}/", mode: 'copy'
+    label 'process_medium'
 
     input:
     path("results/spades/*")
     path("results/blob/*")
     path("results/prokka/*")
     path("results/kofam/*")
+    val split_bac_level
+    val split_euk_level
 
     output:
     path("split/*")
 
     script:
-    def split_bac_level = params.split_bac_level ? params.split_bac_level : "genus"
-    def split_euk_level = params.split_euk_level ? params.split_euk_level : "genus"
     """
     cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split

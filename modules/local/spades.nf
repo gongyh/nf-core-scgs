@@ -8,6 +8,7 @@ process SPADES {
     output:
     tuple val(meta), path("${prefix}.ctg200.fasta"),   emit: ctg200
     tuple val(meta), path("${prefix}.ctgs.fasta"),     emit: ctg
+    path "versions.yml",                               emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -22,6 +23,10 @@ process SPADES {
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*spades //; s/Using.*\$//')
+    END_VERSIONS
     """
     } else {
     """
@@ -33,6 +38,10 @@ process SPADES {
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*spades //; s/Using.*\$//')
+    END_VERSIONS
     """
     }
 }

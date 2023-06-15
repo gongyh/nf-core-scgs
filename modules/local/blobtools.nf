@@ -11,6 +11,7 @@ process BLOBTOOLS {
     tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt") , emit: tax
     tuple val(meta), path("${contigs}") ,                           emit: contigs
     tuple val(meta), path("${prefix}") ,                            emit: tax_split
+    path "versions.yml",                                            emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -30,5 +31,9 @@ process BLOBTOOLS {
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r family --format png -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r genus --format png -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r species --format png -o ${prefix}/
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        blobtools: \$(echo \$(blobtools -v 2>&1) | sed 's/^.*blobtools //; s/Using.*\$//')
+    END_VERSIONS
     """
 }

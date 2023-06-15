@@ -1,7 +1,6 @@
 process CANU {
     tag "${meta.id}"
     label 'process_high'
-    publishDir "${params.outdir}/spades", mode: 'copy'
 
     input:
     tuple val(meta), path(reads)
@@ -9,6 +8,7 @@ process CANU {
     output:
     tuple val(meta), path("${prefix}.ctg200.fasta"),  emit: ctg200
     tuple val(meta), path("${prefix}.ctgs.fasta"),    emit: ctg
+    path "versions.yml",                              emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -27,5 +27,9 @@ process CANU {
     ##ln -s ${prefix}.spades_out/assembly.fasta ${prefix}.contigs.fasta # for flye
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/ len=.*\$//g' > ${prefix}.ctgs.fasta
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        canu: \$(echo \$(canu -version 2>&1) | sed 's/^.*canu //; s/Using.*\$//')
+    END_VERSIONS
     """
 }
