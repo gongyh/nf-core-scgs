@@ -1,5 +1,5 @@
 process ANEUFINDER {
-    publishDir "${pp_outdir}", mode: 'copy'
+    label 'process_medium'
 
     input:
     path("bams/*")
@@ -13,7 +13,6 @@ process ANEUFINDER {
     !params.bulk && params.cnv && !single_end && !params.nanopore
 
     script:
-    pp_outdir = "${params.outdir}/aneufinder"
     """
     aneuf.R ./bams CNV_output ${task.cpus}
 
