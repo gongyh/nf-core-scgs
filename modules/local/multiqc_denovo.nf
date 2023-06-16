@@ -11,6 +11,7 @@ process MULTIQC_DENOVO {
     path('fastqc/*')
     path('trimgalore/*')
     path('software_versions/*')
+    path('fastqc2/*')
     path('quast/*')
     path('prokka/*')
     path('kraken/*')
