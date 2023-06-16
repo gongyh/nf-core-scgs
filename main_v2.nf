@@ -403,7 +403,7 @@ include { BOWTIE2_BUILD               } from './modules/nf-core/bowtie2/build/ma
 include { BOWTIE2_ALIGN               } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN              } from './modules/nf-core/minimap2/align/main'
 include { QUALIMAP_BAMQC              } from './modules/nf-core/qualimap/bamqc/main'
-include { QUAST                       } from './modules/nf-core/quast/main'
+//include { QUAST                       } from './modules/nf-core/quast/main'
 //include { PRODIGAL                  } from './modules/nf-core/prodigal/main'
 //include { CHECKM_LINEAGEWF          } from './modules/nf-core/checkm/lineagewf/main'
 //include { KOFAMSCAN                 } from './modules/nf-core/kofamscan/main'
@@ -424,6 +424,7 @@ include { CIRCLIZE              } from './modules/local/circlize'
 include { NORMALIZE             } from './modules/local/normalize'
 include { CANU                  } from './modules/local/canu'
 include { SPADES                } from './modules/local/spades'
+include { QUAST                 } from './modules/local/quast'
 include { VG_CONSTRUCT          } from './modules/local/vg/vg_construct'
 include { VG_INDEX              } from './modules/local/vg/vg_index'
 include { VG_CALL               } from './modules/local/vg/vg_call'
@@ -761,7 +762,7 @@ workflow {
             ch_multiqc_config1,
             FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
             TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-            GET_SOFTWARE_VERSIONS.out.yml,
+            GET_SOFTWARE_VERSIONS.out.mqc_yml,
             SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
             PRESEQ.out.txt.collect{it[1]}.ifEmpty([]),
             QUALIMAP_BAMQC.out.results.collect{it[1]}.ifEmpty([]),
@@ -776,8 +777,9 @@ workflow {
             ch_multiqc_config2,
             FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
             TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-            GET_SOFTWARE_VERSIONS.out.yml,
+            GET_SOFTWARE_VERSIONS.out.mqc_yml,
             quast_report.ifEmpty('/dev/null'),
+            CHECKM_LINEAGEWF.out.mqc_tsv.ifEmpty('/dev/null'),
             prokka_for_mqc2.collect{it[1]}.ifEmpty([]),
             kraken_for_mqc.collect{it[1]}.ifEmpty([]),
             create_workflow_summary(summary)

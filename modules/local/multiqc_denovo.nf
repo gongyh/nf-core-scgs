@@ -12,6 +12,7 @@ process MULTIQC_DENOVO {
     path('trimgalore/*')
     path('software_versions/*')
     path('quast/*')
+    path('checkm/*')
     path('prokka/*')
     path('kraken/*')
     path workflow_summary

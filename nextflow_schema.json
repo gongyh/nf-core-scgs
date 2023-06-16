@@ -159,21 +159,18 @@
                     "type": "string",
                     "description": "Institutional config description.",
                     "hidden": true,
-                    "default": "Institutional config description.",
                     "fa_icon": "fas fa-users-cog"
                 },
                 "config_profile_contact": {
                     "type": "string",
                     "description": "Institutional config contact information.",
                     "hidden": true,
-                    "default": "Institutional config contact information.",
                     "fa_icon": "fas fa-users-cog"
                 },
                 "config_profile_url": {
                     "type": "string",
                     "description": "Institutional config URL link.",
                     "hidden": true,
-                    "default": "Institutional config URL link.",
                     "fa_icon": "fas fa-users-cog"
                 }
             }
