@@ -761,8 +761,9 @@ workflow {
         MULTIQC_REF (
             ch_multiqc_config1,
             FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
-            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
+            TRIMGALORE.out.log.collect{it[1]}.ifEmpty([]),
             GET_SOFTWARE_VERSIONS.out.mqc_yml,
+            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
             SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
             PRESEQ.out.txt.collect{it[1]}.ifEmpty([]),
             QUALIMAP_BAMQC.out.results.collect{it[1]}.ifEmpty([]),
@@ -776,8 +777,9 @@ workflow {
         MULTIQC_DENOVO (
             ch_multiqc_config2,
             FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
-            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
+            TRIMGALORE.out.log.collect{it[1]}.ifEmpty([]),
             GET_SOFTWARE_VERSIONS.out.mqc_yml,
+            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
             quast_report.ifEmpty('/dev/null'),
             CHECKM_LINEAGEWF.out.mqc_tsv.ifEmpty('/dev/null'),
             prokka_for_mqc2.collect{it[1]}.ifEmpty([]),

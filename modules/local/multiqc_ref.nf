@@ -11,6 +11,7 @@ process MULTIQC_REF {
     path('fastqc/*')
     path('trimgalore/*')
     path('software_versions/*')
+    path('fastqc2/*')
     path('samtools/*')
     path('preseq/*')
     path('*')

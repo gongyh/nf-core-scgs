@@ -7,9 +7,6 @@ process BOWTIE2_REMAP {
     output:
     path("${prefix}Bowtie2Index"),    emit: index
 
-    when:
-    params.remap
-
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """

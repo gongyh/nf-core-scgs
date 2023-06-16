@@ -14,9 +14,6 @@ process CHECKM_LINEAGEWF {
     path('CheckM_mqc.tsv'),    emit: mqc_tsv
     path "versions.yml",       emit: versions
 
-    when:
-    !euk
-
     script:
     def checkm_wf = genus ? "taxonomy_wf" : "lineage_wf"
     """
