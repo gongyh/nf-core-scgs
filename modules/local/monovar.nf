@@ -21,7 +21,7 @@ process MONOVAR {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        monovar: 'v0.0.1'
+        monovar: v0.0.1
     END_VERSIONS
     """
 }

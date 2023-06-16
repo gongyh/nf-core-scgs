@@ -36,4 +36,4 @@ jobs:
           path: /home/circleci/project/tests2/results/MultiQC
       - store_artifacts:
           path: /home/circleci/project/tests2/.nextflow.log
-          destination: nextflow-log
+          destination: nextflow-log.txt

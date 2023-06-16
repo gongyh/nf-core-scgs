@@ -19,7 +19,7 @@ process ANEUFINDER {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        aneufinder: \$(Rscript -e 'print(packageVersion("AneuFinder"))' | sed 's/^.*AneuFinder //;')
+        aneufinder: \$(Rscript -e 'v=format(packageVersion("AneuFinder"));cat(v)')
     END_VERSIONS
     """
 }
