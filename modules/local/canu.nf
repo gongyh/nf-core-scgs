@@ -27,6 +27,7 @@ process CANU {
     ##ln -s ${prefix}.spades_out/assembly.fasta ${prefix}.contigs.fasta # for flye
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/ len=.*\$//g' > ${prefix}.ctgs.fasta
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         canu: \$(echo \$(canu -version 2>&1) | sed 's/^.*canu //; s/Using.*\$//')

@@ -24,6 +24,7 @@ process BLASTN {
     blastn -query $contigs -db $db/nt -outfmt '6 qseqid staxids bitscore std' \
     -max_target_seqs 1 -max_hsps 1 -evalue ${evalue} \
     -num_threads ${task.cpus} -out ${prefix}_nt.out
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         blastn: \$(echo \$(blastn -version 2>&1) | sed 's/^.*blastn //; s/Using.*\$//')

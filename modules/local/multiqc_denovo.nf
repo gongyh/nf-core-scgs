@@ -1,6 +1,10 @@
 process MULTIQC_DENOVO {
     label "multiqc"
-    publishDir "${params.outdir}/MultiQC", mode: 'copy'
+
+    conda "bioconda::multiqc=1.14"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/multiqc:1.14--pyhdfd78af_0' :
+        'biocontainers/multiqc:1.14--pyhdfd78af_0' }"
 
     input:
     path multiqc_config
@@ -13,11 +17,8 @@ process MULTIQC_DENOVO {
     path workflow_summary
 
     output:
-    path("*multiqc_report.html"), emit: multiqc_report2
+    path("*multiqc_report.html"), emit: report
     path("*_data")
-
-    when:
-    denovo == true
 
     script:
     """

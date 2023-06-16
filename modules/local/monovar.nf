@@ -1,7 +1,5 @@
 process MONOVAR {
-    publishDir path: "${pp_outdir}", mode: 'copy',
-                saveAs: { filename ->
-                    if (filename.indexOf(".vcf") > 0) "$filename" else null }
+    label 'process_medium'
 
     input:
     path("*")
@@ -20,6 +18,7 @@ process MONOVAR {
     """
     ls *.bam > bams.txt
     samtools mpileup -B -d 10000 -q 40 -f $fa -b bams.txt | /opt/MonoVar/src/monovar.py -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         monovar: 'v0.0.1'

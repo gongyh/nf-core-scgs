@@ -6,4 +6,5 @@ results/
 .DS_Store
 tests/
 test-datasets/
+testing/
 RAGE-Seq/
