@@ -16,6 +16,7 @@ process MULTIQC_REF {
     path('preseq/*')
     path('*')
     path('quast/*')
+    path('checkm/*')
     path('prokka/*')
     path('kraken/*')
     path workflow_summary

@@ -768,6 +768,7 @@ workflow {
             PRESEQ.out.txt.collect{it[1]}.ifEmpty([]),
             QUALIMAP_BAMQC.out.results.collect{it[1]}.ifEmpty([]),
             quast_report.ifEmpty('/dev/null'),
+            CHECKM_LINEAGEWF.out.mqc_tsv.ifEmpty('/dev/null'),
             prokka_for_mqc1.collect{it[1]}.ifEmpty([]),
             kraken_for_mqc.collect{it[1]}.ifEmpty([]),
             create_workflow_summary(summary)

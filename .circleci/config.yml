@@ -31,9 +31,20 @@ jobs:
             ../nextflow run ../main_v2.nf -profile test_denovo,docker --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
-          path: /home/circleci/project/tests2/results/pipeline_info
+          path: /home/circleci/project/tests1/results/pipeline_info
+          destination: dsl1/pipeline_info
       - store_artifacts:
-          path: /home/circleci/project/tests2/results/MultiQC
+          path: /home/circleci/project/tests1/results/MultiQC/multiqc_report.html
+          destination: dsl1/multiqc_report.html
+      - store_artifacts:
+          path: /home/circleci/project/tests1/.nextflow.log
+          destination: dsl1/nextflow-log.txt
+      - store_artifacts:
+          path: /home/circleci/project/tests2/results/pipeline_info
+          destination: dsl2/pipeline_info
+      - store_artifacts:
+          path: /home/circleci/project/tests2/results/MultiQC/multiqc_report.html
+          destination: dsl2/multiqc_report.html
       - store_artifacts:
           path: /home/circleci/project/tests2/.nextflow.log
-          destination: nextflow-log.txt
+          destination: dsl2/nextflow-log.txt
