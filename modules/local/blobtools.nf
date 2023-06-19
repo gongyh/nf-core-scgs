@@ -1,5 +1,6 @@
 process BLOBTOOLS {
     tag "$meta.id"
+    label 'process_medium'
 
     input:
     tuple val(meta), path(contigs)

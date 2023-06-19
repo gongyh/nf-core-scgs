@@ -1,6 +1,10 @@
 process KRAKEN {
     tag "$meta.id"
-    publishDir "${params.outdir}/kraken", mode: 'copy'
+
+    conda "bioconda::kraken=1.1.1"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/kraken:1.1.1' :
+        'biocontainers/kraken:1.1.1' }"
 
     input:
     tuple val(meta), path(reads)

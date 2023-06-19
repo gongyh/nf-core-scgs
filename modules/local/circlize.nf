@@ -1,5 +1,5 @@
 process CIRCLIZE {
-    tag "${meta.id}"
+    tag "$meta.id"
     label 'process_medium'
 
     input:

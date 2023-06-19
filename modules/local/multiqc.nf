@@ -1,5 +1,5 @@
-process MULTIQC_DENOVO {
-    label "multiqc"
+process MULTIQC {
+    label 'process_medium'
 
     conda "bioconda::multiqc=1.14"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -12,6 +12,9 @@ process MULTIQC_DENOVO {
     path('trimgalore/*')
     path('software_versions/*')
     path('fastqc2/*')
+    path('samtools/*')
+    path('preseq/*')
+    path('*')
     path('quast/*')
     path('checkm/*')
     path('prokka/*')

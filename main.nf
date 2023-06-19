@@ -1808,7 +1808,7 @@ process SPLIT_CHECKM_EUKCC {
     mkdir -p \${sample}_${split_bac_level}_checkM
     checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
     cd \${sample}_${split_euk_level}_Eukaryota
-    contigs=(`ls -d *.fasta`)
+    contigs=(`ls *.fasta`)
     for contig in \${contigs[*]};do
         prefix=\${contig%.fasta}
         # clean id
@@ -1821,7 +1821,7 @@ process SPLIT_CHECKM_EUKCC {
         getAnnoFasta.pl \${prefix}.gff
     done
 
-    faas=(`ls -d *.aa`)
+    faas=(`ls *.aa`)
     for faa in \${faas[*]};do
         faaPrefix=\${faa%.aa}
         eukcc --db ../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"

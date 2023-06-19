@@ -281,8 +281,7 @@ if( workflow.profile == 'awsbatch') {
 }
 
 // Stage config files
-ch_multiqc_config1 = Channel.fromPath(params.multiqc_config)
-ch_multiqc_config2 = Channel.fromPath(params.multiqc_config)
+ch_multiqc_config = Channel.fromPath(params.multiqc_config)
 ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
 
 // Custom trimming options
@@ -441,8 +440,7 @@ include { PROKKA                } from './modules/local/prokka'
 include { PRODIGAL              } from './modules/local/prodigal'
 include { AUGUSTUS              } from './modules/local/augustus'
 include { EUKCC                 } from './modules/local/eukcc'
-include { MULTIQC_DENOVO        } from './modules/local/multiqc_denovo'
-include { MULTIQC_REF           } from './modules/local/multiqc_ref'
+include { MULTIQC               } from './modules/local/multiqc'
 include { EGGNOG                } from './modules/local/eggnog'
 include { KOFAMSCAN             } from './modules/local/kofamscan'
 include { RESFINDER             } from './modules/local/resfinder'
@@ -756,39 +754,22 @@ workflow {
 
     // MULTIQC
     //preseq_for_multiqc = file('/dev/null')
-
-    if ( denovo == false) {
-        MULTIQC_REF (
-            ch_multiqc_config1,
-            FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
-            TRIMGALORE.out.log.collect{it[1]}.ifEmpty([]),
-            GET_SOFTWARE_VERSIONS.out.mqc_yml,
-            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-            SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
-            PRESEQ.out.txt.collect{it[1]}.ifEmpty([]),
-            QUALIMAP_BAMQC.out.results.collect{it[1]}.ifEmpty([]),
-            quast_report.ifEmpty('/dev/null'),
-            prokka_for_mqc1.collect{it[1]}.ifEmpty([]),
-            kraken_for_mqc.collect{it[1]}.ifEmpty([]),
-            create_workflow_summary(summary)
-        )
-        multiqc_report = MULTIQC_REF.out.report
-    } else {
-        MULTIQC_DENOVO (
-            ch_multiqc_config2,
-            FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
-            TRIMGALORE.out.log.collect{it[1]}.ifEmpty([]),
-            GET_SOFTWARE_VERSIONS.out.mqc_yml,
-            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-            quast_report.ifEmpty('/dev/null'),
-            CHECKM_LINEAGEWF.out.mqc_tsv.ifEmpty('/dev/null'),
-            prokka_for_mqc2.collect{it[1]}.ifEmpty([]),
-            kraken_for_mqc.collect{it[1]}.ifEmpty([]),
-            create_workflow_summary(summary)
-        )
-        multiqc_report = MULTIQC_DENOVO.out.report
-    }
-
+    MULTIQC (
+        ch_multiqc_config,
+        FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
+        TRIMGALORE.out.log.collect{it[1]}.ifEmpty([]),
+        GET_SOFTWARE_VERSIONS.out.mqc_yml,
+        TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
+        denovo ? Channel.empty() : SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
+        denovo ? Channel.empty() : PRESEQ.out.txt.collect{it[1]}.ifEmpty([]),
+        denovo ? Channel.empty() : QUALIMAP_BAMQC.out.results.collect{it[1]}.ifEmpty([]),
+        quast_report.ifEmpty('/dev/null'),
+        CHECKM_LINEAGEWF.out.mqc_tsv.ifEmpty('/dev/null'),
+        prokka_for_mqc2.collect{it[1]}.ifEmpty([]),
+        kraken_for_mqc.collect{it[1]}.ifEmpty([]),
+        create_workflow_summary(summary)
+    )
+    multiqc_report = MULTIQC.out.report
     OUTPUT_DOCUMENTATION(ch_output_docs)
 }
 

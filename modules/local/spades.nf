@@ -1,6 +1,6 @@
 process SPADES {
     tag "${meta.id}"
-    publishDir "${params.outdir}/spades", mode: 'copy'
+    label 'process_high'
 
     input:
     tuple val(meta), path(reads)
