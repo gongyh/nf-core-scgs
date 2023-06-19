@@ -2,10 +2,12 @@ process REMAP {
     tag "$meta.id"
     label 'process_medium'
 
+    /**
     conda "bioconda::bowtie2=2.4.4"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/bowtie2:2.4.4--py39hbb4e92a_0' :
         'biocontainers/bowtie2:2.4.4--py39hbb4e92a_0' }"
+    */
 
     input:
     tuple val(meta), path(reads)

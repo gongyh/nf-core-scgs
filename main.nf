@@ -1821,11 +1821,14 @@ process SPLIT_CHECKM_EUKCC {
         getAnnoFasta.pl \${prefix}.gff
     done
 
-    faas=(`ls *.aa`)
-    for faa in \${faas[*]};do
-        faaPrefix=\${faa%.aa}
-        eukcc --db ../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
-    done
+    if ls *.aa >/dev/null 2>&1;
+    then
+        faas=(`ls *.aa`)
+        for faa in \${faas[*]};do
+            faaPrefix=\${faa%.aa}
+            eukcc --db ../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
+        done
+    fi
     cd ../
     done
     """
