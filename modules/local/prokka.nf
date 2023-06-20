@@ -2,6 +2,11 @@ process PROKKA {
     tag "$meta.id"
     label 'process_low'
 
+    conda "prokka==1.14.6--pl5262hdfd78af_3,gff2bed=1.0.3"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-bd42960b956a8cd854aff7247b24b7e730b2c952:e41032276432546adda9699a4dd0421a51defccb-1' :
+        'scgs/mulled-v2-bd42960b956a8cd854aff7247b24b7e730b2c952:e41032276432546adda9699a4dd0421a51defccb-1' }"
+
     input:
     tuple val(meta), path(contigs)
 

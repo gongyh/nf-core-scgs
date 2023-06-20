@@ -1,6 +1,11 @@
 process SAVE_REFERENCE {
     publishDir path: "${params.outdir}/reference_genome", mode: 'copy'
 
+    conda "click=8.1.3,biopython=1.81,bedtools=2.31.0"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-03f569b0930bbc8a26531ce48223cd6880134686:eeee3d8bada9c650a6eab38b1eecb7d20fe49a3a-0' :
+        'scgs/mulled-v2-03f569b0930bbc8a26531ce48223cd6880134686:eeee3d8bada9c650a6eab38b1eecb7d20fe49a3a-0' }"
+
     input:
     path fasta
     path gff

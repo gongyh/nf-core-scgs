@@ -1,6 +1,11 @@
 process REBLOBTOOLS {
     tag "$meta.id"
 
+    conda "blobtools==1.1.1--py_1,samtools=1.17"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-358b5ab5afe13b671cdf14afe811ec6475320ccc:39b70957d5b386c2477e6f9818af54608acbc32d-0' :
+        'scgs/mulled-v2-358b5ab5afe13b671cdf14afe811ec6475320ccc:39b70957d5b386c2477e6f9818af54608acbc32d-0' }"
+
     input:
     tuple val(meta), path(contigs)
     tuple val(meta), path(anno)

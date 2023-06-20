@@ -1,6 +1,6 @@
 # gongyh/nf-core-scgs: Changelog
 
-## v1.3 - [planed]
+## v2.0 - [planed]
 
 DSL2 only version.
 

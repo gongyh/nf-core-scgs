@@ -3,6 +3,11 @@ process INDELREALIGN {
     label 'process_single'
     publishDir "${pp_outdir}", mode: 'copy'
 
+    conda "gatk==3.8--hdfd78af_11,samtools=1.17,picard=2.19.0"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-1078cca9be35f4e979036df5cc474bba6aa9e104:fba6935774d71c8a99c4f45fab44cfeea4781e17-0' :
+        'scgs/mulled-v2-1078cca9be35f4e979036df5cc474bba6aa9e104:fba6935774d71c8a99c4f45fab44cfeea4781e17-0' }"
+
     input:
     tuple val(meta), path(bam)
     path fa

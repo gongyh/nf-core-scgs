@@ -2,6 +2,11 @@ process AUGUSTUS {
     tag "$meta.id"
     label 'process_medium'
 
+    conda "augustus==3.5.0--pl5321h700735d_3"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/augustus:3.5.0--pl5321hf46c7bb_1' :
+        'biocontainers/augustus:3.5.0--pl5321h700735d_3' }"
+
     input:
     tuple val(meta), path(contigs)
 

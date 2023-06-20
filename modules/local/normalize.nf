@@ -1,6 +1,11 @@
 process NORMALIZE {
     tag "${meta.id}"
 
+    conda "khmer=3.0.0a3,fastx_toolkit=0.0.14"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-afeccb6637ecc3e429a8f7f6e6713be70eff3d40:ee0ebbe2f959481c603cf90cda1c2026613505ef-0' :
+        'scgs/mulled-v2-afeccb6637ecc3e429a8f7f6e6713be70eff3d40:ee0ebbe2f959481c603cf90cda1c2026613505ef-0' }"
+
     input:
     tuple val(meta), path(reads)
 
