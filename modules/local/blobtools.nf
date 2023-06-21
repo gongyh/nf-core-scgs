@@ -2,7 +2,7 @@ process BLOBTOOLS {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "blobtools==1.1.1--py_1"
+    conda "blobtools=1.1.1--py_1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/blobtools:1.1.1--py_1' :
         'biocontainers/blobtools:1.1.1--py_1' }"
