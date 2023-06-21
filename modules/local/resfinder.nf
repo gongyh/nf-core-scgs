@@ -2,7 +2,7 @@ process RESFINDER {
     tag "$meta.id"
     label 'process_low'
 
-    conda "bioconda:staramr==0.8.0--pyhdfd78af_0"
+    conda "bioconda:staramr=0.8.0--pyhdfd78af_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/staramr:0.8.0--pyhdfd78af_1' :
         'biocontainers/staramr:0.8.0--pyhdfd78af_0' }"

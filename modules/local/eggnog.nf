@@ -2,7 +2,7 @@ process EGGNOG {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "eggnog-mapper==2.1.11--pyhdfd78af_0"
+    conda "eggnog-mapper=2.1.11--pyhdfd78af_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/eggnog-mapper:2.1.8--pyhdfd78af_0' :
         'biocontainers/eggnog-mapper:2.1.11--pyhdfd78af_0' }"
