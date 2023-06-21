@@ -2,10 +2,10 @@ process RESFINDER {
     tag "$meta.id"
     label 'process_low'
 
-    conda "bioconda::resfinder==4.1.11--hdfd78af_0"
+    conda "bioconda:staramr==0.8.0--pyhdfd78af_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/resfinder:4.1.11--hdfd78af_0' :
-        'biocontainers/resfinder:4.1.11--hdfd78af_0' }"
+        'https://depot.galaxyproject.org/singularity/staramr:0.8.0--pyhdfd78af_1' :
+        'biocontainers/staramr:0.8.0--pyhdfd78af_0' }"
 
     input:
     tuple val(meta), path(contigs)
@@ -20,5 +20,7 @@ process RESFINDER {
     mkdir -p $prefix
     python /opt/resfinder/resfinder.py -i $contigs -o $prefix -p $db -mp blastn -x
     rm -rf $prefix/tmp
+
+    // staramr search -o $prefix $contigs
     """
 }

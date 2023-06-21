@@ -26,8 +26,8 @@ process REBLOBTOOLS {
     def uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
     """
     mkdir -p ${prefix}
-        samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
-        samtools index ${prefix}_ass.sort.bam
+    samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
+    samtools index ${prefix}_ass.sort.bam
     blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -b ${prefix}_ass.sort.bam -o ${prefix}/${prefix} \
     --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
     blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
