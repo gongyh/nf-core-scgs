@@ -2,10 +2,10 @@ process PROKKA {
     tag "$meta.id"
     label 'process_low'
 
-    conda "prokka==1.14.6--pl5262hdfd78af_3,gff2bed=1.0.3"
+    conda "prokka=1.14.6,bedops=2.4.38"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-bd42960b956a8cd854aff7247b24b7e730b2c952:e41032276432546adda9699a4dd0421a51defccb-1' :
-        'scgs/mulled-v2-bd42960b956a8cd854aff7247b24b7e730b2c952:e41032276432546adda9699a4dd0421a51defccb-1' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-1e40df84b5b2d0a934c357a759500c269d2eb793:81460e1910925aa1427c823417f44d2739507564-0' :
+        'scgs/mulled-v2-1e40df84b5b2d0a934c357a759500c269d2eb793:81460e1910925aa1427c823417f44d2739507564-0' }"
 
     input:
     tuple val(meta), path(contigs)
