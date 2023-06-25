@@ -26,7 +26,7 @@ process BLOBTOOLS {
     mkdir -p ${prefix}
     blobtools-build_nodesdb
     blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
-    --db /usr/local/opt/blobtools-1.0.1/datanodesDB.txt
+    --db /usr/local/opt/blobtools-1.0.1/data/nodesDB.txt
     blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/
