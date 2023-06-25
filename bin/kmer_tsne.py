@@ -3,7 +3,7 @@
 import sys
 import h5py
 from openTSNE import TSNE, TSNEEmbedding, affinity, initialization
-from openTSNE.callbacks import ErrorLogger
+#from openTSNE.callbacks import ErrorLogger
 import numpy as np
 import pandas as pd
 
