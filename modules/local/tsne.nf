@@ -2,6 +2,11 @@ process TSNE {
     tag "$meta.id"
     publishDir "${params.outdir}/tsne", mode: 'copy'
 
+    conda "opentsne=1.0.0,h5py=3.9.0,numpy=1.25.0,pandas=2.0.2,kpal=2.1.1,perl-bioperl=1.7.8"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-8905087433117c98a93e379c07447431e85bdd71:5402918794aa21f8f7e4b46973655d86142c9ffb-0' :
+        'scgs/mulled-v2-8905087433117c98a93e379c07447431e85bdd71:5402918794aa21f8f7e4b46973655d86142c9ffb-0' }"
+
     input:
     tuple val(meta), path(contigs)
 

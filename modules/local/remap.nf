@@ -13,7 +13,8 @@ process REMAP {
     val(allow_multi_align)
 
     output:
-    tuple val(meta), path("${prefix}_ass.bam"),  emit: bam
+    tuple val(meta), path("${prefix}_ass.sort.bam"),      emit: bam
+    tuple val(meta), path("${prefix}_ass.sort.bam.bai"),  emit: bai
 
     when:
     params.remap
@@ -24,10 +25,14 @@ process REMAP {
     if (meta.single_end) {
     """
     bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U ${reads[0]} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
+    samtools index ${prefix}_ass.sort.bam
     """
     } else {
     """
     bowtie2 --no-mixed --no-discordant -X 1000 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
+    samtools index ${prefix}_ass.sort.bam
     """
     }
 }

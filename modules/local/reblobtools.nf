@@ -1,10 +1,10 @@
 process REBLOBTOOLS {
     tag "$meta.id"
 
-    conda "blobtools=1.1.1--py_1,samtools=1.17"
+    conda "blobtools=1.0.1--py27_3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-358b5ab5afe13b671cdf14afe811ec6475320ccc:a5ebd9287a143d5f920d100bec2d36e8ec80b625-0' :
-        'scgs/mulled-v2-358b5ab5afe13b671cdf14afe811ec6475320ccc:a5ebd9287a143d5f920d100bec2d36e8ec80b625-0' }"
+        'https://depot.galaxyproject.org/singularity/blobtools=1.0.1--py27_3' :
+        'scgs/blobtools=1.0.1--py27_3' }"
 
     input:
     tuple val(meta), path(contigs)
@@ -12,6 +12,7 @@ process REBLOBTOOLS {
     val has_uniprot
     tuple val(meta), path(uniprot_anno)
     path bam
+    path bai
 
     output:
     tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt")
@@ -26,10 +27,9 @@ process REBLOBTOOLS {
     def uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
     """
     mkdir -p ${prefix}
-    samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
-    samtools index ${prefix}_ass.sort.bam
+    blobtools-build_nodesdb
     blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -b ${prefix}_ass.sort.bam -o ${prefix}/${prefix} \
-    --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
+    --db /usr/local/opt/blobtools-1.0.1/datanodesDB.txt
     blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/

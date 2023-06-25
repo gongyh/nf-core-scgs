@@ -2,10 +2,10 @@ process BLOBTOOLS {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "blobtools=1.1.1--py_1"
+    conda "blobtools=1.0.1--py27_3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/blobtools:1.1.1--py_1' :
-        'biocontainers/blobtools:1.1.1--py_1' }"
+        'https://depot.galaxyproject.org/singularity/blobtools=1.0.1--py27_3' :
+        'scgs/blobtools=1.0.1--py27_3' }"
 
     input:
     tuple val(meta), path(contigs)
@@ -24,8 +24,9 @@ process BLOBTOOLS {
     def uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
     """
     mkdir -p ${prefix}
+    blobtools-build_nodesdb
     blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
-    --db /opt/conda/envs/nf-core-gongyh-scgs/lib/python3.6/site-packages/data/nodesDB.txt
+    --db /usr/local/opt/blobtools-1.0.1/datanodesDB.txt
     blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/

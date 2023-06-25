@@ -675,7 +675,8 @@ workflow {
                 DIAMOND_BLASTX.out.nt,
                 DIAMOND_BLASTX.out.real,
                 DIAMOND_BLASTX.out.uniprot,
-                REMAP.out.bam.map{ meta, bam -> return bam }.collect()
+                REMAP.out.bam.collect{it[1]},
+                REMAP.out.bai.collect{it[1]}
             )
         }
         ACDC (
