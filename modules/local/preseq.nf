@@ -38,7 +38,7 @@ process PRESEQ {
     preseq c_curve ${mode} -s 1e+5 -o ${prefix}_c.txt $sbed
     preseq lc_extrap ${mode} -s 1e+5 -D -o ${prefix}_lc.txt $sbed
     plotPreSeq.R ${prefix}_lc.txt ${prefix}_lc
-    preseq gc_extrap -w 1000 -s 1e+7 -D -o ${prefix}_gc.txt $sbed
+    preseq gc_extrap -w 1000 -s 1e+7 -B -D -o ${prefix}_gc.txt $sbed
     plotPreSeq.R ${prefix}_gc.txt ${prefix}_gc
 
     cat <<-END_VERSIONS > versions.yml
