@@ -2,10 +2,10 @@ process AUGUSTUS {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "augustus=3.5.0--pl5321h700735d_3"
+    conda "augustus=3.5.0--pl5321h700735d_3,tantan=40,perl-getopt-long=2.54"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/augustus:3.5.0--pl5321hf46c7bb_1' :
-        'biocontainers/augustus:3.5.0--pl5321h700735d_3' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-383531f26ddbe208b657a2b4a8d48b7c3644bdc1:d12534b5980a00347a7ae2723726dc1a81248f12-0' :
+        'scgs/mulled-v2-383531f26ddbe208b657a2b4a8d48b7c3644bdc1:d12534b5980a00347a7ae2723726dc1a81248f12-0' }"
 
     input:
     tuple val(meta), path(contigs)

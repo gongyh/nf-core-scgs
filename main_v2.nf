@@ -415,6 +415,7 @@ include { MULTIQC                     } from './modules/nf-core/multiqc/main'
 
 // Import modules from local
 include { SAVE_REFERENCE        } from './modules/local/save_reference'
+include { KTUPDATETAXONOMY      } from './modules/local/ktupdatetaxonomy'
 include { KRAKEN                } from './modules/local/kraken'
 include { SATURATION            } from './modules/local/saturation'
 include { SAMTOOLS              } from './modules/local/samtools'
@@ -494,9 +495,11 @@ workflow {
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
     if (params.kraken_db) {
+        KTUPDATETAXONOMY ()
         KRAKEN (
             trimmed_reads,
-            kraken_db
+            kraken_db,
+            KTUPDATETAXONOMY.out.taxonomy
         )
         ch_multiqc_kraken = KRAKEN.out.report
     }

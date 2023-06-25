@@ -9,6 +9,7 @@ process KRAKEN {
     input:
     tuple val(meta), path(reads)
     path db
+    path taxonomy, stageAs: 'taxonomy.tab'
 
     output:
     tuple val(meta), path("*.report")     , emit: report
@@ -19,10 +20,11 @@ process KRAKEN {
     def mode = meta.single_end ? "" : "--paired"
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    TAXONOMY=\$(find -L . -name '*.tab' -exec dirname {} \\;)
     kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed ${mode} --check-names --output ${prefix}.krk $reads
     kraken-report -db $db ${prefix}.krk > ${prefix}.report
     cut -f2,3 ${prefix}.krk > ${prefix}.f23
-    ktImportTaxonomy -o ${prefix}.krona.html ${prefix}.f23
+    ktImportTaxonomy -o ${prefix}.krona.html -tax \$TAXONOMY/ ${prefix}.f23
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
