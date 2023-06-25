@@ -1,10 +1,10 @@
 process SATURATION {
     tag "${meta.id}"
 
-    conda "fastp=0.20.1,mccortex=1.0,r-base=4.3.0"
+    conda "fastp=0.20.1 mccortex=1.0 r-magicaxis=2.2.14 r-rcolorbrewer=1.1_3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-be9f5ba45af47384627efd3880c6586bd81bf92a:2d818d847653deccb4eefa54656b340b6eccd5b7-0' :
-        'scgs/mulled-v2-be9f5ba45af47384627efd3880c6586bd81bf92a:2d818d847653deccb4eefa54656b340b6eccd5b7-0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-78a3de80258f15f00d10eb0e6b53b053cda0fdaf:a53e36beaf3f3c66855542ea44bf07fdb3309689-0' :
+        'scgs/mulled-v2-78a3de80258f15f00d10eb0e6b53b053cda0fdaf:a53e36beaf3f3c66855542ea44bf07fdb3309689-0' }"
 
     input:
     tuple val(meta), path(reads)

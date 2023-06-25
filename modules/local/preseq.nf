@@ -2,7 +2,7 @@ process PRESEQ {
     tag "${meta.id}"
     label 'process_single'
 
-    conda "preseq=3.2.0,r-base=4.3.0"
+    conda "preseq=3.2.0 r-base=4.3.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mulled-v2-f75ca76f6f0d8dac03a420a64d4d702441604c14:03f4a075e359bb32a613b098d13dba7b4c8c967f-0':
         'scgs/mulled-v2-f75ca76f6f0d8dac03a420a64d4d702441604c14:03f4a075e359bb32a613b098d13dba7b4c8c967f-0' }"

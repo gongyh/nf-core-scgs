@@ -2,7 +2,7 @@ process REMAP {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bowtie2=2.4.4,samtools=1.17"
+    conda "bowtie2=2.4.4 samtools=1.17"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mulled-v2-c742dccc9d8fabfcff2af0d8d6799dbc711366cf:7a723346025146e191fdbf519b8131c258b9eeab-0' :
         'scgs/mulled-v2-c742dccc9d8fabfcff2af0d8d6799dbc711366cf:7a723346025146e191fdbf519b8131c258b9eeab-0' }"

@@ -1,7 +1,7 @@
 process SPLIT_CHECKM {
     label 'process_medium'
 
-    conda "checkm-genome=1.2.1,augustus=3.5.0--pl5321h700735d_3,tantan=40,biopython=1.81,typer=0.9.0,numpy=1.25.0,eukcc=2.1.0"
+    conda "checkm-genome=1.2.1 augustus=3.5.0--pl5321h700735d_3 tantan=40 biopython=1.81 typer=0.9.0 numpy=1.25.0 eukcc=2.1.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mulled-v2-28c5d03d1ac8475499ba2a43715feecc3e991223:c795f73b9d282e25900663d2b634c26711c5b8a4-0' :
         'scgs/mulled-v2-28c5d03d1ac8475499ba2a43715feecc3e991223:c795f73b9d282e25900663d2b634c26711c5b8a4-0' }"
