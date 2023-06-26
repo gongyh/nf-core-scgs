@@ -4,7 +4,7 @@
 
 DSL2 only version.
 
-## v1.2.1 - [preparing]
+## v1.3 - [preparing]
 
 Add a DSL2 implementation.
 

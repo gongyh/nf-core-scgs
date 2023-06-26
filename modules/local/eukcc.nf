@@ -19,9 +19,9 @@ process EUKCC {
     """
     export HOME=/tmp/
     if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
-    echo "NCBI taxa database exist!"
+        echo "NCBI taxa database exist!"
     else
-    python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
+        python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
     fi
     eukcc --db ${db} --ncores ${task.cpus} --outdir ${prefix} --protein ${faa} || echo "Ignore minor errors of eukcc!"
     """

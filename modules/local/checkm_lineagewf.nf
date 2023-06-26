@@ -19,9 +19,9 @@ process CHECKM_LINEAGEWF {
     def checkm_wf = genus ? "taxonomy_wf" : "lineage_wf"
     """
     if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
-    checkm taxonomy_wf -t ${task.cpus} --tab_table -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
+        checkm taxonomy_wf -t ${task.cpus} --tab_table -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
     else
-    checkm lineage_wf -t ${task.cpus} -r --tab_table -f spades_checkM.txt -x fasta spades spades_checkM
+        checkm lineage_wf -t ${task.cpus} -r --tab_table -f spades_checkM.txt -x fasta spades spades_checkM
     fi
 
     echo \"# plot_type: 'table'\" > CheckM_mqc.tsv

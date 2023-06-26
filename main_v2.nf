@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+
 /*
 ========================================================================================
                         gongyh/nf-core-scgs
@@ -8,6 +9,7 @@
     https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
+
 nextflow.enable.dsl=2
 
 def helpMessage() {
@@ -165,12 +167,6 @@ if ( params.fasta ){
     ref = params.fasta - ~/(\.fasta)?(\.fna)?(\.fa)?$/
     if( !fasta.exists() ) exit 1, "Fasta file not found: ${params.fasta}"
 }
-//
-// NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
-// If you want to use the above in a process, define the following:
-//   input:
-//   file fasta from fasta
-//
 
 gff = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 if ( params.gff ) {
@@ -764,11 +760,7 @@ workflow {
     )
     ch_multiqc_versions = GET_SOFTWARE_VERSIONS.out.mqc_yml
 
-    //
     // MODULE: MULTIQC
-    //
-    //preseq_for_multiqc = file('/dev/null')
-
     workflow_summary = create_workflow_summary(summary)
     ch_workflow_summary = Channel.value(workflow_summary)
 
