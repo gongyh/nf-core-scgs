@@ -18,8 +18,6 @@ process EGGNOG {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    set +u
-    source activate base
     emapper.py -i $faa -o $prefix --data_dir $db --dmnd_db $db/eggnog_proteins.dmnd -m diamond --cpu ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml

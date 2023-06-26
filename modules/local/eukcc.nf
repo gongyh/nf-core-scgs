@@ -8,7 +8,7 @@ process EUKCC {
         'biocontainers/eukcc:2.1.0--pypyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(faa)
+    tuple val(meta), path(contig)
     path db
 
     output:
@@ -17,12 +17,6 @@ process EUKCC {
     script:
     prefix   = task.ext.prefix ?: "${meta.id}"
     """
-    export HOME=/tmp/
-    if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
-        echo "NCBI taxa database exist!"
-    else
-        python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
-    fi
-    eukcc --db ${db} --ncores ${task.cpus} --outdir ${prefix} --protein ${faa} || echo "Ignore minor errors of eukcc!"
+    eukcc single --out $prefix --db $db --threads 8 $contig || echo "Ignore minor errors of eukcc!"
     """
 }

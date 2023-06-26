@@ -622,8 +622,8 @@ workflow {
     ch_multiqc_quast = Channel.empty()
     QUAST (
         ctg.map{ meta,ctg -> return ctg }.collect(),
-        fasta,
-        gff,
+        denovo ? Channel.empty() : fasta,
+        denovo ? Channel.empty() : gff,
         denovo ? false: true,
         denovo ? false: true,
     )
@@ -698,7 +698,7 @@ workflow {
         AUGUSTUS(ctg)
         faa = AUGUSTUS.out.faa
         EUKCC (
-            faa,
+            ctg,
             eukcc_db
         )
     }

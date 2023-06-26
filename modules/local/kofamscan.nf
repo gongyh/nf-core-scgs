@@ -2,10 +2,10 @@ process KOFAMSCAN {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::kofamscan=1.3.0"
+    conda "kofamscan=1.3.0 python=3.6.10"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/kofamscan:1.3.0--hdfd78af_2':
-        'biocontainers/kofamscan:1.3.0--hdfd78af_2' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-ef3cc10895f39bdde312c5e796de361bc231bb29:f6fe8bf9968d952a4cb8cdb90f165e49c40688b8-0':
+        'scgs/mulled-v2-ef3cc10895f39bdde312c5e796de361bc231bb29:f6fe8bf9968d952a4cb8cdb90f165e49c40688b8-0' }"
 
     input:
     tuple val(meta), path(faa)
