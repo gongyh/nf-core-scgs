@@ -18,7 +18,7 @@ jobs:
           name: test1
           command: |
             mkdir -p test && cd test
-            JAVA_HOME=/usr/ ../nextflow run ../main.nf -profile test_denovo --saturation --snv --cnv --remap
+            JAVA_HOME=/usr/ ../nextflow run ../main.nf -profile test --ass --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
           path: test/results/pipeline_info
