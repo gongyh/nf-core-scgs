@@ -447,8 +447,7 @@ include { EUKCC                 } from './modules/local/eukcc'
 // include { MULTIQC               } from './modules/local/multiqc'
 include { EGGNOG                } from './modules/local/eggnog'
 include { KOFAMSCAN             } from './modules/local/kofamscan'
-include { RESFINDER             } from './modules/local/resfinder'
-include { POINTFINDER           } from './modules/local/pointfinder'
+include { STARAMR               } from './modules/local/staramr'
 include { SPLIT_CHECKM          } from './modules/local/split_checkm'
 include { SPLIT_CHECKM_EUKCC    } from './modules/local/split_checkm_eukcc'
 include { OUTPUT_DOCUMENTATION  } from './modules/local/output_documentation'
@@ -724,18 +723,16 @@ workflow {
         )
     }
 
-    if ( !params.euk && params.acquired && resfinder_db ) {
-        RESFINDER (
-            ctg,
-            resfinder_db
-        )
-    }
-
-    if ( !params.euk && params.point && pointfinder_db ) {
-        POINTFINDER (
-            ctg,
-            pointfinder_db
-        )
+    if ( !params.euk ) {
+        if ( params.acquired || params.point ) {
+            STARAMR (
+                ctg,
+                params.acquired,
+                params.point,
+                params.pointfinder_species,
+                params.only_known
+            )
+        }
     }
 
     if ( params.split && params.eukcc_db ) {

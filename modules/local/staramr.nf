@@ -1,4 +1,4 @@
-process POINTFINDER {
+process STARAMR {
     tag "$meta.id"
     label 'process_low'
 
@@ -9,22 +9,26 @@ process POINTFINDER {
 
     input:
     tuple val(meta), path(contigs)
-    path db
+    val(acquired)
+    val(point)
+    val(species)
+    val(only_known)
 
     output:
     path("${prefix}/*")
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def species = params.pointfinder_species
-    def known_snp = params.only_known ? "" : "-l 0.4 -r all -u"
+    def species = species
+    def known_snp = only_known ? "" : "-l 0.4 -r all -u"
+    if (acquired) {
     """
-    mkdir -p $prefix
-    python /opt/pointfinder/PointFinder.py -p $db \
-    -m blastn -m_p /opt/conda/bin/blastn $known_snp \
-    -i $contigs -o $prefix -s $species
-    rm -rf $prefix/tmp
-
-    // staramr search --pointfinder-organism $species -o $prefix $contigs
+    staramr search -o $prefix $contigs
     """
+    }
+    if (point) {
+    """
+    staramr search --pointfinder-organism $species -o $prefix $contigs
+    """
+    }
 }
