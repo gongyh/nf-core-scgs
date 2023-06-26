@@ -24,7 +24,7 @@ f = h5py.File(kmer_hdf, "r")
 fp = f["profiles"]
 ctgs = fp.keys()
 total = len(ctgs)
-profile = np.ones((total, 256), dtype=np.float)
+profile = np.ones((total, 256), dtype=np.float64)
 i = 0
 for ctg in ctgs:
     raw = fp[ctg][:]
