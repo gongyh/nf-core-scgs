@@ -12,7 +12,7 @@ jobs:
       - run:
           name: install nextflow
           command: |
-            apt-get update && mkdir -p /usr/share/man/man1 && apt install default-jre
+            apt-get update && mkdir -p /usr/share/man/man1 && apt-get install -y default-jre
             curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
       - run:
           name: test1
