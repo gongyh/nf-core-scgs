@@ -1,10 +1,35 @@
 version: 2.1
 
 jobs:
-  prepare:
+  test_dsl1:
     docker:
-      - image: cimg/base:stable
-    resource_class: small
+      - image: quay.io/gongyh/nf-core-scgs:v1.2
+    resource_class: large
+    environment:
+      - GIT_LFS_SKIP_SMUDGE: 1
+    steps:
+      - checkout
+      - run:
+          name: test1
+          command: |
+            mkdir -p test && cd test
+            nextflow run ../main.nf -profile test_denovo --saturation --snv --cnv --remap
+          no_output_timeout: 30m
+      - store_artifacts:
+          path: test/results/pipeline_info
+          destination: dsl1/pipeline_info
+      - store_artifacts:
+          path: test/results/MultiQC/multiqc_report.html
+          destination: dsl1/multiqc_report.html
+      - store_artifacts:
+          path: test/.nextflow.log
+          destination: dsl1/nextflow-log.txt
+
+  test_dsl2:
+    machine:
+      image: ubuntu-2204:2023.04.2
+      resource_class: large
+      docker_layer_caching: true
     environment:
       - GIT_LFS_SKIP_SMUDGE: 1
     steps:
@@ -13,65 +38,24 @@ jobs:
           name: install nextflow
           command: |
             curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
-      - persist_to_workspace:
-          root: /home/circleci
-          paths:
-            - project
-
-  test_dsl1:
-    docker:
-      - image: quay.io/gongyh/nf-core-scgs:v1.2
-    resource_class: large
-    steps:
-      - attach_workspace:
-          at: ..
-      - run:
-          name: test1
-          command: |
-            mkdir -p tests1 && cd tests1
-            ../nextflow run ../main.nf -profile test_denovo --saturation --snv --cnv --remap
-          no_output_timeout: 30m
-      - store_artifacts:
-          path: /home/circleci/project/tests1/results/pipeline_info
-          destination: dsl1/pipeline_info
-      - store_artifacts:
-          path: /home/circleci/project/tests1/results/MultiQC/multiqc_report.html
-          destination: dsl1/multiqc_report.html
-      - store_artifacts:
-          path: /home/circleci/project/tests1/.nextflow.log
-          destination: dsl1/nextflow-log.txt
-
-  test_dsl2:
-    machine:
-      image: ubuntu-2204:2023.04.2
-      resource_class: large
-      docker_layer_caching: true
-    steps:
-      - attach_workspace:
-          at: /home/circleci
       - run:
           name: test2
           command: |
-            mkdir -p tests2 && cd tests2
+            mkdir -p test && cd test
             ../nextflow run ../main_v2.nf -profile test_denovo,docker --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
-          path: /home/circleci/project/tests2/results/pipeline_info
+          path: test/results/pipeline_info
           destination: dsl2/pipeline_info
       - store_artifacts:
-          path: /home/circleci/project/tests2/results/MultiQC/multiqc_report.html
+          path: test/results/MultiQC/multiqc_report.html
           destination: dsl2/multiqc_report.html
       - store_artifacts:
-          path: /home/circleci/project/tests2/.nextflow.log
+          path: test/.nextflow.log
           destination: dsl2/nextflow-log.txt
 
 workflows:
   test_pipeline:
     jobs:
-      - prepare
-      - test_dsl1:
-          requires:
-            - prepare
-      - test_dsl2:
-          requires:
-            - prepare
+      - test_dsl1
+      - test_dsl2
