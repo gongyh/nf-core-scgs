@@ -12,6 +12,7 @@ process BLOBTOOLS {
     tuple val(meta), path(anno)
     tuple val(meta), path(uniprot_anno)
     val has_uniprot
+    path db
 
     output:
     tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt") , emit: tax
@@ -24,9 +25,7 @@ process BLOBTOOLS {
     def uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
     """
     mkdir -p ${prefix}
-    blobtools-build_nodesdb
-    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} \
-        --db /usr/local/opt/blobtools-1.0.1/data/nodesDB.txt
+    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -o ${prefix}/${prefix} --db $db
     blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r order --format pdf -o ${prefix}/

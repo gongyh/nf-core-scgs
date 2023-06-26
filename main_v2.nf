@@ -49,6 +49,7 @@ def helpMessage() {
 
     External databases:
     --nt_db                       NCBI Nt database (BLAST)
+    --blob_db                     Blobtools nodesDB.txt
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
     --uniprot_taxids              Sequence id to taxa id mapping file
     --kraken_db                   Kraken database
@@ -222,6 +223,13 @@ kraken_db = false
 if ( params.kraken_db ) {
     kraken_db = file(params.kraken_db)
     if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"
+}
+
+// Configurable Blobtools nodesDB.txt
+blob_db = false
+if ( params.blob_db ) {
+    blob_db = file(params.blob_db)
+    if( !blob_db.exists() ) exit 1, "Blobtools nodesDB.txt not found: ${params.blob_db}"
 }
 
 // Configurable eggNOG database
@@ -657,19 +665,23 @@ workflow {
             uniprot_taxids
         )
         ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions.ifEmpty(null))
-        BLOBTOOLS (
-            DIAMOND_BLASTX.out.contigs,
-            DIAMOND_BLASTX.out.nt,
-            DIAMOND_BLASTX.out.uniprot,
-            DIAMOND_BLASTX.out.real
-        )
-        ch_versions = ch_versions.mix(BLOBTOOLS.out.versions.ifEmpty(null))
-        if ( params.remap ) {
+        if ( params.blob_db ) {
+            BLOBTOOLS (
+                DIAMOND_BLASTX.out.contigs,
+                DIAMOND_BLASTX.out.nt,
+                DIAMOND_BLASTX.out.uniprot,
+                DIAMOND_BLASTX.out.real,
+                blob_db
+            )
+            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions.ifEmpty(null))
+        }
+        if ( params.remap && params.blob_db ) {
             REBLOBTOOLS (
                 DIAMOND_BLASTX.out.contigs,
                 DIAMOND_BLASTX.out.nt,
                 DIAMOND_BLASTX.out.real,
                 DIAMOND_BLASTX.out.uniprot,
+                blob_db,
                 REMAP.out.bam.collect{it[1]},
                 REMAP.out.bai.collect{it[1]}
             )

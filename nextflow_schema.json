@@ -285,6 +285,10 @@
                     "type": "string",
                     "description": "Path of NCBI/NT database."
                 },
+                "blob_db": {
+                    "type": "string",
+                    "description": "Path of Blobtools nodesDB.txt."
+                },
                 "kraken_db": {
                     "type": "string",
                     "description": "Path of KRAKEN1 database."
