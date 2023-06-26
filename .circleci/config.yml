@@ -24,7 +24,7 @@ jobs:
     resource_class: large
     steps:
       - attach_workspace:
-          at: /home/circleci
+          at: ~
       - run:
           name: test1
           command: |
