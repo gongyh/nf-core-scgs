@@ -24,7 +24,7 @@ jobs:
     resource_class: large
     steps:
       - attach_workspace:
-          at: ~
+          at: ..
       - run:
           name: test1
           command: |
