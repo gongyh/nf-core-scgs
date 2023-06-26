@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
 # -*- coding: utf-8 -*-
+import os
 import re
 import sys
 
-sys.path.append('monovar_src/')
+script_dir = os.path.abspath( os.path.dirname( __file__ ) )
+
+sys.path.append(script_dir + '/monovar_src/')
 
 from monovar import main, parse_args
 
