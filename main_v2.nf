@@ -130,6 +130,7 @@ params.fungus = false
 params.remap = false
 params.genus = null
 params.nt_db = null
+params.blob_db = null
 params.kraken_db = null
 params.readPaths = null
 params.uniprot_db = null
