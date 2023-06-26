@@ -40,7 +40,6 @@ genotype_dict = {0: "0/0", 1: "0/1", 2: "1/1"}
 
 
 def get_info_string(read_supported_cell_list, n_cells, nCr_matrix, prior_variant_number, denominator, cell_count):
-
     current_cell_ftr_info = read_supported_cell_list[cell_count]
     cp_read_supported_cell_list = [j for i, j in enumerate(read_supported_cell_list) if i != cell_count]
 

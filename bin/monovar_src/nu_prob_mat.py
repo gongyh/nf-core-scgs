@@ -129,7 +129,6 @@ class Prob_matrix:
             cell_j_prob_1 = 2 * sngl_cell_ftr_list[j].Prob_Reads_Given_Genotype_prob(1)
             sum_l = 0
             for l in range(0, 2 * self.n_cells + 1):
-
                 if l > 2 * (j + 1):
                     self.denom_prob_matrix[l, j] = 0
                 else:

@@ -34,7 +34,6 @@ G_MAP = {"CA": "AC", "GA": "AG", "TA": "AT", "GC": "CG", "TC": "CT", "TG": "GT"}
 
 
 class Single_Cell_Ftrs_Pos:
-
     # Constructor takes the list of info for the current position as input
     # ([contig, loc, ref, depth, primary_bases, base_q])
     def __init__(self, refBase, ori_refBase, current_pos_info_list):
