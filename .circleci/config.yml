@@ -10,10 +10,15 @@ jobs:
     steps:
       - checkout
       - run:
+          name: install nextflow
+          command: |
+            apt-get update && mkdir -p /usr/share/man/man1 && apt install default-jre
+            curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
+      - run:
           name: test1
           command: |
             mkdir -p test && cd test
-            nextflow run ../main.nf -profile test_denovo --saturation --snv --cnv --remap
+            JAVA_HOME=/usr/ ../nextflow run ../main.nf -profile test_denovo --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
           path: test/results/pipeline_info
