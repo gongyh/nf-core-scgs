@@ -31,9 +31,9 @@ import numpy as np
 
 
 class Single_cell_genotype_records:
-
-    def __init__(self, current_cell_ftr_list, other_cells_ftr_list,
-                curr_cell_residual_mat, n_cells, prior_variant_allele):
+    def __init__(
+        self, current_cell_ftr_list, other_cells_ftr_list, curr_cell_residual_mat, n_cells, prior_variant_allele
+    ):
         self.current_cell_ftr_list = current_cell_ftr_list
         self.other_cells_ftr_list = other_cells_ftr_list
         self.residual_mat = curr_cell_residual_mat
@@ -41,7 +41,6 @@ class Single_cell_genotype_records:
 
         self.n_cells = n_cells
         self.prior_variant_allele = prior_variant_allele
-
 
     def find_coeff(self, n_cells, l, j, nCr_matrix):
         if j > l:
@@ -51,7 +50,6 @@ class Single_cell_genotype_records:
             denom = nCr_matrix[2 * n_cells, 2]
             return float(num) / denom
 
-
     def other_cells_genotype_prob(self, gt_flag, nCr_matrix):
         if self.other_cell_list_len == 0:
             return 1
@@ -59,11 +57,8 @@ class Single_cell_genotype_records:
             prob = 0.0
             for l in range(self.residual_mat.denom_prob_matrix.shape[0]):
                 coeff = self.find_coeff(self.n_cells, l, gt_flag, nCr_matrix)
-                prob += coeff \
-                    * self.residual_mat.denom_prob_matrix[l, -1] \
-                    * self.prior_variant_allele[l + gt_flag]
+                prob += coeff * self.residual_mat.denom_prob_matrix[l, -1] * self.prior_variant_allele[l + gt_flag]
             return prob
-
 
     def find_genotype_prob(self, gt, nCr_matrix):
         p1 = self.current_cell_ftr_list.Prob_Reads_Given_Genotype_prob(gt)
@@ -73,7 +68,6 @@ class Single_cell_genotype_records:
         if p2 == 0:
             p2 = 1e-322
         return p1 * p2
-
 
     def get_genotype_prob(self, nCr_matrix):
         prob = np.zeros(3)

@@ -30,28 +30,25 @@ SOFTWARE.
 from genotype_prob_mat import Genotype_Prob_matrix
 from nu_genotype_single_cell import Single_cell_genotype_records
 import numpy as np
-np.seterr(divide='ignore')
+
+np.seterr(divide="ignore")
 
 POOR_QUAL = 1e-100
 PHRED_POOR_QUAL = -10 * np.log10(POOR_QUAL)
 MAX_GQ = 99
-genotype_dict = {0: '0/0', 1: '0/1', 2: '1/1'}
+genotype_dict = {0: "0/0", 1: "0/1", 2: "1/1"}
 
 
-def get_info_string(read_supported_cell_list, n_cells, nCr_matrix,
-            prior_variant_number, denominator, cell_count):
-
+def get_info_string(read_supported_cell_list, n_cells, nCr_matrix, prior_variant_number, denominator, cell_count):
     current_cell_ftr_info = read_supported_cell_list[cell_count]
-    cp_read_supported_cell_list = [j for i, j \
-        in enumerate(read_supported_cell_list) if i != cell_count]
+    cp_read_supported_cell_list = [j for i, j in enumerate(read_supported_cell_list) if i != cell_count]
 
     curr_cell_residual_mat = Genotype_Prob_matrix(cp_read_supported_cell_list)
     if len(cp_read_supported_cell_list) > 0:
         curr_cell_residual_mat.fill_matrix(nCr_matrix)
-  
+
     cell_genotype_obj = Single_cell_genotype_records(
-        current_cell_ftr_info, cp_read_supported_cell_list, 
-        curr_cell_residual_mat, n_cells, prior_variant_number
+        current_cell_ftr_info, cp_read_supported_cell_list, curr_cell_residual_mat, n_cells, prior_variant_number
     )
     p_list = cell_genotype_obj.get_genotype_prob(nCr_matrix) / denominator
     max_p_g = p_list.max()
@@ -61,7 +58,7 @@ def get_info_string(read_supported_cell_list, n_cells, nCr_matrix,
         p_list[1] = current_cell_ftr_info.cell_prob_1
         p_list[2] = current_cell_ftr_info.cell_prob_2
         max_p_g = p_list.max()
-    
+
     if max_p_g == 0:
         if current_cell_ftr_info.Alt_freq < 0.1:
             g_ind = 0
@@ -82,9 +79,14 @@ def get_info_string(read_supported_cell_list, n_cells, nCr_matrix,
     GQ = min(MAX_GQ, np.round(-10 * np.log10(1 - norm_p_list[g_ind])))
 
     final_genotype = genotype_dict[g_ind]
-    info = '{gt}:{ad_r},{ad_a}:{dp}:{gq:.0f}:{pl0:.0f},{pl1:.0f},{pl2:.0f}' \
-        .format(gt=final_genotype, ad_r=current_cell_ftr_info.refDepth,
-            ad_a=current_cell_ftr_info.alt_count,
-            dp=current_cell_ftr_info.depth, gq=GQ, pl0=PL[0], pl1=PL[1],
-            pl2=PL[2])
+    info = "{gt}:{ad_r},{ad_a}:{dp}:{gq:.0f}:{pl0:.0f},{pl1:.0f},{pl2:.0f}".format(
+        gt=final_genotype,
+        ad_r=current_cell_ftr_info.refDepth,
+        ad_a=current_cell_ftr_info.alt_count,
+        dp=current_cell_ftr_info.depth,
+        gq=GQ,
+        pl0=PL[0],
+        pl1=PL[1],
+        pl2=PL[2],
+    )
     return info, g_ind

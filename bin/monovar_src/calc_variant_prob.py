@@ -31,42 +31,42 @@ import numpy as np
 from nu_prob_mat import Prob_matrix
 
 
-class Calc_Var_Prob():
+class Calc_Var_Prob:
     """docstring for  Calc_Var_Prob"""
 
     def __init__(self, read_supported_cell_list):
         self.read_supported_cell_list = read_supported_cell_list
         self.matrix = Prob_matrix(read_supported_cell_list)
 
-
-    def calc_zero_var_prob(self, n_cells, max_depth, nCr_matrix, pad,
-                prior_variant_number):
+    def calc_zero_var_prob(self, n_cells, max_depth, nCr_matrix, pad, prior_variant_number):
         self.matrix.denom_prob_matrix = self.matrix.fill_matrix(
-            self.read_supported_cell_list, n_cells, max_depth, nCr_matrix, pad)
+            self.read_supported_cell_list, n_cells, max_depth, nCr_matrix, pad
+        )
 
         probs = self.matrix.denom_prob_matrix[:, -1] * prior_variant_number
-        # Numerator Eq. 6: P(D|l=0) * p(l=0) 
+        # Numerator Eq. 6: P(D|l=0) * p(l=0)
         numerator = probs[0]
-        # Denominator Eq. 6: \sum_{l=0}^{2m} P(D|l) * p(l) 
+        # Denominator Eq. 6: \sum_{l=0}^{2m} P(D|l) * p(l)
         denominator = np.sum(probs)
 
         if denominator == 0.0:
             self.matrix.denom_prob_matrix = self.matrix.fill_matrix_50d(
-                self.read_supported_cell_list, n_cells, nCr_matrix)
+                self.read_supported_cell_list, n_cells, nCr_matrix
+            )
             probs = self.matrix.denom_prob_matrix[:, -1] * prior_variant_number
-            # Numerator Eq. 6: P(D|l=0) * p(l=0) 
+            # Numerator Eq. 6: P(D|l=0) * p(l=0)
             numerator = probs[0]
-            # Denominator Eq. 6: \sum_{l=0}^{2m} P(D|l) * p(l) 
+            # Denominator Eq. 6: \sum_{l=0}^{2m} P(D|l) * p(l)
             denominator = np.sum(probs)
 
             if denominator == 0:
                 self.matrix.denom_prob_matrix = self.matrix.fill_matrix_stable(
-                    self.read_supported_cell_list, n_cells, nCr_matrix)
-                probs = self.matrix.denom_prob_matrix[:, -1] \
-                    * prior_variant_number
-                # Numerator Eq. 6: P(D|l=0) * p(l=0) 
+                    self.read_supported_cell_list, n_cells, nCr_matrix
+                )
+                probs = self.matrix.denom_prob_matrix[:, -1] * prior_variant_number
+                # Numerator Eq. 6: P(D|l=0) * p(l=0)
                 numerator = probs[0]
-                # Denominator Eq. 6: \sum_{l=0}^{2m} P(D|l) * p(l) 
+                # Denominator Eq. 6: \sum_{l=0}^{2m} P(D|l) * p(l)
                 denominator = np.sum(probs)
 
                 if denominator == 0:
