@@ -2,7 +2,7 @@ process KRAKEN {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "kraken2=2.1.2 krona=2.7.1"
+    conda "bioconda::kraken2=2.1.2 bioconda::krona=2.7.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mulled-v2-b85de0f0888e1a8481d8c5d0c3b52736036932cc:96c1f81ca967332ad179c5bc0a350133f6bdf2a8-0' :
         'scgs/mulled-v2-b85de0f0888e1a8481d8c5d0c3b52736036932cc:96c1f81ca967332ad179c5bc0a350133f6bdf2a8-0' }"

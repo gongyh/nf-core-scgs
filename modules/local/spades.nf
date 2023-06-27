@@ -2,7 +2,7 @@ process SPADES {
     tag "${meta.id}"
     label 'process_high'
 
-    conda "spades=3.15.5 perl-bioperl=1.7.8"
+    conda "bioconda::spades=3.15.5 bioconda::perl-bioperl=1.7.8"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mulled-v2-23d30bd0f79edd4339b884a2320935a5a236f7eb:824e273bd5969e5d2f8d617c66ab71e506b4ea71-0' :
         'scgs/mulled-v2-23d30bd0f79edd4339b884a2320935a5a236f7eb:824e273bd5969e5d2f8d617c66ab71e506b4ea71-0' }"

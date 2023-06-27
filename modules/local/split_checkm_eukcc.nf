@@ -1,7 +1,7 @@
 process SPLIT_CHECKM_EUKCC {
     label 'process_medium'
 
-    conda "checkm-genome=1.2.1 augustus=3.5.0--pl5321h700735d_3 tantan=40 biopython=1.81 typer=0.9.0 numpy=1.25.0 eukcc=2.1.0"
+    conda "bioconda::checkm-genome=1.2.1 bioconda::augustus=3.5.0--pl5321h700735d_3 bioconda::tantan=40 conda-forge::biopython=1.81 conda-forge::typer=0.9.0 conda-forge::numpy=1.25.0 bioconda::eukcc=2.1.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mulled-v2-28c5d03d1ac8475499ba2a43715feecc3e991223:c795f73b9d282e25900663d2b634c26711c5b8a4-0' :
         'scgs/mulled-v2-28c5d03d1ac8475499ba2a43715feecc3e991223:c795f73b9d282e25900663d2b634c26711c5b8a4-0' }"
@@ -20,12 +20,6 @@ process SPLIT_CHECKM_EUKCC {
 
     script:
     """
-    export HOME=/tmp/
-    if [ -f "/tmp/.etetoolkit/taxa.sqlite" ]; then
-        echo "NCBI taxa database exist!"
-    else
-        python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(taxdump_file='/opt/nf-core-scgs/taxdump.tar.gz')"
-    fi
     cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
     samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
