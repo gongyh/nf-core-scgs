@@ -1,5 +1,5 @@
-process QUAST {
-    label 'process_medium'
+process QUAST_DENOVO {
+    label 'QUAST'
 
     conda "bioconda::quast=5.2.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -7,14 +7,12 @@ process QUAST {
         'biocontainers/quast:5.2.0--py39pl5321h2add14b_1' }"
 
     input:
-    path consensus
-    path fasta
-    path gff
-    val use_fasta
-    val use_gff
+    path(contig)
+    val(euk)
+    val(fungus)
 
     output:
-    path "${prefix}"    , emit: results
+    path "quast"    , emit: results
     path '*.tsv'        , emit: tsv
     path "versions.yml" , emit: versions
 
@@ -22,21 +20,11 @@ process QUAST {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args   ?: ''
-    prefix   = task.ext.prefix ?: 'quast'
-    def features  = use_gff ? "--features $gff" : ''
-    def reference = use_fasta ? "-r $fasta" : ''
+    def euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
     """
-    quast.py \\
-        --output-dir $prefix \\
-        $reference \\
-        $features \\
-        --threads $task.cpus \\
-        $args \\
-        -l ${consensus.join(',').replaceAll('.ctgs.fasta','')} \\
-        ${consensus.join(' ')}
-
-    ln -s ${prefix}/report.tsv
+    contigs=\$(ls *.ctgs.fasta | paste -sd " " -)
+    labels=\$(ls *.ctgs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
+    quast.py -o quast -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

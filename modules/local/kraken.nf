@@ -1,10 +1,11 @@
 process KRAKEN {
     tag "$meta.id"
+    label 'process_medium'
 
-    conda "kraken=1.1.1 krona=2.7.1"
+    conda "kraken2=2.1.2 krona=2.7.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-d45752891fea2584428a164c55ff535957eb7fa2:17bc7e8d082e77491b01a53af02d08779b923f10-0' :
-        'scgs/mulled-v2-d45752891fea2584428a164c55ff535957eb7fa2:17bc7e8d082e77491b01a53af02d08779b923f10-0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-b85de0f0888e1a8481d8c5d0c3b52736036932cc:96c1f81ca967332ad179c5bc0a350133f6bdf2a8-0' :
+        'scgs/mulled-v2-b85de0f0888e1a8481d8c5d0c3b52736036932cc:96c1f81ca967332ad179c5bc0a350133f6bdf2a8-0' }"
 
     input:
     tuple val(meta), path(reads)
@@ -21,14 +22,13 @@ process KRAKEN {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     TAXONOMY=\$(find -L . -name '*.tab' -exec dirname {} \\;)
-    kraken -db $db --threads ${task.cpus} --fastq-input --gzip-compressed ${mode} --check-names --output ${prefix}.krk $reads
-    kraken-report -db $db ${prefix}.krk > ${prefix}.report
+    kraken2 --db $db --threads ${task.cpus} --report ${prefix}.report --output ${prefix}.krk --gzip-compressed ${mode} --use-names $reads
     cut -f2,3 ${prefix}.krk > ${prefix}.f23
     ktImportTaxonomy -o ${prefix}.krona.html -tax \$TAXONOMY/ ${prefix}.f23
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        kraken: \$(echo \$(kraken --version 2>&1) | sed 's/^.*kraken //; s/Using.*\$//')
+        kraken2: \$(echo \$(kraken --version 2>&1) | sed 's/^.*kraken //; s/Using.*\$//')
     END_VERSIONS
     """
 }

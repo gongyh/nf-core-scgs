@@ -1,10 +1,10 @@
 process KTUPDATETAXONOMY {
     label 'process_single'
 
-    conda "kraken=1.1.1 krona=2.7.1"
+    conda "kraken2=2.1.2 krona=2.7.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-d45752891fea2584428a164c55ff535957eb7fa2:17bc7e8d082e77491b01a53af02d08779b923f10-0' :
-        'scgs/mulled-v2-d45752891fea2584428a164c55ff535957eb7fa2:17bc7e8d082e77491b01a53af02d08779b923f10-0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-b85de0f0888e1a8481d8c5d0c3b52736036932cc:96c1f81ca967332ad179c5bc0a350133f6bdf2a8-0' :
+        'scgs/mulled-v2-b85de0f0888e1a8481d8c5d0c3b52736036932cc:96c1f81ca967332ad179c5bc0a350133f6bdf2a8-0' }"
 
     output:
     path 'taxonomy/taxonomy.tab', emit: taxonomy

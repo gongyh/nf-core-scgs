@@ -409,8 +409,8 @@ include { BOWTIE2_BUILD               } from './modules/nf-core/bowtie2/build/ma
 include { BOWTIE2_ALIGN               } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN              } from './modules/nf-core/minimap2/align/main'
 include { QUALIMAP_BAMQC              } from './modules/nf-core/qualimap/bamqc/main'
-include { QUAST                       } from './modules/nf-core/quast/main'
 include { MULTIQC                     } from './modules/nf-core/multiqc/main'
+// include { QUAST                       } from './modules/nf-core/quast/main'
 // include { PRODIGAL                  } from './modules/nf-core/prodigal/main'
 // include { CHECKM_LINEAGEWF          } from './modules/nf-core/checkm/lineagewf/main'
 // include { KOFAMSCAN                 } from './modules/nf-core/kofamscan/main'
@@ -432,7 +432,8 @@ include { CIRCLIZE              } from './modules/local/circlize'
 include { NORMALIZE             } from './modules/local/normalize'
 include { CANU                  } from './modules/local/canu'
 include { SPADES                } from './modules/local/spades'
-// include { QUAST                 } from './modules/local/quast'
+include { QUAST_REF             } from './modules/local/quast_ref'
+include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 include { VG_CONSTRUCT          } from './modules/local/vg/vg_construct'
 include { VG_INDEX              } from './modules/local/vg/vg_index'
 include { VG_CALL               } from './modules/local/vg/vg_call'
@@ -449,7 +450,6 @@ include { PROKKA                } from './modules/local/prokka'
 include { PRODIGAL              } from './modules/local/prodigal'
 include { AUGUSTUS              } from './modules/local/augustus'
 include { EUKCC                 } from './modules/local/eukcc'
-// include { MULTIQC               } from './modules/local/multiqc'
 include { EGGNOG                } from './modules/local/eggnog'
 include { KOFAMSCAN             } from './modules/local/kofamscan'
 include { STARAMR               } from './modules/local/staramr'
@@ -467,7 +467,7 @@ workflow {
     // FASTQC
     ch_multiqc_fastqc = Channel.empty()
     FASTQC ( read_files_fastqc )
-    ch_versions       = ch_versions.mix(FASTQC.out.versions.ifEmpty(null))
+    ch_versions       = ch_versions.mix(FASTQC.out.versions)
     ch_multiqc_fastqc = FASTQC.out.zip
 
     if ( params.fasta && params.gff ) {
@@ -494,7 +494,7 @@ workflow {
         ch_multiqc_trim_log = TRIMGALORE.out.log
         ch_multiqc_trim_zip = TRIMGALORE.out.zip
     }
-    ch_versions = ch_versions.mix(TRIMGALORE.out.versions.ifEmpty(null))
+    ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
 
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
@@ -520,9 +520,8 @@ workflow {
                 false,
                 false
             )
-            MINIMAP2_ALIGN.out.bam
-                    .set{ bb_bam }
-            ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions.ifEmpty(null))
+            MINIMAP2_ALIGN.out.bam.set{ bb_bam }
+            ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
         } else {
             BOWTIE2_ALIGN (
                 trimmed_reads,
@@ -530,9 +529,8 @@ workflow {
                 false,
                 true
             )
-            BOWTIE2_ALIGN.out.bam
-                    .set { bb_bam }
-            ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions.ifEmpty(null))
+            BOWTIE2_ALIGN.out.bam.set{ bb_bam }
+            ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
         }
     }
 
@@ -542,7 +540,7 @@ workflow {
             fasta,
             vcf
         )
-        ch_versions = ch_versions.mix(VG_CONSTRUCT.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(VG_CONSTRUCT.out.versions)
         VG_INDEX (
             VG_CONSTRUCT.out.vg,
             trimmed_reads
@@ -556,43 +554,47 @@ workflow {
     ch_multiqc_samtools = Channel.empty()
     ch_multiqc_preseq   = Channel.empty()
     ch_multiqc_qualimap = Channel.empty()
+    quast_bam = Channel.empty()
+    quast_bai = Channel.empty()
     if ( params.fasta && params.gff ) {
         SAMTOOLS (
             bb_bam,
             SAVE_REFERENCE.out.bed
         )
-        ch_versions = ch_versions.mix(SAMTOOLS.out.versions.ifEmpty(null))
+        SAMTOOLS.out.bam.set{quast_bam}
+        SAMTOOLS.out.bai.set{quast_bai}
+        ch_versions = ch_versions.mix(SAMTOOLS.out.versions)
         ch_multiqc_samtools = SAMTOOLS.out.stats
         PRESEQ ( SAMTOOLS.out.bed )
-        ch_versions = ch_versions.mix(PRESEQ.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(PRESEQ.out.versions)
         ch_multiqc_preseq = PRESEQ.out.txt
         QUALIMAP_BAMQC (
             SAMTOOLS.out.bam,
             gff
         )
-        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
         ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
         INDELREALIGN (
             SAMTOOLS.out.bam,
             fasta
         )
-        ch_versions = ch_versions.mix(INDELREALIGN.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(INDELREALIGN.out.versions)
         MONOVAR (
-            INDELREALIGN.out.bam.map{ meta,bam -> return bam }.collect(), INDELREALIGN.out.bai.map{ meta, bai -> return bai }
-                .collect(),
+            INDELREALIGN.out.bam.collect{it[1]},
+            INDELREALIGN.out.bai.collect{it[1]},
             fasta
         )
-        ch_versions = ch_versions.mix(MONOVAR.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(MONOVAR.out.versions)
         ANEUFINDER (
-            SAMTOOLS.out.bam.map{ meta, bam -> return bam }.collect(),
-            SAMTOOLS.out.bai.map{ meta, bai -> return bai }.collect()
+            SAMTOOLS.out.bam.collect{it[1]},
+            SAMTOOLS.out.bai.collect{it[1]}
         )
-        ch_versions = ch_versions.mix(ANEUFINDER.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(ANEUFINDER.out.versions)
         CIRCLIZE (
             SAMTOOLS.out.bed,
             SAVE_REFERENCE.out.bed
         )
-        ch_versions = ch_versions.mix(CIRCLIZE.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
     }
 
     // NORMALIZE
@@ -607,12 +609,12 @@ workflow {
                 CANU(NORMALIZE.out.reads)
                 ctg200 = CANU.out.ctg200
                 ctg = CANU.out.ctg
-                ch_versions = ch_versions.mix(CANU.out.versions.ifEmpty(null))
+                ch_versions = ch_versions.mix(CANU.out.versions)
             } else {
                 SPADES(NORMALIZE.out.reads)
                 ctg200 = SPADES.out.ctg200
                 ctg = SPADES.out.ctg
-                ch_versions = ch_versions.mix(SPADES.out.versions.ifEmpty(null))
+                ch_versions = ch_versions.mix(SPADES.out.versions)
             }
         }
     }
@@ -628,26 +630,46 @@ workflow {
     }
 
     // QUAST
-    ch_multiqc_quast = Channel.empty()
+    /**
     QUAST (
         ctg.map{ meta,ctg -> return ctg }.collect(),
         denovo ? Channel.empty() : fasta,
         denovo ? Channel.empty() : gff,
         denovo ? false: true,
-        denovo ? false: true,
+        denovo ? false: true
     )
     ch_multiqc_quast = QUAST.out.tsv
-    ch_versions = ch_versions.mix(QUAST.out.versions.ifEmpty(null))
-
+    */
+    ch_multiqc_quast = Channel.empty()
+    if (denovo == false) {
+        QUAST_REF (
+            fasta,
+            gff,
+            ctg.collect{it[1]},
+            quast_bam.collect{it[1]},
+            quast_bai.collect{it[1]},
+            euk,
+            params.fungus
+        )
+        ch_multiqc_quast = QUAST_REF.out.tsv
+        ch_versions = ch_versions.mix(QUAST_REF.out.versions)
+    } else {
+        QUAST_DENOVO (
+            ctg.collect{it[1]},
+            euk
+        )
+        ch_multiqc_quast = QUAST_DENOVO.out.tsv
+        ch_versions = ch_versions.mix(QUAST_DENOVO.out.versions)
+    }
 
     // CHECKM_LINEAGEWF
     ch_multiqc_checkm = Channel.empty()
     if ( !euk ) {
         CHECKM_LINEAGEWF (
-            ctg.map{ meta,ctg -> return ctg }.collect(),
+            ctg.collect{it[1]},
             params.genus ? true : false
         )
-        ch_versions = ch_versions.mix(CHECKM_LINEAGEWF.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(CHECKM_LINEAGEWF.out.versions)
         ch_multiqc_checkm = CHECKM_LINEAGEWF.out.mqc_tsv
     }
 
@@ -658,14 +680,17 @@ workflow {
             nt_db,
             params.evalue
         )
-        ch_versions = ch_versions.mix(BLASTN.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(BLASTN.out.versions)
         DIAMOND_BLASTX (
             BLASTN.out.contigs,
             BLASTN.out.nt,
             uniprot_db,
             uniprot_taxids
         )
-        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
+
+        acdc_contigs = Channel.empty()
+        acdc_tax = Channel.empty()
         if ( params.blob_db ) {
             BLOBTOOLS (
                 DIAMOND_BLASTX.out.contigs,
@@ -674,7 +699,9 @@ workflow {
                 DIAMOND_BLASTX.out.real,
                 blob_db
             )
-            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions.ifEmpty(null))
+            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
+            acdc_contigs = BLOBTOOLS.out.contigs
+            acdc_tax = BLOBTOOLS.out.tax
         }
         if ( params.remap && params.blob_db ) {
             REBLOBTOOLS (
@@ -688,8 +715,8 @@ workflow {
             )
         }
         ACDC (
-            BLOBTOOLS.out.contigs,
-            BLOBTOOLS.out.tax,
+            acdc_contigs,
+            acdc_tax,
             kraken_db
         )
     }
@@ -701,9 +728,9 @@ workflow {
     ch_multiqc_prokka = Channel.empty()
     if ( !euk ) {
         PROKKA(ctg)
-        ch_versions = ch_versions.mix(PROKKA.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(PROKKA.out.versions)
         PRODIGAL(ctg)
-        ch_versions = ch_versions.mix(PRODIGAL.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(PRODIGAL.out.versions)
         faa = PROKKA.out.faa
         prokka_for_split  = PROKKA.out.prokka_for_split
         ch_multiqc_prokka = PROKKA.out.prokka_for_split
@@ -721,7 +748,7 @@ workflow {
             faa,
             eggnog_db
         )
-        ch_versions = ch_versions.mix(EGGNOG.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(EGGNOG.out.versions)
     }
 
     if ( params.kofam_profile && params.kofam_kolist ) {
@@ -746,10 +773,10 @@ workflow {
 
     if ( params.split && params.eukcc_db ) {
         SPLIT_CHECKM_EUKCC (
-            ctg200.map { meta, ctg200 -> return ctg200}.collect(),
-            BLOBTOOLS.out.tax_split.map{ meta, tax -> return tax }.collect(),
+            ctg200.collect{it[1]},
+            BLOBTOOLS.out.tax_split.collect{it[1]},
             prokka_for_split.collect{it[1]}.ifEmpty([]),
-            KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect(),
+            KOFAMSCAN.out.txt.collect{it[1]},
             eukcc_db,
             params.split_bac_level ? params.split_bac_level : "genus",
             params.split_euk_level ? params.split_euk_level : "genus"
@@ -758,10 +785,10 @@ workflow {
 
     if ( params.split && !params.eukcc_db ) {
         SPLIT_CHECKM (
-            ctg200.map{ meta, ctg200 -> return ctg200 }.collect(),
-            BLOBTOOLS.out.tax_split.map{ meta, tax-> return tax }.collect(),
+            ctg200.collect{it[1]},
+            BLOBTOOLS.out.tax_split.collect{it[1]},
             prokka_for_split.collect{it[1]}.ifEmpty([]),
-            KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect(),
+            KOFAMSCAN.out.txt.collect{it[1]},
             params.split_bac_level ? params.split_bac_level : "genus",
             params.split_euk_level ? params.split_euk_level : "genus"
         )
