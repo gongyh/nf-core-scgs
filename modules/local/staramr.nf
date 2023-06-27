@@ -21,13 +21,17 @@ process STARAMR {
     prefix = task.ext.prefix ?: "${meta.id}"
     def species = species
     def known_snp = only_known ? "" : "-l 0.4 -r all -u"
-    if (acquired) {
+    if (acquired && !point) {
     """
     staramr search -o $prefix $contigs
     """
-    }
-    if (point) {
+    } else if(point && !acquired) {
     """
+    staramr search --pointfinder-organism $species -o $prefix $contigs
+    """
+    } else {
+    """
+    staramr search -o $prefix $contigs
     staramr search --pointfinder-organism $species -o $prefix $contigs
     """
     }
