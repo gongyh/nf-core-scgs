@@ -13,7 +13,7 @@ process QUAST_DENOVO {
 
     output:
     path "quast"    , emit: results
-    path '*.tsv'        , emit: tsv
+    path 'quast/*.tsv'        , emit: tsv
     path "versions.yml" , emit: versions
 
     when:
