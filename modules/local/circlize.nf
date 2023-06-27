@@ -2,10 +2,10 @@ process CIRCLIZE {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bedtools=2.31.0"
+    conda "bioconda::bedtools=2.31.0--h468198e_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bedtools:2.30.0' :
-        'scgs/bedtools:2.31.0' }"
+        'https://depot.galaxyproject.org/singularity/bedtools:2.30.0--h468198e_3' :
+        'biocontainers/bedtools:2.31.0--h468198e_0' }"
 
     input:
     tuple val(meta), path(sbed)
@@ -19,7 +19,7 @@ process CIRCLIZE {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     bedtools makewindows -b $refbed -w 200 > genome.200.bed
-    bedtools coverage -mean -b $sbed -a genome.200.bed | sort -k 1V,1 -k 2n,2 -k 3n,3 > ${prefix}-cov200.bed
+    bedtools coverage -mean -b $sbed -a genome.200.bed | sort -k 1,1 -V -k 2n,2 -k 3n,3 > ${prefix}-cov200.bed
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
