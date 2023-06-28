@@ -13,16 +13,16 @@ process KRAKEN {
     path taxonomy, stageAs: 'taxonomy.tab'
 
     output:
-    tuple val(meta), path("*.report")     , emit: report
-    tuple val(meta), path("*.html") , emit: html
-    path "versions.yml",                    emit: versions
+    tuple val(meta), path("*.krk"), emit: report
+    tuple val(meta), path("*.html"),   emit: html
+    path "versions.yml",               emit: versions
 
     script:
     def mode = meta.single_end ? "" : "--paired"
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     TAXONOMY=\$(find -L . -name '*.tab' -exec dirname {} \\;)
-    kraken2 --db $db --threads ${task.cpus} --report ${prefix}.report --output ${prefix}.krk --gzip-compressed ${mode} $reads
+    kraken2 --db $db --threads ${task.cpus} --report ${prefix}.krk --output ${prefix}.k2 --gzip-compressed ${mode} $reads
     kreport2krona.py -r ${prefix}.krk -o ${prefix}.krn
     ktImportText -o ${prefix}_taxonomy.html ${prefix}.krn
 
