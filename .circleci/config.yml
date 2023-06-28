@@ -58,7 +58,7 @@ jobs:
             echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
       - run:
           name: test
-          shell: /bin/bash
+          shell: /bin/bash --login
           command: |
             mkdir -p test && cd test
             micromamba activate && mamba info
