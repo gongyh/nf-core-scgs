@@ -47,10 +47,11 @@ jobs:
           name: install micromamba
           command: |
             curl micro.mamba.pm/install.sh | bash
+            echo "disable_lockfile: true" > ~/.mambarc
       - run:
           name: test
           command: |
-            mkdir -p test && cd test && export MAMBA_DISABLE_LOCKFILE=true
+            mkdir -p test && cd test
             ../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
