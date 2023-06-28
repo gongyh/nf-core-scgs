@@ -42,7 +42,8 @@ jobs:
       - run:
           name: install nextflow
           command: |
-            curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
+            curl -s https://get.nextflow.io | bash && chmod +x nextflow && ./nextflow -version
+            #curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
       - run:
           name: install micromamba
           command: |
