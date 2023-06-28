@@ -48,6 +48,8 @@ jobs:
           command: |
             curl micro.mamba.pm/install.sh | bash
             echo "disable_lockfile: true" > ~/.mambarc
+            echo "disable_lockfile: true" > ~/.condarc
+            echo "export MAMBA_DISABLE_LOCKFILE=true" >> ~/.bashrc
       - run:
           name: test
           command: |
