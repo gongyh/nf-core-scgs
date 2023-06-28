@@ -362,10 +362,7 @@ summary['User']             = workflow.userName
 if( params.notrim ){
     summary['Trimming Step'] = 'Skipped'
 } else {
-    summary["Trim 5' R1"] = params.clip_r1
-    summary["Trim 5' R2"] = params.clip_r2
-    summary["Trim 3' R1"] = params.three_prime_clip_r1
-    summary["Trim 3' R2"] = params.three_prime_clip_r2
+    summary["Trimming Step"] = 'Trim Glore'
 }
 if(workflow.profile == 'awsbatch'){
     summary['AWS Region']    = params.awsregion
