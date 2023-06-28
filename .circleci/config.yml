@@ -58,6 +58,8 @@ jobs:
       - run:
           name: test
           command: |
+            micromamba info
+            mamba info
             mkdir -p test && cd test
             ../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
           no_output_timeout: 30m
