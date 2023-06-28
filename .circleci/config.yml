@@ -54,6 +54,7 @@ jobs:
             echo 'disable_lockfile: true' >> ~/.mambarc
             echo 'disable_lockfile: true' >> ~/.condarc
             echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
+            echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
       - run:
           name: test
           command: |
