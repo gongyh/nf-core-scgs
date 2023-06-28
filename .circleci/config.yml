@@ -50,13 +50,11 @@ jobs:
       - run:
           name: configure micromamba
           command: |
-            micromamba info && mamba info
             micromamba activate && micromamba install -y conda-forge::mamba
             echo 'disable_lockfile: true' >> ~/.mambarc
             echo 'disable_lockfile: true' >> ~/.condarc
             echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
             echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
-            micromamba info && mamba info
       - run:
           name: test
           command: |
