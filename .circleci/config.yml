@@ -47,10 +47,6 @@ jobs:
           name: install micromamba
           command: |
             curl micro.mamba.pm/install.sh | bash
-      - run:
-          name: configure micromamba
-          command: |
-            micromamba activate && micromamba install -y conda-forge::mamba
             echo 'disable_lockfile: true' >> ~/.mambarc
             echo 'disable_lockfile: true' >> ~/.condarc
             echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
@@ -58,7 +54,6 @@ jobs:
       - run:
           name: test
           command: |
-            micromamba info && mamba info
             mkdir -p test && cd test
             ../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
           no_output_timeout: 30m
