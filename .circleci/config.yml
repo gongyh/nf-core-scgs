@@ -47,6 +47,9 @@ jobs:
           name: install micromamba
           command: |
             curl micro.mamba.pm/install.sh | bash
+      - run:
+          name: configure micromamba
+          command: |
             micromamba activate && micromamba install -y conda-forge::mamba
             echo 'disable_lockfile: true' >> ~/.mambarc
             echo 'disable_lockfile: true' >> ~/.condarc
