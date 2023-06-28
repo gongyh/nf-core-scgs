@@ -765,8 +765,7 @@ workflow {
                 ctg,
                 params.acquired,
                 params.point,
-                params.pointfinder_species,
-                params.only_known
+                params.pointfinder_species
             )
         }
     }

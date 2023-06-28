@@ -12,7 +12,6 @@ process STARAMR {
     val(acquired)
     val(point)
     val(species)
-    val(only_known)
 
     output:
     path("${prefix}/*")
@@ -21,7 +20,6 @@ process STARAMR {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     def species = species
-    def known_snp = only_known ? "" : "-l 0.4 -r all -u"
     if (acquired && !point) {
     """
     staramr search -o $prefix $contigs
@@ -31,18 +29,8 @@ process STARAMR {
         staramr: \$(echo \$(staramr -V 2>&1) | sed 's/^.*staramr //; s/Using.*\$//')
     END_VERSIONS
     """
-    } else if(point && !acquired) {
-    """
-    staramr search --pointfinder-organism $species -o $prefix $contigs
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        staramr: \$(echo \$(staramr -V 2>&1) | sed 's/^.*staramr //; s/Using.*\$//')
-    END_VERSIONS
-    """
     } else {
     """
-    staramr search -o $prefix $contigs
     staramr search --pointfinder-organism $species -o $prefix $contigs
 
     cat <<-END_VERSIONS > versions.yml
