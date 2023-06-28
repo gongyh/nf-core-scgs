@@ -2,7 +2,7 @@ process ACDC {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::acdc=1.02--h4ac6f70_0"
+    conda "bioconda::acdc=1.02=h4ac6f70_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/acdc:1.02--h4ac6f70_0' :
         'biocontainers/acdc:1.02--h4ac6f70_0' }"

@@ -30,6 +30,39 @@ jobs:
           path: test/.nextflow.log
           destination: dsl1/nextflow-log.txt
 
+  test_conda:
+    docker:
+      - image: cimg/base:2023.06
+    resource_class: large
+    environment:
+      - GIT_LFS_SKIP_SMUDGE: 1
+    steps:
+      - checkout
+      - run:
+          name: install nextflow
+          command: |
+            sudo apt-get update && sudo apt-get install -y default-jre
+            curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
+      - run:
+          name: install micromamba
+          command: |
+            curl micro.mamba.pm/install.sh | bash
+      - run:
+          name: test
+          command: |
+            mkdir -p test && cd test && export MAMBA_DISABLE_LOCKFILE=true
+            ../nextflow run ../main.nf -profile test,conda --ass --saturation --snv --cnv --remap
+          no_output_timeout: 30m
+      - store_artifacts:
+          path: test/results/pipeline_info
+          destination: conda/pipeline_info
+      - store_artifacts:
+          path: test/results/MultiQC/multiqc_report.html
+          destination: conda/multiqc_report.html
+      - store_artifacts:
+          path: test/.nextflow.log
+          destination: conda/nextflow-log.txt
+
   test_dsl2:
     machine:
       image: ubuntu-2204:2023.04.2
@@ -64,3 +97,4 @@ workflows:
     jobs:
       - test_dsl1
       - test_dsl2
+      - test_conda

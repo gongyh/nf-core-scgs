@@ -2,7 +2,7 @@ process EUKCC {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::eukcc=2.1.0--pypyhdfd78af_0"
+    conda "bioconda::eukcc=2.1.0=pypyhdfd78af_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/eukcc:2.1.0--pypyhdfd78af_0' :
         'biocontainers/eukcc:2.1.0--pypyhdfd78af_0' }"

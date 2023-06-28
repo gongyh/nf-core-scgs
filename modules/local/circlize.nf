@@ -2,7 +2,7 @@ process CIRCLIZE {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::bedtools=2.31.0--h468198e_0"
+    conda "bioconda::bedtools=2.31.0=h468198e_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/bedtools:2.30.0--h468198e_3' :
         'biocontainers/bedtools:2.31.0--h468198e_0' }"
