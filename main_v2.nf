@@ -653,7 +653,8 @@ workflow {
     } else {
         QUAST_DENOVO (
             ctg.collect{it[1]},
-            euk
+            euk,
+            params.fungus
         )
         ch_multiqc_quast = QUAST_DENOVO.out.tsv
         ch_versions = ch_versions.mix(QUAST_DENOVO.out.versions)
