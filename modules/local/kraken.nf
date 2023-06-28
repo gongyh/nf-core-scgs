@@ -14,7 +14,7 @@ process KRAKEN {
 
     output:
     tuple val(meta), path("*.report")     , emit: report
-    tuple val(meta), path("*.krona.html") , emit: html
+    tuple val(meta), path("*.html") , emit: html
     path "versions.yml",                    emit: versions
 
     script:
