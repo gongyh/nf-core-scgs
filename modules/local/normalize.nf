@@ -11,6 +11,7 @@ process NORMALIZE {
 
     output:
     tuple val(meta), path("*_norm*.fastq.gz"),  emit: reads
+    path "versions.yml",                        emit: versions
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
@@ -22,6 +23,11 @@ process NORMALIZE {
     else
         normalize-by-median.py -k 31 -C 40 --gzip -M ${task.memory.toGiga()}G -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz $R1
     fi
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        khmer: '3.0.0a3'
+    END_VERSIONS
     """
     } else {
     """
@@ -34,6 +40,11 @@ process NORMALIZE {
         interleave-reads.py ${prefix}_rename_R1_fq.gz ${prefix}_rename_R2_fq.gz | normalize-by-median.py -k 31 -C 40 -M ${task.memory.toGiga()}G -p --gzip -R ${prefix}_norm.report -o ${prefix}_nbm.fastq.gz /dev/stdin
         split-paired-reads.py -1 ${prefix}_norm_R1.fastq.gz -2 ${prefix}_norm_R2.fastq.gz --gzip ${prefix}_nbm.fastq.gz
     fi
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        khmer: '3.0.0a3'
+    END_VERSIONS
     """
     }
 }

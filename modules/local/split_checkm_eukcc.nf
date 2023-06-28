@@ -17,6 +17,8 @@ process SPLIT_CHECKM_EUKCC {
 
     output:
     path("split/*")
+    path  "versions.yml", emit: versions
+
 
     script:
     """
@@ -50,5 +52,13 @@ process SPLIT_CHECKM_EUKCC {
         fi
         cd ../
     done
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        augustus: '3.5.0'
+        tantan: '40'
+        checkm: \$( checkm 2>&1 | grep '...:::' | sed 's/.*CheckM v//;s/ .*//' )
+        eukcc: \$(echo \$(eukcc -v 2>&1) | sed 's/^.*EukCC version //; s/Using.*\$//')
+    END_VERSIONS
     """
 }

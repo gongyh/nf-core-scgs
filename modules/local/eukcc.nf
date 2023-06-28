@@ -13,10 +13,16 @@ process EUKCC {
 
     output:
     path("${prefix}")
+    path "versions.yml", emit: versions
 
     script:
     prefix   = task.ext.prefix ?: "${meta.id}"
     """
     eukcc single --out $prefix --db $db --threads ${task.cpus} $contig || echo "Ignore minor errors of eukcc!"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        eukcc: \$(echo \$(eukcc -v 2>&1) | sed 's/^.*EukCC version //; s/Using.*\$//')
+    END_VERSIONS
     """
 }

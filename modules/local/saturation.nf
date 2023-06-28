@@ -34,6 +34,12 @@ process SATURATION {
         fi
     done
     KmerDensity.R \$PWD ${prefix}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        fastp: \$(echo \$(fastp -v 2>&1) | sed 's/^.*fastp //; s/Using.*\$//')
+        mccortex: 'v0.0.3'
+    END_VERSIONS
     """
     } else {
     """
@@ -51,6 +57,12 @@ process SATURATION {
         fi
     done
     KmerDensity.R \$PWD ${prefix}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        fastp: \$(echo \$(fastp -v 2>&1) | sed 's/^.*fastp //; s/Using.*\$//')
+        mccortex: 'v0.0.3'
+    END_VERSIONS
     """
     }
 

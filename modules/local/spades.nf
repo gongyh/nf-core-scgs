@@ -11,9 +11,9 @@ process SPADES {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("${prefix}.ctg200.fasta"),   emit: ctg200
-    tuple val(meta), path("${prefix}.ctgs.fasta"),     emit: ctg
-    path "versions.yml",                               emit: versions
+    tuple val(meta), path("${prefix}.ctg200.fasta"), emit: ctg200
+    tuple val(meta), path("${prefix}.ctgs.fasta"),   emit: ctg
+    path "versions.yml",                             emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

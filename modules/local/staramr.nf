@@ -16,6 +16,7 @@ process STARAMR {
 
     output:
     path("${prefix}/*")
+    path  "versions.yml", emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -24,15 +25,30 @@ process STARAMR {
     if (acquired && !point) {
     """
     staramr search -o $prefix $contigs
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        staramr: \$(echo \$(staramr -V 2>&1) | sed 's/^.*staramr //; s/Using.*\$//')
+    END_VERSIONS
     """
     } else if(point && !acquired) {
     """
     staramr search --pointfinder-organism $species -o $prefix $contigs
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        staramr: \$(echo \$(staramr -V 2>&1) | sed 's/^.*staramr //; s/Using.*\$//')
+    END_VERSIONS
     """
     } else {
     """
     staramr search -o $prefix $contigs
     staramr search --pointfinder-organism $species -o $prefix $contigs
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        staramr: \$(echo \$(staramr -V 2>&1) | sed 's/^.*staramr //; s/Using.*\$//')
+    END_VERSIONS
     """
     }
 }

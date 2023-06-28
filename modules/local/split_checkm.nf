@@ -16,6 +16,7 @@ process SPLIT_CHECKM {
 
     output:
     path("split/*")
+    path  "versions.yml", emit: versions
 
     script:
     """
@@ -26,5 +27,10 @@ process SPLIT_CHECKM {
         mkdir -p \${sample}_${split_bac_level}_checkM
         checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
     done
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        checkm: \$( checkm 2>&1 | grep '...:::' | sed 's/.*CheckM v//;s/ .*//' )
+    END_VERSIONS
     """
 }

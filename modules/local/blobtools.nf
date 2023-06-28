@@ -15,7 +15,7 @@ process BLOBTOOLS {
     path db
 
     output:
-    tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt") , emit: tax
+    tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt"), emit: tax
     tuple val(meta), path("${contigs}") ,                           emit: contigs
     tuple val(meta), path("${prefix}") ,                            emit: tax_split
     path "versions.yml",                                            emit: versions

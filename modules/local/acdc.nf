@@ -14,14 +14,20 @@ process ACDC {
 
     output:
     path("${prefix}")
+    path "versions.yml", emit: versions
 
     when:
-    false
+    params.kraken_db
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     cat $tax | grep -v '^#' | cut -f1,18 > genus.txt
     /usr/local/bin/acdc -i $contigs -m 1000 -b 100 -o $prefix -K $db -x genus.txt -T ${task.cpus}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        acdc: '1.02'
+    END_VERSIONS
     """
 }

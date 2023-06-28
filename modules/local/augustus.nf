@@ -13,6 +13,7 @@ process AUGUSTUS {
     output:
     tuple val(meta), path("${prefix}.aa"), emit: faa
     path("${prefix}*")
+    path "versions.yml",                   emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -25,5 +26,11 @@ process AUGUSTUS {
     augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on ${prefix}_mask.fasta > ${prefix}.gff
     # generate proteins
     getAnnoFasta.pl ${prefix}.gff
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        augustus: '3.5.0'
+        tantan: '40'
+    END_VERSIONS
     """
 }

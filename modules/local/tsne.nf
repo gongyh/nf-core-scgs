@@ -12,6 +12,7 @@ process TSNE {
 
     output:
     path("${prefix}_tsne.tsv")
+    path  "versions.yml", emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -23,5 +24,10 @@ process TSNE {
     else
         touch ${prefix}_tsne.tsv
     fi
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        kpal: \$( checkm 2>&1 | grep 'kpal' | sed 's/.*kpal version//;s/ .*//' )
+    END_VERSIONS
     """
 }

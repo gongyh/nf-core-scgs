@@ -11,9 +11,15 @@ process OUTPUT_DOCUMENTATION {
 
     output:
     path("results_description.html")
+    path "versions.yml", emit: versions
 
     script:
     """
     markdown_to_html.py -o results_description.html $output_docs
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        markdown: '3.4.3'
+    END_VERSIONS
     """
 }

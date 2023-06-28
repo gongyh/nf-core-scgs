@@ -13,8 +13,8 @@ process BLASTN {
     val(evalue)
 
     output:
-    tuple val(meta), path("${contigs}" )      , emit: contigs
-    tuple val(meta), path("${prefix}_nt.out") , emit: nt
+    tuple val(meta), path("${contigs}" ),       emit: contigs
+    tuple val(meta), path("${prefix}_nt.out"),  emit: nt
     path "versions.yml",                        emit: versions
 
     script:

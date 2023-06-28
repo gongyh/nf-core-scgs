@@ -14,6 +14,7 @@ process KOFAMSCAN {
 
     output:
     tuple val(meta), path("${prefix}_KOs_*.txt"), emit: txt
+    path "versions.yml",                          emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -22,5 +23,10 @@ process KOFAMSCAN {
     exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -r -f mapper -o ${prefix}_KOs_mapper.txt ${faa}
     exec_annotation -p ${profile} -k ${ko_list} --cpu ${task.cpus} -T 0.8 --keep-tabular -r -f mapper-one-line -o ${prefix}_KOs_mapper2.txt ${faa}
     kofam_postprocess.py \$(echo \$(which ko_KO.txt)) ${prefix}_KOs_mapper.txt > ${prefix}_KOs_ko.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        koramscan: \$(echo \$(exec_annotation -v 2>&1) | sed 's/^.*exec_annotation //; s/Using.*\$//')
+    END_VERSIONS
     """
 }

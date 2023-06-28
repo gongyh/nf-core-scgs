@@ -11,7 +11,8 @@ process BOWTIE2_REMAP {
     tuple val(meta), path(contigs)
 
     output:
-    path("${prefix}Bowtie2Index"),    emit: index
+    path("${prefix}Bowtie2Index"), emit: index
+    path "versions.yml",           emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -19,5 +20,10 @@ process BOWTIE2_REMAP {
     mkdir -p ${prefix}Bowtie2Index; cd ${prefix}Bowtie2Index
     ln -s ../${contigs} ${prefix}.fa
     bowtie2-build ${prefix}.fa ${prefix}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bowtie2: \$(echo \$(bowtie2 --version 2>&1) | sed 's/^.*bowtie2-align-s version //; s/ .*\$//')
+    END_VERSIONS
     """
 }
