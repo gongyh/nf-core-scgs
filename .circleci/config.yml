@@ -31,18 +31,30 @@ jobs:
           destination: dsl1/nextflow-log.txt
 
   test_conda:
-    docker:
-      - image: quay.io/gongyh/micromamba-java-nextflow:latest
-    resource_class: large
+    machine:
+      image: ubuntu-2204:2023.04.2
+      resource_class: large
+      docker_layer_caching: true
     environment:
       - GIT_LFS_SKIP_SMUDGE: 1
     steps:
       - checkout
       - run:
+          name: install nextflow
+          command: |
+            curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
+      - run:
+          name: install micromamba
+          command: |
+            curl micro.mamba.pm/install.sh | bash
+            echo 'disable_lockfile: true' >> ~/.mambarc
+            echo 'disable_lockfile: true' >> ~/.condarc
+            echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
+      - run:
           name: test
           command: |
             mkdir -p test && cd test
-            nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
+            ../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
           path: test/results/pipeline_info
@@ -68,7 +80,7 @@ jobs:
           command: |
             curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
       - run:
-          name: test2
+          name: test
           command: |
             mkdir -p test && cd test
             ../nextflow run ../main_v2.nf -profile test_denovo,docker --saturation --snv --cnv --remap
