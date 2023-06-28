@@ -32,7 +32,7 @@ jobs:
 
   test_conda:
     docker:
-      - image: quay.io/gongyh/micromamba-java-nextflow:latest
+      - image: quay.io/gongyh/micromamba-java-nextflow:1.4.4
     resource_class: large
     environment:
       - GIT_LFS_SKIP_SMUDGE: 1
