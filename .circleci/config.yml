@@ -47,6 +47,8 @@ jobs:
           name: install micromamba
           command: |
             curl micro.mamba.pm/install.sh | bash
+            eval "$(/home/circleci/.local/bin/micromamba shell hook --shell=bash)"
+            micromamba activate && micromamba install -y conda-forge::mamba
             echo 'disable_lockfile: true' >> ~/.mambarc
             echo 'disable_lockfile: true' >> ~/.condarc
             echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
