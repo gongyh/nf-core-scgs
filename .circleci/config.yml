@@ -61,7 +61,7 @@ jobs:
           command: |
             mkdir -p test && cd test
             micromamba activate && mamba info
-            bash -c '../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap'
+            eval '../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap'
           no_output_timeout: 30m
       - store_artifacts:
           path: test/results/pipeline_info
