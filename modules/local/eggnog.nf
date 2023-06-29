@@ -22,7 +22,7 @@ process EGGNOG {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        eggnog: \$(echo \$(pemapper.py --version | grep emapper 2>&1 ))
+        eggnog: \$(echo \$(emapper.py --version | grep emapper 2>&1 ) | cut -d'/' -f1 | sed 's/^.*emapper-//; s/Using.*\$//')
     END_VERSIONS
     """
 }

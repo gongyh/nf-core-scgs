@@ -31,7 +31,7 @@ process SPADES {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes //; s/Using.*\$//')
+        spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
     END_VERSIONS
     """
     } else {
@@ -47,7 +47,7 @@ process SPADES {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes //; s/Using.*\$//')
+        spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
     END_VERSIONS
     """
     }
