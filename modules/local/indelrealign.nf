@@ -35,7 +35,7 @@ process INDELREALIGN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        picard: \$(echo \$(picard MarkDuplicates --version 2>&1) | sed 's/^.*picard //; s/Using.*\$//')
+        picard: \$(echo \$(picard MarkDuplicates --version 2>&1 | grep SNAPSHOT | cut -d'-' -f1))
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
         gatk3: \$(echo \$(gatk3 -version 2>&1)
     END_VERSIONS

@@ -31,7 +31,7 @@ process DIAMOND_BLASTX {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond //; s/Using.*\$//')
+        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond version //; s/Using.*\$//')
     END_VERSIONS
     """
     } else {
@@ -43,7 +43,7 @@ process DIAMOND_BLASTX {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond //; s/Using.*\$//')
+        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond version //; s/Using.*\$//')
     END_VERSIONS
     """
     }

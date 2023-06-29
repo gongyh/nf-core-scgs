@@ -23,7 +23,7 @@ process CIRCLIZE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*bedtools //; s/Using.*\$//')
+        bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*bedtools v//; s/Using.*\$//')
     END_VERSIONS
     """
 }

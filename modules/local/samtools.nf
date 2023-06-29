@@ -41,8 +41,8 @@ process SAMTOOLS {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*bedtools //; s/Using.*\$//')
-        picard: \$(echo \$(picard MarkDuplicates --version 2>&1) | sed 's/^.*picard //; s/Using.*\$//')
+        bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*bedtools v//; s/Using.*\$//')
+        picard: \$(echo \$(picard MarkDuplicates --version 2>&1 | grep SNAPSHOT | cut -d'-' -f1))
     END_VERSIONS
     """
 }

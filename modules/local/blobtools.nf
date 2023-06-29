@@ -40,7 +40,7 @@ process BLOBTOOLS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        blobtools: \$(echo \$(blobtools -v 2>&1) | sed 's/^.*blobtools //; s/Using.*\$//')
+        blobtools: \$(echo \$(blobtools -v 2>&1) | sed 's/^.*blobtools v//; s/Using.*\$//')
     END_VERSIONS
     """
 }
