@@ -48,7 +48,7 @@ jobs:
           name: install micromamba
           command: |
             #curl micro.mamba.pm/install.sh | bash
-            curl -L -o ~/bin/micromamba https://github.com/mamba-org/mamba/suites/13937119376/artifacts/776206379
+            curl -L -o ~/bin/micromamba https://github.com/gongyh/containers/raw/master/micromamba
             chmod a+x  ~/bin/micromamba && ~/bin/micromamba shell init -s bash -p ~/micromamba
       - run:
           name: install conda and mamba to base
