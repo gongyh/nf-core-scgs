@@ -47,22 +47,24 @@ jobs:
       - run:
           name: install micromamba
           command: |
-            curl micro.mamba.pm/install.sh | bash
+            #curl micro.mamba.pm/install.sh | bash
+            curl -L -o ~/bin/micromamba https://github.com/mamba-org/mamba/suites/13937119376/artifacts/776206379
+            chmod a+x  ~/bin/micromamba && ~/bin/micromamba shell init -s bash -p ~/micromamba
       - run:
           name: install conda and mamba to base
           command: |
-            micromamba activate && micromamba install -y conda-forge::mamba
+            micromamba activate && micromamba install -y conda-forge::mamba=1.4.5
             echo 'disable_lockfile: true' >> ~/.mambarc
             echo 'disable_lockfile: true' >> ~/.condarc
             echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
             echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
       - run:
           name: test
-          shell: /bin/bash --login
+          shell: bash -l {0}
           command: |
             mkdir -p test && cd test
-            micromamba activate && mamba info
-            exec ../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
+            #micromamba activate && mamba info
+            ../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
           path: test/results/pipeline_info
