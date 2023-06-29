@@ -27,7 +27,7 @@ process BLASTN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        blastn: \$(echo \$(blastn -version 2>&1) | sed 's/^.*blastn //; s/Using.*\$//')
+        blastn: \$(blastn -version 2>&1 | grep blastn | sed 's/^.*blastn: //; s/Using.*\$//')
     END_VERSIONS
     """
 }

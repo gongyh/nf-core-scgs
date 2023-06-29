@@ -17,7 +17,7 @@ process SPLIT_CHECKM_EUKCC {
 
     output:
     path("split/*")
-    path  "versions.yml", emit: versions
+    path "split/versions.yml", emit: versions
 
 
     script:

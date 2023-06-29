@@ -16,7 +16,7 @@ process SPLIT_CHECKM {
 
     output:
     path("split/*")
-    path  "versions.yml", emit: versions
+    path "split/versions.yml", emit: versions
 
     script:
     """
