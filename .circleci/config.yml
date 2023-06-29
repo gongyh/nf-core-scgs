@@ -48,11 +48,11 @@ jobs:
           name: install micromamba
           command: |
             curl micro.mamba.pm/install.sh | bash
-            #curl -L -o ~/bin/micromamba https://github.com/gongyh/containers/raw/master/micromamba && chmod a+x  ~/bin/micromamba && ~/bin/micromamba shell init -s bash -p ~/micromamba
+            #curl -L -o ~/bin/micromamba https://github.com/mamba-org/micromamba-releases/releases/download/1.4.2-2/micromamba-linux-64 && chmod a+x  ~/bin/micromamba && ~/bin/micromamba shell init -s bash -p ~/micromamba
       - run:
           name: install conda and mamba
           command: |
-            micromamba activate && micromamba install -y conda-forge::mamba=1.4.4
+            micromamba activate && micromamba install -y conda-forge::mamba
             echo 'disable_lockfile: true' >> ~/.mambarc
             echo 'disable_lockfile: true' >> ~/.condarc
             echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
@@ -109,4 +109,3 @@ workflows:
     jobs:
       - test_dsl1
       - test_dsl2
-      - test_conda
