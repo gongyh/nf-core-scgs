@@ -29,8 +29,8 @@ process AUGUSTUS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        augustus: '3.5.0'
-        tantan: '40'
+        augustus: 3.5.0
+        tantan: 40
     END_VERSIONS
     """
 }
