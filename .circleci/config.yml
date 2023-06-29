@@ -47,9 +47,8 @@ jobs:
       - run:
           name: install micromamba
           command: |
-            #curl micro.mamba.pm/install.sh | bash
-            curl -L -o ~/bin/micromamba https://github.com/gongyh/containers/raw/master/micromamba
-            chmod a+x  ~/bin/micromamba && ~/bin/micromamba shell init -s bash -p ~/micromamba
+            curl micro.mamba.pm/install.sh | bash
+            #curl -L -o ~/bin/micromamba https://github.com/gongyh/containers/raw/master/micromamba && chmod a+x  ~/bin/micromamba && ~/bin/micromamba shell init -s bash -p ~/micromamba
       - run:
           name: install conda and mamba
           command: |
@@ -63,7 +62,7 @@ jobs:
           shell: bash -l
           command: |
             mkdir -p test && cd test
-            #micromamba activate && mamba info
+            micromamba info && mamba info
             ../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
