@@ -52,7 +52,7 @@ jobs:
       - run:
           name: install conda and mamba
           command: |
-            micromamba activate && micromamba install -y conda-forge::mamba=1.4.5
+            micromamba activate && micromamba install -y conda-forge::mamba=1.4.4
             echo 'disable_lockfile: true' >> ~/.mambarc
             echo 'disable_lockfile: true' >> ~/.condarc
             echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
