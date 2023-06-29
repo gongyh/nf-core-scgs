@@ -42,7 +42,7 @@ jobs:
       - run:
           name: install nextflow
           command: |
-            curl -s https://get.nextflow.io | bash && chmod +x nextflow && ./nextflow -version
+            curl -s https://get.nextflow.io | bash && chmod +x nextflow
             #curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
       - run:
           name: install micromamba
@@ -51,7 +51,7 @@ jobs:
             curl -L -o ~/bin/micromamba https://github.com/gongyh/containers/raw/master/micromamba
             chmod a+x  ~/bin/micromamba && ~/bin/micromamba shell init -s bash -p ~/micromamba
       - run:
-          name: install conda and mamba to base
+          name: install conda and mamba
           command: |
             micromamba activate && micromamba install -y conda-forge::mamba=1.4.5
             echo 'disable_lockfile: true' >> ~/.mambarc
@@ -60,7 +60,7 @@ jobs:
             echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
       - run:
           name: test
-          shell: bash -l {0}
+          shell: bash -l
           command: |
             mkdir -p test && cd test
             #micromamba activate && mamba info
