@@ -2,13 +2,12 @@
 
 **Single Cell Genome Sequencing data analysis pipeline**.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/gongyh/nf-core-scgs/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/gongyh/nf-core-scgs/tree/master)
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A522.04.0-23aa62.svg)](https://www.nextflow.io/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with podman](https://img.shields.io/badge/run%20with-podman-0dffed?labelColor=000000)](https://podman.io/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
-[![run with conda](https://img.shields.io/badge/run%20with-conda-ffb7ed?labelColor=000000)](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
+[![run with conda](https://img.shields.io/badge/run%20with-conda-ffb7ed?labelColor=000000&logo=anaconda)](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
 
 ## Introduction
 
@@ -55,5 +54,7 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 gongyh/nf-core-scgs is developed by [Yanhai Gong](mailto:gongyh@qibebt.ac.cn), maintained by [Yanhai Gong](mailto:gongyh@qibebt.ac.cn) and [Shiqi Zhou](mailto:zhousq@qibebt.ac.cn). We look forward to receive your feedback, bug reports, or suggestions for the further development of this pipeline.
 
 ## License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This pipeline is open source under the MIT license, and integrates wonderful third-party softwares, which remain owned and copyrighted by their respective developers. Authors cannot be held legally or morally responsible for any consequences that may arise from using or misusing it.
