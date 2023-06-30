@@ -18,7 +18,8 @@ process EUKCC {
     script:
     prefix   = task.ext.prefix ?: "${meta.id}"
     """
-    eukcc single --out $prefix --db $db --threads ${task.cpus} $contig || echo "Ignore minor errors of eukcc!"
+    cat $contig | sed 's/_length.*\$//g' > ${prefix}_clean.fasta
+    eukcc single --out $prefix --db $db --threads ${task.cpus} ${prefix}_clean.fasta || echo "Ignore minor errors of eukcc!"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

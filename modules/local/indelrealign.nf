@@ -1,7 +1,6 @@
 process INDELREALIGN {
     tag "${meta.id}"
     label 'process_single'
-    publishDir "${pp_outdir}", mode: 'copy'
 
     conda "bioconda::gatk=3.8=hdfd78af_11 bioconda::samtools=1.17 bioconda::picard=2.19.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -21,7 +20,6 @@ process INDELREALIGN {
     params.snv && !params.nanopore
 
     script:
-    pp_outdir = "${params.outdir}/gatk"
     def prefix   = task.ext.prefix ?: "${meta.id}"
     """
     samtools faidx $fa

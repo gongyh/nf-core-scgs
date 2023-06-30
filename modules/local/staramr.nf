@@ -15,7 +15,7 @@ process STARAMR {
 
     output:
     path("${prefix}/*")
-    path  "versions.yml", emit: versions
+    path "versions.yml", emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

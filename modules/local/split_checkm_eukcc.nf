@@ -29,25 +29,14 @@ process SPLIT_CHECKM_EUKCC {
         mkdir -p \${sample}_${split_bac_level}_checkM
         checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
         cd \${sample}_${split_euk_level}_Eukaryota
-        contigs=(`ls *.fasta`)
-        for contig in \${contigs[*]};do
-            prefix=\${contig%.fasta}
-            # clean id
-            cat \$contig | sed 's/_length.*\$//g' > \${prefix}_clean.fasta
-            # mask genome
-            tantan \${prefix}_clean.fasta > \${prefix}_mask.fasta
-            # gene prediction
-            augustus --species=${params.augustus_species} --gff3=on --uniqueGeneId=true --protein=on --codingseq=on \${prefix}_mask.fasta > \${prefix}.gff
-            # generate proteins
-            getAnnoFasta.pl \${prefix}.gff
-        done
-
-        if ls *.aa >/dev/null 2>&1;
+        if ls *.fasta >/dev/null 2>&1;
         then
-            faas=(`ls *.aa`)
-            for faa in \${faas[*]};do
-                faaPrefix=\${faa%.aa}
-                eukcc --db ../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
+            contigs=(`ls *.fasta`)
+            for contig in \${contigs[*]};do
+                prefix=\${contig%.fasta}
+                # clean id
+                cat \$contig | sed 's/_length.*\$//g' > \${prefix}_clean.fasta
+                eukcc single --db ../../$db --out \${prefix} --threads ${task.cpus} \${prefix}_clean.fasta || echo "Ignore minor errors of eukcc!"
             done
         fi
         cd ../
