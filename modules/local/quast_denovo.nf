@@ -12,8 +12,8 @@ process QUAST_DENOVO {
     val(fungus)
 
     output:
-    path "quast",        emit: results
-    path 'quast/*.tsv',  emit: tsv
+    path "quast"       , emit: results
+    path 'quast/*.tsv' , emit: tsv
     path "versions.yml", emit: versions
 
     when:

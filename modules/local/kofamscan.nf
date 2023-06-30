@@ -14,7 +14,7 @@ process KOFAMSCAN {
 
     output:
     tuple val(meta), path("${prefix}_KOs_*.txt"), emit: txt
-    path "versions.yml",                          emit: versions
+    path "versions.yml"                         , emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

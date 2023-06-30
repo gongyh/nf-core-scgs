@@ -12,11 +12,11 @@ process SAMTOOLS {
     path genome
 
     output:
-    tuple val(meta), path("*.markdup.bam"),     emit: bam
+    tuple val(meta), path("*.markdup.bam")    , emit: bam
     tuple val(meta), path("*.markdup.bam.bai"), emit: bai
-    tuple val(meta), path("*.markdup.bed"),     emit: bed
-    tuple val(meta), path("*.stats.txt"),       optional:true, emit: stats
-    path  "versions.yml",                       emit: versions
+    tuple val(meta), path("*.markdup.bed")    , emit: bed
+    tuple val(meta), path("*.stats.txt")      , optional:true, emit: stats
+    path  "versions.yml"                      , emit: versions
     path("${prefix}_1k_bins.txt")
     path("${prefix}_pdrc.pdf")
 

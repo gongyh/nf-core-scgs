@@ -12,7 +12,7 @@ process TSNE {
 
     output:
     path("${prefix}_tsne.tsv")
-    path  "versions.yml", emit: versions
+    path  "versions.yml"      , emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

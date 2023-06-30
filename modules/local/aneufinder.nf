@@ -11,7 +11,7 @@ process ANEUFINDER {
     path("bams/*")
 
     output:
-    path('CNV_output'),  emit: cnv
+    path('CNV_output') , emit: cnv
     path "versions.yml", emit: versions
 
     when:

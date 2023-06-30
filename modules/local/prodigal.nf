@@ -12,7 +12,7 @@ process PRODIGAL {
 
     output:
     path("$prefix")
-    path "versions.yml",  emit: versions
+    path "versions.yml", emit: versions
 
     when:
     !euk

@@ -12,9 +12,9 @@ process INDELREALIGN {
     path fa
 
     output:
-    tuple val(meta), path("*.realign.bam"),         emit: bam
-    tuple val(meta), path("*.realign.bam.bai"),     emit: bai
-    path "versions.yml",                            emit: versions
+    tuple val(meta), path("*.realign.bam")    , emit: bam
+    tuple val(meta), path("*.realign.bam.bai"), emit: bai
+    path "versions.yml"                       , emit: versions
 
     when:
     params.snv && !params.nanopore

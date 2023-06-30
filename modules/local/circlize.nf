@@ -13,7 +13,7 @@ process CIRCLIZE {
 
     output:
     path("${prefix}-cov200.bed")
-    path "versions.yml",  emit: versions
+    path "versions.yml"         , emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

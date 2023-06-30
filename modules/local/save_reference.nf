@@ -14,7 +14,7 @@ process SAVE_REFERENCE {
     path("genome.fa")
     path("genome.gff")
     path("*.bed")
-    path("genome.bed"),   emit: bed
+    path("genome.bed")  , emit: bed
     path  "versions.yml", emit: versions
 
     when:

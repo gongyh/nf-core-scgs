@@ -10,8 +10,8 @@ process NORMALIZE {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("*_norm*.fastq.gz"),  emit: reads
-    path "versions.yml",                        emit: versions
+    tuple val(meta), path("*_norm*.fastq.gz"), emit: reads
+    path "versions.yml"                      , emit: versions
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

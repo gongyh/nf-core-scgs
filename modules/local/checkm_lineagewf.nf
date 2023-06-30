@@ -12,8 +12,8 @@ process CHECKM_LINEAGEWF {
 
     output:
     path('spades_checkM.txt')
-    path('CheckM_mqc.tsv'),    emit: mqc_tsv
-    path "versions.yml",       emit: versions
+    path('CheckM_mqc.tsv')   , emit: mqc_tsv
+    path "versions.yml"      , emit: versions
 
     script:
     def checkm_wf = genus ? "taxonomy_wf" : "lineage_wf"

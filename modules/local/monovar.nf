@@ -12,8 +12,8 @@ process MONOVAR {
     path fa
 
     output:
-    path('monovar.vcf'),  emit: vcf
-    path "versions.yml",  emit: versions
+    path('monovar.vcf'), emit: vcf
+    path "versions.yml", emit: versions
 
     when:
     !params.bulk && params.snv && !params.nanopore

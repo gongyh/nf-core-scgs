@@ -11,7 +11,7 @@ process OUTPUT_DOCUMENTATION {
 
     output:
     path("results_description.html")
-    path "versions.yml", emit: versions
+    path "versions.yml"             , emit: versions
 
     script:
     """

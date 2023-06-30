@@ -14,11 +14,11 @@ process DIAMOND_BLASTX {
     path("uniprot.taxids")
 
     output:
-    tuple val(meta), path("${prefix}_uniprot.taxified.out") , emit: uniprot
-    tuple val(meta), path("${contigs}") ,                     emit: contigs
-    tuple val(meta), path("${nt_out}") ,                      emit: nt
-    val used ,                                                emit: real
-    path "versions.yml",                                      emit: versions
+    tuple val(meta), path("${prefix}_uniprot.taxified.out"), emit: uniprot
+    tuple val(meta), path("${contigs}")                    , emit: contigs
+    tuple val(meta), path("${nt_out}")                     , emit: nt
+    val used                                               , emit: real
+    path "versions.yml"                                    , emit: versions
     path("${prefix}_uniprot.*")
 
     script:

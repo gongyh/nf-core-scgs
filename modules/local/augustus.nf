@@ -13,7 +13,7 @@ process AUGUSTUS {
     output:
     tuple val(meta), path("${prefix}.aa"), emit: faa
     path("${prefix}*")
-    path "versions.yml",                   emit: versions
+    path "versions.yml"                  , emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

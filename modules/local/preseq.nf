@@ -13,7 +13,7 @@ process PRESEQ {
     output:
     tuple val(meta), path('*.txt'), emit: txt
     tuple val(meta), path('*.pdf')
-    path "versions.yml",            emit: versions
+    path "versions.yml"           , emit: versions
 
     when:
     !params.nanopore

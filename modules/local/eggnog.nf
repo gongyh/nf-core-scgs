@@ -13,7 +13,7 @@ process EGGNOG {
 
     output:
     path("${prefix}.emapper.annotations")
-    path "versions.yml",  emit: versions
+    path "versions.yml"                  , emit: versions
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

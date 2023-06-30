@@ -13,9 +13,9 @@ process REMAP {
     val(allow_multi_align)
 
     output:
-    tuple val(meta), path("${prefix}_ass.sort.bam"),      emit: bam
-    tuple val(meta), path("${prefix}_ass.sort.bam.bai"),  emit: bai
-    path "versions.yml",                                  emit: versions
+    tuple val(meta), path("${prefix}_ass.sort.bam")    , emit: bam
+    tuple val(meta), path("${prefix}_ass.sort.bam.bai"), emit: bai
+    path "versions.yml"                                , emit: versions
 
     when:
     params.remap

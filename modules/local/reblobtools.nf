@@ -19,7 +19,7 @@ process REBLOBTOOLS {
     tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt")
     tuple val(meta), path("${contigs}")
     tuple val(meta), path("${prefix}")
-    path "versions.yml", emit: versions
+    path "versions.yml"               , emit: versions
 
     when:
     params.remap
