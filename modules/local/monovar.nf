@@ -3,8 +3,8 @@ process MONOVAR {
 
     conda "conda-forge::numpy=1.25.0 conda-forge::scipy=1.10.1 bioconda::pysam=0.21.0 bioconda::samtools=1.17"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-3fac00b995a603e53b168c14fd623583081a1b9d:dc88b89d94c822ade5a35acdb5836139bb931890-0' :
-        'scgs/mulled-v2-3fac00b995a603e53b168c14fd623583081a1b9d:dc88b89d94c822ade5a35acdb5836139bb931890-0' }"
+        'https://depot.galaxyproject.org/singularity/python-monovar:0.1--hdfd78af_0' :
+        'biocontainers/python-monovar:0.1--hdfd78af_0' }"
 
     input:
     path("*")
