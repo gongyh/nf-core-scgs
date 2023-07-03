@@ -12,6 +12,7 @@ process SATURATION {
     output:
     path("${prefix}_kmer.pdf")
     path("${prefix}_cov31_*.csv")
+    path "versions.yml"          , emit: versions
 
     when:
     params.saturation
