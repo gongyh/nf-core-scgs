@@ -21,7 +21,7 @@ process NORMALIZE {
     if [ \"${mode}\" == \"bulk\" ]; then
         ln -s ${reads[0]} ${prefix}_norm.fastq.gz
     else
-        normalize-by-median.py -k 31 -C 40 --gzip -M ${task.memory.toGiga()}G -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz $R1
+        normalize-by-median.py -k 31 -C 40 --gzip -M ${task.memory.toGiga()}G -R ${prefix}_norm.report -o ${prefix}_norm.fastq.gz ${reads[0]}
     fi
 
     cat <<-END_VERSIONS > versions.yml
