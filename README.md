@@ -22,24 +22,15 @@ Prerequisites: Git, Java 11 or later, Docker
 ```bash
 ## Install Nextflow
 $ curl -s https://get.nextflow.io | bash
-###################### DSL2 version ##################################
 ## Get the pipeline
 $ git clone -b v1.3.0 https://github.com/gongyh/nf-core-scgs.git
 ## Test
-run $ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,docker
-or $ SINGULARITY_DISABLE_CACHE=true ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,singularity
-or $ APPTAINER_DISABLE_CACHE=true ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,apptainer
+$ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,docker
 or $ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,podman
+or $ APPTAINER_DISABLE_CACHE=true ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,apptainer
+or $ SINGULARITY_DISABLE_CACHE=true ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,singularity
 or $ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,conda
 # for conda, add `disable_lockfile: true` to ~/.condarc or ~/.mambarc
-###################### DSL1 version ##################################
-## Pull docker container
-$ docker pull quay.io/gongyh/nf-core-scgs:v1.3.0
-## Get the pipeline
-$ git clone -b v1.3.0 https://github.com/gongyh/nf-core-scgs.git
-## Test (16 cpu cores, 48G memory)
-$ ./nextflow run nf-core-scgs -profile test_local,docker
-######################################################################
 ```
 
 ## Documentation
@@ -57,9 +48,9 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 
 ## Related publications
 
-[1] Jing, X., Gong, Y., Pan, H. et al. Single-cell Raman-activated sorting and cultivation (scRACS-Culture) for assessing and mining in situ phosphate-solubilizing microbes from nature. ISME COMMUN. 2, 106 (2022). [https://doi.org/10.1038/s43705-022-00188-3](https://doi.org/10.1038/s43705-022-00188-3)
+[1] Jing, X., Gong, Y., Pan, H. et al. Single-cell Raman-activated sorting and cultivation (scRACS-Culture) for assessing and mining in situ phosphate-solubilizing microbes from nature. _ISME COMMUN_. 2, 106 (2022). [https://doi.org/10.1038/s43705-022-00188-3](https://doi.org/10.1038/s43705-022-00188-3)
 
-[2] Jing X, Gong Y, Xu T, Meng Y, Han X, Su X, Wang J, Ji Y, Li Y, Jia Z, Ma B, Xu J. One-Cell Metabolic Phenotyping and Sequencing of Soil Microbiome by Raman-Activated Gravity-Driven Encapsulation (RAGE). mSystems. 2021 Jun 29;6(3):e0018121. doi: 10.1128/mSystems.00181-21. Epub 2021 May 27. PMID: [34042466](https://pubmed.ncbi.nlm.nih.gov/34042466/); PMCID: [PMC8269212](http://www.ncbi.nlm.nih.gov/pmc/articles/pmc8269212/)
+[2] Jing X, Gong Y, Xu T, Meng Y, Han X, Su X, Wang J, Ji Y, Li Y, Jia Z, Ma B, Xu J. One-Cell Metabolic Phenotyping and Sequencing of Soil Microbiome by Raman-Activated Gravity-Driven Encapsulation (RAGE). _mSystems_. 2021 Jun 29;6(3):e0018121. doi: 10.1128/mSystems.00181-21. Epub 2021 May 27. PMID: [34042466](https://pubmed.ncbi.nlm.nih.gov/34042466/); PMCID: [PMC8269212](http://www.ncbi.nlm.nih.gov/pmc/articles/pmc8269212/)
 
 [3] Xu, T., Gong, Y., Su, X., Zhu, P., Dai, J., Xu, J., Ma, B., Phenome-Genome Profiling of Single Bacterial Cell by Raman-Activated Gravity-Driven Encapsulation and Sequencing. _Small_ 2020, 2001172. [https://doi.org/10.1002/smll.202001172](https://doi.org/10.1002/smll.202001172) [Details](https://github.com/gongyh/nf-core-scgs/blob/master/RAGE-Seq/Data.md)
 
