@@ -4,7 +4,7 @@
 
 DSL2 only version.
 
-## v1.3 - [preparing]
+## v1.3.0 - [July 3, 2023]
 
 Add a DSL2 implementation.
 

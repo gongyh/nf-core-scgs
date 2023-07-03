@@ -34,12 +34,12 @@ jobs:
 
       - name: Build new docker image
         if: env.MATCHED_FILES
-        run: docker build --no-cache . -t quay.io/gongyh/nf-core-scgs:v1.2
+        run: docker build --no-cache . -t quay.io/gongyh/nf-core-scgs:v1.3.0
 
       - name: Pull docker image
         if: ${{ !env.MATCHED_FILES }}
         run: |
-          docker pull quay.io/gongyh/nf-core-scgs:v1.2
+          docker pull quay.io/gongyh/nf-core-scgs:v1.3.0
 
       - name: Install Nextflow
         uses: nf-core/setup-nextflow@v1
