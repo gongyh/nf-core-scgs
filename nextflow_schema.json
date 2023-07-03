@@ -407,7 +407,7 @@
                     "default": false,
                     "description": "validation show hidden params"
                 },
-                "validatinSchemaIgnoreParams": {
+                "validationSchemaIgnoreParams": {
                     "type": "boolean",
                     "default": false,
                     "description": "validation schema ignore params"
