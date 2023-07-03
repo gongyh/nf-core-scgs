@@ -2,16 +2,21 @@ process SAMTOOLS {
     tag "${meta.id}"
     label 'process_medium'
 
+    conda "bioconda::samtools=1.17 bioconda::picard=2.19.0 bioconda::bedtools=2.31.0 conda-forge::r-magicaxis=2.2"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-a055626708da8b97b79d76d03667dba1cb4bb107:3785590b864aff1747a8d3237666cee5030d4c3e-0' :
+        'scgs/mulled-v2-a055626708da8b97b79d76d03667dba1cb4bb107:3785590b864aff1747a8d3237666cee5030d4c3e-0' }"
+
     input:
     tuple val(meta), path(bam)
     path genome
 
     output:
-    tuple val(meta), path("*.markdup.bam"),     emit: bam
+    tuple val(meta), path("*.markdup.bam")    , emit: bam
     tuple val(meta), path("*.markdup.bam.bai"), emit: bai
-    tuple val(meta), path("*.markdup.bed"),     emit: bed
-    tuple val(meta), path("*.stats.txt"),       optional:true, emit: stats
-    path  "versions.yml",                       emit: versions
+    tuple val(meta), path("*.markdup.bed")    , emit: bed
+    tuple val(meta), path("*.stats.txt")      , optional:true, emit: stats
+    path  "versions.yml"                      , emit: versions
     path("${prefix}_1k_bins.txt")
     path("${prefix}_pdrc.pdf")
 
@@ -36,6 +41,8 @@ process SAMTOOLS {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*bedtools v//; s/Using.*\$//')
+        picard: \$(echo \$(picard MarkDuplicates --version 2>&1 | grep SNAPSHOT | cut -d'-' -f1))
     END_VERSIONS
     """
 }

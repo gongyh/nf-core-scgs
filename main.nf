@@ -1495,7 +1495,7 @@ process PROKKA {
     wget -c -q -t 1 -T 60 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -O linux64.tbl2asn.gz && gunzip linux64.tbl2asn.gz && chmod +x linux64.tbl2asn && mv linux64.tbl2asn /opt/conda/envs/nf-core-gongyh-scgs/bin/tbl2asn
     fi
     cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
-    prokka --outdir $prefix --prefix $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa || echo "Ignore minor errors of prokka!"
+    prokka --outdir $prefix --prefix $prefix --strain $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa || echo "Ignore minor errors of prokka!"
     sed '/^##FASTA/Q' ${prefix}/${prefix}.gff > ${prefix}/${prefix}_noseq.gff
     gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | grep -v gene > ${prefix}/${prefix}_ctg_genes.tsv
     prokka_postprocess.py ${prefix}/${prefix}_ctg_genes.tsv ${prefix}/${prefix}.tsv > ${prefix}/${prefix}_all.tsv
@@ -1808,7 +1808,7 @@ process SPLIT_CHECKM_EUKCC {
     mkdir -p \${sample}_${split_bac_level}_checkM
     checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
     cd \${sample}_${split_euk_level}_Eukaryota
-    contigs=(`ls -d *.fasta`)
+    contigs=(`ls *.fasta`)
     for contig in \${contigs[*]};do
         prefix=\${contig%.fasta}
         # clean id
@@ -1821,11 +1821,14 @@ process SPLIT_CHECKM_EUKCC {
         getAnnoFasta.pl \${prefix}.gff
     done
 
-    faas=(`ls -d *.aa`)
-    for faa in \${faas[*]};do
-        faaPrefix=\${faa%.aa}
-        eukcc --db ../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
-    done
+    if ls *.aa >/dev/null 2>&1;
+    then
+        faas=(`ls *.aa`)
+        for faa in \${faas[*]};do
+            faaPrefix=\${faa%.aa}
+            eukcc --db ../../$db --ncores ${task.cpus} --outdir \${faaPrefix} --protein \${faa} || echo "Ignore minor errors of eukcc!"
+        done
+    fi
     cd ../
     done
     """

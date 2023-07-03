@@ -14,11 +14,11 @@ process DIAMOND_BLASTX {
     path("uniprot.taxids")
 
     output:
-    tuple val(meta), path("${prefix}_uniprot.taxified.out") , emit: uniprot
-    tuple val(meta), path("${contigs}") ,                     emit: contigs
-    tuple val(meta), path("${nt_out}") ,                      emit: nt
-    val used ,                                                emit: real
-    path "versions.yml",                                      emit: versions
+    tuple val(meta), path("${prefix}_uniprot.taxified.out"), emit: uniprot
+    tuple val(meta), path("${contigs}")                    , emit: contigs
+    tuple val(meta), path("${nt_out}")                     , emit: nt
+    val used                                               , emit: real
+    path "versions.yml"                                    , emit: versions
     path("${prefix}_uniprot.*")
 
     script:
@@ -31,7 +31,7 @@ process DIAMOND_BLASTX {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond //; s/Using.*\$//')
+        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond version //; s/Using.*\$//')
     END_VERSIONS
     """
     } else {
@@ -43,7 +43,7 @@ process DIAMOND_BLASTX {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond //; s/Using.*\$//')
+        diamond: \$(echo \$(diamond version 2>&1) | sed 's/^.*diamond version //; s/Using.*\$//')
     END_VERSIONS
     """
     }

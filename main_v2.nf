@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+
 /*
 ========================================================================================
                         gongyh/nf-core-scgs
@@ -8,6 +9,7 @@
     https://github.com/gongyh/nf-core-scgs
 ----------------------------------------------------------------------------------------
 */
+
 nextflow.enable.dsl=2
 
 def helpMessage() {
@@ -47,6 +49,7 @@ def helpMessage() {
 
     External databases:
     --nt_db                       NCBI Nt database (BLAST)
+    --blob_db                     Blobtools nodesDB.txt
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
     --uniprot_taxids              Sequence id to taxa id mapping file
     --kraken_db                   Kraken database
@@ -127,6 +130,7 @@ params.fungus = false
 params.remap = false
 params.genus = null
 params.nt_db = null
+params.blob_db = null
 params.kraken_db = null
 params.readPaths = null
 params.uniprot_db = null
@@ -165,12 +169,6 @@ if ( params.fasta ){
     ref = params.fasta - ~/(\.fasta)?(\.fna)?(\.fa)?$/
     if( !fasta.exists() ) exit 1, "Fasta file not found: ${params.fasta}"
 }
-//
-// NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
-// If you want to use the above in a process, define the following:
-//   input:
-//   file fasta from fasta
-//
 
 gff = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 if ( params.gff ) {
@@ -228,6 +226,13 @@ if ( params.kraken_db ) {
     if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"
 }
 
+// Configurable Blobtools nodesDB.txt
+blob_db = false
+if ( params.blob_db ) {
+    blob_db = file(params.blob_db)
+    if( !blob_db.exists() ) exit 1, "Blobtools nodesDB.txt not found: ${params.blob_db}"
+}
+
 // Configurable eggNOG database
 eggnog_db = false
 if ( params.eggnog_db ) {
@@ -281,8 +286,9 @@ if( workflow.profile == 'awsbatch') {
 }
 
 // Stage config files
-ch_multiqc_config1 = Channel.fromPath(params.multiqc_config)
-ch_multiqc_config2 = Channel.fromPath(params.multiqc_config)
+ch_multiqc_config = Channel.fromPath(params.multiqc_config, checkIfExists: true)
+ch_multiqc_custom_config = Channel.empty()
+ch_multiqc_logo = Channel.empty()
 ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
 
 // Custom trimming options
@@ -356,10 +362,7 @@ summary['User']             = workflow.userName
 if( params.notrim ){
     summary['Trimming Step'] = 'Skipped'
 } else {
-    summary["Trim 5' R1"] = params.clip_r1
-    summary["Trim 5' R2"] = params.clip_r2
-    summary["Trim 3' R1"] = params.three_prime_clip_r1
-    summary["Trim 3' R2"] = params.three_prime_clip_r2
+    summary["Trimming Step"] = 'Trim Glore'
 }
 if(workflow.profile == 'awsbatch'){
     summary['AWS Region']    = params.awsregion
@@ -403,16 +406,18 @@ include { BOWTIE2_BUILD               } from './modules/nf-core/bowtie2/build/ma
 include { BOWTIE2_ALIGN               } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN              } from './modules/nf-core/minimap2/align/main'
 include { QUALIMAP_BAMQC              } from './modules/nf-core/qualimap/bamqc/main'
-include { QUAST                       } from './modules/nf-core/quast/main'
-//include { PRODIGAL                  } from './modules/nf-core/prodigal/main'
-//include { CHECKM_LINEAGEWF          } from './modules/nf-core/checkm/lineagewf/main'
-//include { KOFAMSCAN                 } from './modules/nf-core/kofamscan/main'
-//include { VG_CONSTRUCT                } from './modules/nf-core/vg/construct/main'
-//include { VG_INDEX                    } from './modules/nf-core/vg/index/main'
+include { MULTIQC                     } from './modules/nf-core/multiqc/main'
+// include { QUAST                       } from './modules/nf-core/quast/main'
+// include { PRODIGAL                  } from './modules/nf-core/prodigal/main'
+// include { CHECKM_LINEAGEWF          } from './modules/nf-core/checkm/lineagewf/main'
+// include { KOFAMSCAN                 } from './modules/nf-core/kofamscan/main'
+// include { VG_CONSTRUCT                } from './modules/nf-core/vg/construct/main'
+// include { VG_INDEX                    } from './modules/nf-core/vg/index/main'
 
 
 // Import modules from local
 include { SAVE_REFERENCE        } from './modules/local/save_reference'
+include { KTUPDATETAXONOMY      } from './modules/local/ktupdatetaxonomy'
 include { KRAKEN                } from './modules/local/kraken'
 include { SATURATION            } from './modules/local/saturation'
 include { SAMTOOLS              } from './modules/local/samtools'
@@ -424,6 +429,8 @@ include { CIRCLIZE              } from './modules/local/circlize'
 include { NORMALIZE             } from './modules/local/normalize'
 include { CANU                  } from './modules/local/canu'
 include { SPADES                } from './modules/local/spades'
+include { QUAST_REF             } from './modules/local/quast_ref'
+include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 include { VG_CONSTRUCT          } from './modules/local/vg/vg_construct'
 include { VG_INDEX              } from './modules/local/vg/vg_index'
 include { VG_CALL               } from './modules/local/vg/vg_call'
@@ -440,18 +447,13 @@ include { PROKKA                } from './modules/local/prokka'
 include { PRODIGAL              } from './modules/local/prodigal'
 include { AUGUSTUS              } from './modules/local/augustus'
 include { EUKCC                 } from './modules/local/eukcc'
-include { MULTIQC_DENOVO        } from './modules/local/multiqc_denovo'
-include { MULTIQC_REF           } from './modules/local/multiqc_ref'
 include { EGGNOG                } from './modules/local/eggnog'
 include { KOFAMSCAN             } from './modules/local/kofamscan'
-include { RESFINDER             } from './modules/local/resfinder'
-include { POINTFINDER           } from './modules/local/pointfinder'
+include { STARAMR               } from './modules/local/staramr'
 include { SPLIT_CHECKM          } from './modules/local/split_checkm'
 include { SPLIT_CHECKM_EUKCC    } from './modules/local/split_checkm_eukcc'
 include { OUTPUT_DOCUMENTATION  } from './modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions/main'
-// include { QUAST_REF             } from './modules/local/quast_ref'
-// include { QUAST_DENOVO          } from './modules/local/quast_denovo'
 
 // MULTIQC
 def multiqc_report = []
@@ -460,45 +462,49 @@ workflow {
     ch_versions = Channel.empty()
 
     // FASTQC
-    FASTQC(read_files_fastqc)
-    ch_versions = ch_versions.mix(FASTQC.out.versions.ifEmpty(null))
+    ch_multiqc_fastqc = Channel.empty()
+    FASTQC ( read_files_fastqc )
+    ch_versions       = ch_versions.mix(FASTQC.out.versions)
+    ch_multiqc_fastqc = FASTQC.out.zip
 
-    if (params.fasta && params.gff) {
-        SAVE_REFERENCE(fasta, gff)
+    if ( params.fasta && params.gff ) {
+        SAVE_REFERENCE ( fasta, gff )
     }
 
     if (bowtie2) {
         bowtie2_index = [bowtie2, file(bowtie2)]
     } else {
         if (params.fasta) {
-            BOWTIE2_BUILD([ref, fasta])
+            BOWTIE2_BUILD ( [ref, fasta] )
             bowtie2_index = BOWTIE2_BUILD.out.index
         }
     }
     // TRIM_GALORE
     trimmed_reads = Channel.empty()
+    ch_multiqc_trim_log = Channel.empty()
+    ch_multiqc_trim_zip = Channel.empty()
     if (params.notrim) {
         trimmed_reads = read_files_trimming.map{name, reads -> reads}
-        trimgalore_results1 = file('/dev/null')
-        trimgalore_results2 = file('/dev/null')
-        trimgalore_fastqc_reports1 = file('/dev/null')
-        trimgalore_fastqc_reports2 = file('/dev/null')
     } else {
-        TRIMGALORE(read_files_trimming)
+        TRIMGALORE ( read_files_trimming )
         trimmed_reads = TRIMGALORE.out.reads
+        ch_multiqc_trim_log = TRIMGALORE.out.log
+        ch_multiqc_trim_zip = TRIMGALORE.out.zip
     }
-    ch_versions = ch_versions.mix(TRIMGALORE.out.versions.ifEmpty(null))
+    ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
 
     // KRAKEN
-    kraken_for_mqc = Channel.empty()
+    ch_multiqc_kraken = Channel.empty()
     if (params.kraken_db) {
-        KRAKEN(
+        KTUPDATETAXONOMY ()
+        KRAKEN (
             trimmed_reads,
-            kraken_db
+            kraken_db,
+            KTUPDATETAXONOMY.out.taxonomy
         )
-        kraken_for_mqc = KRAKEN.out.report
+        ch_multiqc_kraken = KRAKEN.out.report
     }
-    SATURATION(trimmed_reads)
+    SATURATION ( trimmed_reads )
 
     // ALIGN
     if (denovo == false) {
@@ -511,9 +517,8 @@ workflow {
                 false,
                 false
             )
-            MINIMAP2_ALIGN.out.bam
-                    .set{ bb_bam }
-            ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions.ifEmpty(null))
+            MINIMAP2_ALIGN.out.bam.set{ bb_bam }
+            ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
         } else {
             BOWTIE2_ALIGN (
                 trimmed_reads,
@@ -521,9 +526,8 @@ workflow {
                 false,
                 true
             )
-            BOWTIE2_ALIGN.out.bam
-                    .set { bb_bam }
-            ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions.ifEmpty(null))
+            BOWTIE2_ALIGN.out.bam.set{ bb_bam }
+            ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
         }
     }
 
@@ -533,7 +537,7 @@ workflow {
             fasta,
             vcf
         )
-        ch_versions = ch_versions.mix(VG_CONSTRUCT.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(VG_CONSTRUCT.out.versions)
         VG_INDEX (
             VG_CONSTRUCT.out.vg,
             trimmed_reads
@@ -544,40 +548,50 @@ workflow {
         )
     }
 
+    ch_multiqc_samtools = Channel.empty()
+    ch_multiqc_preseq   = Channel.empty()
+    ch_multiqc_qualimap = Channel.empty()
+    quast_bam = Channel.empty()
+    quast_bai = Channel.empty()
     if ( params.fasta && params.gff ) {
         SAMTOOLS (
             bb_bam,
             SAVE_REFERENCE.out.bed
         )
-        ch_versions = ch_versions.mix(SAMTOOLS.out.versions.ifEmpty(null))
-        PRESEQ(SAMTOOLS.out.bed)
-        ch_versions = ch_versions.mix(PRESEQ.out.versions.ifEmpty(null))
+        SAMTOOLS.out.bam.set{quast_bam}
+        SAMTOOLS.out.bai.set{quast_bai}
+        ch_versions = ch_versions.mix(SAMTOOLS.out.versions)
+        ch_multiqc_samtools = SAMTOOLS.out.stats
+        PRESEQ ( SAMTOOLS.out.bed )
+        ch_versions = ch_versions.mix(PRESEQ.out.versions)
+        ch_multiqc_preseq = PRESEQ.out.txt
         QUALIMAP_BAMQC (
             SAMTOOLS.out.bam,
             gff
         )
-        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
+        ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
         INDELREALIGN (
             SAMTOOLS.out.bam,
             fasta
         )
-        ch_versions = ch_versions.mix(INDELREALIGN.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(INDELREALIGN.out.versions)
         MONOVAR (
-            INDELREALIGN.out.bam.map{ meta,bam -> return bam }.collect(), INDELREALIGN.out.bai.map{ meta, bai -> return bai }
-                .collect(),
+            INDELREALIGN.out.bam.collect{it[1]},
+            INDELREALIGN.out.bai.collect{it[1]},
             fasta
         )
-        ch_versions = ch_versions.mix(MONOVAR.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(MONOVAR.out.versions)
         ANEUFINDER (
-            SAMTOOLS.out.bam.map{ meta, bam -> return bam }.collect(),
-            SAMTOOLS.out.bai.map{ meta, bai -> return bai }.collect()
+            SAMTOOLS.out.bam.collect{it[1]},
+            SAMTOOLS.out.bai.collect{it[1]}
         )
-        ch_versions = ch_versions.mix(ANEUFINDER.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(ANEUFINDER.out.versions)
         CIRCLIZE (
             SAMTOOLS.out.bed,
             SAVE_REFERENCE.out.bed
         )
-        ch_versions = ch_versions.mix(CIRCLIZE.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
     }
 
     // NORMALIZE
@@ -592,12 +606,12 @@ workflow {
                 CANU(NORMALIZE.out.reads)
                 ctg200 = CANU.out.ctg200
                 ctg = CANU.out.ctg
-                ch_versions = ch_versions.mix(CANU.out.versions.ifEmpty(null))
+                ch_versions = ch_versions.mix(CANU.out.versions)
             } else {
                 SPADES(NORMALIZE.out.reads)
                 ctg200 = SPADES.out.ctg200
                 ctg = SPADES.out.ctg
-                ch_versions = ch_versions.mix(SPADES.out.versions.ifEmpty(null))
+                ch_versions = ch_versions.mix(SPADES.out.versions)
             }
         }
     }
@@ -613,25 +627,48 @@ workflow {
     }
 
     // QUAST
-    quast_report = Channel.empty()
+    /**
     QUAST (
         ctg.map{ meta,ctg -> return ctg }.collect(),
-        fasta,
-        gff,
+        denovo ? Channel.empty() : fasta,
+        denovo ? Channel.empty() : gff,
         denovo ? false: true,
-        denovo ? false: true,
+        denovo ? false: true
     )
-    quast_report = QUAST.out.tsv
-    ch_versions = ch_versions.mix(QUAST.out.versions.ifEmpty(null))
+    ch_multiqc_quast = QUAST.out.tsv
+    */
+    ch_multiqc_quast = Channel.empty()
+    if (denovo == false) {
+        QUAST_REF (
+            fasta,
+            gff,
+            ctg.collect{it[1]},
+            quast_bam.collect{it[1]},
+            quast_bai.collect{it[1]},
+            euk,
+            params.fungus
+        )
+        ch_multiqc_quast = QUAST_REF.out.tsv
+        ch_versions = ch_versions.mix(QUAST_REF.out.versions)
+    } else {
+        QUAST_DENOVO (
+            ctg.collect{it[1]},
+            euk,
+            params.fungus
+        )
+        ch_multiqc_quast = QUAST_DENOVO.out.tsv
+        ch_versions = ch_versions.mix(QUAST_DENOVO.out.versions)
+    }
 
-
-    // CHECKM
+    // CHECKM_LINEAGEWF
+    ch_multiqc_checkm = Channel.empty()
     if ( !euk ) {
         CHECKM_LINEAGEWF (
-            ctg.map{ meta,ctg -> return ctg }.collect(),
-            params.genus
+            ctg.collect{it[1]},
+            params.genus ? true : false
         )
-        ch_versions = ch_versions.mix(CHECKM_LINEAGEWF.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(CHECKM_LINEAGEWF.out.versions)
+        ch_multiqc_checkm = CHECKM_LINEAGEWF.out.mqc_tsv
     }
 
     // NT
@@ -641,33 +678,43 @@ workflow {
             nt_db,
             params.evalue
         )
-        ch_versions = ch_versions.mix(BLASTN.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(BLASTN.out.versions)
         DIAMOND_BLASTX (
             BLASTN.out.contigs,
             BLASTN.out.nt,
             uniprot_db,
             uniprot_taxids
         )
-        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions.ifEmpty(null))
-        BLOBTOOLS (
-            DIAMOND_BLASTX.out.contigs,
-            DIAMOND_BLASTX.out.nt,
-            DIAMOND_BLASTX.out.uniprot,
-            DIAMOND_BLASTX.out.real
-        )
-        ch_versions = ch_versions.mix(BLOBTOOLS.out.versions.ifEmpty(null))
-        if ( params.remap ) {
+        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
+
+        acdc_contigs = Channel.empty()
+        acdc_tax = Channel.empty()
+        if ( params.blob_db ) {
+            BLOBTOOLS (
+                DIAMOND_BLASTX.out.contigs,
+                DIAMOND_BLASTX.out.nt,
+                DIAMOND_BLASTX.out.uniprot,
+                DIAMOND_BLASTX.out.real,
+                blob_db
+            )
+            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
+            acdc_contigs = BLOBTOOLS.out.contigs
+            acdc_tax = BLOBTOOLS.out.tax
+        }
+        if ( params.remap && params.blob_db ) {
             REBLOBTOOLS (
                 DIAMOND_BLASTX.out.contigs,
                 DIAMOND_BLASTX.out.nt,
                 DIAMOND_BLASTX.out.real,
                 DIAMOND_BLASTX.out.uniprot,
-                REMAP.out.bam.map{ meta, bam -> return bam }.collect()
+                blob_db,
+                REMAP.out.bam.collect{it[1]},
+                REMAP.out.bai.collect{it[1]}
             )
         }
         ACDC (
-            BLOBTOOLS.out.contigs,
-            BLOBTOOLS.out.tax,
+            acdc_contigs,
+            acdc_tax,
             kraken_db
         )
     }
@@ -675,23 +722,21 @@ workflow {
 
 
     faa = Channel.empty()
+    prokka_for_split  = Channel.empty()
+    ch_multiqc_prokka = Channel.empty()
     if ( !euk ) {
         PROKKA(ctg)
-        ch_versions = ch_versions.mix(PROKKA.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(PROKKA.out.versions)
         PRODIGAL(ctg)
-        ch_versions = ch_versions.mix(PRODIGAL.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(PRODIGAL.out.versions)
         faa = PROKKA.out.faa
-        prokka_for_mqc1 = PROKKA.out.prokka_for_split
-        prokka_for_mqc2 = PROKKA.out.prokka_for_split
-        prokka_for_split = PROKKA.out.prokka_for_split
+        prokka_for_split  = PROKKA.out.prokka_for_split
+        ch_multiqc_prokka = PROKKA.out.prokka_for_split
     } else {
-        prokka_for_mqc1 = file('/dev/null')
-        prokka_for_mqc2 = file('/dev/null')
-        prokka_for_split = file('/dev/null')
         AUGUSTUS(ctg)
         faa = AUGUSTUS.out.faa
         EUKCC (
-            faa,
+            ctg,
             eukcc_db
         )
     }
@@ -701,7 +746,7 @@ workflow {
             faa,
             eggnog_db
         )
-        ch_versions = ch_versions.mix(EGGNOG.out.versions.ifEmpty(null))
+        ch_versions = ch_versions.mix(EGGNOG.out.versions)
     }
 
     if ( params.kofam_profile && params.kofam_kolist ) {
@@ -712,26 +757,23 @@ workflow {
         )
     }
 
-    if ( !params.euk && params.acquired && resfinder_db ) {
-        RESFINDER (
-            ctg,
-            resfinder_db
-        )
-    }
-
-    if ( !params.euk && params.point && pointfinder_db ) {
-        POINTFINDER (
-            ctg,
-            pointfinder_db
-        )
+    if ( !params.euk ) {
+        if ( params.acquired || params.point ) {
+            STARAMR (
+                ctg,
+                params.acquired,
+                params.point,
+                params.pointfinder_species
+            )
+        }
     }
 
     if ( params.split && params.eukcc_db ) {
-        SPLIT_CHECKM_EUKCC(
-            ctg200.map { meta, ctg200 -> return ctg200}.collect(),
-            BLOBTOOLS.out.tax_split.map{ meta, tax -> return tax }.collect(),
-            PROKKA.out.prokka_for_split.map{ meta, data -> data }.collect(),
-            KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect(),
+        SPLIT_CHECKM_EUKCC (
+            ctg200.collect{it[1]},
+            BLOBTOOLS.out.tax_split.collect{it[1]},
+            prokka_for_split.collect{it[1]}.ifEmpty([]),
+            KOFAMSCAN.out.txt.collect{it[1]},
             eukcc_db,
             params.split_bac_level ? params.split_bac_level : "genus",
             params.split_euk_level ? params.split_euk_level : "genus"
@@ -739,51 +781,47 @@ workflow {
     }
 
     if ( params.split && !params.eukcc_db ) {
-        SPLIT_CHECKM(
-            ctg200.map{ meta, ctg200 -> return ctg200 }.collect(),
-            BLOBTOOLS.out.tax_split.map{ meta, tax-> return tax }.collect(),
-            PROKKA.out.prokka_for_split.map{ meta, data -> data }.collect(),
-            KOFAMSCAN.out.txt.map{ meta, txt -> txt }.collect(),
+        SPLIT_CHECKM (
+            ctg200.collect{it[1]},
+            BLOBTOOLS.out.tax_split.collect{it[1]},
+            prokka_for_split.collect{it[1]}.ifEmpty([]),
+            KOFAMSCAN.out.txt.collect{it[1]},
             params.split_bac_level ? params.split_bac_level : "genus",
             params.split_euk_level ? params.split_euk_level : "genus"
         )
     }
 
+    ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
+    ch_multiqc_versions = GET_SOFTWARE_VERSIONS.out.mqc_yml
 
-    // MULTIQC
-    //preseq_for_multiqc = file('/dev/null')
+    // MODULE: MULTIQC
+    workflow_summary = create_workflow_summary(summary)
+    ch_workflow_summary = Channel.value(workflow_summary)
 
-    if ( denovo == false) {
-        MULTIQC_REF (
-            ch_multiqc_config1,
-            FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
-            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-            GET_SOFTWARE_VERSIONS.out.yml,
-            SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
-            PRESEQ.out.txt.collect{it[1]}.ifEmpty([]),
-            QUALIMAP_BAMQC.out.results.collect{it[1]}.ifEmpty([]),
-            quast_report.ifEmpty('/dev/null'),
-            prokka_for_mqc1.collect{it[1]}.ifEmpty([]),
-            kraken_for_mqc.collect{it[1]}.ifEmpty([]),
-            create_workflow_summary(summary)
-        )
-        multiqc_report = MULTIQC_REF.out.report
-    } else {
-        MULTIQC_DENOVO (
-            ch_multiqc_config2,
-            FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
-            TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
-            GET_SOFTWARE_VERSIONS.out.yml,
-            quast_report.ifEmpty('/dev/null'),
-            prokka_for_mqc2.collect{it[1]}.ifEmpty([]),
-            kraken_for_mqc.collect{it[1]}.ifEmpty([]),
-            create_workflow_summary(summary)
-        )
-        multiqc_report = MULTIQC_DENOVO.out.report
-    }
+    ch_multiqc_files = Channel.empty()
+    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_samtools.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_preseq.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_qualimap.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_quast.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_prokka.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_kraken.collect{it[1]}.ifEmpty([]))
+
+    MULTIQC (
+        ch_multiqc_files.collect(),
+        ch_multiqc_config.toList(),
+        ch_multiqc_custom_config.toList(),
+        ch_multiqc_logo.toList()
+    )
+    multiqc_report = MULTIQC.out.report.toList()
 
     OUTPUT_DOCUMENTATION(ch_output_docs)
 }

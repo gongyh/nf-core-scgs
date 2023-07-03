@@ -1,22 +1,25 @@
 process INDELREALIGN {
     tag "${meta.id}"
     label 'process_single'
-    publishDir "${pp_outdir}", mode: 'copy'
+
+    conda "bioconda::gatk=3.8=hdfd78af_11 bioconda::samtools=1.17 bioconda::picard=2.19.0"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-1078cca9be35f4e979036df5cc474bba6aa9e104:a682d8c0dfb0582e13b281ab918a1de0b7a7778d-0' :
+        'scgs/mulled-v2-1078cca9be35f4e979036df5cc474bba6aa9e104:a682d8c0dfb0582e13b281ab918a1de0b7a7778d-0' }"
 
     input:
     tuple val(meta), path(bam)
     path fa
 
     output:
-    tuple val(meta), path("*.realign.bam"),         emit: bam
-    tuple val(meta), path("*.realign.bam.bai"),     emit: bai
-    path "versions.yml",                            emit: versions
+    tuple val(meta), path("*.realign.bam")    , emit: bam
+    tuple val(meta), path("*.realign.bam.bai"), emit: bai
+    path "versions.yml"                       , emit: versions
 
     when:
     params.snv && !params.nanopore
 
     script:
-    pp_outdir = "${params.outdir}/gatk"
     def prefix   = task.ext.prefix ?: "${meta.id}"
     """
     samtools faidx $fa
@@ -30,7 +33,9 @@ process INDELREALIGN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        picard: \$(echo \$(picard MarkDuplicates --version 2>&1) | sed 's/^.*picard //; s/Using.*\$//')
+        picard: \$(echo \$(picard MarkDuplicates --version 2>&1 | grep SNAPSHOT | cut -d'-' -f1))
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        gatk3: \$(echo \$(gatk3 -version 2>&1))
     END_VERSIONS
     """
 }

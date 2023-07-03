@@ -1,6 +1,36 @@
-version: 2.0
+version: 2.1
+
 jobs:
-  build:
+  test_dsl1:
+    docker:
+      - image: quay.io/gongyh/nf-core-scgs:v1.2
+    resource_class: large
+    environment:
+      - GIT_LFS_SKIP_SMUDGE: 1
+    steps:
+      - checkout
+      - run:
+          name: install nextflow
+          command: |
+            apt-get update && mkdir -p /usr/share/man/man1 && apt-get install -y default-jre
+            curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
+      - run:
+          name: test1
+          command: |
+            mkdir -p test && cd test
+            NXF_JAVA_HOME=/usr/ ../nextflow run ../main.nf -profile test --ass --saturation --snv --cnv --remap
+          no_output_timeout: 30m
+      - store_artifacts:
+          path: test/results/pipeline_info
+          destination: dsl1/pipeline_info
+      - store_artifacts:
+          path: test/results/MultiQC/multiqc_report.html
+          destination: dsl1/multiqc_report.html
+      - store_artifacts:
+          path: test/.nextflow.log
+          destination: dsl1/nextflow-log.txt
+
+  test_conda:
     machine:
       image: ubuntu-2204:2023.04.2
       resource_class: large
@@ -12,28 +42,70 @@ jobs:
       - run:
           name: install nextflow
           command: |
-            #export NXF_VER=22.10.8 && curl -s https://get.nextflow.io | bash && chmod +x nextflow
+            curl -s https://get.nextflow.io | bash && chmod +x nextflow
+            #curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
+      - run:
+          name: install micromamba
+          command: |
+            curl micro.mamba.pm/install.sh | bash
+            #curl -L -o ~/bin/micromamba https://github.com/mamba-org/micromamba-releases/releases/download/1.4.2-2/micromamba-linux-64 && chmod a+x  ~/bin/micromamba && ~/bin/micromamba shell init -s bash -p ~/micromamba
+      - run:
+          name: install conda and mamba
+          command: |
+            micromamba activate && micromamba install -y conda-forge::mamba
+            echo 'disable_lockfile: true' >> ~/.mambarc
+            echo 'disable_lockfile: true' >> ~/.condarc
+            echo 'export MAMBA_DISABLE_LOCKFILE=true' >> ~/.bashrc
+            echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
+      - run:
+          name: test
+          shell: bash -l
+          command: |
+            mkdir -p test && cd test
+            micromamba info && mamba info
+            ../nextflow run ../main_v2.nf -profile test,conda --ass --saturation --snv --cnv --remap
+          no_output_timeout: 30m
+      - store_artifacts:
+          path: test/results/pipeline_info
+          destination: conda/pipeline_info
+      - store_artifacts:
+          path: test/results/MultiQC/multiqc_report.html
+          destination: conda/multiqc_report.html
+      - store_artifacts:
+          path: test/.nextflow.log
+          destination: conda/nextflow-log.txt
+
+  test_dsl2:
+    machine:
+      image: ubuntu-2204:2023.04.2
+      resource_class: large
+      docker_layer_caching: true
+    environment:
+      - GIT_LFS_SKIP_SMUDGE: 1
+    steps:
+      - checkout
+      - run:
+          name: install nextflow
+          command: |
             curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
       - run:
-          name: pull docker images
+          name: test
           command: |
-            docker pull quay.io/gongyh/nf-core-scgs:v1.2
-      - run:
-          name: test1
-          command: |
-            mkdir -p tests1 && cd tests1
-            ../nextflow run ../main.nf -profile test_denovo,docker --saturation --snv --cnv
-          no_output_timeout: 30m
-      - run:
-          name: test2
-          command: |
-            mkdir -p tests2 && cd tests2
-            ../nextflow run ../main_v2.nf -profile test_denovo,docker --saturation --snv --cnv
+            mkdir -p test && cd test
+            ../nextflow run ../main_v2.nf -profile test_denovo,docker --saturation --snv --cnv --remap
           no_output_timeout: 30m
       - store_artifacts:
-          path: /home/circleci/project/tests2/results/pipeline_info
+          path: test/results/pipeline_info
+          destination: dsl2/pipeline_info
       - store_artifacts:
-          path: /home/circleci/project/tests2/results/MultiQC
+          path: test/results/MultiQC/multiqc_report.html
+          destination: dsl2/multiqc_report.html
       - store_artifacts:
-          path: /home/circleci/project/tests2/.nextflow.log
-          destination: nextflow-log
+          path: test/.nextflow.log
+          destination: dsl2/nextflow-log.txt
+
+workflows:
+  test_pipeline:
+    jobs:
+      - test_dsl1
+      - test_dsl2

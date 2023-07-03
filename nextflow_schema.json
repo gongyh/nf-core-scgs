@@ -159,21 +159,18 @@
                     "type": "string",
                     "description": "Institutional config description.",
                     "hidden": true,
-                    "default": "Institutional config description.",
                     "fa_icon": "fas fa-users-cog"
                 },
                 "config_profile_contact": {
                     "type": "string",
                     "description": "Institutional config contact information.",
                     "hidden": true,
-                    "default": "Institutional config contact information.",
                     "fa_icon": "fas fa-users-cog"
                 },
                 "config_profile_url": {
                     "type": "string",
                     "description": "Institutional config URL link.",
                     "hidden": true,
-                    "default": "Institutional config URL link.",
                     "fa_icon": "fas fa-users-cog"
                 }
             }
@@ -288,6 +285,10 @@
                     "type": "string",
                     "description": "Path of NCBI/NT database."
                 },
+                "blob_db": {
+                    "type": "string",
+                    "description": "Path of Blobtools nodesDB.txt."
+                },
                 "kraken_db": {
                     "type": "string",
                     "description": "Path of KRAKEN1 database."
@@ -396,6 +397,20 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Show hidden params?"
+                },
+                "schema_ignore_params": {
+                    "type": "string",
+                    "description": "schema_ignore_params"
+                },
+                "validationShowHiddenParams": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "validation show hidden params"
+                },
+                "validationSchemaIgnoreParams": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "validation schema ignore params"
                 },
                 "custom_config_version": {
                     "type": "string",
