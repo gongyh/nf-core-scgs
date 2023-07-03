@@ -2,10 +2,10 @@ process CANU {
     tag "${meta.id}"
     label 'process_high'
 
-    conda "bioconda::canu=2.2"
+    conda "bioconda::canu=2.2 bioconda::flye=2.9.2 bioconda::perl-bioperl=1.7.8 bioconda::perl-io-all=0.87"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/canu:2.2--ha47f30e_0':
-        'biocontainers/canu:2.2--ha47f30e_0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-ef18b85941472064953d94d6112dc05e36194472:90a061fb09200847c4637e3480aa75a467fb2786-0':
+        'scgs/mulled-v2-ef18b85941472064953d94d6112dc05e36194472:90a061fb09200847c4637e3480aa75a467fb2786-0' }"
 
     input:
     tuple val(meta), path(reads)

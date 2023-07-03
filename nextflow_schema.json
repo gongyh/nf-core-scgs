@@ -398,6 +398,20 @@
                     "default": false,
                     "description": "Show hidden params?"
                 },
+                "schema_ignore_params": {
+                    "type": "string",
+                    "description": "schema_ignore_params"
+                },
+                "validationShowHiddenParams": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "validation show hidden params"
+                },
+                "validatinSchemaIgnoreParams": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "validation schema ignore params"
+                },
                 "custom_config_version": {
                     "type": "string",
                     "default": "release",
