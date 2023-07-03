@@ -1,6 +1,5 @@
 process TSNE {
     tag "$meta.id"
-    publishDir "${params.outdir}/tsne", mode: 'copy'
 
     conda "conda-forge::opentsne=1.0.0 conda-forge::h5py=3.9.0 conda-forge::numpy=1.25.0 conda-forge::pandas=2.0.2 bioconda::kpal=2.1.1 bioconda::perl-bioperl=1.7.8"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
