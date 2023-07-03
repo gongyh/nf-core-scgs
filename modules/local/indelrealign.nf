@@ -28,7 +28,6 @@ process INDELREALIGN {
     samtools index ${prefix}_rg.bam
     gatk3 -T RealignerTargetCreator -R $fa -I ${prefix}_rg.bam -o indels.intervals
     gatk3 -T IndelRealigner -R $fa -I ${prefix}_rg.bam -targetIntervals indels.intervals -o ${prefix}.realign.bam
-    #java -Xmx4g -jar ${workflow.projectDir}/bin/srma-0.1.15.jar I=${prefix}_rg.bam O=${prefix}.realign.bam R=${fa}
     samtools index ${prefix}.realign.bam
 
     cat <<-END_VERSIONS > versions.yml

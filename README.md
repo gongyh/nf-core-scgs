@@ -23,7 +23,7 @@ Prerequisites: Git, Java 11 or later, Docker
 ## Install Nextflow
 $ curl -s https://get.nextflow.io | bash
 ## Get the pipeline
-$ git clone -b v1.3.0 https://github.com/gongyh/nf-core-scgs.git
+$ git clone -b v2.0.0 https://github.com/gongyh/nf-core-scgs.git
 ## Test
 $ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,docker
 or $ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,podman
@@ -52,7 +52,7 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 
 [2] Jing X, Gong Y, Xu T, Meng Y, Han X, Su X, Wang J, Ji Y, Li Y, Jia Z, Ma B, Xu J. One-Cell Metabolic Phenotyping and Sequencing of Soil Microbiome by Raman-Activated Gravity-Driven Encapsulation (RAGE). _mSystems_. 2021 Jun 29;6(3):e0018121. doi: 10.1128/mSystems.00181-21. Epub 2021 May 27. PMID: [34042466](https://pubmed.ncbi.nlm.nih.gov/34042466/); PMCID: [PMC8269212](http://www.ncbi.nlm.nih.gov/pmc/articles/pmc8269212/)
 
-[3] Xu, T., Gong, Y., Su, X., Zhu, P., Dai, J., Xu, J., Ma, B., Phenome-Genome Profiling of Single Bacterial Cell by Raman-Activated Gravity-Driven Encapsulation and Sequencing. _Small_ 2020, 2001172. [https://doi.org/10.1002/smll.202001172](https://doi.org/10.1002/smll.202001172) [Details](https://github.com/gongyh/nf-core-scgs/blob/master/RAGE-Seq/Data.md)
+[3] Xu, T., Gong, Y., Su, X., Zhu, P., Dai, J., Xu, J., Ma, B., Phenome-Genome Profiling of Single Bacterial Cell by Raman-Activated Gravity-Driven Encapsulation and Sequencing. _Small_ 2020, 2001172. [https://doi.org/10.1002/smll.202001172](https://doi.org/10.1002/smll.202001172)
 
 [4] Su, X., Gong, Y., Gou, H., Jing, X., Xu, T., Zheng, X., Chen, R., Li, Y., Ji, Y., Ma, B., Xu, J., Rational Optimization of Raman-Activated Cell Ejection and Sequencing for Bacteria. _Analytical Chemistry_, 2020. [https://doi.org/10.1021/acs.analchem.9b05345](https://doi.org/10.1021/acs.analchem.9b05345)
 
