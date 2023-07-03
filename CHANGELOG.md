@@ -1,6 +1,6 @@
 # gongyh/nf-core-scgs: Changelog
 
-## v2.0 - [planed]
+## v2.0.0 - [July 3, 2023]
 
 DSL2 only version.
 
