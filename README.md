@@ -25,11 +25,11 @@ $ curl -s https://get.nextflow.io | bash
 ## Get the pipeline
 $ git clone -b v2.0.0 https://github.com/gongyh/nf-core-scgs.git
 ## Test
-$ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,docker
-or $ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,podman
-or $ APPTAINER_DISABLE_CACHE=true ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,apptainer
-or $ SINGULARITY_DISABLE_CACHE=true ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,singularity
-or $ ./nextflow run nf-core-scgs/main_v2.nf -profile test_local,conda
+$ ./nextflow run nf-core-scgs -profile test_local,docker
+or $ ./nextflow run nf-core-scgs -profile test_local,podman
+or $ APPTAINER_DISABLE_CACHE=true ./nextflow run nf-core-scgs -profile test_local,apptainer
+or $ SINGULARITY_DISABLE_CACHE=true ./nextflow run nf-core-scgs -profile test_local,singularity
+or $ ./nextflow run nf-core-scgs -profile test_local,conda
 # for conda, add `disable_lockfile: true` to ~/.condarc or ~/.mambarc
 ```
 
