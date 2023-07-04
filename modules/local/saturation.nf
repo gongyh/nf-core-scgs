@@ -10,8 +10,8 @@ process SATURATION {
     tuple val(meta), path(reads)
 
     output:
-    path("${prefix}_kmer.pdf")
-    path("${prefix}_cov31_*.csv")
+    path("${prefix}_kmer.pdf")   , emit: pdf
+    path("${prefix}_cov31_*.csv"), emit: csv
     path "versions.yml"          , emit: versions
 
     when:

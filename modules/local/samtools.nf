@@ -17,8 +17,8 @@ process SAMTOOLS {
     tuple val(meta), path("*.markdup.bed")    , emit: bed
     tuple val(meta), path("*.stats.txt")      , optional:true, emit: stats
     path  "versions.yml"                      , emit: versions
-    path("${prefix}_1k_bins.txt")
-    path("${prefix}_pdrc.pdf")
+    path("${prefix}_1k_bins.txt")             , emit: txt
+    path("${prefix}_pdrc.pdf")                , emit: pdf
 
     script:
     pp_outdir = "${params.outdir}/bowtie2"

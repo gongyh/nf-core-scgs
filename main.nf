@@ -621,7 +621,7 @@ workflow {
         BOWTIE2_REMAP(ctg200)
         REMAP (
             trimmed_reads,
-            BOWTIE2_REMAP.out.index.collect(),
+            BOWTIE2_REMAP.out.index.collect{it[1]},
             params.allow_multi_align
         )
     }
@@ -712,11 +712,13 @@ workflow {
                 REMAP.out.bai.collect{it[1]}
             )
         }
-        ACDC (
-            acdc_contigs,
-            acdc_tax,
-            kraken_db
-        )
+        if ( params.kraken_db ) {
+            ACDC (
+                acdc_contigs,
+                acdc_tax,
+                kraken_db
+            )
+        }
     }
     TSNE(ctg)
 

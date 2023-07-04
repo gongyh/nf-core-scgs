@@ -8,8 +8,11 @@ process OUTPUT_DOCUMENTATION {
     path output_docs
 
     output:
-    path("results_description.html")
+    path("results_description.html"), emit: html
     path "versions.yml"             , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     """

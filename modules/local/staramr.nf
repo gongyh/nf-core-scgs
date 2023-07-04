@@ -14,8 +14,11 @@ process STARAMR {
     val(species)
 
     output:
-    path("${prefix}/*")
+    path("${prefix}/*"), emit: out_put
     path "versions.yml", emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

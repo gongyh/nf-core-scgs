@@ -19,7 +19,10 @@ process DIAMOND_BLASTX {
     tuple val(meta), path("${nt_out}")                     , emit: nt
     val used                                               , emit: real
     path "versions.yml"                                    , emit: versions
-    path("${prefix}_uniprot.*")
+    path("${prefix}_uniprot.*")                            , emit: out_put
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

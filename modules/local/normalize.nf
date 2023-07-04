@@ -13,6 +13,9 @@ process NORMALIZE {
     tuple val(meta), path("*_norm*.fastq.gz"), emit: reads
     path "versions.yml"                      , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
     def mode = params.bulk ? "bulk" : "mda"

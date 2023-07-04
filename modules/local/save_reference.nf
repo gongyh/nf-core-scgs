@@ -9,14 +9,14 @@ process SAVE_REFERENCE {
     path gff
 
     output:
-    path("genome.fa")
-    path("genome.gff")
-    path("*.bed")
+    path("genome.fa")   , emit: fa
+    path("genome.gff")  , emit: gff
+    path("*.bed")       , emit: out_bed
     path("genome.bed")  , emit: bed
     path  "versions.yml", emit: versions
 
     when:
-    params.fasta && params.gff
+    task.ext.when == null || task.ext.when
 
     script:
     """

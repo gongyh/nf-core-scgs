@@ -20,6 +20,9 @@ process BLOBTOOLS {
     tuple val(meta), path("${prefix}")                           , emit: tax_split
     path "versions.yml"                                          , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     def uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""

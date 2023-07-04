@@ -12,8 +12,11 @@ process CIRCLIZE {
     path(refbed)
 
     output:
-    path("${prefix}-cov200.bed")
-    path "versions.yml"         , emit: versions
+    tuple val(meta), path("${prefix}-cov200.bed"), emit: bed
+    path "versions.yml"                          , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

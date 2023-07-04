@@ -15,6 +15,9 @@ process CANU {
     tuple val(meta), path("${prefix}.ctgs.fasta")  , emit: ctg
     path "versions.yml"                            , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     def mode = params.bulk ? "bulk" : "mda"

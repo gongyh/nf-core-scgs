@@ -11,7 +11,7 @@ process PRODIGAL {
     tuple val(meta), path(contigs)
 
     output:
-    path("$prefix")
+    path("$prefix")    , emit: out_put
     path "versions.yml", emit: versions
 
     when:

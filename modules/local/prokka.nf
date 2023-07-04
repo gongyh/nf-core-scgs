@@ -15,7 +15,6 @@ process PROKKA {
     tuple val(meta), path("${prefix}/${prefix}.faa"), emit: faa
     path "versions.yml"                             , emit: versions
 
-
     when:
     !euk
 

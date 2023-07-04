@@ -11,8 +11,11 @@ process BOWTIE2_REMAP {
     tuple val(meta), path(contigs)
 
     output:
-    path("${prefix}Bowtie2Index")             , emit: index
-    path("${prefix}Bowtie2Index/versions.yml"), emit: versions
+    tuple val(meta), path("${prefix}Bowtie2Index"), emit: index
+    path("${prefix}Bowtie2Index/versions.yml")    , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

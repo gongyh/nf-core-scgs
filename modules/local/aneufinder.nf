@@ -11,8 +11,8 @@ process ANEUFINDER {
     path("bams/*")
 
     output:
-    path('CNV_output') , emit: cnv
-    path "versions.yml", emit: versions
+    tuple val(meta), path('CNV_output') , emit: cnv
+    path "versions.yml"                 , emit: versions
 
     when:
     !params.bulk && params.cnv && !single_end && !params.nanopore
