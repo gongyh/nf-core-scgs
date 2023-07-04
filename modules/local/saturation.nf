@@ -1,5 +1,6 @@
 process SATURATION {
     tag "${meta.id}"
+    label 'process_medium'
 
     conda "bioconda::fastp=0.20.1 bioconda::mccortex=1.0 conda-forge::r-magicaxis=2.2.14 conda-forge::r-rcolorbrewer=1.1_3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

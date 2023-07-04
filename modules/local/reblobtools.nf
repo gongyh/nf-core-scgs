@@ -1,5 +1,6 @@
 process REBLOBTOOLS {
     tag "$meta.id"
+    label 'process_medium'
 
     conda "bioconda::blobtools=1.0.1=py27_3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
