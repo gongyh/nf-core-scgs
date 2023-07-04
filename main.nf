@@ -617,7 +617,7 @@ workflow {
     }
 
     // REMAP
-    if ( params.remap ) {
+    if ( params.remap && !params.nanopore ) {
         BOWTIE2_REMAP(ctg200)
         REMAP (
             trimmed_reads,
@@ -627,15 +627,17 @@ workflow {
     }
 
     // QUAST
-    /**
+    /*
     QUAST (
+        params.fasta ? fasta : '/dev/null',
+        params.gff ? gff : '/dev/null',
         ctg.map{ meta,ctg -> return ctg }.collect(),
-        denovo ? Channel.empty() : fasta,
-        denovo ? Channel.empty() : gff,
-        denovo ? false: true,
-        denovo ? false: true
+        params.fasta ? quast_bam.collect{it[1]} : '/dev/null',
+        params.fasta ? quast_bai.collect{it[1]} : '/dev/null',
+        euk,
+        params.fungus
     )
-    ch_multiqc_quast = QUAST.out.tsv
+    ch_multiqc_quast = QUAST.out.mqc_tsv
     */
     ch_multiqc_quast = Channel.empty()
     if (denovo == false) {
@@ -672,54 +674,48 @@ workflow {
     }
 
     // NT
-    if ( params.nt_db ) {
-        BLASTN (
-            ctg200,
-            nt_db,
-            params.evalue
-        )
-        ch_versions = ch_versions.mix(BLASTN.out.versions)
-        DIAMOND_BLASTX (
-            BLASTN.out.contigs,
-            BLASTN.out.nt,
-            uniprot_db,
-            uniprot_taxids
-        )
-        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
+    BLASTN (
+        ctg200,
+        nt_db,
+        params.evalue
+    )
+    ch_versions = ch_versions.mix(BLASTN.out.versions)
+    DIAMOND_BLASTX (
+        BLASTN.out.contigs,
+        BLASTN.out.nt,
+        uniprot_db,
+        uniprot_taxids
+    )
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
 
-        acdc_contigs = Channel.empty()
-        acdc_tax = Channel.empty()
-        if ( params.blob_db ) {
-            BLOBTOOLS (
-                DIAMOND_BLASTX.out.contigs,
-                DIAMOND_BLASTX.out.nt,
-                DIAMOND_BLASTX.out.uniprot,
-                DIAMOND_BLASTX.out.real,
-                blob_db
-            )
-            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
-            acdc_contigs = BLOBTOOLS.out.contigs
-            acdc_tax = BLOBTOOLS.out.tax
-        }
-        if ( params.remap && params.blob_db ) {
-            REBLOBTOOLS (
-                DIAMOND_BLASTX.out.contigs,
-                DIAMOND_BLASTX.out.nt,
-                DIAMOND_BLASTX.out.real,
-                DIAMOND_BLASTX.out.uniprot,
-                blob_db,
-                REMAP.out.bam.collect{it[1]},
-                REMAP.out.bai.collect{it[1]}
-            )
-        }
-        if ( params.kraken_db ) {
-            ACDC (
-                acdc_contigs,
-                acdc_tax,
-                kraken_db
-            )
-        }
+    acdc_contigs = Channel.empty()
+    acdc_tax = Channel.empty()
+    BLOBTOOLS (
+        DIAMOND_BLASTX.out.contigs,
+        DIAMOND_BLASTX.out.nt,
+        DIAMOND_BLASTX.out.uniprot,
+        DIAMOND_BLASTX.out.real,
+        blob_db
+    )
+    ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
+    acdc_contigs = BLOBTOOLS.out.contigs
+    acdc_tax = BLOBTOOLS.out.tax
+    if ( params.remap) {
+        REBLOBTOOLS (
+            DIAMOND_BLASTX.out.contigs,
+            DIAMOND_BLASTX.out.nt,
+            DIAMOND_BLASTX.out.real,
+            DIAMOND_BLASTX.out.uniprot,
+            blob_db,
+            REMAP.out.bam.collect{it[1]},
+            REMAP.out.bai.collect{it[1]}
+        )
     }
+    ACDC (
+        acdc_contigs,
+        acdc_tax,
+        kraken_db
+    )
     TSNE(ctg)
 
 
@@ -743,34 +739,29 @@ workflow {
         )
     }
 
-    if ( params.eggnog_db ) {
-        EGGNOG (
-            faa,
-            eggnog_db
-        )
-        ch_versions = ch_versions.mix(EGGNOG.out.versions)
-    }
+    EGGNOG (
+        faa,
+        eggnog_db
+    )
+    ch_versions = ch_versions.mix(EGGNOG.out.versions)
 
-    if ( params.kofam_profile && params.kofam_kolist ) {
-        KOFAMSCAN (
-            faa,
-            kofam_profile,
-            kofam_kolist
-        )
-    }
+    // KOFAMSCAN
+    KOFAMSCAN (
+        faa,
+        kofam_profile,
+        kofam_kolist
+    )
 
-    if ( !params.euk ) {
-        if ( params.acquired || params.point ) {
-            STARAMR (
-                ctg,
-                params.acquired,
-                params.point,
-                params.pointfinder_species
-            )
-        }
-    }
+    // STARAMR
+    STARAMR (
+        ctg,
+        params.acquired,
+        params.point,
+        params.pointfinder_species
+    )
 
-    if ( params.split && params.eukcc_db ) {
+
+    if ( params.split ) {
         SPLIT_CHECKM_EUKCC (
             ctg200.collect{it[1]},
             BLOBTOOLS.out.tax_split.collect{it[1]},
@@ -780,9 +771,7 @@ workflow {
             params.split_bac_level ? params.split_bac_level : "genus",
             params.split_euk_level ? params.split_euk_level : "genus"
         )
-    }
 
-    if ( params.split && !params.eukcc_db ) {
         SPLIT_CHECKM (
             ctg200.collect{it[1]},
             BLOBTOOLS.out.tax_split.collect{it[1]},
@@ -792,6 +781,7 @@ workflow {
             params.split_euk_level ? params.split_euk_level : "genus"
         )
     }
+
 
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
