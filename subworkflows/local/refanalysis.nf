@@ -15,16 +15,16 @@ include { QUALIMAP_BAMQC        } from '../../modules/nf-core/qualimap/bamqc/mai
 
 workflow REFANALYSIS {
     take:
-    trimmed_reads,
-    fasta,
-    gff,
-    is_nanopore,
-    bowtie2_index,
-    is_vcf,
-    vcf,
-    is_snv,
-    is_cnv,
-    is_bulk,
+    trimmed_reads
+    fasta
+    gff
+    is_nanopore
+    bowtie2_index
+    is_vcf
+    vcf
+    is_snv
+    is_cnv
+    is_bulk
     is_single
 
     main:
@@ -129,8 +129,8 @@ workflow REFANALYSIS {
     ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
 
     emit:
-    ch_versions,
-    quast_bam.collect{it[1]},
-    quast_bai.collect{it[1]},
+    ch_versions
+    quast_bam.collect{it[1]}
+    quast_bai.collect{it[1]}
     ch_multiqc
 }
