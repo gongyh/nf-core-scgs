@@ -490,8 +490,8 @@ workflow {
         trimmed_reads = TRIMGALORE.out.reads
         ch_multiqc_trim_log = TRIMGALORE.out.log
         ch_multiqc_trim_zip = TRIMGALORE.out.zip
+        ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
     }
-    ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
 
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
@@ -564,9 +564,9 @@ workflow {
         ch_multiqc_samtools = SAMTOOLS.out.stats
         if (!params.nanopore) {
             PRESEQ ( SAMTOOLS.out.bed )
+            ch_versions = ch_versions.mix(PRESEQ.out.versions)
+            ch_multiqc_preseq = PRESEQ.out.txt
         }
-        ch_versions = ch_versions.mix(PRESEQ.out.versions)
-        ch_multiqc_preseq = PRESEQ.out.txt
         QUALIMAP_BAMQC (
             SAMTOOLS.out.bam,
             gff
@@ -578,23 +578,23 @@ workflow {
                 SAMTOOLS.out.bam,
                 fasta
             )
+            ch_versions = ch_versions.mix(INDELREALIGN.out.versions)
         }
-        ch_versions = ch_versions.mix(INDELREALIGN.out.versions)
         if (!params.bulk && params.snv && !params.nanopore) {
             MONOVAR (
                 INDELREALIGN.out.bam.collect{it[1]},
                 INDELREALIGN.out.bai.collect{it[1]},
                 fasta
             )
+            ch_versions = ch_versions.mix(MONOVAR.out.versions)
         }
-        ch_versions = ch_versions.mix(MONOVAR.out.versions)
         if (!params.bulk && params.cnv && !single_end && !params.nanopore) {
             ANEUFINDER (
                 SAMTOOLS.out.bam.collect{it[1]},
                 SAMTOOLS.out.bai.collect{it[1]}
             )
+            ch_versions = ch_versions.mix(ANEUFINDER.out.versions)
         }
-        ch_versions = ch_versions.mix(ANEUFINDER.out.versions)
         CIRCLIZE (
             SAMTOOLS.out.bed,
             SAVE_REFERENCE.out.bed
