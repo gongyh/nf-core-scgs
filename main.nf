@@ -453,7 +453,7 @@ include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions/ma
 
 
 /** subworkflow */
-// include { REFANALYSIS           } from 'subworkflows/local/refanalysis'
+// include { REFANALYSIS           } from './subworkflows/local/refanalysis'
 
 // MULTIQC
 def multiqc_report = []
