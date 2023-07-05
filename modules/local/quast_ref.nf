@@ -1,5 +1,4 @@
 process QUAST_REF {
-    label 'QUAST'
     label 'process_medium'
 
     conda "bioconda::quast=5.2.0"

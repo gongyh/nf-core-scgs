@@ -1,5 +1,4 @@
 process QUAST_DENOVO {
-    label 'QUAST'
     label 'process_medium'
 
     conda "bioconda::quast=5.2.0"
