@@ -6,7 +6,7 @@ include { MONOVAR               } from '../../modules/local/monovar'
 include { QUAST_REF             } from '../../modules/local/quast_ref'
 include { ANEUFINDER            } from '../../modules/local/aneufinder'
 include { CIRCLIZE              } from '../../modules/local/circlize'
-include { SAVE_REFERENCE        } from './modules/local/save_reference'
+include { SAVE_REFERENCE        } from '../../modules/local/save_reference'
 
 /* --    IMPORT NF-CORE MODULES/SUBWORKFLOWS   -- */
 include { BOWTIE2_ALIGN         } from '../../modules/nf-core/bowtie2/align/main'
@@ -130,7 +130,7 @@ workflow REFANALYSIS {
 
     emit:
     ch_versions
-    quast_bam.collect{it[1]}
-    quast_bai.collect{it[1]}
+    bam = quast_bam.collect{it[1]}
+    bai = quast_bai.collect{it[1]}
     ch_multiqc
 }
