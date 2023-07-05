@@ -12,7 +12,8 @@ process VG_CONSTRUCT {
     path(vcf)
 
     output:
-    path("graph.vg"), emit: vg
+    path("graph.vg")   , emit: vg
+    path "versions.yml", emit: versions
 
     script:
     """

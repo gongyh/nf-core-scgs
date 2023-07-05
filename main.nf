@@ -537,7 +537,6 @@ workflow {
             fasta,
             vcf
         )
-        ch_versions = ch_versions.mix(VG_CONSTRUCT.out.versions)
         VG_INDEX (
             VG_CONSTRUCT.out.vg,
             trimmed_reads
@@ -546,6 +545,7 @@ workflow {
             VG_CONSTRUCT.out.vg,
             VG_INDEX.out.gam
         )
+        ch_versions = ch_versions.mix(VG_CALL.out.versions)
     }
 
     ch_multiqc_samtools = Channel.empty()
