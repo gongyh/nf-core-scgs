@@ -1,5 +1,6 @@
 process NORMALIZE {
     tag "${meta.id}"
+    label 'process_medium'
 
     conda "bioconda::khmer=3.0.0a3 bioconda::fastx_toolkit=0.0.14"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -12,6 +13,9 @@ process NORMALIZE {
     output:
     tuple val(meta), path("*_norm*.fastq.gz"), emit: reads
     path "versions.yml"                      , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

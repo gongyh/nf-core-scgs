@@ -17,6 +17,9 @@ process BLASTN {
     tuple val(meta), path("${prefix}_nt.out"), emit: nt
     path "versions.yml"                      , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """

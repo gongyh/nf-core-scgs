@@ -199,6 +199,8 @@ nt_db = false
 if ( params.nt_db ) {
     nt_db = file(params.nt_db)
     if( !nt_db.exists() ) exit 1, "NT database not found: ${params.nt_db}"
+} else {
+    nt_db = file("/dev/null")
 }
 
 // Configurable uniprot proteomes database
@@ -224,6 +226,8 @@ kraken_db = false
 if ( params.kraken_db ) {
     kraken_db = file(params.kraken_db)
     if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"
+} else {
+    kraken_db = file("/dev/null")
 }
 
 // Configurable Blobtools nodesDB.txt
@@ -231,6 +235,8 @@ blob_db = false
 if ( params.blob_db ) {
     blob_db = file(params.blob_db)
     if( !blob_db.exists() ) exit 1, "Blobtools nodesDB.txt not found: ${params.blob_db}"
+} else {
+    blob_db = file("/dev/null")
 }
 
 // Configurable eggNOG database
@@ -238,20 +244,8 @@ eggnog_db = false
 if ( params.eggnog_db ) {
     eggnog_db = file(params.eggnog_db)
     if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
-}
-
-// Configure resfinder_db
-resfinder_db = false
-if ( params.resfinder_db ) {
-    resfinder_db = file(params.resfinder_db)
-    if( !resfinder_db.exists() ) exit 1, "ResFinder database not found: ${params.resfinder_db}"
-}
-
-// Configure pointfinder_db
-pointfinder_db = false
-if ( params.pointfinder_db ) {
-    pointfinder_db = file(params.pointfinder_db)
-    if( !pointfinder_db.exists() ) exit 1, "PointFinder database not found: ${params.pointfinder_db}"
+} else {
+    eggnog_db = file("/dev/null")
 }
 
 // Configure EukCC database
@@ -259,6 +253,8 @@ eukcc_db = false
 if ( params.eukcc_db ) {
     eukcc_db  = file(params.eukcc_db)
     if ( !eukcc_db.exists() ) exit 1, "EukCC database not found: ${params.eukcc_db}"
+} else {
+    eukcc_db = file("/dev/null")
 }
 
 // Configure KOfam search database
@@ -266,12 +262,16 @@ kofam_profile = false
 if ( params.kofam_profile ) {
     kofam_profile = file(params.kofam_profile)
     if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
+} else {
+    kofam_profile = file("/dev/null")
 }
 
 kofam_kolist = false
 if ( params.kofam_kolist ) {
     kofam_kolist = file(params.kofam_kolist)
     if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
+} else {
+    kofam_kolist = file("/dev/null")
 }
 
 custom_runName = workflow.runName
@@ -490,21 +490,21 @@ workflow {
         trimmed_reads = TRIMGALORE.out.reads
         ch_multiqc_trim_log = TRIMGALORE.out.log
         ch_multiqc_trim_zip = TRIMGALORE.out.zip
+        ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
     }
-    ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
 
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
-    if (params.kraken_db) {
-        KTUPDATETAXONOMY ()
-        KRAKEN (
-            trimmed_reads,
-            kraken_db,
-            KTUPDATETAXONOMY.out.taxonomy
-        )
-        ch_multiqc_kraken = KRAKEN.out.report
+    KTUPDATETAXONOMY ()
+    KRAKEN (
+        trimmed_reads,
+        kraken_db,
+        KTUPDATETAXONOMY.out.taxonomy
+    )
+    ch_multiqc_kraken = KRAKEN.out.report
+    if (params.saturation) {
+        SATURATION ( trimmed_reads )
     }
-    SATURATION ( trimmed_reads )
 
     // ALIGN
     if (denovo == false) {
@@ -537,7 +537,6 @@ workflow {
             fasta,
             vcf
         )
-        ch_versions = ch_versions.mix(VG_CONSTRUCT.out.versions)
         VG_INDEX (
             VG_CONSTRUCT.out.vg,
             trimmed_reads
@@ -546,6 +545,7 @@ workflow {
             VG_CONSTRUCT.out.vg,
             VG_INDEX.out.gam
         )
+        ch_versions = ch_versions.mix(VG_CALL.out.versions)
     }
 
     ch_multiqc_samtools = Channel.empty()
@@ -562,31 +562,39 @@ workflow {
         SAMTOOLS.out.bai.set{quast_bai}
         ch_versions = ch_versions.mix(SAMTOOLS.out.versions)
         ch_multiqc_samtools = SAMTOOLS.out.stats
-        PRESEQ ( SAMTOOLS.out.bed )
-        ch_versions = ch_versions.mix(PRESEQ.out.versions)
-        ch_multiqc_preseq = PRESEQ.out.txt
+        if (!params.nanopore) {
+            PRESEQ ( SAMTOOLS.out.bed )
+            ch_versions = ch_versions.mix(PRESEQ.out.versions)
+            ch_multiqc_preseq = PRESEQ.out.txt
+        }
         QUALIMAP_BAMQC (
             SAMTOOLS.out.bam,
             gff
         )
         ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
         ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
-        INDELREALIGN (
-            SAMTOOLS.out.bam,
-            fasta
-        )
-        ch_versions = ch_versions.mix(INDELREALIGN.out.versions)
-        MONOVAR (
-            INDELREALIGN.out.bam.collect{it[1]},
-            INDELREALIGN.out.bai.collect{it[1]},
-            fasta
-        )
-        ch_versions = ch_versions.mix(MONOVAR.out.versions)
-        ANEUFINDER (
-            SAMTOOLS.out.bam.collect{it[1]},
-            SAMTOOLS.out.bai.collect{it[1]}
-        )
-        ch_versions = ch_versions.mix(ANEUFINDER.out.versions)
+        if (params.snv && !params.nanopore) {
+            INDELREALIGN (
+                SAMTOOLS.out.bam,
+                fasta
+            )
+            ch_versions = ch_versions.mix(INDELREALIGN.out.versions)
+        }
+        if (!params.bulk && params.snv && !params.nanopore) {
+            MONOVAR (
+                INDELREALIGN.out.bam.collect{it[1]},
+                INDELREALIGN.out.bai.collect{it[1]},
+                fasta
+            )
+            ch_versions = ch_versions.mix(MONOVAR.out.versions)
+        }
+        if (!params.bulk && params.cnv && !single_end && !params.nanopore) {
+            ANEUFINDER (
+                SAMTOOLS.out.bam.collect{it[1]},
+                SAMTOOLS.out.bai.collect{it[1]}
+            )
+            ch_versions = ch_versions.mix(ANEUFINDER.out.versions)
+        }
         CIRCLIZE (
             SAMTOOLS.out.bed,
             SAVE_REFERENCE.out.bed
@@ -617,25 +625,27 @@ workflow {
     }
 
     // REMAP
-    if ( params.remap ) {
+    if ( params.remap && !params.nanopore ) {
         BOWTIE2_REMAP(ctg200)
         REMAP (
             trimmed_reads,
-            BOWTIE2_REMAP.out.index.collect(),
+            BOWTIE2_REMAP.out.index.collect{it[1]},
             params.allow_multi_align
         )
     }
 
     // QUAST
-    /**
+    /*
     QUAST (
+        params.fasta ? fasta : '/dev/null',
+        params.gff ? gff : '/dev/null',
         ctg.map{ meta,ctg -> return ctg }.collect(),
-        denovo ? Channel.empty() : fasta,
-        denovo ? Channel.empty() : gff,
-        denovo ? false: true,
-        denovo ? false: true
+        params.fasta ? quast_bam.collect{it[1]} : '/dev/null',
+        params.fasta ? quast_bai.collect{it[1]} : '/dev/null',
+        euk,
+        params.fungus
     )
-    ch_multiqc_quast = QUAST.out.tsv
+    ch_multiqc_quast = QUAST.out.mqc_tsv
     */
     ch_multiqc_quast = Channel.empty()
     if (denovo == false) {
@@ -672,52 +682,48 @@ workflow {
     }
 
     // NT
-    if ( params.nt_db ) {
-        BLASTN (
-            ctg200,
-            nt_db,
-            params.evalue
-        )
-        ch_versions = ch_versions.mix(BLASTN.out.versions)
-        DIAMOND_BLASTX (
-            BLASTN.out.contigs,
-            BLASTN.out.nt,
-            uniprot_db,
-            uniprot_taxids
-        )
-        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
+    BLASTN (
+        ctg200,
+        nt_db,
+        params.evalue
+    )
+    ch_versions = ch_versions.mix(BLASTN.out.versions)
+    DIAMOND_BLASTX (
+        BLASTN.out.contigs,
+        BLASTN.out.nt,
+        uniprot_db,
+        uniprot_taxids
+    )
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
 
-        acdc_contigs = Channel.empty()
-        acdc_tax = Channel.empty()
-        if ( params.blob_db ) {
-            BLOBTOOLS (
-                DIAMOND_BLASTX.out.contigs,
-                DIAMOND_BLASTX.out.nt,
-                DIAMOND_BLASTX.out.uniprot,
-                DIAMOND_BLASTX.out.real,
-                blob_db
-            )
-            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
-            acdc_contigs = BLOBTOOLS.out.contigs
-            acdc_tax = BLOBTOOLS.out.tax
-        }
-        if ( params.remap && params.blob_db ) {
-            REBLOBTOOLS (
-                DIAMOND_BLASTX.out.contigs,
-                DIAMOND_BLASTX.out.nt,
-                DIAMOND_BLASTX.out.real,
-                DIAMOND_BLASTX.out.uniprot,
-                blob_db,
-                REMAP.out.bam.collect{it[1]},
-                REMAP.out.bai.collect{it[1]}
-            )
-        }
-        ACDC (
-            acdc_contigs,
-            acdc_tax,
-            kraken_db
+    acdc_contigs = Channel.empty()
+    acdc_tax = Channel.empty()
+    BLOBTOOLS (
+        DIAMOND_BLASTX.out.contigs,
+        DIAMOND_BLASTX.out.nt,
+        DIAMOND_BLASTX.out.uniprot,
+        DIAMOND_BLASTX.out.real,
+        blob_db
+    )
+    ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
+    acdc_contigs = BLOBTOOLS.out.contigs
+    acdc_tax = BLOBTOOLS.out.tax
+    if ( params.remap) {
+        REBLOBTOOLS (
+            DIAMOND_BLASTX.out.contigs,
+            DIAMOND_BLASTX.out.nt,
+            DIAMOND_BLASTX.out.real,
+            DIAMOND_BLASTX.out.uniprot,
+            blob_db,
+            REMAP.out.bam.collect{it[1]},
+            REMAP.out.bai.collect{it[1]}
         )
     }
+    ACDC (
+        acdc_contigs,
+        acdc_tax,
+        kraken_db
+    )
     TSNE(ctg)
 
 
@@ -741,34 +747,29 @@ workflow {
         )
     }
 
-    if ( params.eggnog_db ) {
-        EGGNOG (
-            faa,
-            eggnog_db
-        )
-        ch_versions = ch_versions.mix(EGGNOG.out.versions)
-    }
+    EGGNOG (
+        faa,
+        eggnog_db
+    )
+    ch_versions = ch_versions.mix(EGGNOG.out.versions)
 
-    if ( params.kofam_profile && params.kofam_kolist ) {
-        KOFAMSCAN (
-            faa,
-            kofam_profile,
-            kofam_kolist
-        )
-    }
+    // KOFAMSCAN
+    KOFAMSCAN (
+        faa,
+        kofam_profile,
+        kofam_kolist
+    )
 
-    if ( !params.euk ) {
-        if ( params.acquired || params.point ) {
-            STARAMR (
-                ctg,
-                params.acquired,
-                params.point,
-                params.pointfinder_species
-            )
-        }
-    }
+    // STARAMR
+    STARAMR (
+        ctg,
+        params.acquired,
+        params.point,
+        params.pointfinder_species
+    )
 
-    if ( params.split && params.eukcc_db ) {
+
+    if ( params.split ) {
         SPLIT_CHECKM_EUKCC (
             ctg200.collect{it[1]},
             BLOBTOOLS.out.tax_split.collect{it[1]},
@@ -778,9 +779,7 @@ workflow {
             params.split_bac_level ? params.split_bac_level : "genus",
             params.split_euk_level ? params.split_euk_level : "genus"
         )
-    }
 
-    if ( params.split && !params.eukcc_db ) {
         SPLIT_CHECKM (
             ctg200.collect{it[1]},
             BLOBTOOLS.out.tax_split.collect{it[1]},
@@ -790,6 +789,7 @@ workflow {
             params.split_euk_level ? params.split_euk_level : "genus"
         )
     }
+
 
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (

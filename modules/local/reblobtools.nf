@@ -1,5 +1,6 @@
 process REBLOBTOOLS {
     tag "$meta.id"
+    label 'process_medium'
 
     conda "bioconda::blobtools=1.0.1=py27_3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -16,13 +17,13 @@ process REBLOBTOOLS {
     path bai
 
     output:
-    tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt")
-    tuple val(meta), path("${contigs}")
-    tuple val(meta), path("${prefix}")
-    path "versions.yml"               , emit: versions
+    tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt"), emit: txt
+    tuple val(meta), path("${contigs}")                          , emit: contigs
+    tuple val(meta), path("${prefix}")                           , emit: out_put
+    path "versions.yml"                                          , emit: versions
 
     when:
-    params.remap
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

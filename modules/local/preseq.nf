@@ -12,11 +12,11 @@ process PRESEQ {
 
     output:
     tuple val(meta), path('*.txt'), emit: txt
-    tuple val(meta), path('*.pdf')
+    tuple val(meta), path('*.pdf'), emit: pdf
     path "versions.yml"           , emit: versions
 
     when:
-    !params.nanopore
+    task.ext.when == null || task.ext.when
 
     script:
     pp_outdir = "${params.outdir}/preseq"

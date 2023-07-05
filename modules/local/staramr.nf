@@ -4,7 +4,7 @@ process STARAMR {
 
     conda "bioconda:staramr=0.8.0=pyhdfd78af_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/staramr:0.8.0--pyhdfd78af_1' :
+        'https://depot.galaxyproject.org/singularity/staramr:0.8.0--pyhdfd78af_0' :
         'biocontainers/staramr:0.8.0--pyhdfd78af_0' }"
 
     input:
@@ -14,8 +14,11 @@ process STARAMR {
     val(species)
 
     output:
-    path("${prefix}/*")
-    path "versions.yml", emit: versions
+    tuple val(meta), path("${prefix}/*"), emit: out_put
+    path "versions.yml"                 , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

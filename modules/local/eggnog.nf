@@ -4,7 +4,7 @@ process EGGNOG {
 
     conda "bioconda::eggnog-mapper=2.1.11=pyhdfd78af_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/eggnog-mapper:2.1.8--pyhdfd78af_0' :
+        'https://depot.galaxyproject.org/singularity/eggnog-mapper:2.1.11--pyhdfd78af_0' :
         'biocontainers/eggnog-mapper:2.1.11--pyhdfd78af_0' }"
 
     input:
@@ -12,8 +12,11 @@ process EGGNOG {
     path db
 
     output:
-    path("${prefix}.emapper.annotations")
-    path "versions.yml"                  , emit: versions
+    tuple val(meta), path("${prefix}.emapper.annotations"), emit: annotations
+    path "versions.yml"                                   , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

@@ -1,4 +1,6 @@
 process OUTPUT_DOCUMENTATION {
+    label 'process_low'
+
     conda "conda-forge::markdown=3.4.3 conda-forge::pymdown-extensions=10.0.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mulled-v2-9d4085f2843801e3a749ddf5aafb2163e650905b:957aa01b06e937103f54e0d7f72e2ab0c8be9b6f-0' :
@@ -8,8 +10,11 @@ process OUTPUT_DOCUMENTATION {
     path output_docs
 
     output:
-    path("results_description.html")
+    path("results_description.html"), emit: html
     path "versions.yml"             , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     """

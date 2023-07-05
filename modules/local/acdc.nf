@@ -13,11 +13,11 @@ process ACDC {
     path db
 
     output:
-    path("${prefix}")
-    path "versions.yml", emit: versions
+    tuple val(meta), path("${prefix}") , emit: out_put
+    path "versions.yml"                , emit: versions
 
     when:
-    params.kraken_db
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

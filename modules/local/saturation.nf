@@ -1,5 +1,6 @@
 process SATURATION {
     tag "${meta.id}"
+    label 'process_medium'
 
     conda "bioconda::fastp=0.20.1 bioconda::mccortex=1.0 conda-forge::r-magicaxis=2.2.14 conda-forge::r-rcolorbrewer=1.1_3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -10,12 +11,12 @@ process SATURATION {
     tuple val(meta), path(reads)
 
     output:
-    path("${prefix}_kmer.pdf")
-    path("${prefix}_cov31_*.csv")
-    path "versions.yml"          , emit: versions
+    tuple val(meta), path("${prefix}_kmer.pdf")   , emit: pdf
+    tuple val(meta), path("${prefix}_cov31_*.csv"), emit: csv
+    path "versions.yml"                           , emit: versions
 
     when:
-    params.saturation
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

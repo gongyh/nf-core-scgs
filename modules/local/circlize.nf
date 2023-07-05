@@ -4,7 +4,7 @@ process CIRCLIZE {
 
     conda "bioconda::bedtools=2.31.0=h468198e_0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bedtools:2.30.0--h468198e_3' :
+        'https://depot.galaxyproject.org/singularity/bedtools:2.31.0--h468198e_0' :
         'biocontainers/bedtools:2.31.0--h468198e_0' }"
 
     input:
@@ -12,8 +12,11 @@ process CIRCLIZE {
     path(refbed)
 
     output:
-    path("${prefix}-cov200.bed")
-    path "versions.yml"         , emit: versions
+    tuple val(meta), path("${prefix}-cov200.bed"), emit: bed
+    path "versions.yml"                          , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

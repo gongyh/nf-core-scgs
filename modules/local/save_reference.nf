@@ -1,4 +1,6 @@
 process SAVE_REFERENCE {
+    label 'process_low'
+
     conda "conda-forge::click=8.1.3 conda-forge::biopython=1.81 bioconda::bedtools=2.31.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mulled-v2-03f569b0930bbc8a26531ce48223cd6880134686:eeee3d8bada9c650a6eab38b1eecb7d20fe49a3a-0' :
@@ -9,14 +11,14 @@ process SAVE_REFERENCE {
     path gff
 
     output:
-    path("genome.fa")
-    path("genome.gff")
-    path("*.bed")
+    path("genome.fa")   , emit: fa
+    path("genome.gff")  , emit: gff
+    path("*.bed")       , emit: out_bed
     path("genome.bed")  , emit: bed
     path  "versions.yml", emit: versions
 
     when:
-    params.fasta && params.gff
+    task.ext.when == null || task.ext.when
 
     script:
     """

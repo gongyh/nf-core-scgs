@@ -15,7 +15,7 @@ process ANEUFINDER {
     path "versions.yml", emit: versions
 
     when:
-    !params.bulk && params.cnv && !single_end && !params.nanopore
+    task.ext.when == null || task.ext.when
 
     script:
     """

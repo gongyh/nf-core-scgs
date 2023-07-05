@@ -11,11 +11,11 @@ process PRODIGAL {
     tuple val(meta), path(contigs)
 
     output:
-    path("$prefix")
-    path "versions.yml", emit: versions
+    tuple val(meta), path("$prefix"), emit: out_put
+    path "versions.yml"             , emit: versions
 
     when:
-    !euk
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

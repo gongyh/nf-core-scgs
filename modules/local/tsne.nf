@@ -1,5 +1,6 @@
 process TSNE {
     tag "$meta.id"
+    label 'process_medium'
 
     conda "conda-forge::opentsne=1.0.0 conda-forge::h5py=3.9.0 conda-forge::numpy=1.25.0 conda-forge::pandas=2.0.2 bioconda::kpal=2.1.1 bioconda::perl-bioperl=1.7.8"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -10,8 +11,11 @@ process TSNE {
     tuple val(meta), path(contigs)
 
     output:
-    path("${prefix}_tsne.tsv")
-    path  "versions.yml"      , emit: versions
+    tuple val(meta), path("${prefix}_tsne.tsv"), emit: tsv
+    path  "versions.yml"                       , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
