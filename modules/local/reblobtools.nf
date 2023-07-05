@@ -23,7 +23,7 @@ process REBLOBTOOLS {
     path "versions.yml"                                          , emit: versions
 
     when:
-    params.remap
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

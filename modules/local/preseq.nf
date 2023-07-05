@@ -16,7 +16,7 @@ process PRESEQ {
     path "versions.yml"           , emit: versions
 
     when:
-    !params.nanopore
+    task.ext.when == null || task.ext.when
 
     script:
     pp_outdir = "${params.outdir}/preseq"

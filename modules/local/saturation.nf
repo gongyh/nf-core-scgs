@@ -16,7 +16,7 @@ process SATURATION {
     path "versions.yml"                           , emit: versions
 
     when:
-    params.saturation
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

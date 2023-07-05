@@ -1,7 +1,7 @@
 process MONOVAR {
     label 'process_medium'
 
-    conda "conda-forge::numpy=1.25.0 conda-forge::scipy=1.10.1 bioconda::pysam=0.21.0 bioconda::samtools=1.17"
+    conda "bioconda::python-monovar=0.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/python-monovar:0.1--hdfd78af_0' :
         'biocontainers/python-monovar:0.1--hdfd78af_0' }"
@@ -16,7 +16,7 @@ process MONOVAR {
     path "versions.yml", emit: versions
 
     when:
-    !params.bulk && params.snv && !params.nanopore
+    task.ext.when == null || task.ext.when
 
     script:
     pp_outdir = "${params.outdir}/monovar"

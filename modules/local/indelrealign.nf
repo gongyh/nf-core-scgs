@@ -17,7 +17,7 @@ process INDELREALIGN {
     path "versions.yml"                       , emit: versions
 
     when:
-    params.snv && !params.nanopore
+    task.ext.when == null || task.ext.when
 
     script:
     def prefix   = task.ext.prefix ?: "${meta.id}"

@@ -199,6 +199,8 @@ nt_db = false
 if ( params.nt_db ) {
     nt_db = file(params.nt_db)
     if( !nt_db.exists() ) exit 1, "NT database not found: ${params.nt_db}"
+} else {
+    nt_db = file("/dev/null")
 }
 
 // Configurable uniprot proteomes database
@@ -224,6 +226,8 @@ kraken_db = false
 if ( params.kraken_db ) {
     kraken_db = file(params.kraken_db)
     if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"
+} else {
+    kraken_db = file("/dev/null")
 }
 
 // Configurable Blobtools nodesDB.txt
@@ -231,6 +235,8 @@ blob_db = false
 if ( params.blob_db ) {
     blob_db = file(params.blob_db)
     if( !blob_db.exists() ) exit 1, "Blobtools nodesDB.txt not found: ${params.blob_db}"
+} else {
+    blob_db = file("/dev/null")
 }
 
 // Configurable eggNOG database
@@ -238,20 +244,8 @@ eggnog_db = false
 if ( params.eggnog_db ) {
     eggnog_db = file(params.eggnog_db)
     if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
-}
-
-// Configure resfinder_db
-resfinder_db = false
-if ( params.resfinder_db ) {
-    resfinder_db = file(params.resfinder_db)
-    if( !resfinder_db.exists() ) exit 1, "ResFinder database not found: ${params.resfinder_db}"
-}
-
-// Configure pointfinder_db
-pointfinder_db = false
-if ( params.pointfinder_db ) {
-    pointfinder_db = file(params.pointfinder_db)
-    if( !pointfinder_db.exists() ) exit 1, "PointFinder database not found: ${params.pointfinder_db}"
+} else {
+    eggnog_db = file("/dev/null")
 }
 
 // Configure EukCC database
@@ -259,6 +253,8 @@ eukcc_db = false
 if ( params.eukcc_db ) {
     eukcc_db  = file(params.eukcc_db)
     if ( !eukcc_db.exists() ) exit 1, "EukCC database not found: ${params.eukcc_db}"
+} else {
+    eukcc_db = file("/dev/null")
 }
 
 // Configure KOfam search database
@@ -266,12 +262,16 @@ kofam_profile = false
 if ( params.kofam_profile ) {
     kofam_profile = file(params.kofam_profile)
     if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
+} else {
+    kofam_profile = file("/dev/null")
 }
 
 kofam_kolist = false
 if ( params.kofam_kolist ) {
     kofam_kolist = file(params.kofam_kolist)
     if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
+} else {
+    kofam_kolist = file("/dev/null")
 }
 
 custom_runName = workflow.runName
@@ -495,16 +495,16 @@ workflow {
 
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
-    if (params.kraken_db) {
-        KTUPDATETAXONOMY ()
-        KRAKEN (
-            trimmed_reads,
-            kraken_db,
-            KTUPDATETAXONOMY.out.taxonomy
-        )
-        ch_multiqc_kraken = KRAKEN.out.report
+    KTUPDATETAXONOMY ()
+    KRAKEN (
+        trimmed_reads,
+        kraken_db,
+        KTUPDATETAXONOMY.out.taxonomy
+    )
+    ch_multiqc_kraken = KRAKEN.out.report
+    if (params.saturation) {
+        SATURATION ( trimmed_reads )
     }
-    SATURATION ( trimmed_reads )
 
     // ALIGN
     if (denovo == false) {
@@ -562,7 +562,9 @@ workflow {
         SAMTOOLS.out.bai.set{quast_bai}
         ch_versions = ch_versions.mix(SAMTOOLS.out.versions)
         ch_multiqc_samtools = SAMTOOLS.out.stats
-        PRESEQ ( SAMTOOLS.out.bed )
+        if (!params.nanopore) {
+            PRESEQ ( SAMTOOLS.out.bed )
+        }
         ch_versions = ch_versions.mix(PRESEQ.out.versions)
         ch_multiqc_preseq = PRESEQ.out.txt
         QUALIMAP_BAMQC (
@@ -571,21 +573,27 @@ workflow {
         )
         ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
         ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
-        INDELREALIGN (
-            SAMTOOLS.out.bam,
-            fasta
-        )
+        if (params.snv && !params.nanopore) {
+            INDELREALIGN (
+                SAMTOOLS.out.bam,
+                fasta
+            )
+        }
         ch_versions = ch_versions.mix(INDELREALIGN.out.versions)
-        MONOVAR (
-            INDELREALIGN.out.bam.collect{it[1]},
-            INDELREALIGN.out.bai.collect{it[1]},
-            fasta
-        )
+        if (!params.bulk && params.snv && !params.nanopore) {
+            MONOVAR (
+                INDELREALIGN.out.bam.collect{it[1]},
+                INDELREALIGN.out.bai.collect{it[1]},
+                fasta
+            )
+        }
         ch_versions = ch_versions.mix(MONOVAR.out.versions)
-        ANEUFINDER (
-            SAMTOOLS.out.bam.collect{it[1]},
-            SAMTOOLS.out.bai.collect{it[1]}
-        )
+        if (!params.bulk && params.cnv && !single_end && !params.nanopore) {
+            ANEUFINDER (
+                SAMTOOLS.out.bam.collect{it[1]},
+                SAMTOOLS.out.bai.collect{it[1]}
+            )
+        }
         ch_versions = ch_versions.mix(ANEUFINDER.out.versions)
         CIRCLIZE (
             SAMTOOLS.out.bed,

@@ -16,7 +16,7 @@ process PROKKA {
     path "versions.yml"                             , emit: versions
 
     when:
-    !euk
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

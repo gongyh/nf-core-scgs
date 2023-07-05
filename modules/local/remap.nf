@@ -18,14 +18,14 @@ process REMAP {
     path "versions.yml"                                , emit: versions
 
     when:
-    params.remap
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     def filtering = allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
     if (meta.single_end) {
     """
-    bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U ${reads[0]} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U ${reads} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
     samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
     samtools index ${prefix}_ass.sort.bam
 
