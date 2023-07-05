@@ -180,6 +180,8 @@ graph_vcf = false
 if ( params.vcf ) {
     graph_vcf = file(params.vcf)
     if ( !graph_vcf.exists()) exit 1, "VCF file to construct graph not found: ${params.graph_vcf}"
+} else {
+    graph_vcf = file("/dev/null")
 }
 
 single_end = false
@@ -407,12 +409,6 @@ include { BOWTIE2_ALIGN               } from './modules/nf-core/bowtie2/align/ma
 include { MINIMAP2_ALIGN              } from './modules/nf-core/minimap2/align/main'
 include { QUALIMAP_BAMQC              } from './modules/nf-core/qualimap/bamqc/main'
 include { MULTIQC                     } from './modules/nf-core/multiqc/main'
-// include { QUAST                       } from './modules/nf-core/quast/main'
-// include { PRODIGAL                  } from './modules/nf-core/prodigal/main'
-// include { CHECKM_LINEAGEWF          } from './modules/nf-core/checkm/lineagewf/main'
-// include { KOFAMSCAN                 } from './modules/nf-core/kofamscan/main'
-// include { VG_CONSTRUCT                } from './modules/nf-core/vg/construct/main'
-// include { VG_INDEX                    } from './modules/nf-core/vg/index/main'
 
 
 // Import modules from local
@@ -455,6 +451,10 @@ include { SPLIT_CHECKM_EUKCC    } from './modules/local/split_checkm_eukcc'
 include { OUTPUT_DOCUMENTATION  } from './modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions/main'
 
+
+/** subworkflow */
+// include { REFANALYSIS           } from 'subworkflows/local/refanalysis'
+
 // MULTIQC
 def multiqc_report = []
 
@@ -467,6 +467,7 @@ workflow {
     ch_versions       = ch_versions.mix(FASTQC.out.versions)
     ch_multiqc_fastqc = FASTQC.out.zip
 
+    // SATURATION
     if ( params.fasta && params.gff ) {
         SAVE_REFERENCE ( fasta, gff )
     }
@@ -505,6 +506,27 @@ workflow {
     if (params.saturation) {
         SATURATION ( trimmed_reads )
     }
+
+    /**
+    ch_multiqc_refanalysis = Channel.empty()
+    if ( params.fasta && params.gff) {
+        REFANALYSIS (
+            trimmed_reads,
+            fasta,
+            gff,
+            params.nanopore,
+            bowtie2_index,
+            params.vcf,
+            graph_vcf,
+            params.snv,
+            params.cnv,
+            params.bulk,
+            single_end
+        )
+        ch_versions = ch_versions.mix(REFANALYSIS.out.ch_versions)
+        ch_multiqc_refanalysis = REFANALYSIS.out.ch_multiqc
+    }
+    */
 
     // ALIGN
     if (denovo == false) {
@@ -635,18 +657,6 @@ workflow {
     }
 
     // QUAST
-    /*
-    QUAST (
-        params.fasta ? fasta : '/dev/null',
-        params.gff ? gff : '/dev/null',
-        ctg.map{ meta,ctg -> return ctg }.collect(),
-        params.fasta ? quast_bam.collect{it[1]} : '/dev/null',
-        params.fasta ? quast_bai.collect{it[1]} : '/dev/null',
-        euk,
-        params.fungus
-    )
-    ch_multiqc_quast = QUAST.out.mqc_tsv
-    */
     ch_multiqc_quast = Channel.empty()
     if (denovo == false) {
         QUAST_REF (
@@ -658,6 +668,17 @@ workflow {
             euk,
             params.fungus
         )
+        /**
+        QUAST_REF (
+            fasta,
+            gff,
+            ctg.collect{it[1]},
+            REFANALYSIS.out.bam,
+            REFANALYSIS.out.bai,
+            euk,
+            params.fungus
+        )
+        */
         ch_multiqc_quast = QUAST_REF.out.tsv
         ch_versions = ch_versions.mix(QUAST_REF.out.versions)
     } else {
@@ -681,13 +702,15 @@ workflow {
         ch_multiqc_checkm = CHECKM_LINEAGEWF.out.mqc_tsv
     }
 
-    // NT
+    // BLASTN
     BLASTN (
         ctg200,
         nt_db,
         params.evalue
     )
     ch_versions = ch_versions.mix(BLASTN.out.versions)
+
+    // DIAMOND_BLASTS
     DIAMOND_BLASTX (
         BLASTN.out.contigs,
         BLASTN.out.nt,
@@ -698,6 +721,8 @@ workflow {
 
     acdc_contigs = Channel.empty()
     acdc_tax = Channel.empty()
+
+    // BLOBTOOLS
     BLOBTOOLS (
         DIAMOND_BLASTX.out.contigs,
         DIAMOND_BLASTX.out.nt,
@@ -768,7 +793,6 @@ workflow {
         params.pointfinder_species
     )
 
-
     if ( params.split ) {
         SPLIT_CHECKM_EUKCC (
             ctg200.collect{it[1]},
@@ -790,7 +814,6 @@ workflow {
         )
     }
 
-
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -807,6 +830,7 @@ workflow {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
+    // ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_refanalysis)
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_samtools.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_preseq.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_qualimap.collect{it[1]}.ifEmpty([]))
