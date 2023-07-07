@@ -405,9 +405,9 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
 include { FASTQC                      } from './modules/nf-core/fastqc/main'
 include { TRIMGALORE                  } from './modules/nf-core/trimgalore/main'
 include { BOWTIE2_BUILD               } from './modules/nf-core/bowtie2/build/main'
-include { BOWTIE2_ALIGN               } from './modules/nf-core/bowtie2/align/main'
-include { MINIMAP2_ALIGN              } from './modules/nf-core/minimap2/align/main'
-include { QUALIMAP_BAMQC              } from './modules/nf-core/qualimap/bamqc/main'
+//include { BOWTIE2_ALIGN               } from './modules/nf-core/bowtie2/align/main'
+//include { MINIMAP2_ALIGN              } from './modules/nf-core/minimap2/align/main'
+//include { QUALIMAP_BAMQC              } from './modules/nf-core/qualimap/bamqc/main'
 include { MULTIQC                     } from './modules/nf-core/multiqc/main'
 
 
@@ -416,20 +416,20 @@ include { SAVE_REFERENCE        } from './modules/local/save_reference'
 include { KTUPDATETAXONOMY      } from './modules/local/ktupdatetaxonomy'
 include { KRAKEN                } from './modules/local/kraken'
 include { SATURATION            } from './modules/local/saturation'
-include { SAMTOOLS              } from './modules/local/samtools'
-include { PRESEQ                } from './modules/local/preseq'
-include { INDELREALIGN          } from './modules/local/indelrealign'
-include { MONOVAR               } from './modules/local/monovar'
-include { ANEUFINDER            } from './modules/local/aneufinder'
-include { CIRCLIZE              } from './modules/local/circlize'
+//include { SAMTOOLS              } from './modules/local/samtools'
+//include { PRESEQ                } from './modules/local/preseq'
+//include { INDELREALIGN          } from './modules/local/indelrealign'
+//include { MONOVAR               } from './modules/local/monovar'
+//include { ANEUFINDER            } from './modules/local/aneufinder'
+//include { CIRCLIZE              } from './modules/local/circlize'
 include { NORMALIZE             } from './modules/local/normalize'
 include { CANU                  } from './modules/local/canu'
 include { SPADES                } from './modules/local/spades'
 include { QUAST_REF             } from './modules/local/quast_ref'
 include { QUAST_DENOVO          } from './modules/local/quast_denovo'
-include { VG_CONSTRUCT          } from './modules/local/vg/vg_construct'
-include { VG_INDEX              } from './modules/local/vg/vg_index'
-include { VG_CALL               } from './modules/local/vg/vg_call'
+//include { VG_CONSTRUCT          } from './modules/local/vg/vg_construct'
+//include { VG_INDEX              } from './modules/local/vg/vg_index'
+//include { VG_CALL               } from './modules/local/vg/vg_call'
 include { BOWTIE2_REMAP         } from './modules/local/bowtie2_remap'
 include { REMAP                 } from './modules/local/remap'
 include { CHECKM_LINEAGEWF      } from './modules/local/checkm_lineagewf'
@@ -453,7 +453,9 @@ include { GET_SOFTWARE_VERSIONS } from './modules/local/get_software_versions/ma
 
 
 /** subworkflow */
-// include { REFANALYSIS           } from './subworkflows/local/refanalysis'
+include { REFANALYSIS           } from './subworkflows/local/refanalysis'
+include { ALIGN                 } from './subworkflows/local/align'
+include { VG                    } from './subworkflows/local/vg'
 
 // MULTIQC
 def multiqc_report = []
@@ -468,9 +470,11 @@ workflow {
     ch_multiqc_fastqc = FASTQC.out.zip
 
     // SATURATION
+    /**
     if ( params.fasta && params.gff ) {
         SAVE_REFERENCE ( fasta, gff )
     }
+    */
 
     if (bowtie2) {
         bowtie2_index = [bowtie2, file(bowtie2)]
@@ -507,17 +511,32 @@ workflow {
         SATURATION ( trimmed_reads )
     }
 
-    /**
     ch_multiqc_refanalysis = Channel.empty()
     if ( params.fasta && params.gff) {
+        SAVE_REFERENCE ( fasta, gff )
+        ALIGN (
+            params.nanopore,
+            trimmed_reads,
+            bowtie2_index,
+            fasta
+        )
+        ch_versions = ch_versions.mix(ALIGN.out.ch_versions)
+        if (params.vcf) {
+            VG (
+                fasta,
+                trimmed_reads,
+                graph_vcf
+            )
+            ch_versions = ch_versions.mix(VG.out.ch_versions)
+        }
+
         REFANALYSIS (
             trimmed_reads,
             fasta,
             gff,
+            SAVE_REFERENCE.out.bed,
+            ALIGN.out.bb_bam,
             params.nanopore,
-            bowtie2_index,
-            params.vcf,
-            graph_vcf,
             params.snv,
             params.cnv,
             params.bulk,
@@ -526,9 +545,9 @@ workflow {
         ch_versions = ch_versions.mix(REFANALYSIS.out.ch_versions)
         ch_multiqc_refanalysis = REFANALYSIS.out.ch_multiqc
     }
-    */
 
     // ALIGN
+    /**
     if (denovo == false) {
         bb_bam = Channel.empty()
         if ( params.nanopore ) {
@@ -623,6 +642,7 @@ workflow {
         )
         ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
     }
+    */
 
     // NORMALIZE
     ctg200 = Channel.empty()
@@ -659,6 +679,7 @@ workflow {
     // QUAST
     ch_multiqc_quast = Channel.empty()
     if (denovo == false) {
+        /**
         QUAST_REF (
             fasta,
             gff,
@@ -668,7 +689,7 @@ workflow {
             euk,
             params.fungus
         )
-        /**
+        */
         QUAST_REF (
             fasta,
             gff,
@@ -678,7 +699,6 @@ workflow {
             euk,
             params.fungus
         )
-        */
         ch_multiqc_quast = QUAST_REF.out.tsv
         ch_versions = ch_versions.mix(QUAST_REF.out.versions)
     } else {
@@ -830,10 +850,10 @@ workflow {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
-    // ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_refanalysis)
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_samtools.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_preseq.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_qualimap.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_refanalysis)
+    //ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_samtools.collect{it[1]}.ifEmpty([]))
+    //ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_preseq.collect{it[1]}.ifEmpty([]))
+    //ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_qualimap.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_quast.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_prokka.collect{it[1]}.ifEmpty([]))

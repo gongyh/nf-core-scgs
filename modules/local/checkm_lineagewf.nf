@@ -26,7 +26,6 @@ process CHECKM_LINEAGEWF {
     else
         checkm lineage_wf -t ${task.cpus} -r --tab_table -f spades_checkM.txt -x fasta spades spades_checkM
     fi
-
     echo \"# plot_type: 'table'\" > CheckM_mqc.tsv
     echo \"# section_name: 'CheckM'\" >> CheckM_mqc.tsv
     cat spades_checkM.txt >> CheckM_mqc.tsv

@@ -10,18 +10,17 @@ include { SAVE_REFERENCE        } from '../../modules/local/save_reference'
 
 /* --    IMPORT NF-CORE MODULES/SUBWORKFLOWS   -- */
 include { BOWTIE2_ALIGN         } from '../../modules/nf-core/bowtie2/align/main'
-include { MINIMAP2_ALIGN        } from '../../modules/nf-core/minimap2/align/main'
 include { QUALIMAP_BAMQC        } from '../../modules/nf-core/qualimap/bamqc/main'
+
 
 workflow REFANALYSIS {
     take:
     trimmed_reads
     fasta
     gff
+    bed
+    bb_bam
     is_nanopore
-    bowtie2_index
-    is_vcf
-    vcf
     is_snv
     is_cnv
     is_bulk
@@ -30,44 +29,6 @@ workflow REFANALYSIS {
     main:
     ch_versions = Channel.empty()
     ch_multiqc = Channel.empty()
-    bb_bam = Channel.empty()
-    SAVE_REFERENCE ( fasta, gff )
-    if ( is_nanopore ) {
-        MINIMAP2_ALIGN (
-            trimmed_reads,
-            fasta,
-            true,
-            false,
-            false
-        )
-        MINIMAP2_ALIGN.out.bam.set{bb_bam}
-        ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
-    } else {
-        BOWTIE2_ALIGN (
-            trimmed_reads,
-            bowtie2_index,
-            false,
-            true
-        )
-        BOWTIE2_ALIGN.out.bam.set{bb_bam}
-        ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
-    }
-
-    if (is_vcf ) {
-        VG_CONSTRUCT (
-            fasta,
-            vcf
-        )
-        VG_INDEX (
-            VG_CONSTRUCT.out.vg,
-            trimmed_reads
-        )
-        VG_CALL (
-            VG_CONSTRUCT.out.vg,
-            VG_INDEX.out.gam
-        )
-        ch_versions = ch_versions.mix(VG_CALL.out.versions)
-    }
 
     ch_multiqc_samtools = Channel.empty()
     ch_multiqc_preseq   = Channel.empty()
@@ -76,7 +37,7 @@ workflow REFANALYSIS {
     quast_bai = Channel.empty()
     SAMTOOLS (
         bb_bam,
-        SAVE_REFERENCE.out.bed
+        bed
     )
     SAMTOOLS.out.bam.set{quast_bam}
     SAMTOOLS.out.bai.set{quast_bai}
@@ -124,7 +85,7 @@ workflow REFANALYSIS {
 
     CIRCLIZE (
         SAMTOOLS.out.bed,
-        SAVE_REFERENCE.out.bed
+        bed
     )
     ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
 
