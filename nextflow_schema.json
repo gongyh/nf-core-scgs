@@ -188,7 +188,8 @@
                     "description": "Raw sequencing reads."
                 },
                 "single_end": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Whether single_end sequencing?"
                 },
                 "igenomes_ignore": {
@@ -221,24 +222,28 @@
                     "description": "GFF annotation file."
                 },
                 "notrim": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Do not trim low quality regions."
                 },
                 "saveTrimmed": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Save clean reads."
                 },
                 "allow_multi_align": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Allow multi-mapping of reads."
                 },
                 "saveAlignedIntermediates": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Save tmp files."
                 },
                 "nanopore": {
-                    "type": "string",
-                    "default": "false",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Nanopore sequencing data."
                 },
                 "vcf": {
@@ -247,26 +252,28 @@
                     "description": "VCF file for graph pan genome construction."
                 },
                 "no_normalize": {
-                    "type": "string",
-                    "default": "false",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Not normalize reads before genome assembly."
                 },
                 "remap": {
-                    "type": "string",
-                    "default": "false",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Remap and reblob."
                 },
                 "split": {
-                    "type": "string",
-                    "default": "false",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Split according to contig taxa annotation."
                 },
                 "euk": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Eukaryotic genome."
                 },
                 "fungus": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Fungus genome."
                 },
                 "genus": {
@@ -314,23 +321,28 @@
                     "description": "Path of EukCC database."
                 },
                 "snv": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Call SNV using MonoVar?"
                 },
                 "cnv": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Call CNV?"
                 },
                 "saturation": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Perform saturation analysis?"
                 },
                 "bulk": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Bulk sequencing data?"
                 },
                 "ass": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Assemble draft genomes?"
                 },
                 "evalue": {
@@ -342,15 +354,18 @@
                     "description": "blockSize for diamond."
                 },
                 "acquired": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Call acquired ARG?"
                 },
                 "point": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Call mutation derived ARG?"
                 },
                 "only_known": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": true,
                     "description": "Only call known mutations?"
                 },
                 "pointfinder_species": {

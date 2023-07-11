@@ -24,8 +24,8 @@ include { SCGS } from './workflows/scgs'
 // WORKFLOW: Run main scrnaseq analysis pipeline
 //
 
-workflow NFCORE_SCGS{
-    SCGS()
+workflow NFCORE_SCGS {
+    SCGS ()
 }
 
 /*
