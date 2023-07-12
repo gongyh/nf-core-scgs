@@ -7,10 +7,10 @@ process SPLIT_CHECKM {
         'scgs/mulled-v2-28c5d03d1ac8475499ba2a43715feecc3e991223:c795f73b9d282e25900663d2b634c26711c5b8a4-0' }"
 
     input:
-    path("results/spades/*")
-    path("results/blob/*")
-    path("results/prokka/*")
-    path("results/kofam/*")
+    tuple val(meta), path(contigs)
+    tuple val(meta), path(blob, stageAs:"blob_")
+    tuple val(meta), path(prokka, stageAs:"prokka_")
+    tuple val(meta), path(kofam)
     val split_bac_level
     val split_euk_level
 
@@ -22,14 +22,29 @@ process SPLIT_CHECKM {
     task.ext.when == null || task.ext.when
 
     script:
+    def prokka_exist = (prokka == null ? false : true)
+    def kofam_exist = (kofam == null ? false : true)
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
+    if [ -d results ];then
+        mkdir -p results/spades results/blob
+        cp $contigs results/spades
+        cp -R blob_ results/blob
+        mv results/blob/blob_ results/blob/${prefix}
+        if [ ${prokka_exist} ];then
+            mkdir -p results/prokka
+            cp -R prokka_ results/prokka
+            mv results/prokka/prokka_ results/prokka/${prefix}
+        fi
+        if [ ${kofam_exist} ];then
+            mkdir -p results/kofam
+            cp $kofam results/kofam
+        fi
+    fi
+    cli-single.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level} --sample ${prefix}
     cd split
-    samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
-    for sample in \${samples[*]}; do
-        mkdir -p \${sample}_${split_bac_level}_checkM
-        checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
-    done
+    mkdir -p \${prefix}_${split_bac_level}_checkM
+    checkm lineage_wf -t ${task.cpus} -f \${prefix}_${split_bac_level}_checkM.txt -x fasta \${prefix}_${split_bac_level}_Bacteria \${prefix}_${split_bac_level}_checkM || echo "Ignore internal errors!"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

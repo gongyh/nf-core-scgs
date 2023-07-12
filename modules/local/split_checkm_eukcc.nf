@@ -7,11 +7,10 @@ process SPLIT_CHECKM_EUKCC {
         'scgs/mulled-v2-28c5d03d1ac8475499ba2a43715feecc3e991223:c795f73b9d282e25900663d2b634c26711c5b8a4-0' }"
 
     input:
-    path("results/spades/*")
-    path("results/blob/*")
-    path("results/prokka/*")
-    path("results/kofam/*")
-    path db
+    tuple val(meta), path(contigs)
+    tuple val(meta), path(blob, stageAs:"blob_")
+    tuple val(meta), path(prokka, stageAs:"prokka_")
+    tuple val(meta), path(kofam)
     val split_bac_level
     val split_euk_level
 
@@ -24,7 +23,7 @@ process SPLIT_CHECKM_EUKCC {
 
     script:
     """
-    cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
+    cli-single.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
     samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
     for sample in \${samples[*]}; do
