@@ -11,6 +11,7 @@ process SPLIT_CHECKM_EUKCC {
     tuple val(meta), path(blob, stageAs:"blob_")
     tuple val(meta), path(prokka, stageAs:"prokka_")
     tuple val(meta), path(kofam)
+    path(db)
     val split_bac_level
     val split_euk_level
 
