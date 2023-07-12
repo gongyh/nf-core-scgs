@@ -26,7 +26,7 @@ process SPLIT_CHECKM {
     def kofam_exist = (kofam == null ? false : true)
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    if [ -d results ];then
+    if [ ! -d results ];then
         mkdir -p results/spades results/blob
         cp $contigs results/spades
         cp -R blob_ results/blob
