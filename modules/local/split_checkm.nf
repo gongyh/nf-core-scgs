@@ -7,44 +7,34 @@ process SPLIT_CHECKM {
         'scgs/mulled-v2-28c5d03d1ac8475499ba2a43715feecc3e991223:c795f73b9d282e25900663d2b634c26711c5b8a4-0' }"
 
     input:
-    tuple val(meta), path(contigs)
-    tuple val(meta), path(blob, stageAs:"blob_")
-    tuple val(meta), path(prokka, stageAs:"prokka_")
-    tuple val(meta), path(kofam)
+    path("results/spades/*")
+    path("results/blob/*")
+    path("results/prokka/*")
+    path("results/kofam/*")
     val split_bac_level
     val split_euk_level
 
     output:
-    path("split/*")          , emit: out_put
-    path "split/versions.yml", emit: versions
+    path("split/fa/*")         , emit: out_put
+    path("split/versions.yml") , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def prokka_exist = (prokka == null ? false : true)
-    def kofam_exist = (kofam == null ? false : true)
-    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    if [ ! -d results ];then
-        mkdir -p results/spades results/blob
-        cp $contigs results/spades
-        cp -R blob_ results/blob
-        mv results/blob/blob_ results/blob/${prefix}
-        if [ ${prokka_exist} ];then
-            mkdir -p results/prokka
-            cp -R prokka_ results/prokka
-            mv results/prokka/prokka_ results/prokka/${prefix}
-        fi
-        if [ ${kofam_exist} ];then
-            mkdir -p results/kofam
-            cp $kofam results/kofam
-        fi
+    if [ ! -d fa ];then
+        mkdir fa
     fi
-    cli-single.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level} --sample ${prefix}
+    cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
-    mkdir -p \${prefix}_${split_bac_level}_checkM
-    checkm lineage_wf -t ${task.cpus} -f \${prefix}_${split_bac_level}_checkM.txt -x fasta \${prefix}_${split_bac_level}_Bacteria \${prefix}_${split_bac_level}_checkM || echo "Ignore internal errors!"
+    samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
+    for sample in \${samples[*]}; do
+        mkdir -p \${sample}_${split_bac_level}_checkM
+        checkm lineage_wf -t ${task.cpus} --tab_table -f \${sample}_${split_bac_level}_checkM.tsv -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
+    done
+    prepare_fa.py
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

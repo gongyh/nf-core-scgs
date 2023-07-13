@@ -739,22 +739,22 @@ workflow SCGS {
 
     if ( params.split ) {
         SPLIT_CHECKM_EUKCC (
-            ctg200,
-            BLOBTOOLS.out.tax_split,
-            prokka_for_split.ifEmpty([:]),
-            KOFAMSCAN.out.txt.ifEmpty([:]),
+            ctg200.collect{it[1]},
+            BLOBTOOLS.out.tax_split.collect{it[1]},
+            prokka_for_split.collect{it[1]}.ifEmpty([]),
+            KOFAMSCAN.out.txt.collect{it[1]},
             eukcc_db,
-            params.split_bac_level ? params.split_bac_level : "genus",
-            params.split_euk_level ? params.split_euk_level : "genus"
+            params.split_bac_level ?: "genus",
+            params.split_euk_level ?: "genus"
         )
 
         SPLIT_CHECKM (
-            ctg200,
-            BLOBTOOLS.out.tax_split,
-            prokka_for_split.ifEmpty([:]),
-            KOFAMSCAN.out.txt.ifEmpty([:]),
-            params.split_bac_level ? params.split_bac_level : "genus",
-            params.split_euk_level ? params.split_euk_level : "genus"
+            ctg200.collect{it[1]},
+            BLOBTOOLS.out.tax_split.collect{it[1]},
+            prokka_for_split.collect{it[1]}.ifEmpty([]),
+            KOFAMSCAN.out.txt.collect{it[1]},
+            params.split_bac_level ?: "genus",
+            params.split_euk_level ?: "genus"
         )
     }
 
