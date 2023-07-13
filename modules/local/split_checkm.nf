@@ -23,11 +23,11 @@ process SPLIT_CHECKM {
 
     script:
     """
+    cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
+    cd split
     if [ ! -d fa ];then
         mkdir fa
     fi
-    cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
-    cd split
     samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
     for sample in \${samples[*]}; do
         mkdir -p \${sample}_${split_bac_level}_checkM
