@@ -15,6 +15,7 @@ process SPLIT_CHECKM {
     val split_euk_level
 
     output:
+    path("split/*")            , emit: output
     path("split/fa/*")         , emit: out_put
     path("split/versions.yml") , emit: versions
 
