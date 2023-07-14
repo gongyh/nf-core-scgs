@@ -44,6 +44,7 @@ def helpMessage() {
     --kofam_kolist                KOfam ko_list file
     --augustus_species            Augustus species, default 'saccharomyces'
     --eukcc_db                    EukCC database
+    --gtdb                        GTDB database
 
     Trimming options:
     --notrim                      Specifying --notrim will skip the adapter trimming step.
@@ -123,6 +124,7 @@ params.uniprot_db = null
 params.uniprot_taxids = null
 params.eggnog_db = null
 params.eukcc_db = null
+params.gtdb = null
 params.snv = false
 params.cnv = false
 params.saturation = false
@@ -243,6 +245,15 @@ if ( params.eukcc_db ) {
     if ( !eukcc_db.exists() ) exit 1, "EukCC database not found: ${params.eukcc_db}"
 } else {
     eukcc_db = file("/dev/null")
+}
+
+// Configure GTDB database
+gtdb = false
+if ( params.gtdb ) {
+    gtdb  = file(params.gtdb)
+    if ( !gtdb.exists() ) exit 1, "GTDB database not found: ${params.gtdb}"
+} else {
+    gtdb = file("/dev/null")
 }
 
 // Configure KOfam search database
@@ -404,6 +415,7 @@ include { KRAKEN                } from '../modules/local/kraken'
 include { SATURATION            } from '../modules/local/saturation'
 include { SAMTOOLS              } from '../modules/local/samtools'
 include { PRESEQ                } from '../modules/local/preseq'
+include { GTDBTK                } from '../modules/local/gtdbtk'
 include { INDELREALIGN          } from '../modules/local/indelrealign'
 include { MONOVAR               } from '../modules/local/monovar'
 include { ANEUFINDER            } from '../modules/local/aneufinder'
@@ -738,6 +750,7 @@ workflow SCGS {
     )
 
     if ( params.split ) {
+        fa_split = Channel.empty()
         SPLIT_CHECKM_EUKCC (
             ctg200.collect{it[1]},
             BLOBTOOLS.out.tax_split.collect{it[1]},
@@ -755,6 +768,11 @@ workflow SCGS {
             KOFAMSCAN.out.txt.collect{it[1]},
             params.split_bac_level ?: "genus",
             params.split_euk_level ?: "genus"
+        )
+
+        GTDBTK (
+            SPLIT_CHECKM.out.fa,
+            gtdb
         )
     }
 

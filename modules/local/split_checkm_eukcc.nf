@@ -16,8 +16,9 @@ process SPLIT_CHECKM_EUKCC {
     val split_euk_level
 
     output:
-    path("split/*")          , emit: out_put
-    path "split/versions.yml", emit: versions
+    path("split/*")            , emit: output
+    path("split/fa/*")         , emit: fa
+    path("split/versions.yml") , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -26,6 +27,9 @@ process SPLIT_CHECKM_EUKCC {
     """
     cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
+    if [ ! -d fa ];then
+        mkdir fa
+    fi
     samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
     for sample in \${samples[*]}; do
         mkdir -p \${sample}_${split_bac_level}_checkM
@@ -43,6 +47,7 @@ process SPLIT_CHECKM_EUKCC {
         fi
         cd ../
     done
+    prepare_fa.py
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

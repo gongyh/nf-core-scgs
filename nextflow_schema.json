@@ -320,6 +320,10 @@
                     "type": "string",
                     "description": "Path of EukCC database."
                 },
+                "gtdb": {
+                    "type": "string",
+                    "description": "Path of gtdb database."
+                },
                 "snv": {
                     "type": "boolean",
                     "default": false,
