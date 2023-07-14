@@ -91,6 +91,7 @@ def real_split(
                             if g in gene_ko.keys():
                                 for v in gene_ko[g]:
                                     euk_kofh.write(g + "\t" + v + "\n")
+                euk_kofh.close()
             else:
                 bacAnnotation = cl[annCol].replace("/", "_")
                 if "_" in bacAnnotation:
@@ -106,8 +107,7 @@ def real_split(
                             if g in gene_ko.keys():
                                 for v in gene_ko[g]:
                                     bac_kofh.write(g + "\t" + v + "\n")
-            bac_kofh.close()
-            euk_kofh.close()
+                bac_kofh.close()
             assert annCol > 0
             assert eukAnnCol > 0
             assert eukCol > 0
