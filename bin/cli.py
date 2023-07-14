@@ -92,6 +92,10 @@ def real_split(
                                 for v in gene_ko[g]:
                                     euk_kofh.write(g + "\t" + v + "\n")
                 euk_kofh.close()
+                assert eukAnnCol > 0
+                assert eukCol > 0
+                euk_fname = eukAnnotation.replace(" ", "_") + ".fasta"
+                fname_path = euk_out_dir.joinpath(euk_fname)
             else:
                 bacAnnotation = cl[annCol].replace("/", "_")
                 if "_" in bacAnnotation:
@@ -108,14 +112,8 @@ def real_split(
                                 for v in gene_ko[g]:
                                     bac_kofh.write(g + "\t" + v + "\n")
                 bac_kofh.close()
-            assert annCol > 0
-            assert eukAnnCol > 0
-            assert eukCol > 0
-            bac_fname = bacAnnotation.replace(" ", "_") + ".fasta"
-            euk_fname = eukAnnotation.replace(" ", "_") + ".fasta"
-            if superkingdom == "Eukaryota":
-                fname_path = euk_out_dir.joinpath(euk_fname)
-            else:
+                assert annCol > 0
+                bac_fname = bacAnnotation.replace(" ", "_") + ".fasta"
                 fname_path = bac_out_dir.joinpath(bac_fname)
             with fname_path.open("a") as f:
                 SeqIO.write(record_dict[contig_id], f, "fasta")
