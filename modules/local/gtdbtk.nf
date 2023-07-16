@@ -7,7 +7,7 @@ process GTDBTK {
         'biocontainers/gtdbtk:2.1.1--pyhdfd78af_1' }"
 
     input:
-    path("fa/*.fasta")
+    path(fa)
     path(gtdb)
 
     output:
@@ -24,7 +24,7 @@ process GTDBTK {
     export GTDBTK_DATA_PATH=$gtdb
 
     mkdir -p genome
-    cp fa/*.fasta genome
+    cp $fa genome
     echo 'g__' >  taxa.txt
 
     if [[ -f $gtdb ]]; then
@@ -34,7 +34,7 @@ process GTDBTK {
         gtdbtk classify_wf \\
             --pplacer_cpus 1 \\
             --genome_dir genome \\
-            --extension fa \\
+            --extension fasta \\
             --out_dir out \\
             --cpus $task.cpus
 
