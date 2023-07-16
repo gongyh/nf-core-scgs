@@ -750,7 +750,7 @@ workflow SCGS {
     )
 
     if ( params.split ) {
-        fa_split = Channel.empty()
+        // eukcc_db == true
         SPLIT_CHECKM_EUKCC (
             ctg200.collect{it[1]},
             BLOBTOOLS.out.tax_split.collect{it[1]},
@@ -761,6 +761,7 @@ workflow SCGS {
             params.split_euk_level ?: "genus"
         )
 
+        // eukcc_db == false
         SPLIT_CHECKM (
             ctg200.collect{it[1]},
             BLOBTOOLS.out.tax_split.collect{it[1]},
@@ -771,7 +772,7 @@ workflow SCGS {
         )
 
         GTDBTK (
-            SPLIT_CHECKM.out.fa,
+            params.eukcc_db ? SPLIT_CHECKM_EUKCC.out.fa : SPLIT_CHECKM.out.fa,
             gtdb
         )
     }
