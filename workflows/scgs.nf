@@ -74,9 +74,6 @@ def helpMessage() {
     ARG related options:
     --acquired                    Enable ARG analysis
     --point                       Enable point mutation analysis
-    --only_known                  Only analyze known SNPs
-    --resfinder_db                Database path for resfinder
-    --pointfinder_db              Database path for pointfinder
     --pointfinder_species         Species for pointfinder, default 'escherichia_coli'
 
     Output options:
@@ -134,10 +131,7 @@ params.evalue = 1e-25
 params.blockSize = 2.0
 params.acquired = false
 params.point = false
-params.only_known = true
 params.pointfinder_species = "escherichia_coli"
-params.resfinder_db = null
-params.pointfinder_db = null
 params.kofam_profile = null
 params.kofam_kolist = null
 params.augustus_species = "saccharomyces"

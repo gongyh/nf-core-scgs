@@ -367,22 +367,9 @@
                     "default": false,
                     "description": "Call mutation derived ARG?"
                 },
-                "only_known": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Only call known mutations?"
-                },
                 "pointfinder_species": {
                     "type": "string",
                     "description": "The species name for pointfinder."
-                },
-                "resfinder_db": {
-                    "type": "string",
-                    "description": "Database of resfinder"
-                },
-                "pointfinder_db": {
-                    "type": "string",
-                    "description": "Database of pointfinder"
                 },
                 "kofam_profile": {
                     "type": "string",
