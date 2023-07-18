@@ -12,7 +12,7 @@ process GTDBTK {
 
     output:
     path("out/*")
-    path("genome/*.fasta"), emit: scaffolds
+    path("genome/*")      , emit: scaffolds
     path('taxa.txt')      , emit: taxa
     path "versions.yml"   , emit: versions
 
@@ -31,15 +31,22 @@ process GTDBTK {
         mkdir -p out
         echo 'd__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
     else
-        gtdbtk classify_wf \\
-            --pplacer_cpus 1 \\
-            --genome_dir genome \\
-            --extension fasta \\
-            --out_dir out \\
-            --cpus $task.cpus
+        if [ ! -f genome/no_fasta.txt ];then
+            gtdbtk classify_wf \\
+                --pplacer_cpus 1 \\
+                --genome_dir genome \\
+                --extension fasta \\
+                --out_dir out \\
+                --cpus $task.cpus
 
-        if [ -f out/*.summary.tsv ]; then
-            cut -f2 out/*.summary.tsv | grep -v classification > taxa.txt
+            if [ -f out/*.summary.tsv ]; then
+                cut -f2 out/*.summary.tsv | grep -v classification > taxa.txt
+            fi
+        else
+            mkdir -p out
+            touch out/no_results.txt
+            echo "No fasta to taxonomy!" > out/no_results.txt
+            echo 'd__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
         fi
     fi
 

@@ -35,6 +35,10 @@ process SPLIT_CHECKM {
         checkm lineage_wf -t ${task.cpus} --tab_table -f \${sample}_${split_bac_level}_checkM.tsv -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
     done
     prepare_fa.py
+    if [ "`ls -A fa`" == "" ];then
+        touch fa/no_fasta.txt
+        echo "No splited fasta with integrity greater than 40% and contamination less than 10%" > fa/no_fasta.txt
+    fi
 
 
     cat <<-END_VERSIONS > versions.yml
