@@ -34,9 +34,7 @@ def real_split(
                 if len(cl) >= 9:  # gene annotation line
                     ctg_id = cl[0]
                     anno8 = cl[8].split(";")[0]
-                    if anno8.startswith("ID=") and anno8.endswith(
-                        "_gene"
-                    ):  # correct line
+                    if anno8.startswith("ID=") and anno8.endswith("_gene"):  # correct line
                         gid = anno8[3 : len(anno8) - 5]
                         if ctg_id in ctg_genes.keys():  # add the new id
                             ctg_genes[ctg_id].append(gid)
@@ -67,9 +65,7 @@ def real_split(
                 cl = line.strip().split("\t")
                 for item in cl:
                     il = item.split(".")
-                    if (
-                        len(il) == 3 and il[0] == level_Bacteria and il[1] == "t"
-                    ):  # eg. order.t.12
+                    if len(il) == 3 and il[0] == level_Bacteria and il[1] == "t":  # eg. order.t.12
                         annCol = int(il[2].rstrip("%s")) - 1
                     if len(il) == 3 and il[0] == level_Eukaryota and il[1] == "t":
                         eukAnnCol = int(il[2].rstrip("%s")) - 1
@@ -153,12 +149,8 @@ def tools_split(
         resolve_path=True,
         show_default=True,
     ),
-    level_Bacteria: TaxaLevels = typer.Option(
-        TaxaLevels.genus, case_sensitive=False, show_default=True
-    ),
-    level_Eukaryota: TaxaLevels = typer.Option(
-        TaxaLevels.genus, case_sensitive=False, show_default=True
-    ),
+    level_Bacteria: TaxaLevels = typer.Option(TaxaLevels.genus, case_sensitive=False, show_default=True),
+    level_Eukaryota: TaxaLevels = typer.Option(TaxaLevels.genus, case_sensitive=False, show_default=True),
     output_dir: Path = typer.Option(
         "./split/",
         exists=False,
@@ -177,8 +169,7 @@ def tools_split(
     blob_dir = results_dir.joinpath("blob")
     if not blob_dir.is_dir():
         typer.secho(
-            f"Taxa annotations not found, please check {blob_dir} .",
-            fg=typer.colors.RED,
+            f"Taxa annotations not found, please check {blob_dir} .", fg=typer.colors.RED,
         )
         raise typer.Abort()
     else:  # check subdir
@@ -190,17 +181,14 @@ def tools_split(
     spades_dir = results_dir.joinpath("spades")
     if not spades_dir.is_dir():
         typer.secho(
-            f"Spades assemblies not found, please check {spades_dir} .",
-            fg=typer.colors.RED,
+            f"Spades assemblies not found, please check {spades_dir} .", fg=typer.colors.RED,
         )
         raise typer.Abort()
     else:  # check the existence of all genome assemblies
         for sample in samples:
             ass = spades_dir.joinpath(sample + ".ctg200.fasta")
             if not ass.exists():
-                typer.secho(
-                    f"genome assembly file {ass} not found.", fg=typer.colors.RED
-                )
+                typer.secho(f"genome assembly file {ass} not found.", fg=typer.colors.RED)
                 raise typer.Abort()
 
     prokka_dir = results_dir.joinpath("prokka")
@@ -239,18 +227,10 @@ def tools_split(
         for sample in progress:
             # typer.echo(sample)
             fa = spades_dir.joinpath(sample + ".ctg200.fasta")
-            out_bac_subdir = output_dir.joinpath(
-                sample + "_" + level_Bacteria + "_Bacteria"
-            )
-            out_bac_subdir.mkdir(
-                exist_ok=True
-            )  # create subdir to store Bacteria fastas
-            out_euk_subdir = output_dir.joinpath(
-                sample + "_" + level_Eukaryota + "_Eukaryota"
-            )
-            out_euk_subdir.mkdir(
-                exist_ok=True
-            )  # create subdir to store Eukaryota fastas
+            out_bac_subdir = output_dir.joinpath(sample + "_" + level_Bacteria + "_Bacteria")
+            out_bac_subdir.mkdir(exist_ok=True)  # create subdir to store Bacteria fastas
+            out_euk_subdir = output_dir.joinpath(sample + "_" + level_Eukaryota + "_Eukaryota")
+            out_euk_subdir.mkdir(exist_ok=True)  # create subdir to store Eukaryota fastas
             blob_sub = blob_dir.joinpath(sample)
             blob_table = None
             for child in blob_sub.iterdir():
@@ -258,17 +238,14 @@ def tools_split(
                     blob_table = child
             if blob_table is None:
                 typer.secho(
-                    f"Can not find annotation table for sample {sample}.",
-                    fg=typer.colors.RED,
+                    f"Can not find annotation table for sample {sample}.", fg=typer.colors.RED,
                 )
                 raise typer.Abort()
             gff = None
             sample_anno = prokka_dir.joinpath(sample)
             if anno_exist and sample_anno.exists() and sample_anno.is_dir():
                 sample_gff = sample_anno.joinpath(sample + ".gff")
-                if (
-                    sample_gff.exists() and sample_gff.is_file()
-                ):  # find annotation gff file
+                if sample_gff.exists() and sample_gff.is_file():  # find annotation gff file
                     gff = sample_gff
             ko_file = None
             if ko_exist:
@@ -332,8 +309,7 @@ def tools_checkm(
             typer.secho(f"Rename checkm output dir.", fg=typer.colors.RED)
         else:
             typer.secho(
-                f"Output directory already exist, please move/delete and try again.",
-                fg=typer.colors.RED,
+                f"Output directory already exist, please move/delete and try again.", fg=typer.colors.RED,
             )
             raise typer.Abort()
 
@@ -429,16 +405,8 @@ def tools_fastANI(
         show_default=True,
         help="output file name",
     ),
-    threads: int = typer.Option(
-        1,
-        "--threads",
-        "-t",
-        show_default=True,
-        help="Thread count for parallel execution.",
-    ),
-    visualize: bool = typer.Option(
-        False, "--visualize", help="Output mappings and visualization."
-    ),
+    threads: int = typer.Option(1, "--threads", "-t", show_default=True, help="Thread count for parallel execution.",),
+    visualize: bool = typer.Option(False, "--visualize", help="Output mappings and visualization."),
 ):
     """
     This is a wrapper script for fastANI. FastANI is a fast alignment-free implementation
@@ -447,21 +415,17 @@ def tools_fastANI(
 
     if query_genome is not None and query_list is not None:
         typer.secho(
-            f"Error: only one of --query or --queryList can be set.",
-            fg=typer.colors.RED,
+            f"Error: only one of --query or --queryList can be set.", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
     if ref_genome is not None and ref_list is not None:
-        typer.secho(
-            f"Error: only one of --ref or --refList can be set.", fg=typer.colors.RED
-        )
+        typer.secho(f"Error: only one of --ref or --refList can be set.", fg=typer.colors.RED)
         raise typer.Abort()
 
     if visualize and (query_genome is None or ref_genome is None):
         typer.secho(
-            f"Error: visualize can only be enabled for one to one genome comparison",
-            fg=typer.colors.RED,
+            f"Error: visualize can only be enabled for one to one genome comparison", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
@@ -473,8 +437,7 @@ def tools_fastANI(
         params_str += "--queryList " + str(query_list)
     else:
         typer.secho(
-            f"Error: query genome(s) need to be set by --query or --queryList.",
-            fg=typer.colors.RED,
+            f"Error: query genome(s) need to be set by --query or --queryList.", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
@@ -484,8 +447,7 @@ def tools_fastANI(
         params_str += " --refList " + str(ref_list)
     else:
         typer.secho(
-            f"Error: reference genome(s) need to be set by --ref or --refList.",
-            fg=typer.colors.RED,
+            f"Error: reference genome(s) need to be set by --ref or --refList.", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
@@ -521,8 +483,7 @@ def tools_fastANI(
             )
         else:  # error
             typer.secho(
-                f"Error: mapping file (with .visual extension) is not generated.",
-                fg=typer.colors.RED,
+                f"Error: mapping file (with .visual extension) is not generated.", fg=typer.colors.RED,
             )
 
     typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
@@ -543,9 +504,7 @@ def tools_roary(
         show_default=False,
         help="Directory with gff files.",
     ),
-    threads: int = typer.Option(
-        8, "--threads", "-t", show_default=True, help="Number of threads."
-    ),
+    threads: int = typer.Option(8, "--threads", "-t", show_default=True, help="Number of threads."),
     kraken_db: Path = typer.Option(
         None,
         "--kraken_db",
@@ -600,8 +559,7 @@ def tools_roary(
                 params_str,
                 "-f",
                 str(output_dir),
-                "-p",
-                str(threads),
+                "-p", str(threads),
                 str(input_dir) + "/*.gff",
             ]
         ),
@@ -609,23 +567,16 @@ def tools_roary(
     )
     gpa = output_dir.joinpath("gene_presence_absence.csv")
     if not gpa.exists():
-        typer.secho(
-            f"Error: gene_presence_absence.csv not generated", fg=typer.colors.RED
-        )
+        typer.secho(f"Error: gene_presence_absence.csv not generated", fg=typer.colors.RED)
         raise typer.Abort()
     aln = output_dir.joinpath("core_gene_alignment.aln")
     if not aln.exists():
-        typer.secho(
-            f"Error: no core gene alignment file generated.", fg=typer.colors.RED
-        )
+        typer.secho(f"Error: no core gene alignment file generated.", fg=typer.colors.RED)
         raise typer.Abort()
 
     typer.echo(f"Generate a newick tree.")
     subprocess.check_call(
-        " ".join(
-            ["fasttree", "-nt", "-gtr", str(aln), ">", str(output_dir) + "/tree.newick"]
-        ),
-        shell=True,
+        " ".join(["fasttree", "-nt", "-gtr", str(aln), ">", str(output_dir) + "/tree.newick"]), shell=True,
     )
 
     tree = output_dir.joinpath("tree.newick")
@@ -704,9 +655,7 @@ def tools_scoary(
         show_default=False,
         help="Use if you only want to analyze a subset of your strains. (E.g. Strain1,Strain2,Strain3)",
     ),
-    threads: int = typer.Option(
-        1, "--threads", "-t", show_default=True, help="Number of threads."
-    ),
+    threads: int = typer.Option(1, "--threads", "-t", show_default=True, help="Number of threads."),
     newicktree: Path = typer.Option(
         None,
         "--newicktree",
@@ -720,9 +669,7 @@ def tools_scoary(
         show_default=False,
         help="Supply a custom tree (Newick format) for phylogenetic analyses instead instead of calculating it internally.",
     ),
-    collapse: bool = typer.Option(
-        False, "--collapse", help="Collapse correlated genes into merged units."
-    ),
+    collapse: bool = typer.Option(False, "--collapse", help="Collapse correlated genes into merged units."),
     outdir: Path = typer.Option(
         ".",
         "--outdir",
@@ -745,14 +692,11 @@ def tools_scoary(
 
     corrects = correction.strip().split(" ")
     pvalues = pvalue_cutoff.strip().split(" ")
-    if (
-        len(corrects) > 0 and len(pvalues) > 0 and len(corrects) == len(pvalues)
-    ):  # correct
+    if len(corrects) > 0 and len(pvalues) > 0 and len(corrects) == len(pvalues):  # correct
         cmd += " -c " + corrects + " -p " + pvalues
     else:
         typer.secho(
-            f"Error: check --correction and --p_value_cutoff parameters.",
-            fg=typer.colors.RED,
+            f"Error: check --correction and --p_value_cutoff parameters.", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
@@ -804,9 +748,7 @@ def main(
         resolve_path=True,
         show_default=True,
     ),
-    version: bool = typer.Option(
-        None, "--version", callback=version_callback, is_eager=True
-    ),
+    version: bool = typer.Option(None, "--version", callback=version_callback, is_eager=True),
 ):
     """
     Welcome to use gongyh/scgs pipeline!
