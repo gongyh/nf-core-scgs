@@ -10,14 +10,7 @@ import numpy as np
 
 
 def real_split(
-    fa,
-    ann,
-    level_Bacteria,
-    level_Eukaryota,
-    bac_out_dir,
-    euk_out_dir,
-    gff=None,
-    ko_file=None,
+    fa, ann, level_Bacteria, level_Eukaryota, bac_out_dir, euk_out_dir, gff=None, ko_file=None,
 ):
     """
     Split by annotation
@@ -169,8 +162,7 @@ def tools_split(
     blob_dir = results_dir.joinpath("blob")
     if not blob_dir.is_dir():
         typer.secho(
-            f"Taxa annotations not found, please check {blob_dir} .",
-            fg=typer.colors.RED,
+            f"Taxa annotations not found, please check {blob_dir} .", fg=typer.colors.RED,
         )
         raise typer.Abort()
     else:  # check subdir
@@ -182,8 +174,7 @@ def tools_split(
     spades_dir = results_dir.joinpath("spades")
     if not spades_dir.is_dir():
         typer.secho(
-            f"Spades assemblies not found, please check {spades_dir} .",
-            fg=typer.colors.RED,
+            f"Spades assemblies not found, please check {spades_dir} .", fg=typer.colors.RED,
         )
         raise typer.Abort()
     else:  # check the existence of all genome assemblies
@@ -240,8 +231,7 @@ def tools_split(
                     blob_table = child
             if blob_table is None:
                 typer.secho(
-                    f"Can not find annotation table for sample {sample}.",
-                    fg=typer.colors.RED,
+                    f"Can not find annotation table for sample {sample}.", fg=typer.colors.RED,
                 )
                 raise typer.Abort()
             gff = None
@@ -255,14 +245,7 @@ def tools_split(
                 ko_file = kofam_dir.joinpath(sample + "_KOs_mapper.txt")
             # perform split
             real_split(
-                fa,
-                blob_table,
-                level_Bacteria,
-                level_Eukaryota,
-                out_bac_subdir,
-                out_euk_subdir,
-                gff,
-                ko_file,
+                fa, blob_table, level_Bacteria, level_Eukaryota, out_bac_subdir, out_euk_subdir, gff, ko_file,
             )
         typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
 
@@ -312,8 +295,7 @@ def tools_checkm(
             typer.secho(f"Rename checkm output dir.", fg=typer.colors.RED)
         else:
             typer.secho(
-                f"Output directory already exist, please move/delete and try again.",
-                fg=typer.colors.RED,
+                f"Output directory already exist, please move/delete and try again.", fg=typer.colors.RED,
             )
             raise typer.Abort()
 
@@ -409,13 +391,7 @@ def tools_fastANI(
         show_default=True,
         help="output file name",
     ),
-    threads: int = typer.Option(
-        1,
-        "--threads",
-        "-t",
-        show_default=True,
-        help="Thread count for parallel execution.",
-    ),
+    threads: int = typer.Option(1, "--threads", "-t", show_default=True, help="Thread count for parallel execution.",),
     visualize: bool = typer.Option(False, "--visualize", help="Output mappings and visualization."),
 ):
     """
@@ -425,8 +401,7 @@ def tools_fastANI(
 
     if query_genome is not None and query_list is not None:
         typer.secho(
-            f"Error: only one of --query or --queryList can be set.",
-            fg=typer.colors.RED,
+            f"Error: only one of --query or --queryList can be set.", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
@@ -436,8 +411,7 @@ def tools_fastANI(
 
     if visualize and (query_genome is None or ref_genome is None):
         typer.secho(
-            f"Error: visualize can only be enabled for one to one genome comparison",
-            fg=typer.colors.RED,
+            f"Error: visualize can only be enabled for one to one genome comparison", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
@@ -449,8 +423,7 @@ def tools_fastANI(
         params_str += "--queryList " + str(query_list)
     else:
         typer.secho(
-            f"Error: query genome(s) need to be set by --query or --queryList.",
-            fg=typer.colors.RED,
+            f"Error: query genome(s) need to be set by --query or --queryList.", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
@@ -460,8 +433,7 @@ def tools_fastANI(
         params_str += " --refList " + str(ref_list)
     else:
         typer.secho(
-            f"Error: reference genome(s) need to be set by --ref or --refList.",
-            fg=typer.colors.RED,
+            f"Error: reference genome(s) need to be set by --ref or --refList.", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
@@ -469,17 +441,7 @@ def tools_fastANI(
         params_str += " --visualize"
 
     subprocess.check_call(
-        " ".join(
-            [
-                "fastANI",
-                params_str,
-                "--output",
-                str(output_file),
-                "--threads",
-                str(threads),
-            ]
-        ),
-        shell=True,
+        " ".join(["fastANI", params_str, "--output", str(output_file), "--threads", str(threads),]), shell=True,
     )
     if visualize:
         visfile = Path(str(output_file) + ".visual")
@@ -497,8 +459,7 @@ def tools_fastANI(
             )
         else:  # error
             typer.secho(
-                f"Error: mapping file (with .visual extension) is not generated.",
-                fg=typer.colors.RED,
+                f"Error: mapping file (with .visual extension) is not generated.", fg=typer.colors.RED,
             )
 
     typer.secho(f"\nFinished.", fg=typer.colors.GREEN)
@@ -568,17 +529,7 @@ def tools_roary(
 
     typer.echo(f"Run roary.")
     subprocess.check_call(
-        " ".join(
-            [
-                "roary",
-                params_str,
-                "-f",
-                str(output_dir),
-                "-p",
-                str(threads),
-                str(input_dir) + "/*.gff",
-            ]
-        ),
+        " ".join(["roary", params_str, "-f", str(output_dir), "-p", str(threads), str(input_dir) + "/*.gff",]),
         shell=True,
     )
     gpa = output_dir.joinpath("gene_presence_absence.csv")
@@ -592,8 +543,7 @@ def tools_roary(
 
     typer.echo(f"Generate a newick tree.")
     subprocess.check_call(
-        " ".join(["fasttree", "-nt", "-gtr", str(aln), ">", str(output_dir) + "/tree.newick"]),
-        shell=True,
+        " ".join(["fasttree", "-nt", "-gtr", str(aln), ">", str(output_dir) + "/tree.newick"]), shell=True,
     )
 
     tree = output_dir.joinpath("tree.newick")
@@ -603,14 +553,7 @@ def tools_roary(
 
     typer.echo(f"Plot figures.")
     subprocess.check_call(
-        " ".join(
-            [
-                str(Path(__file__).resolve().parent.joinpath("roary_plots.py")),
-                str(tree),
-                str(gpa),
-            ]
-        ),
-        shell=True,
+        " ".join([str(Path(__file__).resolve().parent.joinpath("roary_plots.py")), str(tree), str(gpa),]), shell=True,
     )
 
     typer.secho(f"Finished", fg=typer.colors.GREEN)
@@ -713,8 +656,7 @@ def tools_scoary(
         cmd += " -c " + corrects + " -p " + pvalues
     else:
         typer.secho(
-            f"Error: check --correction and --p_value_cutoff parameters.",
-            fg=typer.colors.RED,
+            f"Error: check --correction and --p_value_cutoff parameters.", fg=typer.colors.RED,
         )
         raise typer.Abort()
 
