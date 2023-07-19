@@ -736,12 +736,16 @@ workflow SCGS {
     )
 
     // STARAMR
-    STARAMR (
-        ctg,
-        params.acquired,
-        params.point,
-        params.pointfinder_species
-    )
+    if ( !params.euk ) {
+        if ( params.acquired || params.point ) {
+            STARAMR (
+                ctg,
+                params.acquired,
+                params.point,
+                params.pointfinder_species
+            )
+        }
+    }
 
     if ( params.split ) {
         // eukcc_db == true
