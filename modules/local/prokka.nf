@@ -24,7 +24,7 @@ process PROKKA {
     cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
     prokka --outdir $prefix --prefix $prefix --strain $prefix --addgenes --cpus ${task.cpus} ${prefix}_node.fa
     sed '/^##FASTA/Q' ${prefix}/${prefix}.gff > ${prefix}/${prefix}_noseq.gff
-    gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | grep -v gene > ${prefix}/${prefix}_ctg_genes.tsv
+    gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | grep _gene | sed 's/_gene//g' > ${prefix}/${prefix}_ctg_genes.tsv
     prokka_postprocess.py ${prefix}/${prefix}_ctg_genes.tsv ${prefix}/${prefix}.tsv > ${prefix}/${prefix}_all.tsv
 
     cat <<-END_VERSIONS > versions.yml
