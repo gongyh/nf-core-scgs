@@ -21,6 +21,7 @@ def helpMessage() {
     --single_end                  Specifies that the input is single end reads
     --snv                         Enable detection of single nucleotide variation
     --cnv                         Enable detection of copy number variation
+    --doubletd                    Enable detection of doublet
     --remap                       Remap trimmed reads to contigs
     --saturation                  Enable sequencing saturation analysis
     --ass                         Assemble using SPAdes
@@ -124,6 +125,7 @@ params.eukcc_db = null
 params.gtdb = null
 params.snv = false
 params.cnv = false
+params.doubletd = false
 params.saturation = false
 params.bulk = false
 params.ass = false
@@ -412,6 +414,7 @@ include { PRESEQ                } from '../modules/local/preseq'
 include { GTDBTK                } from '../modules/local/gtdbtk'
 include { INDELREALIGN          } from '../modules/local/indelrealign'
 include { MONOVAR               } from '../modules/local/monovar'
+include { DOUBLETD              } from '../modules/local/doubletd'
 include { ANEUFINDER            } from '../modules/local/aneufinder'
 include { CIRCLIZE              } from '../modules/local/circlize'
 include { NORMALIZE             } from '../modules/local/normalize'
@@ -570,6 +573,9 @@ workflow SCGS {
                 fasta
             )
             ch_versions = ch_versions.mix(MONOVAR.out.versions)
+            if ( params.doubletd ) {
+                DOUBLETD ( MONOVAR.out.vcf )
+            }
         }
         if (!params.bulk && params.cnv && !single_end && !params.nanopore) {
             ANEUFINDER (

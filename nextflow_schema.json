@@ -339,6 +339,11 @@
                     "default": false,
                     "description": "Perform saturation analysis?"
                 },
+                "doubletd": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Detect doublet?"
+                },
                 "bulk": {
                     "type": "boolean",
                     "default": false,
