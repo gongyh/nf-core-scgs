@@ -1,6 +1,7 @@
 import vcf
 import pysam
 
+
 # read VCF file
 def read_vcf_file(vcf_path):
     vcf_reader = vcf.Reader(open(vcf_path, "r"))

@@ -31,7 +31,6 @@ class doubletFinder:
         binom=False,
         precision=None,
     ):
-
         self.df_total = df_total
         self.df_alt = df_alt
         self.cells = cells
@@ -89,7 +88,6 @@ class doubletFinder:
 
         for m in self.muts:
             if estimate:
-
                 reads = self.df_alt[m]
                 total = self.df_total[m]
                 vaf = pd.DataFrame(reads / total)
@@ -145,7 +143,6 @@ class doubletFinder:
             self.threshold = math.log((1 - self.delta) / self.delta)
 
     def solve(self):
-
         self.doublet_result = {}
         self.logprobs = {}
         for cell in self.cells:
@@ -158,7 +155,6 @@ class doubletFinder:
                 self.doublet_result[cell] = "singlet"
 
     def prv_z(self, cell, z):
-
         log_prob_sum = 0
         for mut in self.muts:
             v = self.df_alt.loc[cell, mut]
@@ -204,7 +200,6 @@ class doubletFinder:
         return prob
 
     def writeSolution(self, outputFile):
-
         with open(outputFile, "w") as output:
             output.write("cell_id\tprob_z0\tprob_z1\tprediction\n")
             for cell in self.cells:
@@ -221,7 +216,6 @@ class doubletFinder:
 
 
 def getBetaMOM(x):
-
     m_x = np.mean(x)
     s_x = np.std(x)
     x_alpha = m_x * ((m_x * (1 - m_x) / s_x**2) - 1)
@@ -237,7 +231,6 @@ def nCr(n, r):
 
 
 def main(args):
-
     df_total = pd.read_csv(args.inputTotal)
     df_alt = pd.read_csv(args.inputAlternate)
     cells = list(df_total["cell_id"].values)
