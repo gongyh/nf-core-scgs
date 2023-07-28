@@ -21,15 +21,17 @@ def helpMessage() {
     --single_end                  Specifies that the input is single end reads
     --snv                         Enable detection of single nucleotide variation
     --cnv                         Enable detection of copy number variation
+    --bbmap                       Enable bbmap to remove host pollution
     --doubletd                    Enable detection of doublet
     --remap                       Remap trimmed reads to contigs
     --saturation                  Enable sequencing saturation analysis
     --ass                         Assemble using SPAdes
-    --split                       Split the draft genomes and annotation
+    --split                       Split the draft genomes and annotation(Bacteria)
+    --split_euk                   Split the draft genomes and annotation(Eukaryota)
     --split_bac_level             Level of split for Bacteria
     --split_euk_level             Level of split for Eukaryota
 
-    References:                     If not specified in the configuration file or you wish to overwrite any of the references.
+    References:                   If not specified in the configuration file or you wish to overwrite any of the references.
     --fasta                       Path to Fasta reference
     --gff                         Path to GFF reference
     --genus                       Genus information for use in CheckM
@@ -46,6 +48,7 @@ def helpMessage() {
     --augustus_species            Augustus species, default 'saccharomyces'
     --eukcc_db                    EukCC database
     --gtdb                        GTDB database
+    --ref                         Specify the reference sequence for bbmap
 
     Trimming options:
     --notrim                      Specifying --notrim will skip the adapter trimming step.
@@ -123,8 +126,10 @@ params.uniprot_taxids = null
 params.eggnog_db = null
 params.eukcc_db = null
 params.gtdb = null
+params.ref = null
 params.snv = false
 params.cnv = false
+params.bbmap = false
 params.doubletd = false
 params.saturation = false
 params.bulk = false
@@ -138,6 +143,7 @@ params.kofam_profile = null
 params.kofam_kolist = null
 params.augustus_species = "saccharomyces"
 params.split = false
+params.split_euk = false
 params.split_bac_level = null
 params.split_euk_level = null
 
@@ -250,6 +256,15 @@ if ( params.gtdb ) {
     if ( !gtdb.exists() ) exit 1, "GTDB database not found: ${params.gtdb}"
 } else {
     gtdb = file("/dev/null")
+}
+
+// Configure reference sequence
+ref = false
+if ( params.ref ) {
+    ref  = file(params.ref)
+    if ( !ref.exists() ) exit 1, "Ref not found: ${params.ref}"
+} else {
+    ref = file("/dev/null")
 }
 
 // Configure KOfam search database
@@ -412,6 +427,7 @@ include { SATURATION            } from '../modules/local/saturation'
 include { SAMTOOLS              } from '../modules/local/samtools'
 include { PRESEQ                } from '../modules/local/preseq'
 include { GTDBTK                } from '../modules/local/gtdbtk'
+include { BBMAP_ALIGN           } from '../modules/local/bbmap_align'
 include { INDELREALIGN          } from '../modules/local/indelrealign'
 include { MONOVAR               } from '../modules/local/monovar'
 include { DOUBLETD              } from '../modules/local/doubletd'
@@ -531,7 +547,16 @@ workflow SCGS {
             trimmed_reads,
             graph_vcf
         )
-        ch_versions = ch_versions.mix(VG.out.versions)
+        ch_versions = ch_versions.mix(VG.out.ch_versions)
+    }
+
+    // BBMAP
+    if ( params.bbmap ) {
+        BBMAP_ALIGN (
+            trimmed_reads,
+            ref
+        )
+        ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
     }
 
     ch_multiqc_samtools = Channel.empty()
@@ -754,29 +779,32 @@ workflow SCGS {
     }
 
     if ( params.split ) {
-        // eukcc_db == true
-        SPLIT_CHECKM_EUKCC (
-            ctg200.collect{it[1]},
-            BLOBTOOLS.out.tax_split.collect{it[1]},
-            prokka_for_split.collect{it[1]}.ifEmpty([]),
-            KOFAMSCAN.out.txt.collect{it[1]},
-            eukcc_db,
-            params.split_bac_level ?: "genus",
-            params.split_euk_level ?: "genus"
-        )
-
-        // eukcc_db == false
-        SPLIT_CHECKM (
-            ctg200.collect{it[1]},
-            BLOBTOOLS.out.tax_split.collect{it[1]},
-            prokka_for_split.collect{it[1]}.ifEmpty([]),
-            KOFAMSCAN.out.txt.collect{it[1]},
-            params.split_bac_level ?: "genus",
-            params.split_euk_level ?: "genus"
-        )
+        split_fa = Channel.empty()
+        if ( params.split_euk ) {
+            SPLIT_CHECKM_EUKCC (
+                ctg200.collect{it[1]},
+                BLOBTOOLS.out.tax_split.collect{it[1]},
+                prokka_for_split.collect{it[1]}.ifEmpty([]),
+                KOFAMSCAN.out.txt.collect{it[1]},
+                eukcc_db,
+                params.split_bac_level ?: "genus",
+                params.split_euk_level ?: "genus"
+            )
+            split_fa = SPLIT_CHECKM_EUKCC.out.fa
+        } else {
+            SPLIT_CHECKM (
+                ctg200.collect{it[1]},
+                BLOBTOOLS.out.tax_split.collect{it[1]},
+                prokka_for_split.collect{it[1]}.ifEmpty([]),
+                KOFAMSCAN.out.txt.collect{it[1]},
+                params.split_bac_level ?: "genus",
+                params.split_euk_level ?: "genus"
+            )
+            split_fa = SPLIT_CHECKM.out.fa
+        }
 
         GTDBTK (
-            params.eukcc_db ? SPLIT_CHECKM_EUKCC.out.fa : SPLIT_CHECKM.out.fa,
+            split_fa,
             gtdb
         )
     }

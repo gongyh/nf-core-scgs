@@ -264,7 +264,12 @@
                 "split": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Split according to contig taxa annotation."
+                    "description": "Split according to contig taxa annotation(Bacteria)."
+                },
+                "split_euk": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Split according to contig taxa annotation(Eukaryota)."
                 },
                 "euk": {
                     "type": "boolean",
@@ -324,6 +329,10 @@
                     "type": "string",
                     "description": "Path of gtdb database."
                 },
+                "ref": {
+                    "type": "string",
+                    "description": "Path of reference sequence for bbmap."
+                },
                 "snv": {
                     "type": "boolean",
                     "default": false,
@@ -343,6 +352,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Detect doublet?"
+                },
+                "bbmap": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable bbmap align?"
                 },
                 "bulk": {
                     "type": "boolean",
