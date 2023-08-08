@@ -509,7 +509,7 @@ workflow SCGS {
             ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
             trimmed_reads = BBMAP_ALIGN.out.clean_fastq
         } else {
-            trimmed_reads = TRIM_GALORE.out.reads
+            trimmed_reads = TRIMGALORE.out.reads
         }
     }
 
