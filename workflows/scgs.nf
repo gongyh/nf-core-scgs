@@ -21,11 +21,12 @@ def helpMessage() {
     --single_end                  Specifies that the input is single end reads
     --snv                         Enable detection of single nucleotide variation
     --cnv                         Enable detection of copy number variation
-    --bbmap                       Enable bbmap to remove host pollution
+    --bbmap                       Enable bbmap to remove host-derived contamination
     --doubletd                    Enable detection of doublet
     --remap                       Remap trimmed reads to contigs
     --saturation                  Enable sequencing saturation analysis
     --ass                         Assemble using SPAdes
+    --kofam                       Enable KEGG Ortholog annotation
     --split                       Split the draft genomes and annotation(Bacteria)
     --split_euk                   Split the draft genomes and annotation(Eukaryota)
     --split_bac_level             Level of split for Bacteria
@@ -41,7 +42,7 @@ def helpMessage() {
     --blob_db                     Blobtools nodesDB.txt
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
     --uniprot_taxids              Sequence id to taxa id mapping file
-    --kraken_db                   Kraken database
+    --kraken_db                   Kraken2 database
     --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
     --kofam_profile               KOfam profile database
     --kofam_kolist                KOfam ko_list file
@@ -134,6 +135,7 @@ params.doubletd = false
 params.saturation = false
 params.bulk = false
 params.ass = false
+params.kofam = false
 params.evalue = 1e-25
 params.blockSize = 2.0
 params.acquired = false
@@ -144,8 +146,8 @@ params.kofam_kolist = null
 params.augustus_species = "saccharomyces"
 params.split = false
 params.split_euk = false
-params.split_bac_level = null
-params.split_euk_level = null
+params.split_bac_level = "genus"
+params.split_euk_level = "genus"
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -154,20 +156,20 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 
 // Configurable reference genomes
 fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-if ( params.fasta ){
+if (params.fasta) {
     fasta = file(params.fasta)
     ref = params.fasta - ~/(\.fasta)?(\.fna)?(\.fa)?$/
     if( !fasta.exists() ) exit 1, "Fasta file not found: ${params.fasta}"
 }
 
 gff = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
-if ( params.gff ) {
+if (params.gff) {
     gff = file(params.gff)
     if( !gff.exists() ) exit 1, "GFF file not found: ${params.gff}"
 }
 
 graph_vcf = false
-if ( params.vcf ) {
+if (params.vcf) {
     graph_vcf = file(params.vcf)
     if ( !graph_vcf.exists()) exit 1, "VCF file to construct graph not found: ${params.graph_vcf}"
 } else {
@@ -175,20 +177,20 @@ if ( params.vcf ) {
 }
 
 single_end = false
-if ( params.nanopore ) {
+if (params.nanopore) {
     single_end = true
 } else {
     single_end = params.single_end
 }
 
 euk = false
-if ( params.fungus || params.euk ) {
+if (params.fungus || params.euk) {
     euk = true
 }
 
 // Configurable nt database
 nt_db = false
-if ( params.nt_db ) {
+if (params.nt_db) {
     nt_db = file(params.nt_db)
     if( !nt_db.exists() ) exit 1, "NT database not found: ${params.nt_db}"
 } else {
@@ -197,7 +199,7 @@ if ( params.nt_db ) {
 
 // Configurable uniprot proteomes database
 uniprot_db = false
-if ( params.uniprot_db ) {
+if (params.uniprot_db) {
     uniprot_db = file(params.uniprot_db)
     if ( !uniprot_db.exists() ) exit 1, "Uniprot proteomes database not found: ${params.uniprot_db}"
 } else {
@@ -206,7 +208,7 @@ if ( params.uniprot_db ) {
 
 //uniprot_taxids
 uniprot_taxids = false
-if ( params.uniprot_taxids ) {
+if (params.uniprot_taxids) {
     uniprot_taxids = file(params.uniprot_taxids)
     if ( !uniprot_taxids.exists() ) exit 1, "Uniprot proteomes seq2tax mapping file not found: ${params.uniprot_taxids}"
 } else {
@@ -215,7 +217,7 @@ if ( params.uniprot_taxids ) {
 
 // Configurable kraken database
 kraken_db = false
-if ( params.kraken_db ) {
+if (params.kraken_db) {
     kraken_db = file(params.kraken_db)
     if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"
 } else {
@@ -224,7 +226,7 @@ if ( params.kraken_db ) {
 
 // Configurable Blobtools nodesDB.txt
 blob_db = false
-if ( params.blob_db ) {
+if (params.blob_db) {
     blob_db = file(params.blob_db)
     if( !blob_db.exists() ) exit 1, "Blobtools nodesDB.txt not found: ${params.blob_db}"
 } else {
@@ -233,7 +235,7 @@ if ( params.blob_db ) {
 
 // Configurable eggNOG database
 eggnog_db = false
-if ( params.eggnog_db ) {
+if (params.eggnog_db) {
     eggnog_db = file(params.eggnog_db)
     if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
 } else {
@@ -242,7 +244,7 @@ if ( params.eggnog_db ) {
 
 // Configure EukCC database
 eukcc_db = false
-if ( params.eukcc_db ) {
+if (params.eukcc_db) {
     eukcc_db  = file(params.eukcc_db)
     if ( !eukcc_db.exists() ) exit 1, "EukCC database not found: ${params.eukcc_db}"
 } else {
@@ -251,7 +253,7 @@ if ( params.eukcc_db ) {
 
 // Configure GTDB database
 gtdb = false
-if ( params.gtdb ) {
+if (params.gtdb) {
     gtdb  = file(params.gtdb)
     if ( !gtdb.exists() ) exit 1, "GTDB database not found: ${params.gtdb}"
 } else {
@@ -260,7 +262,7 @@ if ( params.gtdb ) {
 
 // Configure reference sequence
 ref = false
-if ( params.ref ) {
+if (params.ref) {
     ref  = file(params.ref)
     if ( !ref.exists() ) exit 1, "Ref not found: ${params.ref}"
 } else {
@@ -269,7 +271,7 @@ if ( params.ref ) {
 
 // Configure KOfam search database
 kofam_profile = false
-if ( params.kofam_profile ) {
+if (params.kofam_profile) {
     kofam_profile = file(params.kofam_profile)
     if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
 } else {
@@ -277,7 +279,7 @@ if ( params.kofam_profile ) {
 }
 
 kofam_kolist = false
-if ( params.kofam_kolist ) {
+if (params.kofam_kolist) {
     kofam_kolist = file(params.kofam_kolist)
     if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
 } else {
@@ -286,7 +288,7 @@ if ( params.kofam_kolist ) {
 
 custom_runName = workflow.runName
 
-if( workflow.profile == 'awsbatch') {
+if(workflow.profile == 'awsbatch') {
     // AWSBatch sanity checking
     if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
     if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
@@ -475,7 +477,7 @@ workflow SCGS {
     ch_versions       = ch_versions.mix(FASTQC.out.versions)
     ch_multiqc_fastqc = FASTQC.out.zip
 
-    // SATURATION
+    // SAVE_REFERENCE
     if ( params.fasta && params.gff ) {
         SAVE_REFERENCE ( fasta, gff )
     }
@@ -496,10 +498,19 @@ workflow SCGS {
         trimmed_reads = read_files_trimming.map{name, reads -> reads}
     } else {
         TRIMGALORE ( read_files_trimming )
-        trimmed_reads = TRIMGALORE.out.reads
         ch_multiqc_trim_log = TRIMGALORE.out.log
         ch_multiqc_trim_zip = TRIMGALORE.out.zip
         ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
+        if (params.bbmap) {
+            BBMAP_ALIGN (
+                TRIMGALORE.out.reads,
+                ref
+            )
+            ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
+            trimmed_reads = BBMAP_ALIGN.out.clean_fastq
+        } else {
+            trimmed_reads = TRIM_GALORE.out.reads
+        }
     }
 
     // KRAKEN
@@ -548,15 +559,6 @@ workflow SCGS {
             graph_vcf
         )
         ch_versions = ch_versions.mix(VG.out.ch_versions)
-    }
-
-    // BBMAP
-    if ( params.bbmap ) {
-        BBMAP_ALIGN (
-            trimmed_reads,
-            ref
-        )
-        ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
     }
 
     ch_multiqc_samtools = Channel.empty()
@@ -639,7 +641,7 @@ workflow SCGS {
     }
 
     // REMAP
-    if ( params.remap && !params.nanopore ) {
+    if (params.remap && !params.nanopore) {
         BOWTIE2_REMAP(ctg200)
         REMAP (
             trimmed_reads,
@@ -674,7 +676,7 @@ workflow SCGS {
 
     // CHECKM_LINEAGEWF
     ch_multiqc_checkm = Channel.empty()
-    if ( !euk ) {
+    if (!euk) {
         CHECKM_LINEAGEWF (
             ctg.collect{it[1]},
             params.genus ? true : false
@@ -714,7 +716,7 @@ workflow SCGS {
     ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
     acdc_contigs = BLOBTOOLS.out.contigs
     acdc_tax = BLOBTOOLS.out.tax
-    if ( params.remap) {
+    if (params.remap) {
         REBLOBTOOLS (
             DIAMOND_BLASTX.out.contigs,
             DIAMOND_BLASTX.out.nt,
@@ -736,7 +738,7 @@ workflow SCGS {
     faa = Channel.empty()
     prokka_for_split  = Channel.empty()
     ch_multiqc_prokka = Channel.empty()
-    if ( !euk ) {
+    if (!euk) {
         PROKKA(ctg)
         ch_versions = ch_versions.mix(PROKKA.out.versions)
         PRODIGAL(ctg)
@@ -760,15 +762,19 @@ workflow SCGS {
     ch_versions = ch_versions.mix(EGGNOG.out.versions)
 
     // KOFAMSCAN
-    KOFAMSCAN (
-        faa,
-        kofam_profile,
-        kofam_kolist
-    )
+    kofam_scan = Channel.empty()
+    if (params.kofam) {
+        KOFAMSCAN (
+            faa,
+            kofam_profile,
+            kofam_kolist
+        )
+        kofam_scan = KOFAMSCAN.out.txt
+    }
 
     // STARAMR
-    if ( !params.euk ) {
-        if ( params.acquired || params.point ) {
+    if (!params.euk) {
+        if (params.acquired || params.point) {
             STARAMR (
                 ctg,
                 params.acquired,
@@ -778,17 +784,17 @@ workflow SCGS {
         }
     }
 
-    if ( params.split ) {
+    if (params.split) {
         split_fa = Channel.empty()
-        if ( params.split_euk ) {
+        if (params.split_euk) {
             SPLIT_CHECKM_EUKCC (
                 ctg200.collect{it[1]},
                 BLOBTOOLS.out.tax_split.collect{it[1]},
                 prokka_for_split.collect{it[1]}.ifEmpty([]),
-                KOFAMSCAN.out.txt.collect{it[1]},
+                kofam_scan.collect{it[1]}.ifEmpty(file("/dev/null")),
                 eukcc_db,
-                params.split_bac_level ?: "genus",
-                params.split_euk_level ?: "genus"
+                params.split_bac_level,
+                params.split_euk_level
             )
             split_fa = SPLIT_CHECKM_EUKCC.out.fa
         } else {
@@ -796,9 +802,9 @@ workflow SCGS {
                 ctg200.collect{it[1]},
                 BLOBTOOLS.out.tax_split.collect{it[1]},
                 prokka_for_split.collect{it[1]}.ifEmpty([]),
-                KOFAMSCAN.out.txt.collect{it[1]},
-                params.split_bac_level ?: "genus",
-                params.split_euk_level ?: "genus"
+                kofam_scan.collect{it[1]}.ifEmpty(file("/dev/null")),
+                params.split_bac_level,
+                params.split_euk_level
             )
             split_fa = SPLIT_CHECKM.out.fa
         }
@@ -848,7 +854,7 @@ workflow SCGS {
  * Completion e-mail notification
  */
 workflow.onComplete {
-    if ( params.email ){
+    if (params.email){
         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
     }
     NfcoreTemplate.summary(workflow, params, log)

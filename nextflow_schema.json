@@ -381,6 +381,11 @@
                     "default": false,
                     "description": "Call acquired ARG?"
                 },
+                "kofam": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable KEGG Ortholog annotation?"
+                },
                 "point": {
                     "type": "boolean",
                     "default": false,
