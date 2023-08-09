@@ -495,7 +495,16 @@ workflow SCGS {
     ch_multiqc_trim_log = Channel.empty()
     ch_multiqc_trim_zip = Channel.empty()
     if (params.notrim) {
-        trimmed_reads = read_files_trimming.map{name, reads -> reads}
+        if (params.bbmap) {
+            BBMAP_ALIGN (
+                read_files_trimming.map{name, reads -> reads},
+                ref
+            )
+            ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
+            trimmed_reads = BBMAP_ALIGN.out.clean_fastq
+        } else {
+            trimmed_reads = read_files_trimming.map{name, reads -> reads}
+        }
     } else {
         TRIMGALORE ( read_files_trimming )
         ch_multiqc_trim_log = TRIMGALORE.out.log
