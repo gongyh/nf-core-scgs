@@ -75,46 +75,45 @@ def real_split(
             cl = line.strip().split("\t")
             contig_id = cl[0]
             ctg_id_short = contig_id.split("_length_")[0]
-            bacAnnotation = cl[annCol].replace("/", "_")
-            eukAnnotation = cl[eukAnnCol].replace("/", "_")
-            if "_" in bacAnnotation:
-                bacAnnotation = bacAnnotation.split("_")[0]
-            if "_" in eukAnnotation:
-                eukAnnotation = eukAnnotation.split("_")[0]
             superkingdom = cl[eukCol]
-            bac_gname = bacAnnotation.replace(" ", "_") + ".gids"
-            bac_kname = bacAnnotation.replace(" ", "_") + ".ko"
-            euk_gname = eukAnnotation.replace(" ", "_") + ".gids"
-            euk_kname = eukAnnotation.replace(" ", "_") + ".ko"
-            euk_kofh = euk_out_dir.joinpath(euk_kname).open("a")
-            euk_gname_path = euk_out_dir.joinpath(euk_gname)
-            bac_kofh = bac_out_dir.joinpath(bac_kname).open("a")
-            bac_gname_path = bac_out_dir.joinpath(bac_gname)
-            with bac_gname_path.open("a") as f1, euk_gname_path.open("a") as f2:
-                if superkingdom == "Eukaryota":
+            if superkingdom == "Eukaryota":
+                eukAnnotation = cl[eukAnnCol].replace("/", "_")
+                if "_" in eukAnnotation:
+                    eukAnnotation = eukAnnotation.split("_")[0]
+                euk_gname = eukAnnotation.replace(" ", "_") + ".gids"
+                euk_kname = eukAnnotation.replace(" ", "_") + ".ko"
+                euk_gname_path = euk_out_dir.joinpath(euk_gname)
+                euk_kofh = euk_out_dir.joinpath(euk_kname).open("a")
+                with euk_gname_path.open("a") as f2:
                     if ctg_id_short in ctg_genes.keys():
                         for g in ctg_genes[ctg_id_short]:
                             f2.write(g + "\n")
                             if g in gene_ko.keys():
                                 for v in gene_ko[g]:
                                     euk_kofh.write(g + "\t" + v + "\n")
-                else:
+                euk_kofh.close()
+                assert eukAnnCol > 0
+                assert eukCol > 0
+                euk_fname = eukAnnotation.replace(" ", "_") + ".fasta"
+                fname_path = euk_out_dir.joinpath(euk_fname)
+            else:
+                bacAnnotation = cl[annCol].replace("/", "_")
+                if "_" in bacAnnotation:
+                    bacAnnotation = bacAnnotation.split("_")[0]
+                bac_gname = bacAnnotation.replace(" ", "_") + ".gids"
+                bac_kname = bacAnnotation.replace(" ", "_") + ".ko"
+                bac_kofh = bac_out_dir.joinpath(bac_kname).open("a")
+                bac_gname_path = bac_out_dir.joinpath(bac_gname)
+                with bac_gname_path.open("a") as f1:
                     if ctg_id_short in ctg_genes.keys():
                         for g in ctg_genes[ctg_id_short]:
                             f1.write(g + "\n")
                             if g in gene_ko.keys():
                                 for v in gene_ko[g]:
                                     bac_kofh.write(g + "\t" + v + "\n")
-            bac_kofh.close()
-            euk_kofh.close()
-            assert annCol > 0
-            assert eukAnnCol > 0
-            assert eukCol > 0
-            bac_fname = bacAnnotation.replace(" ", "_") + ".fasta"
-            euk_fname = eukAnnotation.replace(" ", "_") + ".fasta"
-            if superkingdom == "Eukaryota":
-                fname_path = euk_out_dir.joinpath(euk_fname)
-            else:
+                bac_kofh.close()
+                assert annCol > 0
+                bac_fname = bacAnnotation.replace(" ", "_") + ".fasta"
                 fname_path = bac_out_dir.joinpath(bac_fname)
             with fname_path.open("a") as f:
                 SeqIO.write(record_dict[contig_id], f, "fasta")

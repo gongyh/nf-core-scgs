@@ -15,8 +15,9 @@ process SPLIT_CHECKM {
     val split_euk_level
 
     output:
-    path("split/*")          , emit: out_put
-    path "split/versions.yml", emit: versions
+    path("split/*")            , emit: output
+    path("split/fa/*")         , emit: fa
+    path("split/versions.yml") , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,11 +26,20 @@ process SPLIT_CHECKM {
     """
     cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
+    if [ ! -d fa ];then
+        mkdir fa
+    fi
     samples=(`ls -d *_${split_bac_level}_Bacteria | sed 's/_${split_bac_level}_Bacteria//g'`)
     for sample in \${samples[*]}; do
         mkdir -p \${sample}_${split_bac_level}_checkM
-        checkm lineage_wf -t ${task.cpus} -f \${sample}_${split_bac_level}_checkM.txt -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
+        checkm lineage_wf -t ${task.cpus} --tab_table -f \${sample}_${split_bac_level}_checkM.tsv -x fasta \${sample}_${split_bac_level}_Bacteria \${sample}_${split_bac_level}_checkM || echo "Ignore internal errors!"
     done
+    prepare_fa.py
+    if [ "`ls -A fa`" == "" ];then
+        touch fa/no_fasta.txt
+        echo "No splited fasta with integrity greater than 40% and contamination less than 10%" > fa/no_fasta.txt
+    fi
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

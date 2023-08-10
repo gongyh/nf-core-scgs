@@ -19,7 +19,6 @@ process MONOVAR {
     task.ext.when == null || task.ext.when
 
     script:
-    pp_outdir = "${params.outdir}/monovar"
     """
     ls *.bam > bams.txt
     samtools mpileup -B -d 10000 -q 40 -f $fa -b bams.txt | monovar.py -f $fa -o monovar.vcf -m ${task.cpus} -b bams.txt
