@@ -20,7 +20,7 @@ process CHECKM2 {
 
     script:
     """
-    checkm2 predict --threads ${task.cpus} -x fasta --input spades --output-directory checkm2 --database_path db
+    checkm2 predict --threads ${task.cpus} -x fasta --input spades --output-directory checkm2 --database_path $db
     cp checkm2/quality_report.tsv spades_checkM2.txt
 
     echo \"# plot_type: 'table'\" > CheckM2_mqc.tsv
