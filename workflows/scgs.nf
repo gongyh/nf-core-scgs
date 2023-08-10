@@ -48,6 +48,7 @@ def helpMessage() {
     --kofam_kolist                KOfam ko_list file
     --augustus_species            Augustus species, default 'saccharomyces'
     --eukcc_db                    EukCC database
+    --checkm2_db                  CheckM2 database
     --gtdb                        GTDB database
     --ref                         Specify the reference sequence for bbmap
 
@@ -126,6 +127,7 @@ params.uniprot_db = null
 params.uniprot_taxids = null
 params.eggnog_db = null
 params.eukcc_db = null
+params.checkm2_db = null
 params.gtdb = null
 params.ref = null
 params.snv = false
@@ -249,6 +251,15 @@ if (params.eukcc_db) {
     if ( !eukcc_db.exists() ) exit 1, "EukCC database not found: ${params.eukcc_db}"
 } else {
     eukcc_db = file("/dev/null")
+}
+
+// Configure Checkm2 database
+checkm2_db = false
+if (params.checkm2_db) {
+    checkm2_db  = file(params.checkm2_db)
+    if ( !checkm2_db.exists() ) exit 1, "CheckM2 database not found: ${params.checkm2_db}"
+} else {
+    checkm2_db = file("/dev/null")
 }
 
 // Configure GTDB database
@@ -694,6 +705,17 @@ workflow SCGS {
         ch_multiqc_checkm = CHECKM_LINEAGEWF.out.mqc_tsv
     }
 
+    // CHECKM2
+    ch_multiqc_checkm2 = Channel.empty()
+    if (!euk) {
+        CHECKM2 (
+            ctg.collect{it[1]},
+            checkm2_db
+        )
+        ch_versions = ch_versions.mix(CHECKM2.out.versions)
+        ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
+    }
+
     // BLASTN
     BLASTN (
         ctg200,
@@ -844,6 +866,7 @@ workflow SCGS {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_preseq.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_qualimap.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_quast.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_prokka.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_kraken.collect{it[1]}.ifEmpty([]))

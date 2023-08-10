@@ -297,6 +297,10 @@
                     "type": "string",
                     "description": "Path of NCBI/NT database."
                 },
+                "checkm2_db": {
+                    "type": "string",
+                    "description": "Path of CheckM2 database."
+                },
                 "blob_db": {
                     "type": "string",
                     "description": "Path of Blobtools nodesDB.txt."
