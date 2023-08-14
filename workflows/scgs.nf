@@ -26,7 +26,13 @@ def helpMessage() {
     --remap                       Remap trimmed reads to contigs
     --saturation                  Enable sequencing saturation analysis
     --ass                         Assemble using SPAdes
+    --blastn                      Enable NCBI Nt database annotation
+    --blob                        Enable Blobtools analysis
+    --kraken                      Enable Kraken2 annotation
+    --eggnog                      Enable EggNOG database annotation
     --kofam                       Enable KEGG Ortholog annotation
+    --checkm2                     Enable CheckM2 analysis
+    --gtdbtk                      Enable gtdbtk analysis
     --split                       Split the draft genomes and annotation(Bacteria)
     --split_euk                   Split the draft genomes and annotation(Eukaryota)
     --split_bac_level             Level of split for Bacteria
@@ -118,18 +124,6 @@ params.no_normalize = false
 params.euk = false
 params.fungus = false
 params.remap = false
-params.genus = null
-params.nt_db = null
-params.blob_db = null
-params.kraken_db = null
-params.readPaths = null
-params.uniprot_db = null
-params.uniprot_taxids = null
-params.eggnog_db = null
-params.eukcc_db = null
-params.checkm2_db = null
-params.gtdb = null
-params.ref = null
 params.snv = false
 params.cnv = false
 params.bbmap = false
@@ -138,6 +132,12 @@ params.saturation = false
 params.bulk = false
 params.ass = false
 params.kofam = false
+params.blastn = false
+params.blob = false
+params.kraken = false
+params.eggnog = false
+params.checkm2 = false
+params.gtdbtk = false
 params.evalue = 1e-25
 params.blockSize = 2.0
 params.acquired = false
@@ -150,6 +150,18 @@ params.split = false
 params.split_euk = false
 params.split_bac_level = "genus"
 params.split_euk_level = "genus"
+params.genus = null
+params.nt_db = null
+params.blob_db = null
+params.kraken_db = null
+params.readPaths = null
+params.uniprot_db = null
+params.uniprot_taxids = null
+params.eggnog_db = null
+params.eukcc_db = null
+params.checkm2_db = null
+params.gtdb = null
+params.ref = null
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -536,13 +548,17 @@ workflow SCGS {
 
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
-    KTUPDATETAXONOMY ()
-    KRAKEN (
-        trimmed_reads,
-        kraken_db,
-        KTUPDATETAXONOMY.out.taxonomy
-    )
-    ch_multiqc_kraken = KRAKEN.out.report
+    if (params.kraken) {
+        KTUPDATETAXONOMY ()
+        KRAKEN (
+            trimmed_reads,
+            kraken_db,
+            KTUPDATETAXONOMY.out.taxonomy
+        )
+        ch_multiqc_kraken = KRAKEN.out.report
+    }
+
+    // SATURATION
     if (params.saturation) {
         SATURATION ( trimmed_reads )
     }
@@ -708,7 +724,7 @@ workflow SCGS {
 
     // CHECKM2
     ch_multiqc_checkm2 = Channel.empty()
-    if (!euk) {
+    if (!euk && params.checkm2) {
         CHECKM2 (
             ctg.collect{it[1]},
             checkm2_db
@@ -717,53 +733,58 @@ workflow SCGS {
         ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
     }
 
-    // BLASTN
-    BLASTN (
-        ctg200,
-        nt_db,
-        params.evalue
-    )
-    ch_versions = ch_versions.mix(BLASTN.out.versions)
+    if (params.blastn) {
+        // BLASTN
+        BLASTN (
+            ctg200,
+            nt_db,
+            params.evalue
+        )
+        ch_versions = ch_versions.mix(BLASTN.out.versions)
 
-    // DIAMOND_BLASTS
-    DIAMOND_BLASTX (
-        BLASTN.out.contigs,
-        BLASTN.out.nt,
-        uniprot_db,
-        uniprot_taxids
-    )
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
+        // DIAMOND_BLASTS
+        DIAMOND_BLASTX (
+            BLASTN.out.contigs,
+            BLASTN.out.nt,
+            uniprot_db,
+            uniprot_taxids
+        )
+        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
+        acdc_contigs = Channel.empty()
+        acdc_tax = Channel.empty()
 
-    acdc_contigs = Channel.empty()
-    acdc_tax = Channel.empty()
+        // BLOBTOOLS
+        if (params.blob) {
+            BLOBTOOLS (
+                DIAMOND_BLASTX.out.contigs,
+                DIAMOND_BLASTX.out.nt,
+                DIAMOND_BLASTX.out.uniprot,
+                DIAMOND_BLASTX.out.real,
+                blob_db
+            )
+            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
+            acdc_contigs = BLOBTOOLS.out.contigs
+            acdc_tax = BLOBTOOLS.out.tax
+        }
 
-    // BLOBTOOLS
-    BLOBTOOLS (
-        DIAMOND_BLASTX.out.contigs,
-        DIAMOND_BLASTX.out.nt,
-        DIAMOND_BLASTX.out.uniprot,
-        DIAMOND_BLASTX.out.real,
-        blob_db
-    )
-    ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
-    acdc_contigs = BLOBTOOLS.out.contigs
-    acdc_tax = BLOBTOOLS.out.tax
-    if (params.remap) {
-        REBLOBTOOLS (
-            DIAMOND_BLASTX.out.contigs,
-            DIAMOND_BLASTX.out.nt,
-            DIAMOND_BLASTX.out.real,
-            DIAMOND_BLASTX.out.uniprot,
-            blob_db,
-            REMAP.out.bam.collect{it[1]},
-            REMAP.out.bai.collect{it[1]}
+        if (params.remap) {
+            REBLOBTOOLS (
+                DIAMOND_BLASTX.out.contigs,
+                DIAMOND_BLASTX.out.nt,
+                DIAMOND_BLASTX.out.real,
+                DIAMOND_BLASTX.out.uniprot,
+                blob_db,
+                REMAP.out.bam.collect{it[1]},
+                REMAP.out.bai.collect{it[1]}
+            )
+        }
+
+        ACDC (
+            acdc_contigs,
+            acdc_tax,
+            kraken_db
         )
     }
-    ACDC (
-        acdc_contigs,
-        acdc_tax,
-        kraken_db
-    )
     TSNE(ctg)
 
 
@@ -787,11 +808,13 @@ workflow SCGS {
         )
     }
 
-    EGGNOG (
-        faa,
-        eggnog_db
-    )
-    ch_versions = ch_versions.mix(EGGNOG.out.versions)
+    if (params.eggnog) {
+      EGGNOG (
+          faa,
+          eggnog_db
+      )
+      ch_versions = ch_versions.mix(EGGNOG.out.versions)
+    }
 
     // KOFAMSCAN
     kofam_scan = Channel.empty()
@@ -841,10 +864,12 @@ workflow SCGS {
             split_fa = SPLIT_CHECKM.out.fa
         }
 
-        GTDBTK (
-            split_fa,
-            gtdb
-        )
+        if (params.gtdbtk) {
+          GTDBTK (
+              split_fa,
+              gtdb
+          )
+        }
     }
 
     ch_multiqc_versions = Channel.empty()

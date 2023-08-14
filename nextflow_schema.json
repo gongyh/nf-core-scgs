@@ -261,6 +261,36 @@
                     "default": false,
                     "description": "Remap and reblob."
                 },
+                "blastn": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable NCBI Nt database annotation."
+                },
+                "kraken": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable Kraken2 annotation."
+                },
+                "blob": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable Blobtools analysis."
+                },
+                "eggnog": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable EggNOG database annotation."
+                },
+                "checkm2": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable CheckM2 analysis."
+                },
+                "gtdbtk": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable gtdbtk analysis."
+                },
                 "split": {
                     "type": "boolean",
                     "default": false,
