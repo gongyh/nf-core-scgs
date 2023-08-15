@@ -417,7 +417,7 @@
                 },
                 "kofam": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enable KEGG Ortholog annotation?"
                 },
                 "point": {
