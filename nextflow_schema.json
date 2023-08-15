@@ -263,32 +263,32 @@
                 },
                 "blastn": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enable NCBI Nt database annotation."
                 },
                 "kraken": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enable Kraken2 annotation."
                 },
                 "blob": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enable Blobtools analysis."
                 },
                 "eggnog": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enable EggNOG database annotation."
                 },
                 "checkm2": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enable CheckM2 analysis."
                 },
                 "gtdbtk": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enable gtdbtk analysis."
                 },
                 "split": {
