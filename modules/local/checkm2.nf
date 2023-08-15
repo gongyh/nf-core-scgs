@@ -24,7 +24,7 @@ process CHECKM2 {
     cp checkm2/quality_report.tsv spades_checkM2.txt
 
     echo \"# plot_type: 'table'\" > CheckM2_mqc.tsv
-    echo \"# section_name: 'CheckM'\" >> CheckM2_mqc.tsv
+    echo \"# section_name: 'CheckM2'\" >> CheckM2_mqc.tsv
     cat spades_checkM2.txt >> CheckM2_mqc.tsv
 
     cat <<-END_VERSIONS > versions.yml
