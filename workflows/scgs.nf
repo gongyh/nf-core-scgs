@@ -846,7 +846,7 @@ workflow SCGS {
                 ctg200.collect{it[1]},
                 BLOBTOOLS.out.tax_split.collect{it[1]},
                 prokka_for_split.collect{it[1]}.ifEmpty([]),
-                kofam_scan.collect{it[1]}.ifEmpty(file("/dev/null")),
+                kofam_scan.collect{it[1]}.ifEmpty([]),
                 eukcc_db,
                 params.split_bac_level,
                 params.split_euk_level
@@ -857,7 +857,7 @@ workflow SCGS {
                 ctg200.collect{it[1]},
                 BLOBTOOLS.out.tax_split.collect{it[1]},
                 prokka_for_split.collect{it[1]}.ifEmpty([]),
-                kofam_scan.collect{it[1]}.ifEmpty(file("/dev/null")),
+                kofam_scan.collect{it[1]}.ifEmpty([]),
                 params.split_bac_level,
                 params.split_euk_level
             )
