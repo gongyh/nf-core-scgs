@@ -205,17 +205,8 @@ def tools_split(
     kofam_dir = results_dir.joinpath("kofam")
     ko_exist = False
     if kofam_dir.exists() and kofam_dir.is_dir():
-        exist_arr = []
-        for sample in samples:
-            kofam_file = kofam_dir.joinpath(sample + "_KOs_mapper.txt")
-            if kofam_file.exists():
-                exist_arr.append(True)
-            else:
-                exist_arr.append(False)
-        if False in exist_arr:
-            ko_exist = False
-        else:
-            ko_exist = True
+        typer.echo(f"INFO: KO annotations found, will also split gene kos.")
+        ko_exist = True
     else:
         typer.echo(f"INFO: KO annotations not found, will skip splitting gene kos.")
         ko_exist = False
