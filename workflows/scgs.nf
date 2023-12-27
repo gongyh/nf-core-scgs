@@ -661,19 +661,22 @@ workflow SCGS {
     if ( params.no_normalize ) {
         trimmed_reads.set{ normalized_reads }
     } else {
-        if ( params.ass ) {
-            NORMALIZE(trimmed_reads)
-            if (params.nanopore) {
-                CANU(NORMALIZE.out.reads)
-                ctg200 = CANU.out.ctg200
-                ctg = CANU.out.ctg
-                ch_versions = ch_versions.mix(CANU.out.versions)
-            } else {
-                SPADES(NORMALIZE.out.reads)
-                ctg200 = SPADES.out.ctg200
-                ctg = SPADES.out.ctg
-                ch_versions = ch_versions.mix(SPADES.out.versions)
-            }
+        NORMALIZE(trimmed_reads)
+        normalized_reads = NORMALIZE.out.reads
+    }
+
+    // ASSEMBLY
+    if ( params.ass ) {
+        if (params.nanopore) {
+            CANU(normalized_reads)
+            ctg200 = CANU.out.ctg200
+            ctg = CANU.out.ctg
+            ch_versions = ch_versions.mix(CANU.out.versions)
+        } else {
+            SPADES(normalized_reads)
+            ctg200 = SPADES.out.ctg200
+            ctg = SPADES.out.ctg
+            ch_versions = ch_versions.mix(SPADES.out.versions)
         }
     }
 
