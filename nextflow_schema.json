@@ -261,6 +261,11 @@
                     "default": false,
                     "description": "Remap and reblob."
                 },
+                "acdc": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Enable acdc."
+                },
                 "blastn": {
                     "type": "boolean",
                     "default": true,

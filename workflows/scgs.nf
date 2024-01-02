@@ -24,6 +24,7 @@ def helpMessage() {
     --bbmap                       Enable bbmap to remove host-derived contamination
     --doubletd                    Enable detection of doublet
     --remap                       Remap trimmed reads to contigs
+    --acdc                        Enable acdc
     --saturation                  Enable sequencing saturation analysis
     --ass                         Assemble using SPAdes
     --blastn                      Enable NCBI Nt database annotation
@@ -124,6 +125,7 @@ params.no_normalize = false
 params.euk = false
 params.fungus = false
 params.remap = false
+params.acdc = false
 params.snv = false
 params.cnv = false
 params.bbmap = false
@@ -782,11 +784,13 @@ workflow SCGS {
             )
         }
 
-        ACDC (
-            acdc_contigs,
-            acdc_tax,
-            kraken_db
-        )
+        if (params.acdc) {
+            ACDC (
+              acdc_contigs,
+              acdc_tax,
+              kraken_db
+          )
+        }
     }
     TSNE(ctg)
 
