@@ -789,7 +789,7 @@ workflow SCGS {
               acdc_contigs,
               acdc_tax,
               kraken_db
-          )
+            )
         }
     }
     TSNE(ctg)
