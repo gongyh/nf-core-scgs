@@ -76,10 +76,10 @@ def real_split(
                 continue
             cl = line.strip().split("\t")
             contig_id = cl[0]
-            bin_csv = output_dir.joinpath(sample+".bin.csv")
+            bin_csv = output_dir.joinpath(sample + ".bin.csv")
             if cl[annCol] != "no-hit":
                 with bin_csv.open("a") as bin_csv:
-                    bin_csv.write(contig_id+","+cl[annCol]+"\n")
+                    bin_csv.write(contig_id + "," + cl[annCol] + "\n")
             ctg_id_short = contig_id.split("_length_")[0]
             superkingdom = cl[eukCol]
             if superkingdom == "Eukaryota":

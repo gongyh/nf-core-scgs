@@ -10,7 +10,7 @@ with open(contigsFasta, "r") as ffasta:
     fastaLines = ffasta.readlines()
     for fastaLine in fastaLines:
         if fastaLine.startswith(">"):
-            ID = fastaLine.strip().replace(">","")
+            ID = fastaLine.strip().replace(">", "")
             contigsID.append(ID)
 
 
@@ -21,17 +21,17 @@ with open(contigsPath, "r") as fcontigs, open(contigsCorrPath, "w") as fcorrect:
             l = contigsLine.strip()
             if l.endswith("'"):
                 if l[:-1] in contigsID:
-                    fcorrect.write(l+"\n")
+                    fcorrect.write(l + "\n")
                 else:
                     for i in contigsID:
-                        if i[:i.find("_length")] == l[:l.find("_length")]:
-                            fcorrect.write(i+"'\n")
+                        if i[: i.find("_length")] == l[: l.find("_length")]:
+                            fcorrect.write(i + "'\n")
             else:
                 if l in contigsID:
-                    fcorrect.write(l+"\n")
+                    fcorrect.write(l + "\n")
                 else:
                     for i in contigsID:
-                        if i[:i.find("_length")] == l[:l.find("_length")]:
-                            fcorrect.write(i+"\n")
+                        if i[: i.find("_length")] == l[: l.find("_length")]:
+                            fcorrect.write(i + "\n")
         else:
             fcorrect.write(contigsLine)

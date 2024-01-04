@@ -29,7 +29,7 @@ i = 0
 for ctg in ctgs:
     raw = fp[ctg][:]
     norm = raw * 256.0 / sum(raw)
-    profile[i,] = norm
+    profile[i, ] = norm
     i = i + 1
 
 ## 2. Run t-SNE
