@@ -18,6 +18,7 @@ process SPLIT_CHECKM_EUKCC {
     output:
     path("split/*")            , emit: output
     path("split/fa/*")         , emit: fa
+    path("split/*.csv")        , emit: csv
     path("split/versions.yml") , emit: versions
 
     when:

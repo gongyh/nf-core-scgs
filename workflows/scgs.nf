@@ -38,6 +38,7 @@ def helpMessage() {
     --split_euk                   Split the draft genomes and annotation(Eukaryota)
     --split_bac_level             Level of split for Bacteria
     --split_euk_level             Level of split for Eukaryota
+    --graphbin                    Enable graphbin to bin
 
     References:                   If not specified in the configuration file or you wish to overwrite any of the references.
     --fasta                       Path to Fasta reference
@@ -140,22 +141,17 @@ params.kraken = true
 params.eggnog = true
 params.checkm2 = true
 params.gtdbtk = true
-params.evalue = 1e-25
-params.blockSize = 2.0
 params.acquired = false
 params.point = false
-params.pointfinder_species = "escherichia_coli"
-params.kofam_profile = null
-params.kofam_kolist = null
-params.augustus_species = "saccharomyces"
 params.split = false
 params.split_euk = false
-params.split_bac_level = "genus"
-params.split_euk_level = "genus"
+params.graphbin = false
 params.genus = null
 params.nt_db = null
 params.blob_db = null
 params.kraken_db = null
+params.kofam_profile = null
+params.kofam_kolist = null
 params.readPaths = null
 params.uniprot_db = null
 params.uniprot_taxids = null
@@ -164,6 +160,13 @@ params.eukcc_db = null
 params.checkm2_db = null
 params.gtdb = null
 params.ref = null
+params.evalue = 1e-25
+params.blockSize = 2.0
+params.split_bac_level = "genus"
+params.split_euk_level = "genus"
+params.pointfinder_species = "escherichia_coli"
+params.augustus_species = "saccharomyces"
+
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -484,6 +487,7 @@ include { KOFAMSCAN             } from '../modules/local/kofamscan'
 include { STARAMR               } from '../modules/local/staramr'
 include { SPLIT_CHECKM          } from '../modules/local/split_checkm'
 include { SPLIT_CHECKM_EUKCC    } from '../modules/local/split_checkm_eukcc'
+include { GRAPHBIN              } from '../modules/local/graphbin'
 include { OUTPUT_DOCUMENTATION  } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions/main'
 
@@ -658,8 +662,6 @@ workflow SCGS {
     }
 
     // NORMALIZE
-    ctg200 = Channel.empty()
-    ctg = Channel.empty()
     if ( params.no_normalize ) {
         trimmed_reads.set{ normalized_reads }
     } else {
@@ -669,6 +671,11 @@ workflow SCGS {
 
     // ASSEMBLY
     if ( params.ass ) {
+        contig = Channel.empty()
+        contig_path = Channel.empty()
+        contig_graph = Channel.empty()
+        ctg200 = Channel.empty()
+        ctg = Channel.empty()
         if (params.nanopore) {
             CANU(normalized_reads)
             ctg200 = CANU.out.ctg200
@@ -676,6 +683,9 @@ workflow SCGS {
             ch_versions = ch_versions.mix(CANU.out.versions)
         } else {
             SPADES(normalized_reads)
+            contig = SPADES.out.contig
+            contig_path = SPADES.out.contig_path
+            contig_graph = SPADES.out.contig_graph
             ctg200 = SPADES.out.ctg200
             ctg = SPADES.out.ctg
             ch_versions = ch_versions.mix(SPADES.out.versions)
@@ -832,6 +842,7 @@ workflow SCGS {
             kofam_kolist
         )
         kofam_scan = KOFAMSCAN.out.txt
+        ch_versions = ch_versions.mix(KOFAMSCAN.out.versions)
     }
 
     // STARAMR
@@ -843,11 +854,13 @@ workflow SCGS {
                 params.point,
                 params.pointfinder_species
             )
+            ch_versions = ch_versions.mix(STARAMR.out.versions)
         }
     }
 
     if (params.split) {
         split_fa = Channel.empty()
+        bin_csv = Channel.empty()
         if (params.split_euk) {
             SPLIT_CHECKM_EUKCC (
                 ctg200.collect{it[1]},
@@ -859,6 +872,7 @@ workflow SCGS {
                 params.split_euk_level
             )
             split_fa = SPLIT_CHECKM_EUKCC.out.fa
+            bin_csv = SPLIT_CHECKM_EUKCC.out.csv
         } else {
             SPLIT_CHECKM (
                 ctg200.collect{it[1]},
@@ -869,13 +883,25 @@ workflow SCGS {
                 params.split_euk_level
             )
             split_fa = SPLIT_CHECKM.out.fa
+            bin_csv = SPLIT_CHECKM.out.csv
+        }
+
+        if (params.graphbin && !params.nanopore) {
+            GRAPHBIN (
+                contig.collect{it[1]},
+                contig_path.collect{it[1]},
+                contig_graph.collect{it[1]},
+                bin_csv
+            )
+            ch_versions = ch_versions.mix(GRAPHBIN.out.versions)
         }
 
         if (params.gtdbtk) {
-          GTDBTK (
-              split_fa,
-              gtdb
-          )
+            GTDBTK (
+                split_fa,
+                gtdb
+            )
+            ch_versions = ch_versions.mix(GTDBTK.out.versions)
         }
     }
 

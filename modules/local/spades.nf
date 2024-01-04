@@ -11,9 +11,12 @@ process SPADES {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("${prefix}.ctg200.fasta"), emit: ctg200
-    tuple val(meta), path("${prefix}.ctgs.fasta")  , emit: ctg
-    path "versions.yml"                            , emit: versions
+    tuple val(meta), path("${prefix}.contigs.fasta")                       , emit: contig
+    tuple val(meta), path("${prefix}.correct.paths")                       , emit: contig_path
+    tuple val(meta), path("${prefix}.spades_out/${prefix}.contigs.gfa")    , emit: contig_graph
+    tuple val(meta), path("${prefix}.ctg200.fasta")                        , emit: ctg200
+    tuple val(meta), path("${prefix}.ctgs.fasta")                          , emit: ctg
+    path "versions.yml"                                                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,9 +31,12 @@ process SPADES {
     else
         spades.py --sc -s ${reads[0]} --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
+    mv ${prefix}.spades_out/assembly_graph_after_simplification.gfa ${prefix}.spades_out/${prefix}.contigs.gfa
+    ln -s ${prefix}.spades_out/contigs.paths ${prefix}.contigs.paths
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
+    correctPaths.py ${prefix}.contigs.fasta ${prefix}.contigs.paths
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -44,9 +50,12 @@ process SPADES {
     else
         spades.py --sc -1 ${reads[0]} -2 ${reads[1]} --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     fi
+    mv ${prefix}.spades_out/assembly_graph_after_simplification.gfa ${prefix}.spades_out/${prefix}.contigs.gfa
+    ln -s ${prefix}.spades_out/contigs.paths ${prefix}.contigs.paths
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
+    correctPaths.py ${prefix}.contigs.fasta ${prefix}.contigs.paths
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

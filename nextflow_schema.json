@@ -306,6 +306,11 @@
                     "default": false,
                     "description": "Split according to contig taxa annotation(Eukaryota)."
                 },
+                "graphbin": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable graphbin to bin."
+                },
                 "euk": {
                     "type": "boolean",
                     "default": false,
