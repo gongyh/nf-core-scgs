@@ -7,10 +7,10 @@ process GRAPHBIN {
         'biocontainers/graphbin:1.7.1--pyh7cba7a3_0' }"
 
     input:
-    tuple val(meta), path(contig)
-    tuple val(meta), path(path)
-    tuple val(meta), path(gfa)
-    path("*")
+    path("contigs/*")
+    path("paths/*")
+    path("gfa/*")
+    path("csv/*")
 
     output:
     path("binning/*")      , emit: out_put
@@ -20,10 +20,14 @@ process GRAPHBIN {
     task.ext.when == null || task.ext.when
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir -p binning/${meta.id}
-    graphbin --assembler spades --graph $gfa --contigs $contig --paths $path --binned ${prefix}.bin.csv --output binning/${meta.id}
+    mkdir binning
+    samples=(`ls contigs/*.contigs.fasta | sed 's~contigs/~~g;s~.contigs.fasta~~g'`)
+    for sample in \${samples[*]}; do
+        mkdir binning/\$sample
+        graphbin --assembler spades --graph gfa/\$sample.contigs.gfa --contigs contigs/\$sample.contigs.fasta \\
+        --paths paths/\$sample.correct.paths --binned csv/\$sample.bin.csv --output binning/\$sample
+    done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

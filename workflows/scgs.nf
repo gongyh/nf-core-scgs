@@ -888,9 +888,9 @@ workflow SCGS {
 
         if (params.graphbin && !params.nanopore) {
             GRAPHBIN (
-                contig,
-                contig_path,
-                contig_graph,
+                contig.collect{it[1]},
+                contig_path.collect{it[1]},
+                contig_graph.collect{it[1]},
                 bin_csv
             )
             ch_versions = ch_versions.mix(GRAPHBIN.out.versions)
