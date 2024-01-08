@@ -676,12 +676,12 @@ workflow SCGS {
     }
 
     // ASSEMBLY
+    ctg200 = Channel.empty()
+    ctg = Channel.empty()
     if ( params.ass ) {
         contig = Channel.empty()
         contig_path = Channel.empty()
         contig_graph = Channel.empty()
-        ctg200 = Channel.empty()
-        ctg = Channel.empty()
         if (params.nanopore) {
             CANU(normalized_reads)
             ctg200 = CANU.out.ctg200
