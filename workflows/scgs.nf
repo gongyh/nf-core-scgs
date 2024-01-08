@@ -609,7 +609,7 @@ workflow SCGS {
     ch_multiqc_qualimap = Channel.empty()
     quast_bam = Channel.empty()
     quast_bai = Channel.empty()
-    if ( params.fasta && params.gff ) {
+    if ( params.fasta ) {
         SAMTOOLS (
             bb_bam,
             SAVE_REFERENCE.out.bed
@@ -623,12 +623,14 @@ workflow SCGS {
             ch_versions = ch_versions.mix(PRESEQ.out.versions)
             ch_multiqc_preseq = PRESEQ.out.txt
         }
-        QUALIMAP_BAMQC (
-            SAMTOOLS.out.bam,
-            gff
-        )
-        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
-        ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
+        if ( params.gff ) {
+            QUALIMAP_BAMQC (
+                SAMTOOLS.out.bam,
+                gff
+            )
+            ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
+            ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
+        }
         if (params.snv && !params.nanopore) {
             INDELREALIGN (
                 SAMTOOLS.out.bam,
