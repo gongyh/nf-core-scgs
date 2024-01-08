@@ -508,8 +508,12 @@ workflow SCGS {
     ch_multiqc_fastqc = FASTQC.out.zip
 
     // SAVE_REFERENCE
-    if ( params.fasta && params.gff ) {
-        SAVE_REFERENCE ( fasta, gff )
+    if ( params.fasta ) {
+        if ( params.gff ) {
+            SAVE_REFERENCE ( fasta, gff )
+        } else {
+            SAVE_REFERENCE ( fasta, file("/dev/null") )
+        }
     }
 
     if (bowtie2) {

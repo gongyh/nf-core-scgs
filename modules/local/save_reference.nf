@@ -12,7 +12,7 @@ process SAVE_REFERENCE {
 
     output:
     path("genome.fa")   , emit: fa
-    path("genome.gff")  , emit: gff
+    path("genome.gff")  , optional: true
     path("*.bed")       , emit: out_bed
     path("genome.bed")  , emit: bed
     path  "versions.yml", emit: versions
