@@ -667,18 +667,17 @@ workflow SCGS {
         ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
     }
 
-    // NORMALIZE
-    if ( params.no_normalize ) {
-        trimmed_reads.set{ normalized_reads }
-    } else {
-        NORMALIZE(trimmed_reads)
-        normalized_reads = NORMALIZE.out.reads
-    }
-
     // ASSEMBLY
     ctg200 = Channel.empty()
     ctg = Channel.empty()
     if ( params.ass ) {
+        // NORMALIZE
+        if ( params.no_normalize ) {
+            trimmed_reads.set{ normalized_reads }
+        } else {
+            NORMALIZE(trimmed_reads)
+            normalized_reads = NORMALIZE.out.reads
+        }
         contig = Channel.empty()
         contig_path = Channel.empty()
         contig_graph = Channel.empty()

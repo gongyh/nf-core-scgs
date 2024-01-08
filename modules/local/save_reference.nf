@@ -25,7 +25,11 @@ process SAVE_REFERENCE {
     ln -s ${fasta} genome.fa
     ln -s ${gff} genome.gff
     fa2bed.py genome.fa
-    cat genome.gff | grep \$'\tgene\t' | bedtools sort | cut -f1,4,5,7 > genes.bed
+    if [ -s genome.gff ]; then
+        cat genome.gff | grep \$'\\tgene\\t' | bedtools sort | cut -f1,4,5,7 > genes.bed
+    else
+        touch genes.bed
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

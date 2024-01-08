@@ -3,7 +3,7 @@ from __future__ import print_function
 
 from Bio.Seq import Seq
 import sys
-from Bio.SeqUtils import GC, GC_skew
+from Bio.SeqUtils import gc_fraction, GC_skew
 from Bio import SeqIO
 import click
 
@@ -42,7 +42,7 @@ def fa2bed(fa, window, step):
             start = int(i - window_len / 2) if i - window_len / 2 >= 0 else 0
             end = int(i + window_len / 2) if i + window_len / 2 <= length else length
             s = chrom_seq[start:end]
-            gc = GC(s)
+            gc = gc_fraction(s)
             skew = GC_skew(s, window_len)[0]
             gcBed.write(chrom + "\t%d\t%d\t%.3f\n" % (start0, end0, gc))
             gcSkewBed.write(chrom + "\t%d\t%d\t%.3f\n" % (start0, end0, skew))
