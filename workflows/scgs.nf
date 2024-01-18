@@ -444,6 +444,7 @@ include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { TRIMGALORE                  } from '../modules/nf-core/trimgalore/main'
 include { BOWTIE2_BUILD               } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/main'
+include { BBMAP_BBNORM                } from '../modules/nf-core/bbmap/bbnorm/main'
 include { MINIMAP2_ALIGN              } from '../modules/nf-core/minimap2/align/main'
 include { QUALIMAP_BAMQC              } from '../modules/nf-core/qualimap/bamqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
@@ -675,8 +676,13 @@ workflow SCGS {
         if ( params.no_normalize ) {
             trimmed_reads.set{ normalized_reads }
         } else {
+            /**
             NORMALIZE(trimmed_reads)
             normalized_reads = NORMALIZE.out.reads
+            */
+            BBMAP_BBNORM(trimmed_reads)
+            normalized_reads = BBMAP_BBNORM.out.fastq
+            ch_versions = ch_versions.mix(BBMAP_BBNORM.out.versions)
         }
         contig = Channel.empty()
         contig_path = Channel.empty()
