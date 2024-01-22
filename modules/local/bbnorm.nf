@@ -22,12 +22,13 @@ process BBNORM {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def mode = params.bulk ? "bulk" : "mda"
+    def memory = (task.memory.giga*0.8).intValue() + 'g'
     if (meta.single_end) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then
         ln -s ${reads[0]} ${prefix}_norm.fastq.gz
     else
-        bbnorm.sh in=${reads[0]} out=${prefix}_norm.fastq.gz $args threads=$task.cpus -Xmx${task.memory.toGiga()}g &> ${prefix}.bbnorm.log
+        bbnorm.sh in=${reads[0]} out=${prefix}_norm.fastq.gz $args threads=$task.cpus -Xmx${memory} &> ${prefix}.bbnorm.log
     fi
 
     cat <<-END_VERSIONS > versions.yml
@@ -45,7 +46,7 @@ process BBNORM {
         gzip -cd ${reads[1]} | fastx_renamer -n COUNT -i /dev/stdin -Q33 -z -o ${prefix}_rename_R2_fq.gz
         bbnorm.sh in=${prefix}_rename_R1_fq.gz in2=${prefix}_rename_R2_fq.gz \\
         out=${prefix}_norm_R1.fastq.gz out2=${prefix}_norm_R2.fastq.gz \\
-        $args threads=$task.cpus -Xmx${task.memory.toGiga()}g &> ${prefix}.bbnorm.log
+        $args threads=$task.cpus -Xmx${memory} &> ${prefix}.bbnorm.log
     fi
 
     cat <<-END_VERSIONS > versions.yml
