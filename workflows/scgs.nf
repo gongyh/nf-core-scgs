@@ -441,7 +441,6 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
 
 // Import modules from nf-core
 include { FASTQC                      } from '../modules/nf-core/fastqc/main'
-include { TRIMGALORE                  } from '../modules/nf-core/trimgalore/main'
 include { BOWTIE2_BUILD               } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN              } from '../modules/nf-core/minimap2/align/main'
@@ -451,6 +450,7 @@ include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 
 // Import modules from local
 include { SAVE_REFERENCE        } from '../modules/local/save_reference'
+include { TRIMGALORE            } from '../modules/local/trimgalore'
 include { KTUPDATETAXONOMY      } from '../modules/local/ktupdatetaxonomy'
 include { KRAKEN                } from '../modules/local/kraken'
 include { SATURATION            } from '../modules/local/saturation'
