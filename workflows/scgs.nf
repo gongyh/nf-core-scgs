@@ -27,6 +27,7 @@ def helpMessage() {
     --acdc                        Enable acdc
     --saturation                  Enable sequencing saturation analysis
     --ass                         Assemble using SPAdes
+    --genomad                     Enable genomad analysis
     --blastn                      Enable NCBI Nt database annotation
     --blob                        Enable Blobtools analysis
     --kraken                      Enable Kraken2 annotation
@@ -46,6 +47,7 @@ def helpMessage() {
     --genus                       Genus information for use in CheckM
 
     External databases:
+    --genomad_db                  genomad database
     --nt_db                       NCBI Nt database (BLAST)
     --blob_db                     Blobtools nodesDB.txt
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
@@ -133,6 +135,7 @@ params.bbmap = false
 params.doubletd = false
 params.saturation = false
 params.bulk = false
+params.genomad = false
 params.ass = false
 params.kofam = true
 params.blastn = true
@@ -147,6 +150,7 @@ params.split = false
 params.split_euk = false
 params.graphbin = false
 params.genus = null
+params.genomad_db = null
 params.nt_db = null
 params.blob_db = null
 params.kraken_db = null
@@ -205,6 +209,15 @@ if (params.nanopore) {
 euk = false
 if (params.fungus || params.euk) {
     euk = true
+}
+
+// Configurable genomad database
+genomad_db = false
+if (params.genomad_db) {
+    genomad_db = file(params.genomad_db)
+    if( !genomad_db.exists() ) exit 1, "Genomad database not found: ${params.genomad_db}"
+} else {
+    genomad_db = file("/dev/null")
 }
 
 // Configurable nt database
@@ -440,12 +453,13 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
 }
 
 // Import modules from nf-core
-include { FASTQC                      } from '../modules/nf-core/fastqc/main'
-include { BOWTIE2_BUILD               } from '../modules/nf-core/bowtie2/build/main'
-include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/main'
-include { MINIMAP2_ALIGN              } from '../modules/nf-core/minimap2/align/main'
-include { QUALIMAP_BAMQC              } from '../modules/nf-core/qualimap/bamqc/main'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { FASTQC                } from '../modules/nf-core/fastqc/main'
+include { BOWTIE2_BUILD         } from '../modules/nf-core/bowtie2/build/main'
+include { BOWTIE2_ALIGN         } from '../modules/nf-core/bowtie2/align/main'
+include { MINIMAP2_ALIGN        } from '../modules/nf-core/minimap2/align/main'
+include { QUALIMAP_BAMQC        } from '../modules/nf-core/qualimap/bamqc/main'
+include { GENOMAD_ENDTOEND      } from '../modules/nf-core/genomad/endtoend/main'
+include { MULTIQC               } from '../modules/nf-core/multiqc/main'
 
 
 // Import modules from local
@@ -701,6 +715,15 @@ workflow SCGS {
             ctg = SPADES.out.ctg
             ch_versions = ch_versions.mix(SPADES.out.versions)
         }
+    }
+
+    // GENOMAD
+    if ( params.genomad ) {
+        GENOMAD_ENDTOEND(
+          ctg,
+          genomad_db
+        )
+        ch_versions = ch_versions.mix(GENOMAD_ENDTOEND.out.versions)
     }
 
     // REMAP
