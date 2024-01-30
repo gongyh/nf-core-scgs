@@ -372,9 +372,9 @@
                     "description": "Assemble draft genomes?"
                 },
                 "genomad": {
-                  "type": "boolean",
-                  "default": false,
-                  "description": "Enable genomad analysis?"
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable genomad analysis?"
                 },
                 "genus": {
                     "type": "string",
