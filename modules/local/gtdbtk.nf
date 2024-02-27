@@ -25,11 +25,11 @@ process GTDBTK {
 
     mkdir -p genome
     cp $fa genome
-    echo 'g__' >  taxa.txt
+    echo \$'genome\\tg__' >  taxa.txt
 
     if [[ -f $gtdb ]]; then
         mkdir -p out
-        echo 'd__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
+        echo \$'genome\\td__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
     else
         if [ ! -f genome/no_fasta.txt ];then
             gtdbtk classify_wf \\
@@ -40,13 +40,13 @@ process GTDBTK {
                 --cpus $task.cpus
 
             if [ -f out/*.summary.tsv ]; then
-                cut -f2 out/*.summary.tsv | grep -v classification > taxa.txt
+                cut -f1,2 out/*.summary.tsv | grep -v classification > taxa.txt
             fi
         else
             mkdir -p out
             touch out/no_results.txt
             echo "No fasta to taxonomy!" > out/no_results.txt
-            echo 'd__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
+            echo \$'genome\\td__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
         fi
     fi
 
