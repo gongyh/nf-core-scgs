@@ -219,6 +219,7 @@
                 },
                 "gff": {
                     "type": "string",
+                    "pattern": "^\\S+\\.gff$",
                     "description": "GFF annotation file."
                 },
                 "notrim": {
