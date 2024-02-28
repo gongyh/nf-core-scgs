@@ -12,9 +12,10 @@ process GTDBTK {
 
     output:
     path("out/*")
-    path("genome/*")      , emit: scaffolds
-    path('taxa.txt')      , emit: taxa
-    path "versions.yml"   , emit: versions
+    path("genome/*")       , emit: scaffolds
+    path('taxa.txt')       , emit: taxa
+    path('GTDBtk_mqc.tsv') , emit: mqc_tsv
+    path "versions.yml"    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,6 +26,10 @@ process GTDBTK {
 
     mkdir -p genome
     cp $fa genome
+
+    echo \"# plot_type: 'table'\" > GTDBtk_mqc.tsv
+    echo \"# section_name: 'GTDBtk'\" >> GTDBtk_mqc.tsv
+
     echo \$'genome\\tg__' >  taxa.txt
 
     if [[ -f $gtdb ]]; then
@@ -41,6 +46,7 @@ process GTDBTK {
 
             if [ -f out/*.summary.tsv ]; then
                 cut -f1,2 out/*.summary.tsv | grep -v classification > taxa.txt
+                cut -f1,2 out/*.summary.tsv >> GTDBtk_mqc.tsv
             fi
         else
             mkdir -p out

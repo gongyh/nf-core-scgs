@@ -892,6 +892,7 @@ workflow SCGS {
         }
     }
 
+    ch_multiqc_gtdb = Channel.empty()
     if (params.split) {
         split_fa = Channel.empty()
         bin_csv = Channel.empty()
@@ -936,6 +937,7 @@ workflow SCGS {
                 gtdb
             )
             ch_versions = ch_versions.mix(GTDBTK.out.versions)
+            ch_multiqc_gtdb = gtdb.out.mqc_tsv
         }
     }
 
@@ -960,6 +962,7 @@ workflow SCGS {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_qualimap.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_gtdb.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_quast.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_prokka.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_kraken.collect{it[1]}.ifEmpty([]))
