@@ -937,7 +937,7 @@ workflow SCGS {
                 gtdb
             )
             ch_versions = ch_versions.mix(GTDBTK.out.versions)
-            ch_multiqc_gtdb = gtdb.out.mqc_tsv
+            ch_multiqc_gtdb = GTDBTK.out.mqc_tsv
         }
     }
 
