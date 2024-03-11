@@ -223,12 +223,11 @@ if (params.genomad_db) {
 }
 
 // Prokka trusted proteins database
-prokka_proteins = false
+prokka_proteins = []
 if (params.prokka_proteins) {
-    prokka_proteins = file(params.prokka_proteins)
+    faa = file(params.prokka_proteins)
     if( !prokka_proteins.exists() ) exit 1, "Protein database not found: ${params.prokka_proteins}"
-} else {
-    prokka_proteins = file("/dev/null")
+    prokka_proteins = [faa]
 }
 
 // Configurable nt database
