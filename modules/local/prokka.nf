@@ -21,7 +21,7 @@ process PROKKA {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
+    def proteins_opt = "${proteins}"!="/dev/null" ? "--proteins ${proteins}" : ""
     """
     cat $contigs | sed 's/_length.*\$//g' > ${prefix}_node.fa
     prokka --outdir $prefix --prefix $prefix --strain $prefix --addgenes --cpus ${task.cpus} $proteins_opt ${prefix}_node.fa
