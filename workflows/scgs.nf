@@ -47,7 +47,8 @@ def helpMessage() {
     --genus                       Genus information for use in CheckM
 
     External databases:
-    --genomad_db                  genomad database
+    --genomad_db                  geNomad database
+    --prokka_proteins             FASTA file of trusted proteins to first annotate from (optional)
     --nt_db                       NCBI Nt database (BLAST)
     --blob_db                     Blobtools nodesDB.txt
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
@@ -151,6 +152,7 @@ params.split_euk = false
 params.graphbin = false
 params.genus = null
 params.genomad_db = null
+params.prokka_proteins = null
 params.nt_db = null
 params.blob_db = null
 params.kraken_db = null
@@ -218,6 +220,15 @@ if (params.genomad_db) {
     if( !genomad_db.exists() ) exit 1, "Genomad database not found: ${params.genomad_db}"
 } else {
     genomad_db = file("/dev/null")
+}
+
+// Prokka trusted proteins database
+prokka_proteins = false
+if (params.prokka_proteins) {
+    prokka_proteins = file(params.prokka_proteins)
+    if( !prokka_proteins.exists() ) exit 1, "Protein database not found: ${params.prokka_proteins}"
+} else {
+    prokka_proteins = file("/dev/null")
 }
 
 // Configurable nt database
@@ -843,7 +854,7 @@ workflow SCGS {
     prokka_for_split  = Channel.empty()
     ch_multiqc_prokka = Channel.empty()
     if (!euk) {
-        PROKKA(ctg)
+        PROKKA(ctg, prokka_proteins)
         ch_versions = ch_versions.mix(PROKKA.out.versions)
         PRODIGAL(ctg)
         ch_versions = ch_versions.mix(PRODIGAL.out.versions)

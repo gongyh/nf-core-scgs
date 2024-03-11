@@ -393,6 +393,10 @@
                     "type": "string",
                     "description": "Path of genomad database."
                 },
+                "prokka_proteins": {
+                    "type": "string",
+                    "description": "Path of protein fasta file for Prokka."
+                },
                 "nt_db": {
                     "type": "string",
                     "description": "Path of NCBI/NT database."
