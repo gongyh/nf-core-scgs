@@ -219,6 +219,7 @@
                 },
                 "gff": {
                     "type": "string",
+                    "pattern": "^\\S+\\.gff$",
                     "description": "GFF annotation file."
                 },
                 "notrim": {
@@ -261,6 +262,56 @@
                     "default": false,
                     "description": "Remap and reblob."
                 },
+                "acdc": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable acdc."
+                },
+                "acquired": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Call acquired ARG?"
+                },
+                "kofam": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable KEGG Ortholog annotation?"
+                },
+                "point": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Call mutation derived ARG?"
+                },
+                "blastn": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable NCBI Nt database annotation."
+                },
+                "kraken": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable Kraken2 annotation."
+                },
+                "blob": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable Blobtools analysis."
+                },
+                "eggnog": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable EggNOG database annotation."
+                },
+                "checkm2": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable CheckM2 analysis."
+                },
+                "gtdbtk": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable gtdbtk analysis."
+                },
                 "split": {
                     "type": "boolean",
                     "default": false,
@@ -271,6 +322,11 @@
                     "default": false,
                     "description": "Split according to contig taxa annotation(Eukaryota)."
                 },
+                "graphbin": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable graphbin to bin."
+                },
                 "euk": {
                     "type": "boolean",
                     "default": false,
@@ -280,6 +336,46 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Fungus genome."
+                },
+                "snv": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Call SNV using MonoVar?"
+                },
+                "cnv": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Call CNV?"
+                },
+                "saturation": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Perform saturation analysis?"
+                },
+                "doubletd": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Detect doublet?"
+                },
+                "bbmap": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable bbmap align?"
+                },
+                "bulk": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Bulk sequencing data?"
+                },
+                "ass": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Assemble draft genomes?"
+                },
+                "genomad": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable genomad analysis?"
                 },
                 "genus": {
                     "type": "string",
@@ -292,6 +388,14 @@
                 "split_euk_level": {
                     "type": "string",
                     "description": "Which level to split eukarytic contigs?"
+                },
+                "genomad_db": {
+                    "type": "string",
+                    "description": "Path of genomad database."
+                },
+                "prokka_proteins": {
+                    "type": "string",
+                    "description": "Path of protein fasta file for Prokka."
                 },
                 "nt_db": {
                     "type": "string",
@@ -337,41 +441,6 @@
                     "type": "string",
                     "description": "Path of reference sequence for bbmap."
                 },
-                "snv": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Call SNV using MonoVar?"
-                },
-                "cnv": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Call CNV?"
-                },
-                "saturation": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Perform saturation analysis?"
-                },
-                "doubletd": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Detect doublet?"
-                },
-                "bbmap": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable bbmap align?"
-                },
-                "bulk": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Bulk sequencing data?"
-                },
-                "ass": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Assemble draft genomes?"
-                },
                 "evalue": {
                     "type": "string",
                     "description": "E-value for diamond blastp."
@@ -379,21 +448,6 @@
                 "blockSize": {
                     "type": "string",
                     "description": "blockSize for diamond."
-                },
-                "acquired": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Call acquired ARG?"
-                },
-                "kofam": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable KEGG Ortholog annotation?"
-                },
-                "point": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Call mutation derived ARG?"
                 },
                 "pointfinder_species": {
                     "type": "string",

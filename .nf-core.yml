@@ -4,3 +4,5 @@ lint:
     - manifest.name
     - manifest.version
     - manifest.homePage
+  files_unchanged:
+    - .github/workflows/linting.yml

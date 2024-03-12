@@ -27,6 +27,8 @@ with open(mapper) as fh:
             continue
         gene = cl[0]
         KO = cl[1]
+        if KO not in KO_dict:
+            continue
         detail = KO_dict[KO].split("\t")
         ko = "ko" + detail[0]
         pathway_detail = ko + " " + detail[1].split(" [")[0]

@@ -11,7 +11,7 @@ def helpMessage() {
     Mandatory arguments:
     --reads                       Path to input data (must be surrounded with quotes)
     -profile                      Configuration profile to use. Can use multiple (comma separated)
-                                    Available: conda, docker, singularity, awsbatch, test and more.
+                                  Available: conda, docker, singularity, awsbatch, test and more.
 
     Options:
     --vcf                         Variantion graph construction
@@ -24,13 +24,22 @@ def helpMessage() {
     --bbmap                       Enable bbmap to remove host-derived contamination
     --doubletd                    Enable detection of doublet
     --remap                       Remap trimmed reads to contigs
+    --acdc                        Enable acdc
     --saturation                  Enable sequencing saturation analysis
     --ass                         Assemble using SPAdes
+    --genomad                     Enable genomad analysis
+    --blastn                      Enable NCBI Nt database annotation
+    --blob                        Enable Blobtools analysis
+    --kraken                      Enable Kraken2 annotation
+    --eggnog                      Enable EggNOG database annotation
     --kofam                       Enable KEGG Ortholog annotation
+    --checkm2                     Enable CheckM2 analysis
+    --gtdbtk                      Enable gtdbtk analysis
     --split                       Split the draft genomes and annotation(Bacteria)
     --split_euk                   Split the draft genomes and annotation(Eukaryota)
     --split_bac_level             Level of split for Bacteria
     --split_euk_level             Level of split for Eukaryota
+    --graphbin                    Enable graphbin to bin
 
     References:                   If not specified in the configuration file or you wish to overwrite any of the references.
     --fasta                       Path to Fasta reference
@@ -38,6 +47,8 @@ def helpMessage() {
     --genus                       Genus information for use in CheckM
 
     External databases:
+    --genomad_db                  geNomad database
+    --prokka_proteins             FASTA file of trusted proteins to first annotate from (optional)
     --nt_db                       NCBI Nt database (BLAST)
     --blob_db                     Blobtools nodesDB.txt
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
@@ -118,10 +129,35 @@ params.no_normalize = false
 params.euk = false
 params.fungus = false
 params.remap = false
+params.acdc = false
+params.snv = false
+params.cnv = false
+params.bbmap = false
+params.doubletd = false
+params.saturation = false
+params.bulk = false
+params.genomad = false
+params.ass = false
+params.kofam = true
+params.blastn = true
+params.blob = true
+params.kraken = true
+params.eggnog = true
+params.checkm2 = true
+params.gtdbtk = true
+params.acquired = false
+params.point = false
+params.split = false
+params.split_euk = false
+params.graphbin = false
 params.genus = null
+params.genomad_db = null
+params.prokka_proteins = null
 params.nt_db = null
 params.blob_db = null
 params.kraken_db = null
+params.kofam_profile = null
+params.kofam_kolist = null
 params.readPaths = null
 params.uniprot_db = null
 params.uniprot_taxids = null
@@ -130,26 +166,13 @@ params.eukcc_db = null
 params.checkm2_db = null
 params.gtdb = null
 params.ref = null
-params.snv = false
-params.cnv = false
-params.bbmap = false
-params.doubletd = false
-params.saturation = false
-params.bulk = false
-params.ass = false
-params.kofam = false
 params.evalue = 1e-25
 params.blockSize = 2.0
-params.acquired = false
-params.point = false
-params.pointfinder_species = "escherichia_coli"
-params.kofam_profile = null
-params.kofam_kolist = null
-params.augustus_species = "saccharomyces"
-params.split = false
-params.split_euk = false
 params.split_bac_level = "genus"
 params.split_euk_level = "genus"
+params.pointfinder_species = "escherichia_coli"
+params.augustus_species = "saccharomyces"
+
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -188,6 +211,23 @@ if (params.nanopore) {
 euk = false
 if (params.fungus || params.euk) {
     euk = true
+}
+
+// Configurable genomad database
+genomad_db = false
+if (params.genomad_db) {
+    genomad_db = file(params.genomad_db)
+    if( !genomad_db.exists() ) exit 1, "Genomad database not found: ${params.genomad_db}"
+} else {
+    genomad_db = file("/dev/null")
+}
+
+// Prokka trusted proteins database
+prokka_proteins = []
+if (params.prokka_proteins) {
+    faa = file(params.prokka_proteins)
+    if( !prokka_proteins.exists() ) exit 1, "Protein database not found: ${params.prokka_proteins}"
+    prokka_proteins = [faa]
 }
 
 // Configurable nt database
@@ -423,17 +463,18 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
 }
 
 // Import modules from nf-core
-include { FASTQC                      } from '../modules/nf-core/fastqc/main'
-include { TRIMGALORE                  } from '../modules/nf-core/trimgalore/main'
-include { BOWTIE2_BUILD               } from '../modules/nf-core/bowtie2/build/main'
-include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/main'
-include { MINIMAP2_ALIGN              } from '../modules/nf-core/minimap2/align/main'
-include { QUALIMAP_BAMQC              } from '../modules/nf-core/qualimap/bamqc/main'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { FASTQC                } from '../modules/nf-core/fastqc/main'
+include { BOWTIE2_BUILD         } from '../modules/nf-core/bowtie2/build/main'
+include { BOWTIE2_ALIGN         } from '../modules/nf-core/bowtie2/align/main'
+include { MINIMAP2_ALIGN        } from '../modules/nf-core/minimap2/align/main'
+include { QUALIMAP_BAMQC        } from '../modules/nf-core/qualimap/bamqc/main'
+include { GENOMAD_ENDTOEND      } from '../modules/nf-core/genomad/endtoend/main'
+include { MULTIQC               } from '../modules/nf-core/multiqc/main'
 
 
 // Import modules from local
 include { SAVE_REFERENCE        } from '../modules/local/save_reference'
+include { TRIMGALORE            } from '../modules/local/trimgalore'
 include { KTUPDATETAXONOMY      } from '../modules/local/ktupdatetaxonomy'
 include { KRAKEN                } from '../modules/local/kraken'
 include { SATURATION            } from '../modules/local/saturation'
@@ -447,6 +488,7 @@ include { DOUBLETD              } from '../modules/local/doubletd'
 include { ANEUFINDER            } from '../modules/local/aneufinder'
 include { CIRCLIZE              } from '../modules/local/circlize'
 include { NORMALIZE             } from '../modules/local/normalize'
+include { BBNORM                } from '../modules/local/bbnorm'
 include { CANU                  } from '../modules/local/canu'
 include { SPADES                } from '../modules/local/spades'
 include { QUAST_REF             } from '../modules/local/quast_ref'
@@ -470,6 +512,7 @@ include { KOFAMSCAN             } from '../modules/local/kofamscan'
 include { STARAMR               } from '../modules/local/staramr'
 include { SPLIT_CHECKM          } from '../modules/local/split_checkm'
 include { SPLIT_CHECKM_EUKCC    } from '../modules/local/split_checkm_eukcc'
+include { GRAPHBIN              } from '../modules/local/graphbin'
 include { OUTPUT_DOCUMENTATION  } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions/main'
 
@@ -490,8 +533,12 @@ workflow SCGS {
     ch_multiqc_fastqc = FASTQC.out.zip
 
     // SAVE_REFERENCE
-    if ( params.fasta && params.gff ) {
-        SAVE_REFERENCE ( fasta, gff )
+    if ( params.fasta ) {
+        if ( params.gff ) {
+            SAVE_REFERENCE ( fasta, gff )
+        } else {
+            SAVE_REFERENCE ( fasta, file("/dev/null") )
+        }
     }
 
     if (bowtie2) {
@@ -536,13 +583,17 @@ workflow SCGS {
 
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
-    KTUPDATETAXONOMY ()
-    KRAKEN (
-        trimmed_reads,
-        kraken_db,
-        KTUPDATETAXONOMY.out.taxonomy
-    )
-    ch_multiqc_kraken = KRAKEN.out.report
+    if (params.kraken) {
+        KTUPDATETAXONOMY ()
+        KRAKEN (
+            trimmed_reads,
+            kraken_db,
+            KTUPDATETAXONOMY.out.taxonomy
+        )
+        ch_multiqc_kraken = KRAKEN.out.report
+    }
+
+    // SATURATION
     if (params.saturation) {
         SATURATION ( trimmed_reads )
     }
@@ -587,7 +638,7 @@ workflow SCGS {
     ch_multiqc_qualimap = Channel.empty()
     quast_bam = Channel.empty()
     quast_bai = Channel.empty()
-    if ( params.fasta && params.gff ) {
+    if ( params.fasta ) {
         SAMTOOLS (
             bb_bam,
             SAVE_REFERENCE.out.bed
@@ -601,12 +652,14 @@ workflow SCGS {
             ch_versions = ch_versions.mix(PRESEQ.out.versions)
             ch_multiqc_preseq = PRESEQ.out.txt
         }
-        QUALIMAP_BAMQC (
-            SAMTOOLS.out.bam,
-            gff
-        )
-        ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
-        ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
+        if ( params.gff ) {
+            QUALIMAP_BAMQC (
+                SAMTOOLS.out.bam,
+                gff
+            )
+            ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
+            ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
+        }
         if (params.snv && !params.nanopore) {
             INDELREALIGN (
                 SAMTOOLS.out.bam,
@@ -639,26 +692,48 @@ workflow SCGS {
         ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
     }
 
-    // NORMALIZE
+    // ASSEMBLY
     ctg200 = Channel.empty()
     ctg = Channel.empty()
-    if ( params.no_normalize ) {
-        trimmed_reads.set{ normalized_reads }
-    } else {
-        if ( params.ass ) {
+    if ( params.ass ) {
+        // NORMALIZE
+        if ( params.no_normalize ) {
+            trimmed_reads.set{ normalized_reads }
+        } else {
+            /**
             NORMALIZE(trimmed_reads)
-            if (params.nanopore) {
-                CANU(NORMALIZE.out.reads)
-                ctg200 = CANU.out.ctg200
-                ctg = CANU.out.ctg
-                ch_versions = ch_versions.mix(CANU.out.versions)
-            } else {
-                SPADES(NORMALIZE.out.reads)
-                ctg200 = SPADES.out.ctg200
-                ctg = SPADES.out.ctg
-                ch_versions = ch_versions.mix(SPADES.out.versions)
-            }
+            normalized_reads = NORMALIZE.out.reads
+            */
+            BBNORM(trimmed_reads)
+            normalized_reads = BBNORM.out.fastq
+            ch_versions = ch_versions.mix(BBNORM.out.versions)
         }
+        contig = Channel.empty()
+        contig_path = Channel.empty()
+        contig_graph = Channel.empty()
+        if (params.nanopore) {
+            CANU(normalized_reads)
+            ctg200 = CANU.out.ctg200
+            ctg = CANU.out.ctg
+            ch_versions = ch_versions.mix(CANU.out.versions)
+        } else {
+            SPADES(normalized_reads)
+            contig = SPADES.out.contig
+            contig_path = SPADES.out.contig_path
+            contig_graph = SPADES.out.contig_graph
+            ctg200 = SPADES.out.ctg200
+            ctg = SPADES.out.ctg
+            ch_versions = ch_versions.mix(SPADES.out.versions)
+        }
+    }
+
+    // GENOMAD
+    if ( params.genomad ) {
+        GENOMAD_ENDTOEND(
+          ctg,
+          genomad_db
+        )
+        ch_versions = ch_versions.mix(GENOMAD_ENDTOEND.out.versions)
     }
 
     // REMAP
@@ -708,7 +783,7 @@ workflow SCGS {
 
     // CHECKM2
     ch_multiqc_checkm2 = Channel.empty()
-    if (!euk) {
+    if (!euk && params.checkm2) {
         CHECKM2 (
             ctg.collect{it[1]},
             checkm2_db
@@ -717,53 +792,60 @@ workflow SCGS {
         ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
     }
 
-    // BLASTN
-    BLASTN (
-        ctg200,
-        nt_db,
-        params.evalue
-    )
-    ch_versions = ch_versions.mix(BLASTN.out.versions)
-
-    // DIAMOND_BLASTS
-    DIAMOND_BLASTX (
-        BLASTN.out.contigs,
-        BLASTN.out.nt,
-        uniprot_db,
-        uniprot_taxids
-    )
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
-
-    acdc_contigs = Channel.empty()
-    acdc_tax = Channel.empty()
-
-    // BLOBTOOLS
-    BLOBTOOLS (
-        DIAMOND_BLASTX.out.contigs,
-        DIAMOND_BLASTX.out.nt,
-        DIAMOND_BLASTX.out.uniprot,
-        DIAMOND_BLASTX.out.real,
-        blob_db
-    )
-    ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
-    acdc_contigs = BLOBTOOLS.out.contigs
-    acdc_tax = BLOBTOOLS.out.tax
-    if (params.remap) {
-        REBLOBTOOLS (
-            DIAMOND_BLASTX.out.contigs,
-            DIAMOND_BLASTX.out.nt,
-            DIAMOND_BLASTX.out.real,
-            DIAMOND_BLASTX.out.uniprot,
-            blob_db,
-            REMAP.out.bam.collect{it[1]},
-            REMAP.out.bai.collect{it[1]}
+    if (params.blastn) {
+        // BLASTN
+        BLASTN (
+            ctg200,
+            nt_db,
+            params.evalue
         )
+        ch_versions = ch_versions.mix(BLASTN.out.versions)
+
+        // DIAMOND_BLASTS
+        DIAMOND_BLASTX (
+            BLASTN.out.contigs,
+            BLASTN.out.nt,
+            uniprot_db,
+            uniprot_taxids
+        )
+        ch_versions = ch_versions.mix(DIAMOND_BLASTX.out.versions)
+        acdc_contigs = Channel.empty()
+        acdc_tax = Channel.empty()
+
+        // BLOBTOOLS
+        if (params.blob) {
+            BLOBTOOLS (
+                DIAMOND_BLASTX.out.contigs,
+                DIAMOND_BLASTX.out.nt,
+                DIAMOND_BLASTX.out.uniprot,
+                DIAMOND_BLASTX.out.real,
+                blob_db
+            )
+            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
+            acdc_contigs = BLOBTOOLS.out.contigs
+            acdc_tax = BLOBTOOLS.out.tax
+        }
+
+        if (params.remap) {
+            REBLOBTOOLS (
+                DIAMOND_BLASTX.out.contigs,
+                DIAMOND_BLASTX.out.nt,
+                DIAMOND_BLASTX.out.real,
+                DIAMOND_BLASTX.out.uniprot,
+                blob_db,
+                REMAP.out.bam.collect{it[1]},
+                REMAP.out.bai.collect{it[1]}
+            )
+        }
+
+        if (params.acdc) {
+            ACDC (
+              acdc_contigs,
+              acdc_tax,
+              kraken_db
+            )
+        }
     }
-    ACDC (
-        acdc_contigs,
-        acdc_tax,
-        kraken_db
-    )
     TSNE(ctg)
 
 
@@ -771,7 +853,7 @@ workflow SCGS {
     prokka_for_split  = Channel.empty()
     ch_multiqc_prokka = Channel.empty()
     if (!euk) {
-        PROKKA(ctg)
+        PROKKA(ctg, prokka_proteins)
         ch_versions = ch_versions.mix(PROKKA.out.versions)
         PRODIGAL(ctg)
         ch_versions = ch_versions.mix(PRODIGAL.out.versions)
@@ -787,11 +869,13 @@ workflow SCGS {
         )
     }
 
-    EGGNOG (
-        faa,
-        eggnog_db
-    )
-    ch_versions = ch_versions.mix(EGGNOG.out.versions)
+    if (params.eggnog) {
+      EGGNOG (
+          faa,
+          eggnog_db
+      )
+      ch_versions = ch_versions.mix(EGGNOG.out.versions)
+    }
 
     // KOFAMSCAN
     kofam_scan = Channel.empty()
@@ -802,6 +886,7 @@ workflow SCGS {
             kofam_kolist
         )
         kofam_scan = KOFAMSCAN.out.txt
+        ch_versions = ch_versions.mix(KOFAMSCAN.out.versions)
     }
 
     // STARAMR
@@ -813,38 +898,57 @@ workflow SCGS {
                 params.point,
                 params.pointfinder_species
             )
+            ch_versions = ch_versions.mix(STARAMR.out.versions)
         }
     }
 
+    ch_multiqc_gtdb = Channel.empty()
     if (params.split) {
         split_fa = Channel.empty()
+        bin_csv = Channel.empty()
         if (params.split_euk) {
             SPLIT_CHECKM_EUKCC (
                 ctg200.collect{it[1]},
                 BLOBTOOLS.out.tax_split.collect{it[1]},
                 prokka_for_split.collect{it[1]}.ifEmpty([]),
-                kofam_scan.collect{it[1]}.ifEmpty(file("/dev/null")),
+                kofam_scan.collect{it[1]}.ifEmpty([]),
                 eukcc_db,
                 params.split_bac_level,
                 params.split_euk_level
             )
             split_fa = SPLIT_CHECKM_EUKCC.out.fa
+            bin_csv = SPLIT_CHECKM_EUKCC.out.csv
         } else {
             SPLIT_CHECKM (
                 ctg200.collect{it[1]},
                 BLOBTOOLS.out.tax_split.collect{it[1]},
                 prokka_for_split.collect{it[1]}.ifEmpty([]),
-                kofam_scan.collect{it[1]}.ifEmpty(file("/dev/null")),
+                kofam_scan.collect{it[1]}.ifEmpty([]),
                 params.split_bac_level,
                 params.split_euk_level
             )
             split_fa = SPLIT_CHECKM.out.fa
+            bin_csv = SPLIT_CHECKM.out.csv
         }
 
-        GTDBTK (
-            split_fa,
-            gtdb
-        )
+        if (params.graphbin && !params.nanopore) {
+            GRAPHBIN (
+                contig.collect{it[1]},
+                contig_path.collect{it[1]},
+                contig_graph.collect{it[1]},
+                bin_csv
+            )
+            ch_versions = ch_versions.mix(GRAPHBIN.out.versions)
+        }
+
+        if (params.gtdbtk) {
+            GTDBTK (
+                split_fa,
+                gtdb
+            )
+            ch_versions = ch_versions.mix(GTDBTK.out.versions)
+            ch_multiqc_gtdb = GTDBTK.out.mqc_tsv
+        }
     }
 
     ch_multiqc_versions = Channel.empty()
@@ -868,6 +972,7 @@ workflow SCGS {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_qualimap.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_gtdb.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_quast.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_prokka.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_kraken.collect{it[1]}.ifEmpty([]))

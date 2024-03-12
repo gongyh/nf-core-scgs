@@ -12,7 +12,7 @@ process BBMAP_ALIGN {
     path ref
 
     output:
-    tuple val(meta), path("*_removehost*.fastq"), emit: clean_fastq
+    tuple val(meta), path("*_removehost*.fq.gz"), emit: clean_fastq
     tuple val(meta), path("*.log"), emit: log
     path "versions.yml"           , emit: versions
 
@@ -24,7 +24,7 @@ process BBMAP_ALIGN {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     input = meta.single_end ? "in=${fastq}" : "in=${fastq[0]} in2=${fastq[1]}"
-    outu = meta.single_end ? "outu=${prefix}_removehost.fastq" : "outu=${prefix}_removehost_R1.fastq outu2=${prefix}_removehost_R2.fastq"
+    outu = meta.single_end ? "outu=${prefix}_removehost.fq.gz" : "outu=${prefix}_removehost_R1.fq.gz outu2=${prefix}_removehost_R2.fq.gz"
 
     // Set the db variable to reflect the three possible types of reference input: 1) directory
     // named 'ref', 2) directory named something else (containg a 'ref' subdir) or 3) a sequence
