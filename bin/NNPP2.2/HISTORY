@@ -1,0 +1,63 @@
+NNPP 2.2 release notes
+http://www-hgc.lbl.gov/homes/reese/NNPP2.2/
+MGR, Mon Mar 29 11:47:04 PST 1999
+------------------------------------------------------------------
+
+NNPP2.2 is a new release of the NNPP2.1 version which extends the
+program with a new neural network trained to predict prokaryotic
+promoter sites.
+
+The following are the list of changes relative to NNPP 2.1. 
+
+The following features were added:
+
+   - fa2TDNNpred2.0-PRO: a new executable for the prediction
+     of prokaryotic transcription start site was added.
+
+   - fa2TDNNpred.linux: a new executable for LINUX added.
+
+   - extended installation documentation
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+NNPP 2.1 release notes
+http://www-hgc.lbl.gov/homes/reese/NNPP2.1/
+MGR, Fri Jan 22 10:02:04 PST 1999
+------------------------------------------------------------------
+
+
+NNPP2.1 is a patch release of the NNPP2.0 version. Minor bug fixes and
+documentation errors are correct. Because these fixes are only minor 
+a new upgrade is not necessary for most of the users.
+
+The following are the list of changes relative to NNPP 2.0. 
+
+The following features were added:
+
+   - fa2TDNNpred.alpha:  a new executable for DEC alpha OSF1 V4.0
+     added.
+
+   - print out message annotations corrected.
+
+
+The following minor bugs were fixed:
+        
+   - in the perl wrapper util/process-signals path for
+    NNPP executable path corrected.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+NNPP 2.0 release notes
+http://www-hgc.lbl.gov/homes/reese/NNPP2.0/
+MGR, Fri Oct 26 08:32:08 PST 1998
+------------------------------------------------------------------
+
+NNPP2.0 first official release of the executable software to academic
+users.
+
+
+==================================================================== 
+Martin Reese (mgreese@lbl.gov) 
+Lawrence Berkeley National Laboratory 
+Berkeley, California 94720 
+ 

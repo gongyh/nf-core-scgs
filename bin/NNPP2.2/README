@@ -1,0 +1,170 @@
+NNPP - Neural network based program to predict promoter site
+Version 2.2 (March 1999)
+Copyright (C) 1996-1999 Regents of the University of California
+------------------------------------------------------------------
+
+
+A. About this software
+
+  NNPP is an implementation of time-delay neural network methods for 
+  sensitive promoter predictions for eukaryotic and prokaryotic 
+  DNA sequences.
+
+  Basically you give NNPP a genomic DNA sequence as input; it
+  take the sequence and predicts potential transcription start 
+  sites in the sequence. The prediction are scored based on the 
+  prediction strength.
+
+
+B. Getting NNPP
+
+  WWW home: 		http://www-hgc.lbl.gov/homes/reese/NNPP2.1
+
+
+C. Installing NNPP
+   
+  See the file INSTALL for brief instructions. 
+
+  You should also read the following file:
+  LICENSE   -- Full text of the UC Regents of the University of California License
+
+
+D. Getting started with NNPP
+
+  A quick tutorial intro is given below.
+
+
+E. Reporting bugs
+
+  These programs are under active development. Though this
+  release has been tested and appears to be stable, bugs may crop up. If
+  you use these programs, please help me out and e-mail me with
+  suggestions, comments, and bug reports. (mgreese@lbl.gov)
+
+
+F. Content of this directory	
+
+   bin			All the binaries 
+   test   		a test example
+
+
+   Files:  
+	
+   /bin: 	fa2TDNNpred.sun4u	NNPP for Solaris 2.0 (eukaryotic)
+		fa2TDNNpred.sun4m	NNPP for SunOS 4.1.3 (eukaryotic)
+		fa2TDNNpred.alpha	NNPP for DEC alpha OSF1 V4.0 (eukaryotic)
+		fa2TDNNpred.linux	NNPP for LINUX (eukaryotic)
+		fa2TDNNpred-PRO.sun4u	NNPP for Solaris 2.0 (prokaryotic)
+		fa2TDNNpred-PRO.linux	NNPP for LINUX 2.2.12-20 (prokaryotic)
+   /util:	process-signals		post-processing perl script for scanning genomic regions (for use in Genotater by nlharris@lbl.gov)
+		process-promoters.pl	required perl script by process-signals
+
+
+   /test:	test-seq.fa		promoter test-sequence
+
+NAME
+	fa2TDNNpred.sun4u,fa2TDNNpred.sun4m,fa2TDNNpred.alpha,fa2TDNNpred.linux,
+	fa2TDNNpred-PRO.sun4u,fa2TDNNpred-PRO.linux
+
+SYNOPSIS
+	fa2TDNNpred.<ARCH> [-r] [-t <threshold>] <fa seqfile>
+		
+
+OPTIONS:
+	-t 		threshold for predicted promoter sites
+	-r 		include reverse strand
+	<fa seqfile> 	sequence file in fasta format
+
+---------------------------------------------------------------------------------
+
+QUICK TUTORIAL:
+
+
+Example run1 (eukaryotic predictions):
+
+> bin/fa2TDNNpred.`uname -m` -t 0.99 -r test/test-seq.fa  
+
+Output:
+
+Prediction for HSPS2G1-15056 (350 bases): 
+Parameters:
+         window size = 51,
+         transcription start = 41,
+         threshold = 0.990000
+
+Hit 1: position: 261 .. 311, signal start = 301 
+Pattern: AGAGCCTGCCCTATAAAATCCGGGGCTCGGGCGGCCTCTCATCCCTGACTC
+Prediction: 0.998364-----------------------------------------
+Hit 2: position: 262 .. 312, signal start = 302 
+Pattern: GAGCCTGCCCTATAAAATCCGGGGCTCGGGCGGCCTCTCATCCCTGACTCG
+Prediction: 0.994977-----------------------------------------
+*************************************************************
+
+Prediction for the reverse strand of HSPS2G1-15056
+
+Pattern in reverse format but not complement; numbering from back strand!
+To get forward numbering: y(position_iforward_strand) = N(length_of_sequence) - x(position_in_reverse_seq) + 1
+
+=============================================================
+
+Threshold: 0.990000
+Hits: 2
+
+
+"transcription start" indicates the position of the predicted
+transcription start site (TSS) in the Pattern in the output.
+
+"position: 261 .. 311" information indicates the window predicted from
+your input sequence.
+
+"signal start" gives the TSS in the input sequence.
+
+"Prediction: 0.998364" is the score from the neural network for the
+predicted TSS.
+
+---------------------------------------------------------------------------------
+
+Example run2 (including post-processing wrapper):
+
+> bin/fa2TDNNpred.`uname -m` -t 0.9 -r test/test-seq.fa | util/process-signals -H
+
+Found 1 potential promoter at score threshold 0.900.
+ 
+Start   End     Score           Sequence
+  261   311     1.00    
+
+---------------------------------------------------------------------------------
+
+Example run3 (prokaryotic predictions):
+
+> bin/fa2TDNNpred-PRO.`uname -m` -t 0.8  test/test-seq.fa
+Prediction for HSPS2G1-15056 (350 bases): 
+Parameters:
+         window size = 46,
+         transcription start = 0,
+         threshold = 0.800000
+
+Hit 1: position: 152 .. 197, signal start = 151 
+Pattern: GCTTGACCATGTCTAGGAAACACCTTTGATAAAAATCAGTGGAGAT
+Prediction: 0.856027-----------------------------------------
+Hit 2: position: 245 .. 290, signal start = 244 
+Pattern: CGCTCTTTAAGCAAACAGAGCCTGCCCTATAAAATCCGGGGCTCGG
+Prediction: 0.905937-----------------------------------------
+=============================================================
+
+Threshold: 0.800000
+Hits: 2
+
+---------------------------------------------------------------------------------
+
+If you have any problems, please Email me.
+
+====================================================================
+Martin Reese (mgreese@lbl.gov)
+Lawrence Berkeley National Laboratory
+Berkeley, California 94720
+
+
+		
+		
+	
