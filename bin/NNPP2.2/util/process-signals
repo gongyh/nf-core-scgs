@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 # process-signals
 # by Nomi Harris
 # Copyright (c) 1996-8 The Regents of the University of California.
