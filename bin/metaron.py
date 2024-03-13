@@ -1947,7 +1947,7 @@ def Prom_IGD_Clustering():
     ##    for i in range(20):
     ##        print new_igd_clstr[i],new_igd_scaffold_name[i], new_igd_geneA[i], new_igd_geneB[i], new_intergenic_dist[i], new_igd_stA[i], new_igd_stB[i], new_promA_res[i],new_promB_res[i]
 
-    new_igd_clstr = map(int, new_igd_clstr)
+    new_igd_clstr = list(map(int, new_igd_clstr))
 
     countr = 0
     new_dist_cluster = []
@@ -2184,7 +2184,7 @@ def Prom_clustering():
         tmp1 = re.split("[a-z]*_", i)
         gene_tmp.append(tmp1[2])
     ##    print gene_tmp[:20]
-    gene_tmp = map(int, gene_tmp)
+    gene_tmp = list(map(int, gene_tmp))
 
     ##print 'new_geneA_uni', len(new_geneA_uni)
     ##print 'gene_tmp', len(gene_tmp)
@@ -2206,7 +2206,7 @@ def Prom_clustering():
             cluster_len.append(tm)
     ##        print tm, New_scaffold_name_uni[i], new_geneA_uni[i], new_stA_uni[i], new_prom_res_uni[i]
 
-    cluster_len = map(int, cluster_len)
+    cluster_len = list(map(int, cluster_len))
     cluster_no = []
     mp = 0
     for i in range(len(cluster_len)):
