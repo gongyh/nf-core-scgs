@@ -857,6 +857,8 @@ workflow SCGS {
         ch_versions = ch_versions.mix(PROKKA.out.versions)
         PRODIGAL(ctg)
         ch_versions = ch_versions.mix(PRODIGAL.out.versions)
+        METARON(ctg, PRODIGAL.gff.collect{it[1]})
+        ch_versions = ch_versions.mix(METARON.out.versions)
         faa = PROKKA.out.faa
         prokka_for_split  = PROKKA.out.prokka_for_split
         ch_multiqc_prokka = PROKKA.out.prokka_for_split

@@ -9,10 +9,10 @@ process METARON {
 
     input:
     tuple val(meta), path(contigs)
-    tuple val(meta), path(tab)
+    path(gene_models)
 
     output:
-    tuple val(meta), path("$prefix"), emit: out_put
+    tuple val(meta), path("$prefix"), emit: out_operon
     path "versions.yml"             , emit: versions
 
     when:
@@ -21,11 +21,11 @@ process METARON {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    metaron.py -n ${prefix} -p op -i ${tab} -j ${contigs} -t 2 -o ${prefix}
+    metaron.py -n ${prefix} -p op -i ${prefix}.gff -j ${contigs} -t 2 -o ${prefix}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        multiqc: \$( multiqc --version | sed -e "s/multiqc, version //g" )
+        MetaRon: 1.0
     END_VERSIONS
     """
 }
