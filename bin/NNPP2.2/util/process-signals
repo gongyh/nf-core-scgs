@@ -10,196 +10,236 @@
 
 require "util/process-promoters.pl";
 
-select((select(STDOUT), $| = 1)[0]); # Make stdout fflush
+select( ( select(STDOUT), $| = 1 )[0] );    # Make stdout fflush
 
 $nnpp = "bin/fa2TDNNpred.`uname -m`";
 
 # Process arguments
-while ($ARGV[0] ne "") {
-     if ($ARGV[0] =~ /^\-d/) {
-	  $DEBUG = 1;
-	  print("Debugging mode on.\n");
-     }
-     elsif ($ARGV[0] =~ /^\-h/) {
-	  die("Usage: fa2TDNNpred [-t score_cutoff] seqfile | $0 [-t score_cutoff] [-r(everse strand also)] [-H(ighest scoring only)] [-ace]\n");
-     }
-     elsif ($ARGV[0] =~ /^\-H/) {
-	  $highest_only = 1;
-     }
-     elsif ($ARGV[0] =~ /^\-t/) {
-	  if ($ARGV[0] =~ /\-t([0-9]+)/) {
-	       $min_score = $1;
-	  }
-	  elsif ($ARGV[1]) {
-	       $min_score = $ARGV[1];
-	       shift(@ARGV);
-	  }
-	  printf(stderr "Minimum score for reporting promoters = $min_score\n") if $DEBUG;
-	  $set_threshold = "-t $min_score";
-     }	
-     elsif ($ARGV[0] =~ /^\-s/) {
-	  if ($ARGV[0] =~ /\-t(.+)/) {
-	       $seqfile = $1;
-	  }
-	  elsif ($ARGV[1]) {
-	       $seqfile = $ARGV[1];
-	       shift(@ARGV);
-	  }
-     }
-     elsif ($ARGV[0] =~ /^\-r/) {
-	  $reverse = "-r";
-     }
-     elsif ($ARGV[0] =~ /^\-ace/) {
-	  $ACE = 1;
-     }
-     else {
-	  die "Unknown arg: $ARGV[0]\nUsage: fa2TDNNpred [-t score_cutoff] seqfile | $0 [-t score_cutoff] [-r(everse strand also)] [-H(ighest scoring only)] [-ace][-s seqfile]\n";
-     }
-     shift(@ARGV);
+while ( $ARGV[0] ne "" ) {
+    if ( $ARGV[0] =~ /^\-d/ ) {
+        $DEBUG = 1;
+        print("Debugging mode on.\n");
+    }
+    elsif ( $ARGV[0] =~ /^\-h/ ) {
+        die(
+"Usage: fa2TDNNpred [-t score_cutoff] seqfile | $0 [-t score_cutoff] [-r(everse strand also)] [-H(ighest scoring only)] [-ace]\n"
+        );
+    }
+    elsif ( $ARGV[0] =~ /^\-H/ ) {
+        $highest_only = 1;
+    }
+    elsif ( $ARGV[0] =~ /^\-t/ ) {
+        if ( $ARGV[0] =~ /\-t([0-9]+)/ ) {
+            $min_score = $1;
+        }
+        elsif ( $ARGV[1] ) {
+            $min_score = $ARGV[1];
+            shift(@ARGV);
+        }
+        printf( stderr "Minimum score for reporting promoters = $min_score\n" )
+          if $DEBUG;
+        $set_threshold = "-t $min_score";
+    }
+    elsif ( $ARGV[0] =~ /^\-s/ ) {
+        if ( $ARGV[0] =~ /\-t(.+)/ ) {
+            $seqfile = $1;
+        }
+        elsif ( $ARGV[1] ) {
+            $seqfile = $ARGV[1];
+            shift(@ARGV);
+        }
+    }
+    elsif ( $ARGV[0] =~ /^\-r/ ) {
+        $reverse = "-r";
+    }
+    elsif ( $ARGV[0] =~ /^\-ace/ ) {
+        $ACE = 1;
+    }
+    else {
+        die
+"Unknown arg: $ARGV[0]\nUsage: fa2TDNNpred [-t score_cutoff] seqfile | $0 [-t score_cutoff] [-r(everse strand also)] [-H(ighest scoring only)] [-ace][-s seqfile]\n";
+    }
+    shift(@ARGV);
 }
 
 @prom = <STDIN>;
-if (!($prom[0] =~ /Prediction/)) {
-     die("Input to this program should be output of nnpp promoter predictor");
+if ( !( $prom[0] =~ /Prediction/ ) ) {
+    die("Input to this program should be output of nnpp promoter predictor");
 }
 
 # Get sequence length--need for calculating reverse strand positions
-if ($prom[0] =~ /Prediction.*\(([0-9]+) bases/) {
-     $seqlength = $1;
-     printf (stderr "seqlength = $seqlength\n") if $DEBUG;
+if ( $prom[0] =~ /Prediction.*\(([0-9]+) bases/ ) {
+    $seqlength = $1;
+    printf( stderr "seqlength = $seqlength\n" ) if $DEBUG;
 }
 
 &process_and_print(@prom);
 
 sub process_and_print {
-     local(@prom) = @_;
+    local (@prom) = @_;
 
-     if (@prom) {
-	  @promoter = &ProcessPromoters(*prom, $highest_only, $min_score);
+    if (@prom) {
+        @promoter = &ProcessPromoters( *prom, $highest_only, $min_score );
 
-	  # $threshold is set in &ProcessPromoters
-	  if ($min_score == 0) {
-	       $min_score = $threshold;
-	  }
+        # $threshold is set in &ProcessPromoters
+        if ( $min_score == 0 ) {
+            $min_score = $threshold;
+        }
 
-	  if ($ACE) {
-	       &ace_print(@promoter);
-	  }
-	  else {
-	       &print_prom(@promoter);
-	  }
-     }
+        if ($ACE) {
+            &ace_print(@promoter);
+        }
+        else {
+            &print_prom(@promoter);
+        }
+    }
 }
 
 sub print_prom {
-     local(@promoter) = @_;
+    local (@promoter) = @_;
 
-     if ($seqfile) {
-	  @seq = `cat $seqfile`;
-	  if ($seq[0] =~ /\>/) {
-	       $name = $seq[0];
-	       $name =~ s/ .*//;
-	       $name =~ s/>//;
-	       shift(@seq);
-	  }
-	  $orig_seq = join('', @seq);
-	  $orig_seq =~ s/\n//g;
-	  $orig_seq =~ s/ //g;
-	  if ($DEBUG) {
-	       print "orig seq: $orig_seq\n";
-	  }
-     }
+    if ($seqfile) {
+        @seq = `cat $seqfile`;
+        if ( $seq[0] =~ /\>/ ) {
+            $name = $seq[0];
+            $name =~ s/ .*//;
+            $name =~ s/>//;
+            shift(@seq);
+        }
+        $orig_seq = join( '', @seq );
+        $orig_seq =~ s/\n//g;
+        $orig_seq =~ s/ //g;
+        if ($DEBUG) {
+            print "orig seq: $orig_seq\n";
+        }
+    }
 
-     if ($IS_PROMOTER) {
-	  $which = "promoter";
-     }
-     elsif ($IS_DONOR) {
-	  $which = "donor";
-     }
-     elsif ($IS_ACCEPTOR) {
-	  $which = "acceptor";
-     }
-     else {			# We didn't find any hits, but try to figure out what we were looking for based on window size
-	  if ($window_size == 15) {
-	       $which = "donor";
-	  }
-	  elsif ($window_size == 41) {
-	       $which = "acceptor";
-	  }
-	  # I thought it was 51, but it seems now to be 46
-	  elsif ($window_size == 46 || $window_size == 51) {
-	       $which = "promoter";
-	  }
-	  else {
-	       die("Error: input was not generated by one of Martin's programs.\n");
-	  }
-     }
-     printf("\nFound %d potential $which%s %sat score threshold %.3f.\n\n", 
-	    $#promoter+1, 
-	    ($#promoter == 0) ? "" : "s",
-	    ($name eq "") ? "" : "in sequence $name",
-	    ($min_score>0) ? $min_score : $threshold);
+    if ($IS_PROMOTER) {
+        $which = "promoter";
+    }
+    elsif ($IS_DONOR) {
+        $which = "donor";
+    }
+    elsif ($IS_ACCEPTOR) {
+        $which = "acceptor";
+    }
+    else
+    { # We didn't find any hits, but try to figure out what we were looking for based on window size
+        if ( $window_size == 15 ) {
+            $which = "donor";
+        }
+        elsif ( $window_size == 41 ) {
+            $which = "acceptor";
+        }
 
-     $saw_reverse = 0;		# Change to 1 once we've seen reverse strand
-     $header = "Start\tEnd\tScore\t\tSequence\n";
-     print "$header" unless ($#promoter < 0);
-     for ($h = 0; $h <= $#promoter; $h++) {
-	  if (!$saw_reverse && ($promoter[$h]{start} > $promoter[$h]{end})) {
-	       print "\nPredictions for reverse strand:\n";
-	       print "$header";
-	       $saw_reverse = 1;
-	  }
+        # I thought it was 51, but it seems now to be 46
+        elsif ( $window_size == 46 || $window_size == 51 ) {
+            $which = "promoter";
+        }
+        else {
+            die("Error: input was not generated by one of Martin's programs.\n"
+            );
+        }
+    }
+    printf(
+        "\nFound %d potential $which%s %sat score threshold %.3f.\n\n",
+        $#promoter + 1,
+        ( $#promoter == 0 ) ? ""         : "s",
+        ( $name eq "" )     ? ""         : "in sequence $name",
+        ( $min_score > 0 )  ? $min_score : $threshold
+    );
 
-	  if ($saw_reverse) {	# Reverse strand
-	       @promoter_reverse_seq = split('', substr($orig_seq, $seqlength-$promoter[$h]{start}+1, $promoter[$h]{start}-$promoter[$h]{end}));
-	       # Display reverse complement
-	       @promoter_seq = reverse(&complement(*promoter_reverse_seq));
-	  }
-	  else {			# Forward strand
-	       $pseq = substr($orig_seq, $promoter[$h]{start}-1, $promoter[$h]{end}-$promoter[$h]{start});
-	       @promoter_seq = split('', $pseq);
-	       printf("start-end = $promoter[$h]{start}-$promoter[$h]{end}, length pseq = %d, length promoter_seq = %d.  pseq = $pseq.\n", length($pseq), $#promoter_seq+1) if $DEBUG;
-	  }
+    $saw_reverse = 0;    # Change to 1 once we've seen reverse strand
+    $header = "Start\tEnd\tScore\t\tSequence\n";
+    print "$header" unless ( $#promoter < 0 );
+    for ( $h = 0 ; $h <= $#promoter ; $h++ ) {
+        if ( !$saw_reverse && ( $promoter[$h]{start} > $promoter[$h]{end} ) ) {
+            print "\nPredictions for reverse strand:\n";
+            print "$header";
+            $saw_reverse = 1;
+        }
 
-	  # Make all lower-case except for signal start
-	  grep(tr/[A-Z]/[a-z]/, @promoter_seq);
-	  printf("After grep, length promoter_seq = %d\n", $#promoter_seq+1) if $DEBUG;
-	  if ($IS_PROMOTER) {
-	       $promoter_seq[40] =~ tr/[a-z]/[A-Z]/;
-	  }
-	  elsif ($IS_DONOR) {
-	       $promoter_seq[7] =~ tr/[a-z]/[A-Z]/;
-	       $promoter_seq[8] =~ tr/[a-z]/[A-Z]/;
-	  }
-	  else {
-	       $promoter_seq[19] =~ tr/[a-z]/[A-Z]/;
-	       $promoter_seq[20] =~ tr/[a-z]/[A-Z]/;
-	  }
-	  printf("%5d %5d     %.2f    %s\n", 
-		 ($saw_reverse) ? $seqlength - $promoter[$h]{end} + 1 : $promoter[$h]{start},
-		 ($saw_reverse) ? $seqlength - $promoter[$h]{start} + 1 : $promoter[$h]{end},
-		 $promoter[$h]{score}, join('', @promoter_seq));
-     }
+        if ($saw_reverse) {    # Reverse strand
+            @promoter_reverse_seq = split(
+                '',
+                substr(
+                    $orig_seq,
+                    $seqlength - $promoter[$h]{start} + 1,
+                    $promoter[$h]{start} - $promoter[$h]{end}
+                )
+            );
+
+            # Display reverse complement
+            @promoter_seq = reverse( &complement(*promoter_reverse_seq) );
+        }
+        else {    # Forward strand
+            $pseq = substr(
+                $orig_seq,
+                $promoter[$h]{start} - 1,
+                $promoter[$h]{end} - $promoter[$h]{start}
+            );
+            @promoter_seq = split( '', $pseq );
+            printf(
+"start-end = $promoter[$h]{start}-$promoter[$h]{end}, length pseq = %d, length promoter_seq = %d.  pseq = $pseq.\n",
+                length($pseq), $#promoter_seq + 1 )
+              if $DEBUG;
+        }
+
+        # Make all lower-case except for signal start
+        grep( tr/[A-Z]/[a-z]/, @promoter_seq );
+        printf( "After grep, length promoter_seq = %d\n", $#promoter_seq + 1 )
+          if $DEBUG;
+        if ($IS_PROMOTER) {
+            $promoter_seq[40] =~ tr/[a-z]/[A-Z]/;
+        }
+        elsif ($IS_DONOR) {
+            $promoter_seq[7] =~ tr/[a-z]/[A-Z]/;
+            $promoter_seq[8] =~ tr/[a-z]/[A-Z]/;
+        }
+        else {
+            $promoter_seq[19] =~ tr/[a-z]/[A-Z]/;
+            $promoter_seq[20] =~ tr/[a-z]/[A-Z]/;
+        }
+        printf(
+            "%5d %5d     %.2f    %s\n",
+            ($saw_reverse) ? $seqlength - $promoter[$h]{end} + 1
+            : $promoter[$h]{start},
+            ($saw_reverse) ? $seqlength - $promoter[$h]{start} + 1
+            : $promoter[$h]{end},
+            $promoter[$h]{score},
+            join( '', @promoter_seq )
+        );
+    }
 }
 
 sub ace_print {
-     local(@promoter) = @_;
+    local (@promoter) = @_;
 
-     print "Sequence : \"$seq_name\"\n";
+    print "Sequence : \"$seq_name\"\n";
 
-     for ($h = 0; $h <= $#promoter; $h++) {
-	  if ($IS_PROMOTER) {
-	       printf("NNPP_promoter     %d %d %.3f\n", 
-		      ($promoter[$h]{start} > $promoter[$h]{end}) ? $seqlength - $promoter[$h]{end} + 1 : $promoter[$h]{start},
-		      ($promoter[$h]{start} > $promoter[$h]{end}) ? $seqlength - $promoter[$h]{start} + 1 : $promoter[$h]{end},
-		      $promoter[$h]{score});
-	  }
-	  else {
-	       printf("NNPP_%s     %s %d %.3f\n", 
-		      ($IS_DONOR) ? "donor" : "acceptor",
-		      ($promoter[$h]{start} > $promoter[$h]{end}) ? "r" : "f",
-		      ($promoter[$h]{start} > $promoter[$h]{end}) ? $seqlength - $promoter[$h]{signal} + 1 : $promoter[$h]{signal},
-		      $promoter[$h]{score});
-	  }
-     }
+    for ( $h = 0 ; $h <= $#promoter ; $h++ ) {
+        if ($IS_PROMOTER) {
+            printf(
+                "NNPP_promoter     %d %d %.3f\n",
+                ( $promoter[$h]{start} > $promoter[$h]{end} )
+                ? $seqlength - $promoter[$h]{end} + 1
+                : $promoter[$h]{start},
+                ( $promoter[$h]{start} > $promoter[$h]{end} )
+                ? $seqlength - $promoter[$h]{start} + 1
+                : $promoter[$h]{end},
+                $promoter[$h]{score}
+            );
+        }
+        else {
+            printf(
+                "NNPP_%s     %s %d %.3f\n",
+                ($IS_DONOR) ? "donor" : "acceptor",
+                ( $promoter[$h]{start} > $promoter[$h]{end} ) ? "r" : "f",
+                ( $promoter[$h]{start} > $promoter[$h]{end} )
+                ? $seqlength - $promoter[$h]{signal} + 1
+                : $promoter[$h]{signal},
+                $promoter[$h]{score}
+            );
+        }
+    }
 }
