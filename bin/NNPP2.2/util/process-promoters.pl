@@ -33,8 +33,7 @@ sub ProcessPromoters {
         # Look for hit
         elsif (
             /^Hit ([0-9]+): position.* ([0-9]+) \.\. ([0-9]+), (.*) = ([0-9]+)/i
-          )
-        {
+        ) {
             ++$h;
             $promoter[$h]{start}  = $2;
             $promoter[$h]{end}    = $3;
@@ -178,16 +177,14 @@ sub pick_best_promoters {
         $p = 0 ;
         ( $p <= $#prom ) && ( $prom[$p]{score} == $prom[0]{score} ) ;
         $p++
-      )
-    {
+    ) {
         if ($DEBUG) {
             print(
 "\nSaving current best promoter (start = $prom[$p]{start}, score = $prom[$p]{score})\n"
             );
         }
         push( @keep, $prom[$p] );
-        splice( @prom, $p, 1 )
-          ;    # Get rid of this one now that it's on "keep" list
+        splice( @prom, $p, 1 );    # Get rid of this one now that it's on "keep" list
 
         # Remove from consideration all remaining promoters in
         # neighborhood of best one.
@@ -196,8 +193,7 @@ sub pick_best_promoters {
                 &in_neighborhood(
                     $prom[$j]{start}, $keep[-1]{start}, $neighborhood
                 )
-              )
-            {
+            ) {
                 if ($DEBUG) {
                     print(
 "Promoter $j ($prom[$j]{start}) is in neighborhood of current best ($keep[-1]{start})\n"
@@ -213,8 +209,7 @@ sub pick_best_promoters {
                     }
                     print("\n");
                 }
-                $j
-                  --; # It's bad to tamper with loop variables inside a loop, but too bad.
+                $j--; # It's bad to tamper with loop variables inside a loop, but too bad.
             }
         }
     }

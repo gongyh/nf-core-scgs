@@ -36,8 +36,7 @@ while ( $ARGV[0] ne "" ) {
             $min_score = $ARGV[1];
             shift(@ARGV);
         }
-        printf( stderr "Minimum score for reporting promoters = $min_score\n" )
-          if $DEBUG;
+        printf( stderr "Minimum score for reporting promoters = $min_score\n" ) if $DEBUG;
         $set_threshold = "-t $min_score";
     }
     elsif ( $ARGV[0] =~ /^\-s/ ) {
@@ -181,14 +180,12 @@ sub print_prom {
             @promoter_seq = split( '', $pseq );
             printf(
 "start-end = $promoter[$h]{start}-$promoter[$h]{end}, length pseq = %d, length promoter_seq = %d.  pseq = $pseq.\n",
-                length($pseq), $#promoter_seq + 1 )
-              if $DEBUG;
+                length($pseq), $#promoter_seq + 1 ) if $DEBUG;
         }
 
         # Make all lower-case except for signal start
         grep( tr/[A-Z]/[a-z]/, @promoter_seq );
-        printf( "After grep, length promoter_seq = %d\n", $#promoter_seq + 1 )
-          if $DEBUG;
+        printf( "After grep, length promoter_seq = %d\n", $#promoter_seq + 1 ) if $DEBUG;
         if ($IS_PROMOTER) {
             $promoter_seq[40] =~ tr/[a-z]/[A-Z]/;
         }
