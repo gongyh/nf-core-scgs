@@ -22,7 +22,7 @@ process METARON {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}
-    metaron.py -n ${prefix} -p op -i ${prefix}.gff -j ${contigs} -t 2 -o ${prefix}
+    metaron.py -n ${prefix} -p op -i ${prefix}.gff -j ${contigs} -t 2 -o ${prefix}/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

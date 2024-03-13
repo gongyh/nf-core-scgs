@@ -733,7 +733,7 @@ def gff2tab(sample_name):
             Gene_en.append(temp_line[4])
             Strand.append(temp_line[6])
             ID_info.append(G_ID[1])
-            Scaf_gene.append(scf_G)
+            Scaf_gene.append(sample_name + "_revised_" + scf_G)
 
     Gene_st = [int(item) if item.isdigit() else item for item in Gene_st]
     Gene_en = [int(item) if item.isdigit() else item for item in Gene_en]
@@ -758,7 +758,7 @@ def gff2tab(sample_name):
 
     ##    saving all lists to file
     zoo = zip(Scaf_gene, Strand, Gene_st, Gene_en, Gene_len)
-    with open(gene_file, "wb") as out_file:
+    with open(gene_file, "w") as out_file:
         writer = csv.writer(out_file, delimiter="\t", lineterminator="\n")
         writer.writerows(zoo)
     out_file.close()
@@ -815,7 +815,8 @@ def data_extraction(gene_file, gene_pred_tool):
         print("PRODIGAL")
         for i2 in gene_name_scaf:
             tmp1 = re.compile(
-                "(?P<file_name>.*?)_*(?P<rev>revised)_*(?P<scaftig_name>[a-zA-Z0-9]*)_(?P<gene_name>gene)(?P<scaftig_no>[0-9_]*)_(?P<gene_no>[0-9_]*)"
+                ##"(?P<file_name>.*?)_*(?P<rev>revised)_*(?P<scaftig_name>[a-zA-Z0-9]*)_(?P<gene_name>gene)(?P<scaftig_no>[0-9_]*)_(?P<gene_no>[0-9_]*)"
+                "(?P<file_name>.*?)_*(?P<rev>revised)_*(?P<scaftig_name>[a-zA-Z0-9]*)_*(?P<scaftig_no>[0-9_]*)_(?P<gene_name>gene)(?P<gene_no>\d+)"
             )
             match2 = tmp1.search(i2)
             if match2:
@@ -864,7 +865,7 @@ def seq_info(gene_name_scaf, strand, gene_st, gene_end, file_name, scaftig_name,
         for SL in scaf_line:
             scaffold_name_len.append(SL.split("length="))
         scaffold_name_length = [[SNL.strip() for SNL in inner] for inner in scaffold_name_len]
-        for SLO in xrange(len(scaffold_name_length)):
+        for SLO in range(len(scaffold_name_length)):
             scaf_len_only.append(scaffold_name_length[SLO][1])
         scaf_len_only = [int(item) if item.isdigit() else item for item in scaf_len_only]
         scaf_name_len_dict = dict(scaffold_name_length)
@@ -909,7 +910,7 @@ def seq_info2(gene_name_scaf, strand, gene_st, gene_end, file_name, scaftig_name
         for SL in scaf_line:
             scaffold_name_len.append(SL.split("length="))
         scaffold_name_length = [[SNL.strip() for SNL in inner] for inner in scaffold_name_len]
-        for SLO in xrange(len(scaffold_name_length)):
+        for SLO in range(len(scaffold_name_length)):
             scaf_len_only.append(scaffold_name_length[SLO][1])
         scaf_len_only = [int(item) if item.isdigit() else item for item in scaf_len_only]
         scaf_name_len_dict = dict(scaffold_name_length)
@@ -950,7 +951,7 @@ def upstream_coordinates_extraction(scaftig_name, gene_name, strand, gene_st, ge
     new_scaf_name = []
     scaf_name4dict_new = []
 
-    for i in xrange(len(scaftig_name)):
+    for i in range(len(scaftig_name)):
         if i < len(scaftig_name) - 1:
             if scaftig_name[i] != scaftig_name[i - 1] and scaftig_name[i] == scaftig_name[i + 1]:
                 ups1 = gene_st[i] - 1
@@ -990,13 +991,13 @@ def upstream_coordinates_extraction(scaftig_name, gene_name, strand, gene_st, ge
             gene_st_new.append(gene_st[i])
             gene_end_new.append(gene_end[i])
             scaf_name4dict_new.append(scaf_name4dict[i])
-    upstream_seq_len = map(int, upstream_seq_len)
-    gene_st_new = map(int, gene_st_new)
+    upstream_seq_len = list(map(int, upstream_seq_len))
+    gene_st_new = list(map(int, gene_st_new))
 
     print("Extracting upstream coordinates")
     upstream_st_pos = []
     upstream_en_pos = []
-    for i in xrange(len(scaftig_name_new)):
+    for i in range(len(scaftig_name_new)):
         if i < len(scaftig_name_new) - 1:
             if i == 0:
                 if upstream_seq_len[i] < 2:
@@ -1058,7 +1059,7 @@ def upstream_coordinates_extraction(scaftig_name, gene_name, strand, gene_st, ge
 def scaftig_length(scaf_name4dict, scaf_name_len_dict):
     print("Extracting scaftig length information")
     leng_scaftig = []
-    for i in xrange(len(scaf_name4dict)):
+    for i in range(len(scaf_name4dict)):
         scaf_len1 = scaf_name_len_dict.get(scaf_name4dict[i])
         leng_scaftig.append(scaf_len1)
     return leng_scaftig
@@ -1070,7 +1071,7 @@ def downstream_coordinate_region(scaftig_name, gene_st, gene_end, leng_scaftig, 
     downstream_st_pos = []
     downstream_en_pos = []
 
-    for i in xrange(len(scaftig_name)):
+    for i in range(len(scaftig_name)):
         if i < len(scaftig_name) - 1:
             if scaftig_name[i] == scaftig_name[i + 1]:
                 dss = gene_st[i + 1] - gene_end[i]
@@ -1090,7 +1091,7 @@ def downstream_coordinate_region(scaftig_name, gene_st, gene_end, leng_scaftig, 
             downstream_seq_len.append(dss)
     print("Calculating downstream coordinates...")
 
-    for i in xrange(len(scaftig_name_new)):
+    for i in range(len(scaftig_name_new)):
         if i < len(scaftig_name_new) - 1:
             if i == 0:
                 if downstream_seq_len[i] < 2:
@@ -1254,7 +1255,7 @@ def UPS_DSS_Slicing(
     scaf_name4cord_UPS = []
     gene_name4cord_UPS = []
 
-    for i in xrange(len(scaftig_name_new)):
+    for i in range(len(scaftig_name_new)):
         if downstream_seq_len[i] >= 15:
             if downstream_seq_len[i] <= 700:
                 dss_st_new = downstream_st_pos[i]
@@ -1489,7 +1490,7 @@ def IGD_calc(scaftig_name_new, strand_new, gene_name_new, gene_st_new, gene_end_
     c = 1
     ##print 'Gene name,\tStrand\tGene2_st\tGene1_end\tIGD\n'
     ##gene_st_new, gene_end_new,gene_name_new
-    for i in xrange(len(scaftig_name_new[:-1])):
+    for i in range(len(scaftig_name_new[:-1])):
         if scaftig_name_new[i] == scaftig_name_new[i + 1]:
             if strand_new[i] == strand_new[i + 1]:
                 a = gene_st_new[i + 1] - gene_end_new[i]
@@ -1722,7 +1723,7 @@ def Prom_IGD_Clustering():
 
     igd_scf_gene1 = []
     igd_scf_gene2 = []
-    for i in xrange(len(igd_scf_nm)):
+    for i in range(len(igd_scf_nm)):
         tmp1 = igd_scf_nm[i] + "," + igd_gene1[i]
         tmp2 = igd_scf_nm[i] + "," + igd_gene2[i]
         igd_scf_gene1.append(tmp1)
@@ -1803,7 +1804,7 @@ def Prom_IGD_Clustering():
     ############            CHECK
 
     if len(igd_scf_gene1) == len(newk2_igd) and len(newk2_igd) == len(newk1_igd):
-        for i in xrange(len(newk2_igd)):
+        for i in range(len(newk2_igd)):
             if (
                 newk1_igd[i] == newk2_igd[i]
                 and scnm1_igd[i] == scnm2_igd[i]
@@ -1870,7 +1871,7 @@ def Prom_IGD_Clustering():
         new_promA_res1,
         new_promB_res1,
     ) = ([], [], [], [], [], [], [], [], [])
-    for i in xrange(len(igd_clstr)):
+    for i in range(len(igd_clstr)):
         if promA_res[i] == "Yes" and promB_res[i] == "No" or promB_res[i] == "NA":
             new_igd_clstr1.append(igd_clstr[i]), new_igd_scaffold_name1.append(
                 igd_scaffold_name[i]
@@ -1908,7 +1909,7 @@ def Prom_IGD_Clustering():
         new_promA_res,
         new_promB_res,
     ) = ([], [], [], [], [], [], [], [], [])
-    for i in xrange(len(new_promA_res1)):
+    for i in range(len(new_promA_res1)):
         ##        if new_promA_res1[i] == 'Yes' and new_promB_res1[i] == 'No' or new_promB_res1[i] == 'NA':
         ##            new_igd_clstr.append(new_igd_clstr1[i]), new_igd_scaffold_name.append(new_igd_scaffold_name1[i]), new_igd_geneA.append(new_igd_geneA1[i]), new_igd_geneB.append(new_igd_geneB1[i]), new_intergenic_dist.append(new_intergenic_dist1[i]), new_igd_stA.append(new_igd_stA[i]), new_igd_stB.append(new_igd_stB[i]), new_promA_res.append(new_promA_res[i]), new_promB_res.append(new_promB_res[i])
         if new_promA_res1[i] == "No" or new_promA_res1[i] == "NA" and new_promB_res1[i] == "Yes":
@@ -1950,7 +1951,7 @@ def Prom_IGD_Clustering():
 
     countr = 0
     new_dist_cluster = []
-    for i in xrange(len(new_igd_clstr)):
+    for i in range(len(new_igd_clstr)):
         if i == 0:
             countr = 1
             new_dist_cluster.append(countr)
@@ -1966,7 +1967,7 @@ def Prom_IGD_Clustering():
 
     cluster_tmp = 0
     clustr_no = []
-    for i in xrange(len(new_dist_cluster)):
+    for i in range(len(new_dist_cluster)):
         if new_dist_cluster[i] == 1:
             cluster_tmp += 1
             clustr_no.append(cluster_tmp)
@@ -2057,7 +2058,7 @@ def Prom_clustering():
     igd_st = [x[2] for x in csv.reader(open(igd_file, "r"), delimiter="\t")]
 
     igd_scf_gene = []
-    for i in xrange(len(igd_scf_nm)):
+    for i in range(len(igd_scf_nm)):
         tmp1 = igd_scf_nm[i] + "," + igd_gene[i]
         ##    tmp2 = igd_scf_nm[i]+','+igd_gene2[i]
         igd_scf_gene.append(tmp1)
@@ -2102,7 +2103,7 @@ def Prom_clustering():
     countera = 0
     counter11 = 0
     if len(scaffold_name) == len(geneA) and len(geneA) == len(stA) and len(stA) == len(prom_res):
-        for i in xrange(len(scaffold_name)):
+        for i in range(len(scaffold_name)):
             if i < len(scaffold_name) - 1:
 
                 if (
@@ -2158,7 +2159,7 @@ def Prom_clustering():
     ##    print 'new_prom_res', len(new_prom_res)
 
     New_scaffold_name_uni, new_geneA_uni, new_stA_uni, new_prom_res_uni = [], [], [], []
-    for i in xrange(len(new_geneA)):
+    for i in range(len(new_geneA)):
         if i < len(new_geneA) - 1:
             if new_geneA[i] != new_geneA[i + 1]:
                 new_geneA_uni.append(new_geneA[i]), New_scaffold_name_uni.append(
@@ -2173,7 +2174,7 @@ def Prom_clustering():
     ##print 'new_stA_uni', len(new_stA_uni)
     ##print 'new_prom_res_uni', len(new_prom_res_uni)
 
-    ##for i in xrange(len(New_scaffold_name_uni)):
+    ##for i in range(len(New_scaffold_name_uni)):
     ##    print New_scaffold_name_uni[i], new_geneA_uni[i], new_stA_uni[i], new_prom_res_uni[i]
 
     gene_tmp = []
@@ -2190,7 +2191,7 @@ def Prom_clustering():
 
     cluster_len = []
     tm = 0
-    for i in xrange(len(new_geneA_uni)):
+    for i in range(len(new_geneA_uni)):
         if (
             i == 0
             or gene_tmp[i] - 1 != gene_tmp[i - 1]
@@ -2208,7 +2209,7 @@ def Prom_clustering():
     cluster_len = map(int, cluster_len)
     cluster_no = []
     mp = 0
-    for i in xrange(len(cluster_len)):
+    for i in range(len(cluster_len)):
         if cluster_len[i] == 1:
             mp += 1
             cluster_no.append(mp)
@@ -2224,11 +2225,11 @@ def Prom_clustering():
     ):
         pass
     ##        print 'print all lens equal'
-    ##    for i in xrange(len(New_scaffold_name_uni)):
+    ##    for i in range(len(New_scaffold_name_uni)):
     ##        print cluster_no[i], cluster_len[i], New_scaffold_name_uni[i], new_geneA_uni[i], new_stA_uni[i], new_prom_res_uni[i]
     else:
         print("len not equal")
-    ##for i in xrange(len(New_scaffold_name_uni)):
+    ##for i in range(len(New_scaffold_name_uni)):
     ##    print cluster_no[i], cluster_len[i], New_scaffold_name_uni[i], new_geneA_uni[i], new_stA_uni[i], new_prom_res_uni[i]
 
     ##    print '\nNew_scaffold_name_uni', len(New_scaffold_name_uni)
