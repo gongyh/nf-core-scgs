@@ -1606,7 +1606,7 @@ def promoter_prediction(upstream_seq_file):
         ##            loops += 1
         else:
             sequence = line[0:]
-            with open(NNPP2_path + "/test/tmp_seq.txt", "w+") as outfile:
+            with open(output_dir + "/tmp_seq.txt", "w") as outfile:
                 outfile.write(header)
                 outfile.write("\n")
                 outfile.write(sequence)
@@ -1614,9 +1614,9 @@ def promoter_prediction(upstream_seq_file):
         cmd1 = "cd " + NNPP2_path
         cmd2 = (
             NNPP2_path
-            + "/bin/fa2TDNNpred-PRO.linux -t 0.25 "
-            + NNPP2_path
-            + "/test/tmp_seq.txt >> %s/promoter_prediction.txt" % output_dir
+            + "/bin/fa2TDNNpred-PRO-static.linux -t 0.25 "
+            + output_dir
+            + "/tmp_seq.txt >> %s/promoter_prediction.txt" % output_dir
         )
         ##    cmd4 = 'rm /home/alisu/Software/Promoter_prediction/NNPP/NNPP2.2/test/tmp_seq.txt'
         cmds = [cmd1, cmd2]
@@ -2270,7 +2270,7 @@ def config_file_check():
     print("config_file_check start")
     My_prog_path = os.path.dirname(os.path.abspath(__file__))
     print(My_prog_path)
-    if os.path.exists(My_prog_path + "/NNPP2.2/bin/fa2TDNNpred-PRO.linux") == True:
+    if os.path.exists(My_prog_path + "/NNPP2.2/bin/fa2TDNNpred-PRO-static.linux") == True:
         NNPP2_path = My_prog_path + "/NNPP2.2"
     else:
         print("please check the path for NNPP2.2")
