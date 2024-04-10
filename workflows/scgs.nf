@@ -40,6 +40,9 @@ def helpMessage() {
     --split_bac_level             Level of split for Bacteria
     --split_euk_level             Level of split for Eukaryota
     --graphbin                    Enable graphbin to bin
+    --pangenome                   Enable pangenome analysis
+    --completeness                Calculate the completeness of assembling contigs using pan-genomic methods based on core genes
+    --tree                        Draw a phylogenetic tree
 
     References:                   If not specified in the configuration file or you wish to overwrite any of the references.
     --fasta                       Path to Fasta reference
@@ -60,6 +63,7 @@ def helpMessage() {
     --augustus_species            Augustus species, default 'saccharomyces'
     --eukcc_db                    EukCC database
     --checkm2_db                  CheckM2 database
+    --mgpg_db                     Microbiome graph pangenome database
     --gtdb                        GTDB database
     --ref                         Specify the reference sequence for bbmap
 
@@ -78,9 +82,13 @@ def helpMessage() {
     Assembly options:
     --no_normalize                Specifying --no_normalize will skip the reads normalizing step.
 
-    Quast options:
+    Quast options: 
     --euk                         Euk genome
     --fungus                      Fungal genome
+
+    Pangenome options:
+    --genusName                   Genus Name
+    --coreGenesFile               Core genes txt file
 
     Taxa annotation options:
     --evalue                      E-value for blasting NCBI-nt and uniprot reference proteomes database (default=1e-25)
@@ -150,6 +158,11 @@ params.point = false
 params.split = false
 params.split_euk = false
 params.graphbin = false
+params.pangenome = false
+params.completeness = false
+params.tree = false
+params.genusName = null
+params.coreGenesFile = null
 params.genus = null
 params.genomad_db = null
 params.prokka_proteins = null
@@ -309,6 +322,24 @@ if (params.gtdb) {
     if ( !gtdb.exists() ) exit 1, "GTDB database not found: ${params.gtdb}"
 } else {
     gtdb = file("/dev/null")
+}
+
+// Configure pangenome database
+mgpg_db = false
+if (params.mgpg_db) {
+    mgpg_db  = file(params.mgpg_db)
+    if ( !mgpg_db.exists() ) exit 1, "Graph pangenome database not found: ${params.mgpg_db}"
+} else {
+    mgpg_db = file("/dev/null")
+}
+
+// Configure core genes file
+coreGenesFile = false
+if (params.coreGenesFile) {
+    coreGenesFile  = file(params.coreGenesFile)
+    if ( !coreGenesFile.exists() ) exit 1, "Core genes file not found: ${params.coreGenesFile}"
+} else {
+    coreGenesFile = file("/dev/null")
 }
 
 // Configure reference sequence
@@ -491,6 +522,8 @@ include { NORMALIZE             } from '../modules/local/normalize'
 include { BBNORM                } from '../modules/local/bbnorm'
 include { CANU                  } from '../modules/local/canu'
 include { SPADES                } from '../modules/local/spades'
+include { COMPLETENESS          } from '../modules/local/pangenome/completeness'
+include { TREE                  } from '../modules/local/pangenome/tree'
 include { QUAST_REF             } from '../modules/local/quast_ref'
 include { QUAST_DENOVO          } from '../modules/local/quast_denovo'
 include { BOWTIE2_REMAP         } from '../modules/local/bowtie2_remap'
@@ -849,6 +882,17 @@ workflow SCGS {
     }
     TSNE(ctg)
 
+    // PANGENOME ANALYSIS
+    if (params.pangenome) {
+        if (params.completeness && params.genusName && params.coreGenesFile) {
+            COMPLETENESS(
+                ctg,
+                params.genusName,
+                mgpg_db,
+                coreGenesFile
+            )
+        }
+    }
 
     faa = Channel.empty()
     prokka_for_split  = Channel.empty()
