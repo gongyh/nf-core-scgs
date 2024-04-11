@@ -15,9 +15,9 @@ class Stat(object):
 
     def write(self):
         check_directory(self.outdir)
-        with open(
-            os.path.join(self.database, "metadata", "Metadata.tsv"), "r"
-        ) as f, open(os.path.join(self.outdir, self.name + ".tsv"), "w") as fout:
+        with open(os.path.join(self.database, "metadata", "Metadata.tsv"), "r") as f, open(
+            os.path.join(self.outdir, self.name + ".tsv"), "w"
+        ) as fout:
             reader = csv.reader(f, delimiter="\t")
             next(reader)
             header = "Domain\tPhylum\tClass\tOrder\tFamily\tGenus\tNodes\tLinks\tNo.genomes\tRef\n"

@@ -22,9 +22,7 @@ class Analysis(object):
 
     def viz(self, options):
         viz_args_judgment(options)
-        odgi = Odgi(
-            options.db, options.name, options.outdir, options.outName, options.threads
-        )
+        odgi = Odgi(options.db, options.name, options.outdir, options.outName, options.threads)
         odgi.viz(options)
 
     def search(self, options):

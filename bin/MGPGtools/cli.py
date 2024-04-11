@@ -6,9 +6,7 @@ from MGPGtools.utils.customHelpFormatter import CustomHelpFormatter
 
 @contextmanager
 def subparser(parser, name, desc):
-    yield parser.add_parser(
-        name, conflict_handler="resolve", help=desc, formatter_class=CustomHelpFormatter
-    )
+    yield parser.add_parser(name, conflict_handler="resolve", help=desc, formatter_class=CustomHelpFormatter)
 
 
 @contextmanager
@@ -55,9 +53,7 @@ def __treeGenesFile(group):
 
 
 def __name(group, required):
-    group.add_argument(
-        "-name", type=str, default=None, required=required, help="Name of pangenome"
-    )
+    group.add_argument("-name", type=str, default=None, required=required, help="Name of pangenome")
 
 
 def __outName(group):
@@ -159,9 +155,7 @@ def __label(group):
 
 
 def __threads(group):
-    group.add_argument(
-        "-t", "--threads", default=1, type=int, help="Number of CPUs to use"
-    )
+    group.add_argument("-t", "--threads", default=1, type=int, help="Number of CPUs to use")
 
 
 def __debug(group):
@@ -178,14 +172,10 @@ def __help(group):
 
 
 def get_main_parser():
-    main_parser = argparse.ArgumentParser(
-        prog="pantools", add_help=False, conflict_handler="resolve"
-    )
+    main_parser = argparse.ArgumentParser(prog="pantools", add_help=False, conflict_handler="resolve")
     sub_parsers = main_parser.add_subparsers(help="--", dest="subparser_name")
 
-    with subparser(
-        sub_parsers, "stat", "static basic information of pangenome."
-    ) as parser:
+    with subparser(sub_parsers, "stat", "static basic information of pangenome.") as parser:
         with arg_group(parser, "required named arguments") as grp:
             __db(grp, required=True)
             __outdir(grp, required=True)

@@ -145,24 +145,9 @@ class Tree(object):
             for k, v in genesMapDict.items():
                 if v["assemblCore"]:
                     coreGenesWithContig.append(k)
-                convertStr = (
-                    ">"
-                    + v["refNode"]
-                    + "_"
-                    + str(v["ref_start"])
-                    + "-"
-                    + str(v["ref_end"])
-                    + ":. "
-                )
+                convertStr = ">" + v["refNode"] + "_" + str(v["ref_start"]) + "-" + str(v["ref_end"]) + ":. "
                 idConvert[convertStr] = k
-                f.write(
-                    v["refNode"]
-                    + "\t"
-                    + str(v["ref_start"] - 1)
-                    + "\t"
-                    + str(v["ref_end"])
-                    + "\n"
-                )
+                f.write(v["refNode"] + "\t" + str(v["ref_start"] - 1) + "\t" + str(v["ref_end"]) + "\n")
         subseqCmd = ["seqkit", "subseq", "--bed", bedFile, self.fasta]
         if_success, stdout, stderr = run(subseqCmd)
         with open(extractFastaFile, "w") as f:
@@ -226,9 +211,7 @@ class Tree(object):
         chrom = geneTag[gene][0]
         start = geneTag[gene][1]
         end = geneTag[gene][2]
-        extractOgSortedFile = os.path.join(
-            outdir, self.name + "." + gene + ".sorted.og"
-        )
+        extractOgSortedFile = os.path.join(outdir, self.name + "." + gene + ".sorted.og")
         geneGfa = os.path.join(outdir, self.name + "." + gene + ".gfa")
         refPath = chrom + ":" + start + "-" + end
         extractCmd = [

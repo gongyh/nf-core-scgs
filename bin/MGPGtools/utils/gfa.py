@@ -28,9 +28,7 @@ def gfa_parse_link_path(gfaFile):
                 if "," in row[2]:
                     gfa_path[chrom]["path"] = row[2].split(",")
                     gfa_path[chrom]["overlap"] = row[3]
-                    if int(gfa_path[chrom]["path"][0][:-1]) < int(
-                        gfa_path[chrom]["path"][-1][:-1]
-                    ):
+                    if int(gfa_path[chrom]["path"][0][:-1]) < int(gfa_path[chrom]["path"][-1][:-1]):
                         gfa_path[chrom]["tag"] = "forward"
                     else:
                         gfa_path[chrom]["tag"] = "reverse"

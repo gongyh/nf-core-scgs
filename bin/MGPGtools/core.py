@@ -74,9 +74,7 @@ class Core(object):
         return geneTag, geneLength, genePath
 
     # 根据每个基因的位置提取子图
-    def extractGenesOg(
-        self, genePath, ogFile, outdir, geneTag, geneLength, genomeListExceptRef
-    ):
+    def extractGenesOg(self, genePath, ogFile, outdir, geneTag, geneLength, genomeListExceptRef):
         geneName = geneTag[genePath]
         gene_length = geneLength[geneName]
         # 每个基因的odgi文件
@@ -120,9 +118,7 @@ class Core(object):
             if genePath in str(row["path.name"]):
                 continue
             # genome id
-            genomeName = (
-                row["path.name"].split("#")[0] + "." + row["path.name"].split("#")[1]
-            )
+            genomeName = row["path.name"].split("#")[0] + "." + row["path.name"].split("#")[1]
             if genomeName not in genome_df:
                 genome_df.append(genomeName)
             else:
@@ -204,25 +200,13 @@ class Core(object):
             for i in b:
                 geneMatrix.at[a, i] = 0
         # 基因矩阵输出到gene_presence_absence.tsv
-        geneMatrix.to_csv(
-            os.path.join(self.outdir, "gene_presence_absence.tsv"), sep="\t", index=True
-        )
+        geneMatrix.to_csv(os.path.join(self.outdir, "gene_presence_absence.tsv"), sep="\t", index=True)
         # 写入summary_statistics.txt
         with open(os.path.join(self.outdir, "summary_statistics.txt"), "w") as f:
             f.write("Core genes(99% <= strains <= 100%): {}\n".format(len(gene_99_100)))
-            f.write(
-                "Soft core genes(95% <= strains < 99%): {}\n".format(
-                    len(coreGene["95-99%"])
-                )
-            )
-            f.write(
-                "Shell genes(15% <= strains < 95%): {}\n".format(
-                    len(coreGene["15-95%"])
-                )
-            )
-            f.write(
-                "Cloud genes(0% <= strains < 15%): {}\n".format(len(coreGene["0-15%"]))
-            )
+            f.write("Soft core genes(95% <= strains < 99%): {}\n".format(len(coreGene["95-99%"])))
+            f.write("Shell genes(15% <= strains < 95%): {}\n".format(len(coreGene["15-95%"])))
+            f.write("Cloud genes(0% <= strains < 15%): {}\n".format(len(coreGene["0-15%"])))
             f.write("Total genes: {}\n".format(totalGenesNum))
         delete_temp_dir(os.path.join(self.outdir, "tmp"))
 
@@ -241,9 +225,5 @@ class Core(object):
                 assemblGenes.append(k)
         outputFile = os.path.join(self.outdir, "completeness.txt")
         with open(outputFile, "w") as f:
-            f.write(
-                "Core Gene Completeness: {}\n".format(
-                    len(assemblGenes) / len(coreGenes)
-                )
-            )
+            f.write("Core Gene Completeness: {}\n".format(len(assemblGenes) / len(coreGenes)))
         # delete_temp_dir(os.path.join(self.outdir, "tmp"))

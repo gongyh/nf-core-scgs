@@ -13,9 +13,7 @@ def processRow(row, genome_df, ref):
     result = {}
     tmp_df = pd.DataFrame(data=row)
     # 每行第3列之后是1的行索引为该基因的node
-    column_indexes = (
-        tmp_df[3:][tmp_df.iloc[3:] == 1].dropna(axis=0, how="all").index.tolist()
-    )
+    column_indexes = tmp_df[3:][tmp_df.iloc[3:] == 1].dropna(axis=0, how="all").index.tolist()
     # 列索引加入"path.name"索引
     column_indexes.insert(0, "path.name")
     # genome dataframe根据基因的列提取部分列
@@ -124,9 +122,7 @@ def extractGenesOg(genePath, ogFile, outdir, geneTag, geneLength, genomeListExce
         if genePath in str(row["path.name"]):
             continue
         # 基因组名称
-        genomeName = (
-            row["path.name"].split("#")[0] + "." + row["path.name"].split("#")[1]
-        )
+        genomeName = row["path.name"].split("#")[0] + "." + row["path.name"].split("#")[1]
         if genomeName not in genome_df:
             genome_df.append(genomeName)
         else:

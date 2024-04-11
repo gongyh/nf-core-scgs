@@ -64,9 +64,7 @@ def get_chromosome(database, name):
 
 def getPanTxt(database, name):
     genomeList = []
-    className = get_info(os.path.join(database, "metadata", "Metadata.tsv"), name)[
-        "class"
-    ]
+    className = get_info(os.path.join(database, "metadata", "Metadata.tsv"), name)["class"]
     panTxt = os.path.join(
         database,
         "databases",

@@ -41,9 +41,7 @@ def run(cmd):
     """
 
     try:
-        proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
-        )
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
         stdout, stderr = proc.communicate()
         return True, stdout, stderr
     except subprocess.CalledProcessError as e:

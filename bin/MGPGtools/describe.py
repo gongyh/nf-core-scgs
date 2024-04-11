@@ -29,9 +29,7 @@ class Describe(object):
         with open(os.path.join(self.outdir, self.name + ".tsv"), "w") as f:
             path_str = (
                 "## databases/gfa/"
-                + get_info(
-                    os.path.join(self.database, "metadata", "Metadata.tsv"), self.name
-                )["class"]
+                + get_info(os.path.join(self.database, "metadata", "Metadata.tsv"), self.name)["class"]
                 + "/"
                 + self.name
                 + ".gfa\n"

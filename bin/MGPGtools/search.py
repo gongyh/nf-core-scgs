@@ -39,19 +39,12 @@ class Search(object):
                     if line[0] == "#":
                         continue
                     row = line.strip().split("\t")
-                    if (
-                        row[2] == self.region_type
-                        and row[8].split(";")[0] == id_character
-                    ):
+                    if row[2] == self.region_type and row[8].split(";")[0] == id_character:
                         tchrom = row[0]
                         start = row[3]
                         end = row[4]
             if len(start) == 0:
-                print(
-                    "{} {} not found in {}".format(
-                        self.region_type, self.region_name, info["ref"]
-                    )
-                )
+                print("{} {} not found in {}".format(self.region_type, self.region_name, info["ref"]))
             else:
                 tb = PrettyTable(
                     [
@@ -80,9 +73,7 @@ class Search(object):
             tb = PrettyTable(["name", "ref", "chromosomes", "size", "path"])
             for chrom, size in chrom_size_info.items():
                 if tb_row_count == 1:
-                    tb.add_row(
-                        [self.name, info["ref"], chrom, size, path + "#" + chrom]
-                    )
+                    tb.add_row([self.name, info["ref"], chrom, size, path + "#" + chrom])
                 else:
                     tb.add_row(["", "", chrom, size, path + "#" + chrom])
                 tb_row_count += 1

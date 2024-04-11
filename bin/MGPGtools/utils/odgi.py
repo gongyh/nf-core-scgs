@@ -86,21 +86,13 @@ def ogExtractBed(ogFile, extractOgFile, bedFile, threads):
 
 
 def ogPath(ogFile, threads):
-    ODGIPathCmd = (
-        ["odgi", "paths", "-i", ogFile, "-H"]
-        if threads == 1
-        else ["odgi", "paths", "-i", ogFile, "-H"]
-    )
+    ODGIPathCmd = ["odgi", "paths", "-i", ogFile, "-H"] if threads == 1 else ["odgi", "paths", "-i", ogFile, "-H"]
     if_success, stdout, stderr = run(ODGIPathCmd)
     return if_success, stdout, stderr
 
 
 def ogPathTsv(ogFile, tsvFile, threads):
-    ODGIPathCmd = (
-        ["odgi", "paths", "-i", ogFile, "-H"]
-        if threads == 1
-        else ["odgi", "paths", "-i", ogFile, "-H"]
-    )
+    ODGIPathCmd = ["odgi", "paths", "-i", ogFile, "-H"] if threads == 1 else ["odgi", "paths", "-i", ogFile, "-H"]
     if_success, stdout, stderr = run(ODGIPathCmd)
     with open(tsvFile, "w") as f:
         f.write(stdout)
@@ -108,9 +100,7 @@ def ogPathTsv(ogFile, tsvFile, threads):
 
 def ogView(ogFile, gfaFile, threads):
     ODGIViewCmd = (
-        ["odgi", "view", "-i", ogFile, "-g"]
-        if threads == 1
-        else ["odgi", "view", "-i", ogFile, "-g", "-t", threads]
+        ["odgi", "view", "-i", ogFile, "-g"] if threads == 1 else ["odgi", "view", "-i", ogFile, "-g", "-t", threads]
     )
     if_success, stdout, stderr = run(ODGIViewCmd)
     with open(gfaFile, "w") as f:

@@ -17,11 +17,7 @@ def rankName_exists(db, rank, rankName):
 
 def stat_args_judgment(args):
     if args.rank not in Taxonomy.rank_labels:
-        raise rankNotFound(
-            "{} is not the rank ('domain','phylum','class','order','family','genus')".format(
-                args.rank
-            )
-        )
+        raise rankNotFound("{} is not the rank ('domain','phylum','class','order','family','genus')".format(args.rank))
     rankName_exists(args.db, args.rank, args.name)
 
 
