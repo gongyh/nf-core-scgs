@@ -1,0 +1,154 @@
+import re
+import sys
+import os
+from utils.common import *
+from collections import deque
+from utils.meta import get_info, get_chromosome
+from utils.odgi import ogPosition
+from utils.gff import extract_gene
+from utils.gfa import gfa_parse_link_path
+
+
+def core_genome_extract(gfaFile, ogFile, geneDict, threads):
+    """extract core sequence/dispensable sequence"""
+    ref_chrom_list = list()
+    ref_chrom_path_list = list()
+    alt_path_range = dict()
+    info, chrom_size = get_chromosome(database, name)
+    details = get_info(os.path.join(database, "metadata", "Metadata.tsv"), name)
+    ref_genome = info["ref"].replace(".", "#")
+    # ref_chrom_path_list: path形式list
+    # ref_chrom_list: chromosome name形式list
+    for chrom in chrom_size.keys():
+        ref_chrom_path_list.append(ref_genome + "#" + chrom)
+        ref_chrom_list.append(chrom)
+    gfa_link, unsigned_gfa_link, gfa_path = gfa_parse_link_path()
+    # 除参考基因组外的其他path
+    alt_path_range = {
+        key: value["path"]
+        for key, value in gfa_path.items()
+        if key not in ref_chrom_path_list
+    }
+    genes = extract_gene(database, name)
+    variant_dict = {}
+    _100_gene_list = []
+    variant_range = []
+    if alt_path_range:
+        for k, v in alt_path_range.items():
+            variant_dict[k] = dict()
+            variant_dict[k]["start"] = v[0]
+            variant_dict[k]["end"] = v[-1]
+        # 变异区域范围与ref范围对应
+        positionFile = os.path.join(outdir, "tmp", "position.txt")
+        write_positions_file(variant_dict, positionFile)
+        if len(ref_chrom_list) == 1:
+            is_success, stdout, stderr = ogPosition(ogFile, positionFile, ref_chrom_list[0], threads)
+            output = stdout.strip().split("\n")
+            for output_line in output:
+                if output_line[0] == "#":
+                    continue
+                node = output_line.strip().split("\t")[0].split(",")[0]
+                target_p = output_line.strip().split("\t")[1].split(",")[1]
+                dist = output_line.strip().split("\t")[2]
+                strand = output_line.strip().split("\t")[3]
+                for v in variant_dict.values():
+                    if v["start"][:-1] == node:
+                        if strand == "+":
+                            v["start_position"] = int(target_p) + int(dist)
+                        else:
+                            v["start_position"] = int(target_p) - int(dist)
+                    if v["end"][:-1] == node:
+                        if strand == "+":
+                            v["end_position"] = int(target_p) + int(dist)
+                        else:
+                            v["end_position"] = int(target_p) - int(dist)
+            for v in variant_dict.values():
+                if v["start_position"] > v["end_position"]:
+                    tmp = v["start_position"]
+                    v["start_position"] = v["end_position"]
+                    v["end_position"] = tmp
+                variant_range.append([v["start_position"], v["end_position"]])
+            variant_range = get_merged_ranges(variant_range)
+
+
+def get_merged_ranges(ranges):
+    if not ranges:
+        return []
+    sorted_ranges = sorted(ranges)
+    merged_ranges = [sorted_ranges[0]]
+    for cur_range in sorted_ranges[1:]:
+        if merged_ranges[-1][1] >= cur_range[0]:
+            merged_ranges[-1][1] = max(merged_ranges[-1][1], cur_range[1])
+        else:
+            merged_ranges.append(cur_range)
+    concat_ranges = []
+    for i in range(len(merged_ranges)):
+        if i == 0 or merged_ranges[i][0] != merged_ranges[i - 1][1] + 1:
+            concat_ranges.append(merged_ranges[i])
+        else:
+            concat_ranges[-1][1] = merged_ranges[i][1]
+    return concat_ranges
+
+
+def write_positions_file(variant_dict, tmp_path):
+    with open(tmp_path, "w") as f:
+        for v in variant_dict.values():
+            if v["start"].endswith("+"):
+                f.write(v["start"] + ",0,+\n")
+            if v["start"].endswith("-"):
+                f.write(v["start"] + ",0,-\n")
+            if v["end"].endswith("+"):
+                f.write(v["end"] + ",0,-\n")
+            if v["end"].endswith("-"):
+                f.write(v["end"] + ",0,+\n")
+
+
+def combine_chrom_gfa_file(
+    ref, chrom_list, chrom_path_list, gfa_path, combine_gfa_path
+):
+    ref_path_segment = dict()
+    ref_segment = ""
+    with open(gfa_path, "r") as fin, open(combine_gfa_path, "w") as fout:
+        lines = fin.readlines()
+        for i in range(len(lines)):
+            line = lines[i].strip()
+            row = line.strip().split("\t")
+            next_line = lines[i + 1].strip()
+            if line[0] == "P" and next_line[0] == "L":
+                for j in chrom_path_list:
+                    ref_segment += ref_path_segment[j]
+                fout.write(line + "\n")
+                fout.write("P\t" + ref + "\t" + ref_segment + "\t" + "*\n")
+            if row[0] == "P" and ref in row[1]:
+                if "[" in row[1]:
+                    ref_path_key = re.sub("\[.*?\]", "", row[1])
+                    ref_path_segment[ref_path_key] = row[2]
+                else:
+                    ref_path_segment[row[1]] = row[2]
+            else:
+                fout.write(line + "\n")
+
+
+def core_gfa_file(common_nodes, gfa_path, core_gfa_path):
+    with open(gfa_path, "r") as fin, open(core_gfa_path, "w") as fout:
+        lines = fin.readlines()
+        for i in range(len(lines)):
+            line = lines[i].strip()
+            row = line.strip().split("\t")
+            if row[0] == "H":
+                fout.write(line + "\n")
+            if row[0] == "S":
+                if row[1] in common_nodes:
+                    fout.write(line + "\n")
+            if row[0] == "L":
+                if row[1] in common_nodes or row[3] in common_nodes:
+                    fout.write(line + "\n")
+
+
+def remove_elements(lst1, lst2):
+    empty_list = []
+    for sublist in lst2:
+        start_index, end_index = sublist
+        empty_list.extend(lst1[start_index : end_index + 1])
+    new_list = [element for element in lst1 if element not in empty_list]
+    return new_list
