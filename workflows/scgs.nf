@@ -884,13 +884,23 @@ workflow SCGS {
 
     // PANGENOME ANALYSIS
     if (params.pangenome) {
-        if (params.completeness && params.genusName && params.coreGenesFile) {
-            COMPLETENESS(
-                ctg,
-                params.genusName,
-                mgpg_db,
-                coreGenesFile
-            )
+        if (params.genusName && params.coreGenesFile) {
+            if (params.completeness) {
+                COMPLETENESS (
+                    ctg,
+                    params.genusName,
+                    mgpg_db,
+                    coreGenesFile
+                )
+            }
+            if (params.tree) {
+                TREE (
+                    ctg,
+                    params.genusName,
+                    mgpg_db,
+                    coreGenesFile
+                )
+            }
         }
     }
 
