@@ -165,6 +165,7 @@ params.genusName = null
 params.coreGenesFile = null
 params.genus = null
 params.genomad_db = null
+params.mgpg_db = null
 params.prokka_proteins = null
 params.nt_db = null
 params.blob_db = null
