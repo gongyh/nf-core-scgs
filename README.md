@@ -60,6 +60,6 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 
 gongyh/nf-core-scgs is developed by [Yanhai Gong](mailto:gongyh@qibebt.ac.cn), maintained by [Yanhai Gong](mailto:gongyh@qibebt.ac.cn) and [Shiqi Zhou](mailto:zhousq@qibebt.ac.cn). We look forward to receive your feedback, bug reports, or suggestions for the further development of this pipeline.
 
-##[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This pipeline is open source under the MIT license, and integrates wonderful third-party softwares, which remain owned and copyrighted by their respective developers. Authors cannot be held legally or morally responsible for any consequences that may arise from using or misusing it.
