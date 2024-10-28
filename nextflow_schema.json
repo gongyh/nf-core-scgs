@@ -222,10 +222,9 @@
                     "pattern": "^\\S+\\.gff$",
                     "description": "GFF annotation file."
                 },
-                "refs_fna" : {
+                "refs_fna": {
                     "type": "string",
                     "pattern": "^\\S+\\.fna\\.gz$",
-                    "default": "false",
                     "description": "Genomes for scaffolding."
                 },
                 "notrim": {
