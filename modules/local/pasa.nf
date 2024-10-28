@@ -64,7 +64,7 @@ process PASA {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cp -ar ${panta_refs} panta_${prefix}
+    cp -arL ${panta_refs} panta_${prefix}
     prodigal -i ${spades_out}/contigs.fasta -f gff -o tmp.gff
     echo -e "##FASTA" | cat tmp.gff /dev/stdin ${spades_out}/contigs.fasta > ${prefix}.gff
     panta.py -p add -g ${prefix}.gff -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
