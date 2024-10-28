@@ -63,7 +63,6 @@ def helpMessage() {
     --augustus_species            Augustus species, default 'saccharomyces'
     --eukcc_db                    EukCC database
     --checkm2_db                  CheckM2 database
-    --mgpg_db                     Microbiome graph pangenome database
     --gtdb                        GTDB database
     --ref                         Specify the reference sequence for bbmap
 
@@ -87,8 +86,10 @@ def helpMessage() {
     --fungus                      Fungal genome
 
     Pangenome options:
+    --mgpg_db                     Microbiome graph pangenome database
     --genusName                   Genus Name
     --coreGenesFile               Core genes txt file
+    --refs_fna                    Genome files for scaffolding
 
     Taxa annotation options:
     --evalue                      E-value for blasting NCBI-nt and uniprot reference proteomes database (default=1e-25)
@@ -180,6 +181,7 @@ params.eukcc_db = null
 params.checkm2_db = null
 params.gtdb = null
 params.ref = null
+params.refs_fna = null
 params.evalue = 1e-25
 params.blockSize = 2.0
 params.split_bac_level = "genus"
@@ -421,22 +423,26 @@ if(params.readPaths){
 } else {
     if (single_end) {
         read_files_fastqc = read_files_trimming =
-        Channel.fromFilePairs( params.reads, size:1, checkIfExists: true)
+        Channel.fromFilePairs(params.reads, size:1, checkIfExists: true)
             .map { it ->
                 def meta = [:];
                 meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
                 meta.single_end = single_end;
                 [meta, [file(it[1][0])]]}
 
-        } else {
-            read_files_fastqc = read_files_trimming =
-            Channel.fromFilePairs( params.reads, size:2, checkIfExists: true)
-                .map { it ->
-                    def meta = [:];
-                    meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
-                    meta.single_end = single_end;
-                    [meta, [file(it[1][0]), file(it[1][1])]]}
-        }
+    } else {
+        read_files_fastqc = read_files_trimming =
+        Channel.fromFilePairs(params.reads, size:2, checkIfExists: true)
+            .map { it ->
+                def meta = [:];
+                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                meta.single_end = single_end;
+                [meta, [file(it[1][0]), file(it[1][1])]]}
+    }
+}
+
+if (params.refs_fna) {
+  refs_fna = channel.fromPath(params.refs_fna, checkIfExists: true)
 }
 
 // Header log info

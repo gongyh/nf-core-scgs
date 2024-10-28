@@ -1,5 +1,5 @@
-process PANTA_INIT {
-    tag "panta_refs"
+process PANTA {
+    tag "panta"
     label 'process_high'
 
     conda "python=3.7.10 biopython=1.79 bedtools=2.30.0 prodigal=2.6.3 cd-hit=4.8.1 blast=2.13.0 hmmer=3.3.2 diamond=2.0.14 mcl=14.137 mafft=7.526 parallel=20220222 numpy=1.21.6 scipy=1.7.3 numba=0.56.3 networkx=2.6.3 pandas=1.3.5"
@@ -8,7 +8,8 @@ process PANTA_INIT {
         'scgs/mulled-v2-adf032e06d3ecc4986e4c4efa160e481707acd5a:5d5dd40d2a8d9df574dfc603ccb059d9d3354e19-0' }"
 
     input:
-    path(refs)
+    path(refs_fna)
+    path(proteins)
 
     output:
     path("panta_refs")                , emit: out
@@ -18,8 +19,18 @@ process PANTA_INIT {
     task.ext.when == null || task.ext.when
 
     script:
+    def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
     """
-    panta.py -p init -a ${refs} -o panta_refs -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
+    mkdir -p gffs
+    for fna in ${refs_fna}; do
+        if [[ \$fna == *.fna.gz ]]; then
+            bn=\$(basename "\$fna")
+            prefix="\${bn%.*}"
+            gzip -cd $fna > \${prefix}.fna
+            prokka --outdir gffs/\${prefix} --prefix \$prefix --strain \$prefix --addgenes --addmrna --cpus ${task.cpus} $proteins_opt \${prefix}.fna
+        fi
+    done
+    panta.py -p init -g ${gffs}/*/*.gff -o panta_refs -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -28,7 +39,7 @@ process PANTA_INIT {
     """
 }
 
-process PANTA_ADD {
+process PASA {
     tag "$meta.id"
     label 'process_high'
 
@@ -38,21 +49,25 @@ process PANTA_ADD {
         'scgs/mulled-v2-adf032e06d3ecc4986e4c4efa160e481707acd5a:5d5dd40d2a8d9df574dfc603ccb059d9d3354e19-0' }"
 
     input:
-    tuple val(meta), path(contigs)
+    tuple val(meta), path(spades_out)
     path(panta_refs)
+    path(proteins)
 
     output:
-    path("panta_${prefix}")             , emit: out
-    path "versions.yml"                 , emit: versions
+    path("${prefix}_scaffolds.fasta")             , emit: scaffolds
+    path "versions.yml"                           , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
+    def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
     """
     cp -ar ${panta_refs} panta_${prefix}
-    panta.py -p add -a $contigs -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
+    prokka --outdir ${prefix} --prefix $prefix --strain $prefix --addgenes --addmrna --cpus ${task.cpus} $proteins_opt ${spades_out}/contigs.fasta
+    panta.py -p add -g ${prefix}/${prefix}.gff -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
+    pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir $spades_out --output_fasta ${prefix}_scaffolds.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
