@@ -441,6 +441,7 @@ if(params.readPaths){
     }
 }
 
+refs_fna = Channel.empty()
 if (params.refs_fna) {
   refs_fna = channel.fromPath(params.refs_fna, checkIfExists: true)
 }
