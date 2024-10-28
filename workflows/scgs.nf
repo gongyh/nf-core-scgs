@@ -529,6 +529,7 @@ include { NORMALIZE             } from '../modules/local/normalize'
 include { BBNORM                } from '../modules/local/bbnorm'
 include { CANU                  } from '../modules/local/canu'
 include { SPADES                } from '../modules/local/spades'
+include { PANTA, PASA           } from '../modules/local/pasa'
 include { COMPLETENESS          } from '../modules/local/pangenome/completeness'
 include { TREE                  } from '../modules/local/pangenome/tree'
 include { QUAST_REF             } from '../modules/local/quast_ref'
@@ -733,6 +734,11 @@ workflow SCGS {
         ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
     }
 
+    // PANTA
+    if (!euk) {
+        PANTA(refs_fna, prokka_proteins)
+    }
+
     // ASSEMBLY
     ctg200 = Channel.empty()
     ctg = Channel.empty()
@@ -765,6 +771,11 @@ workflow SCGS {
             ctg200 = SPADES.out.ctg200
             ctg = SPADES.out.ctg
             ch_versions = ch_versions.mix(SPADES.out.versions)
+            if (!euk && params.refs_fna) {
+                PASA(SPADES.out.assembly, PANTA.out.db, prokka_proteins)
+                ctg200 = PASA.out.ctg200
+                ctg = PASA.out.ctg
+            }
         }
     }
 

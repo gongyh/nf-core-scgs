@@ -16,6 +16,7 @@ process SPADES {
     tuple val(meta), path("${prefix}.spades_out/${prefix}.contigs.gfa")    , emit: contig_graph
     tuple val(meta), path("${prefix}.ctg200.fasta")                        , emit: ctg200
     tuple val(meta), path("${prefix}.ctgs.fasta")                          , emit: ctg
+    tuple val(meta), path("${prefix}.spades_out")                          , emit: assembly
     path "versions.yml"                                                    , emit: versions
 
     when:

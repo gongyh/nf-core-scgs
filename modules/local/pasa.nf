@@ -12,7 +12,7 @@ process PANTA {
     path(proteins)
 
     output:
-    path("panta_refs")                , emit: out
+    path("panta_refs")                , emit: db
     path "versions.yml"               , emit: versions
 
     when:
@@ -54,8 +54,10 @@ process PASA {
     path(proteins)
 
     output:
-    path("${prefix}_scaffolds.fasta")             , emit: scaffolds
-    path "versions.yml"                           , emit: versions
+    tuple val(meta), path("${prefix}.scaffolds.fasta")          , emit: scaffolds
+    tuple val(meta), path("${prefix}.ctg200.fasta")             , emit: ctg200
+    tuple val(meta), path("${prefix}.ctgs.fasta")               , emit: ctg
+    path "versions.yml"                                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -67,7 +69,9 @@ process PASA {
     cp -ar ${panta_refs} panta_${prefix}
     prokka --outdir ${prefix} --prefix $prefix --strain $prefix --addgenes --addmrna --cpus ${task.cpus} $proteins_opt ${spades_out}/contigs.fasta
     panta.py -p add -g ${prefix}/${prefix}.gff -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
-    pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir $spades_out --output_fasta ${prefix}_scaffolds.fasta
+    pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir $spades_out --output_fasta ${prefix}.scaffolds.fasta
+    faFilterByLen.pl ${prefix}.scaffolds.fasta 200 > ${prefix}.ctg200.fasta
+    cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
