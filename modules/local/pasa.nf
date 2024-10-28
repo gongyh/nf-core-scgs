@@ -9,7 +9,6 @@ process PANTA {
 
     input:
     path(refs_fna)
-    path(proteins)
 
     output:
     path("panta_refs")                , emit: db
@@ -19,18 +18,19 @@ process PANTA {
     task.ext.when == null || task.ext.when
 
     script:
-    def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
     """
     mkdir -p gffs
-    for fna in ${refs_fna}; do
+    refs=(${refs_fna})
+    for fna in \${refs[*]}; do
         if [[ \$fna == *.fna.gz ]]; then
-            bn=\$(basename "\$fna")
-            prefix="\${bn%.*}"
-            gzip -cd $fna > \${prefix}.fna
-            prokka --outdir gffs/\${prefix} --prefix \$prefix --strain \$prefix --addgenes --addmrna --cpus ${task.cpus} $proteins_opt \${prefix}.fna
+            bn=\$(basename \$fna)
+            prefix=\${bn%.fna.gz}
+            gzip -cd \$fna > \${prefix}.fna
+            prodigal -i \${prefix}.fna -f gff -o tmp.gff
+            echo -e "##FASTA" | cat tmp.gff /dev/stdin \${prefix}.fna > gffs/\${prefix}.gff
         fi
     done
-    panta.py -p init -g ${gffs}/*/*.gff -o panta_refs -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
+    panta.py -p init -g gffs/*.gff -o panta_refs -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -51,7 +51,6 @@ process PASA {
     input:
     tuple val(meta), path(spades_out)
     path(panta_refs)
-    path(proteins)
 
     output:
     tuple val(meta), path("${prefix}.scaffolds.fasta")          , emit: scaffolds
@@ -64,11 +63,11 @@ process PASA {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
     """
     cp -ar ${panta_refs} panta_${prefix}
-    prokka --outdir ${prefix} --prefix $prefix --strain $prefix --addgenes --addmrna --cpus ${task.cpus} $proteins_opt ${spades_out}/contigs.fasta
-    panta.py -p add -g ${prefix}/${prefix}.gff -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
+    prodigal -i ${spades_out}/contigs.fasta -f gff -o tmp.gff
+    echo -e "##FASTA" | cat tmp.gff /dev/stdin ${spades_out}/contigs.fasta > ${prefix}.gff
+    panta.py -p add -g ${prefix}.gff -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
     pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir $spades_out --output_fasta ${prefix}.scaffolds.fasta
     faFilterByLen.pl ${prefix}.scaffolds.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta

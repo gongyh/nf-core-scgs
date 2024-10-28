@@ -735,11 +735,6 @@ workflow SCGS {
         ch_versions = ch_versions.mix(CIRCLIZE.out.versions)
     }
 
-    // PANTA
-    if (!euk) {
-        PANTA(refs_fna, prokka_proteins)
-    }
-
     // ASSEMBLY
     ctg200 = Channel.empty()
     ctg = Channel.empty()
@@ -773,7 +768,8 @@ workflow SCGS {
             ctg = SPADES.out.ctg
             ch_versions = ch_versions.mix(SPADES.out.versions)
             if (!euk && params.refs_fna) {
-                PASA(SPADES.out.assembly, PANTA.out.db, prokka_proteins)
+                PANTA(refs_fna.collect())
+                PASA(SPADES.out.assembly, PANTA.out.db)
                 ctg200 = PASA.out.ctg200
                 ctg = PASA.out.ctg
             }
