@@ -376,8 +376,8 @@ def read_contigs2dict(data_dir):
     f = open(data_dir, "r")
     lines = f.readlines()
 
-    hre = re.compile(">(\S+)")
-    lre = re.compile("^(\S+)$")
+    hre = re.compile(r">(\S+)")
+    lre = re.compile(r"^(\S+)$")
 
     gene = {}
 
