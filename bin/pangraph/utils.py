@@ -10,6 +10,7 @@ import gzip
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import get_context
 
+
 def help_fnc(i, j):
     nonmatch = True
     for ele in range(min(127, len(j)), 63, -1):
@@ -258,6 +259,7 @@ def append_strand_undirected(input_str):
     else:
         return input_str
 
+
 def get_overlap(task):
     key1, key2, contig1, contig2, min_overlap = task
 
@@ -284,6 +286,7 @@ def get_overlap(task):
             pairs.append((key2 + "+", key1 + "-"))
     return pairs
 
+
 def get_undirected_overlap(task):
     key1, key2, contig1, contig2, min_overlap = task
 
@@ -308,6 +311,7 @@ def get_undirected_overlap(task):
             pairs.append((key1, key2))
     return pairs
 
+
 def buildOverlapEdge(contigs, min_overlap=30, graph="directed"):
     # contigs: dict of contigs (key = contig id, value = sequence)
     # min_overlap: minimum overlap length
@@ -316,20 +320,17 @@ def buildOverlapEdge(contigs, min_overlap=30, graph="directed"):
     edge_list_overlap = []
     # Create a list of tuples with key1 and key2 for each combination
     tasks = [
-        (key1, key2, contigs[key1], contigs[key2], min_overlap)
-        for key1 in contigs
-        for key2 in contigs
-        if key1 != key2
+        (key1, key2, contigs[key1], contigs[key2], min_overlap) for key1 in contigs for key2 in contigs if key1 != key2
     ]
 
     if graph == "directed":
-        with ProcessPoolExecutor(mp_context=get_context('spawn')) as executor:
+        with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
             # Map the tasks to the get_overlap function
             results = executor.map(get_overlap, tasks)
             # Flatten the list of generators and extend the edge_list_overlap
             edge_list_overlap.extend(item for sublist in results for item in sublist)
     else:
-        with ProcessPoolExecutor(mp_context=get_context('spawn')) as executor:
+        with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
             # Map the tasks to the get_undirected_overlap function
             results = executor.map(get_undirected_overlap, tasks)
             # Extend the edge_list_overlap with the results
