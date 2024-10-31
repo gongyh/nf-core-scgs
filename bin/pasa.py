@@ -40,20 +40,27 @@ SInfer = args.SInfer
 min_weight_val = args.min_weight_val
 pangraph_output_sensitive = args.output_fasta
 
-pangraph = PanGraph(sample_info=None, gene_info=None, gene_position=None)
-try:
-    maximum_matching = "greedy"
-    pangraph.run_pangraph_pipeline(
-        data_dir,
-        incomplete_sample_name,
-        assem_dir,
-        fasta_gen,
-        pangraph_output_sensitive,
-        maximum_matching,
-        MLR,
-        SInfer,
-        min_weight_val,
-    )
-except Exception as e:
-    logging.error(traceback.format_exc())
-    # Logs the error appropriately.
+from multiprocessing import freeze_support
+
+if __name__ == "__main__":
+
+    freeze_support()
+
+    pangraph = PanGraph(sample_info=None, gene_info=None, gene_position=None)
+
+    try:
+        maximum_matching = "greedy"
+        pangraph.run_pangraph_pipeline(
+            data_dir,
+            incomplete_sample_name,
+            assem_dir,
+            fasta_gen,
+            pangraph_output_sensitive,
+            maximum_matching,
+            MLR,
+            SInfer,
+            min_weight_val,
+        )
+    except Exception as e:
+        logging.error(traceback.format_exc())
+        # Logs the error appropriately.

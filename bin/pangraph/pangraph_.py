@@ -877,12 +877,6 @@ class PanGraph:
 
         self.gene = read_contigs2dict(contig_dir)
         # print("Use union graph: overlap + assembly: NO")
-        # print("Use union graph: overlap + assembly: NO")
-        # print("Use union graph: overlap + assembly: NO")
-        # print("Use union graph: overlap + assembly: NO")
-        # print("Use union graph: overlap + assembly: NO")
-        # print("Use union graph: overlap + assembly: NO")
-        # print("Use union graph: overlap + assembly: NO")
         edge_list_overlap = buildOverlapEdge(self.gene, 20, "directed")
         print("Use union graph: overlap + assembly: done")
         edge_list_final = edge_list_overlap + edge_list_assembly
@@ -953,7 +947,6 @@ class PanGraph:
         self.min_weight = min_weight_val
         self.MLR = MLR
         contig_graph = self.join_contig(sample_id=incomplete_sample_id, min_weight=self.min_weight, params=params)
-        # print("DO NOT REMOVE CIRCLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         # print("DO NOT REMOVE CIRCLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         contig_graph = self.remove_cycle(assembly_graph)
         indegree_dict = dict(contig_graph.in_degree())

@@ -4,8 +4,8 @@ process PANTA {
 
     conda "python=3.7.10 biopython=1.79 bedtools=2.30.0 prodigal=2.6.3 cd-hit=4.8.1 blast=2.13.0 hmmer=3.3.2 diamond=2.0.14 mcl=14.137 mafft=7.526 parallel=20220222 numpy=1.21.6 scipy=1.7.3 numba=0.56.3 networkx=2.6.3 pandas=1.3.5"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-13e4a6d8b6a43c8cebffef2d3a782f9859e04bd8:34fb1060499c2c2fc71354290282dcd6cba7a68b-0' :
-        'scgs/mulled-v2-13e4a6d8b6a43c8cebffef2d3a782f9859e04bd8:34fb1060499c2c2fc71354290282dcd6cba7a68b-0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-13e4a6d8b6a43c8cebffef2d3a782f9859e04bd8:c32998af85c0bad16098c2058913b09d9e367237-0' :
+        'scgs/mulled-v2-13e4a6d8b6a43c8cebffef2d3a782f9859e04bd8:c32998af85c0bad16098c2058913b09d9e367237-0' }"
 
     input:
     path(refs_fna)
@@ -45,8 +45,8 @@ process PASA {
 
     conda "python=3.7.10 biopython=1.79 bedtools=2.30.0 prodigal=2.6.3 cd-hit=4.8.1 blast=2.13.0 hmmer=3.3.2 diamond=2.0.14 mcl=14.137 mafft=7.526 parallel=20220222 numpy=1.21.6 scipy=1.7.3 numba=0.56.3 networkx=2.6.3 pandas=1.3.5"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-13e4a6d8b6a43c8cebffef2d3a782f9859e04bd8:34fb1060499c2c2fc71354290282dcd6cba7a68b-0' :
-        'scgs/mulled-v2-13e4a6d8b6a43c8cebffef2d3a782f9859e04bd8:34fb1060499c2c2fc71354290282dcd6cba7a68b-0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-13e4a6d8b6a43c8cebffef2d3a782f9859e04bd8:c32998af85c0bad16098c2058913b09d9e367237-0' :
+        'scgs/mulled-v2-13e4a6d8b6a43c8cebffef2d3a782f9859e04bd8:c32998af85c0bad16098c2058913b09d9e367237-0' }"
 
     input:
     tuple val(meta), path(spades_out)
