@@ -2,10 +2,10 @@ process PANTA {
     tag "panta"
     label 'process_high'
 
-    conda "pypy=7.3.15 python=3.9.18 biopython=1.84 bedtools=2.30.0 prodigal=2.6.3 cd-hit=4.8.1 blast=2.13.0 hmmer=3.3.2 diamond=2.0.14 mcl=14.137 mafft=7.526 parallel=20220222 numpy=1.26.4 scipy=1.12.0 networkx=3.2.1 pandas=2.2.2 perl-bioperl=1.7.8"
+    conda "pypy=7.3.15 python=3.9.18 biopython=1.84 bedtools=2.30.0 prodigal=2.6.3 cd-hit=4.8.1 blast=2.13.0 hmmer=3.3.2 diamond=2.0.14 mcl=14.137 mafft=7.526 parallel=20220222 numpy=1.26.4 scipy=1.12.0 networkx=2.6.3 pandas=2.2.2 perl-bioperl=1.7.8"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:f75504f23b69830fde44c8b392512eaec51976d1-0' :
-        'scgs/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:f75504f23b69830fde44c8b392512eaec51976d1-0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:2dbb37a53c6b2b0022680b85f721d8d95f888d99-0' :
+        'scgs/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:2dbb37a53c6b2b0022680b85f721d8d95f888d99-0' }"
 
     input:
     path(refs_fna)
@@ -43,10 +43,10 @@ process PASA {
     tag "$meta.id"
     label 'process_high'
 
-    conda "pypy=7.3.15 python=3.9.18 biopython=1.84 bedtools=2.30.0 prodigal=2.6.3 cd-hit=4.8.1 blast=2.13.0 hmmer=3.3.2 diamond=2.0.14 mcl=14.137 mafft=7.526 parallel=20220222 numpy=1.26.4 scipy=1.12.0 networkx=3.2.1 pandas=2.2.2 perl-bioperl=1.7.8"
+    conda "pypy=7.3.15 python=3.9.18 biopython=1.84 bedtools=2.30.0 prodigal=2.6.3 cd-hit=4.8.1 blast=2.13.0 hmmer=3.3.2 diamond=2.0.14 mcl=14.137 mafft=7.526 parallel=20220222 numpy=1.26.4 scipy=1.12.0 networkx=2.6.3 pandas=2.2.2 perl-bioperl=1.7.8"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:f75504f23b69830fde44c8b392512eaec51976d1-0' :
-        'scgs/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:f75504f23b69830fde44c8b392512eaec51976d1-0' }"
+        'https://depot.galaxyproject.org/singularity/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:2dbb37a53c6b2b0022680b85f721d8d95f888d99-0' :
+        'scgs/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:2dbb37a53c6b2b0022680b85f721d8d95f888d99-0' }"
 
     input:
     tuple val(meta), path(spades_out)
