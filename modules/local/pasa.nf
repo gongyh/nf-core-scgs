@@ -68,7 +68,8 @@ process PASA {
     prodigal -i ${spades_out}/contigs.fasta -f gff -o tmp.gff
     echo -e "##FASTA" | cat tmp.gff /dev/stdin ${spades_out}/contigs.fasta > ${prefix}.gff
     panta.py -p add -g ${prefix}.gff -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
-    pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir $spades_out --output_fasta ${prefix}.scaffolds.fasta
+    pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir $spades_out --output_fasta ${prefix}.pasa.fasta
+    fixSPAdesLen.py ${prefix}.pasa.fasta > ${prefix}.scaffolds.fasta
     faFilterByLen.pl ${prefix}.scaffolds.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
 
