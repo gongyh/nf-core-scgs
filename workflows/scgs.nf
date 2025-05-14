@@ -54,6 +54,7 @@ def helpMessage() {
     --prokka_proteins             FASTA file of trusted proteins to first annotate from (optional)
     --nt_db                       NCBI Nt database (BLAST)
     --blob_db                     Blobtools nodesDB.txt
+    --krona_db                    Krona taxonomy.tab (if used offline)
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
     --uniprot_taxids              Sequence id to taxa id mapping file
     --kraken_db                   Kraken2 database
@@ -169,6 +170,7 @@ params.genomad_db = null
 params.mgpg_db = null
 params.prokka_proteins = null
 params.nt_db = null
+params.krona_db = null
 params.blob_db = null
 params.kraken_db = null
 params.kofam_profile = null
@@ -289,6 +291,13 @@ if (params.blob_db) {
     if( !blob_db.exists() ) exit 1, "Blobtools nodesDB.txt not found: ${params.blob_db}"
 } else {
     blob_db = file("/dev/null")
+}
+
+// Configurable Krona taxonomy.tab
+krona_db = false
+if (params.krona_db) {
+    krona_db = file(params.krona_db)
+    if( !krona_db.exists() ) exit 1, "Krona taxonomy.tab not found: ${params.krona_db}"
 }
 
 // Configurable eggNOG database
@@ -627,11 +636,14 @@ workflow SCGS {
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
     if (params.kraken) {
-        KTUPDATETAXONOMY ()
+        if (!krona_db) {
+            KTUPDATETAXONOMY ()
+            krona_db = KTUPDATETAXONOMY.out.taxonomy
+        }
         KRAKEN (
             trimmed_reads,
             kraken_db,
-            KTUPDATETAXONOMY.out.taxonomy
+            krona_db
         )
         ch_multiqc_kraken = KRAKEN.out.report
     }
@@ -764,14 +776,19 @@ workflow SCGS {
             contig = SPADES.out.contig
             contig_path = SPADES.out.contig_path
             contig_graph = SPADES.out.contig_graph
-            ctg200 = SPADES.out.ctg200
-            ctg = SPADES.out.ctg
+            // ctg200 = SPADES.out.ctg200
+            // ctg = SPADES.out.ctg
             ch_versions = ch_versions.mix(SPADES.out.versions)
             if (!euk && params.refs_fna) {
                 PANTA(refs_fna.collect())
+                ch_versions = ch_versions.mix(PANTA.out.versions)
                 PASA(SPADES.out.assembly, PANTA.out.db)
+                ch_versions = ch_versions.mix(PASA.out.versions)
                 ctg200 = PASA.out.ctg200
                 ctg = PASA.out.ctg
+            } else {
+                ctg200 = SPADES.out.ctg200
+                ctg = SPADES.out.ctg
             }
         }
     }

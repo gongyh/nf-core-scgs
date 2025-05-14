@@ -28,7 +28,7 @@ process SAMTOOLS {
     """
     samtools sort -o ${prefix}.sorted.bam $bam
     samtools index ${prefix}.sorted.bam
-    picard MarkDuplicates I=${prefix}.sorted.bam O=${prefix}.markdup.bam M=metrics.txt AS=true
+    picard -Xmx${task.memory.toGiga()}G MarkDuplicates I=${prefix}.sorted.bam O=${prefix}.markdup.bam M=metrics.txt AS=true
     samtools index ${prefix}.markdup.bam
     bedtools bamtobed -i ${prefix}.markdup.bam | sort -T /tmp -k 1,1 -k 2,2n -k 3,3n -k 6,6 > ${prefix}.markdup.bed
     samtools stats -t ${genome} ${prefix}.markdup.bam > ${prefix}.stats.txt

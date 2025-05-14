@@ -418,6 +418,10 @@
                     "type": "string",
                     "description": "Path of Blobtools nodesDB.txt."
                 },
+                "krona_db": {
+                    "type": "string",
+                    "description": "Path of Krona taxonomy.tab."
+                },
                 "kraken_db": {
                     "type": "string",
                     "description": "Path of KRAKEN1 database."
