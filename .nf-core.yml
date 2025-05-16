@@ -1,8 +1,9 @@
 repository_type: pipeline
+nf_core_version: 3.2.1
 lint:
   nextflow_config:
     - manifest.name
     - manifest.version
     - manifest.homePage
-  files_unchanged:
-    - .github/workflows/linting.yml
+  actions_awsfulltest: False
+  local_component_structure: False
