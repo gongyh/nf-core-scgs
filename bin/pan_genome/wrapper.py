@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    Wrapper for pipelines
+Wrapper for pipelines
 """
 import os
 import subprocess

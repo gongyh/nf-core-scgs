@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-    The entry point
+The entry point
 """
 import argparse
 import os
