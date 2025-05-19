@@ -113,13 +113,6 @@
             "description": "Parameters used to describe centralised config profiles. These should not be edited.",
             "help_text": "The centralised nf-core configuration profiles use a handful of pipeline parameters to describe themselves. This information is then printed to the Nextflow log when you run a pipeline. You should not need to change these values when you run a pipeline.",
             "properties": {
-                "hostnames": {
-                    "type": "string",
-                    "description": "Institutional configs hostname.",
-                    "hidden": true,
-                    "default": "localhost",
-                    "fa_icon": "fas fa-users-cog"
-                },
                 "config_profile_description": {
                     "type": "string",
                     "description": "Institutional config description.",
