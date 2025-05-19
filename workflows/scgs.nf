@@ -10,8 +10,7 @@ def helpMessage() {
 
     Mandatory arguments:
     --reads                       Path to input data (must be surrounded with quotes)
-    -profile                      Configuration profile to use. Can use multiple (comma separated)
-                                  Available: conda, docker, singularity, awsbatch, test and more.
+    -profile                      Configuration profile to use. Can use multiple (comma separated). Available: conda, docker, singularity, awsbatch, test and more.
 
     Options:
     --vcf                         Variantion graph construction
@@ -40,6 +39,9 @@ def helpMessage() {
     --split_bac_level             Level of split for Bacteria
     --split_euk_level             Level of split for Eukaryota
     --graphbin                    Enable graphbin to bin
+    --pangenome                   Enable pangenome analysis
+    --completeness                Calculate the completeness of assembling contigs using pan-genomic methods based on core genes
+    --tree                        Draw a phylogenetic tree
 
     References:                   If not specified in the configuration file or you wish to overwrite any of the references.
     --fasta                       Path to Fasta reference
@@ -51,6 +53,7 @@ def helpMessage() {
     --prokka_proteins             FASTA file of trusted proteins to first annotate from (optional)
     --nt_db                       NCBI Nt database (BLAST)
     --blob_db                     Blobtools nodesDB.txt
+    --krona_db                    Krona taxonomy.tab (if used offline)
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
     --uniprot_taxids              Sequence id to taxa id mapping file
     --kraken_db                   Kraken2 database
@@ -81,6 +84,12 @@ def helpMessage() {
     Quast options:
     --euk                         Euk genome
     --fungus                      Fungal genome
+
+    Pangenome options:
+    --mgpg_db                     Microbiome graph pangenome database
+    --genusName                   Genus Name
+    --coreGenesFile               Core genes txt file
+    --refs_fna                    Genome files for scaffolding
 
     Taxa annotation options:
     --evalue                      E-value for blasting NCBI-nt and uniprot reference proteomes database (default=1e-25)
@@ -150,10 +159,17 @@ params.point = false
 params.split = false
 params.split_euk = false
 params.graphbin = false
+params.pangenome = false
+params.completeness = false
+params.tree = false
+params.genusName = null
+params.coreGenesFile = null
 params.genus = null
 params.genomad_db = null
+params.mgpg_db = null
 params.prokka_proteins = null
 params.nt_db = null
+params.krona_db = null
 params.blob_db = null
 params.kraken_db = null
 params.kofam_profile = null
@@ -166,6 +182,7 @@ params.eukcc_db = null
 params.checkm2_db = null
 params.gtdb = null
 params.ref = null
+params.refs_fna = null
 params.evalue = 1e-25
 params.blockSize = 2.0
 params.split_bac_level = "genus"
@@ -275,6 +292,13 @@ if (params.blob_db) {
     blob_db = file("/dev/null")
 }
 
+// Configurable Krona taxonomy.tab
+krona_db = false
+if (params.krona_db) {
+    krona_db = file(params.krona_db)
+    if( !krona_db.exists() ) exit 1, "Krona taxonomy.tab not found: ${params.krona_db}"
+}
+
 // Configurable eggNOG database
 eggnog_db = false
 if (params.eggnog_db) {
@@ -309,6 +333,24 @@ if (params.gtdb) {
     if ( !gtdb.exists() ) exit 1, "GTDB database not found: ${params.gtdb}"
 } else {
     gtdb = file("/dev/null")
+}
+
+// Configure pangenome database
+mgpg_db = false
+if (params.mgpg_db) {
+    mgpg_db  = file(params.mgpg_db)
+    if ( !mgpg_db.exists() ) exit 1, "Graph pangenome database not found: ${params.mgpg_db}"
+} else {
+    mgpg_db = file("/dev/null")
+}
+
+// Configure core genes file
+coreGenesFile = false
+if (params.coreGenesFile) {
+    coreGenesFile  = file(params.coreGenesFile)
+    if ( !coreGenesFile.exists() ) exit 1, "Core genes file not found: ${params.coreGenesFile}"
+} else {
+    coreGenesFile = file("/dev/null")
 }
 
 // Configure reference sequence
@@ -389,22 +431,27 @@ if(params.readPaths){
 } else {
     if (single_end) {
         read_files_fastqc = read_files_trimming =
-        Channel.fromFilePairs( params.reads, size:1, checkIfExists: true)
+        Channel.fromFilePairs(params.reads, size:1, checkIfExists: true)
             .map { it ->
                 def meta = [:];
                 meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
                 meta.single_end = single_end;
                 [meta, [file(it[1][0])]]}
 
-        } else {
-            read_files_fastqc = read_files_trimming =
-            Channel.fromFilePairs( params.reads, size:2, checkIfExists: true)
-                .map { it ->
-                    def meta = [:];
-                    meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
-                    meta.single_end = single_end;
-                    [meta, [file(it[1][0]), file(it[1][1])]]}
-        }
+    } else {
+        read_files_fastqc = read_files_trimming =
+        Channel.fromFilePairs(params.reads, size:2, checkIfExists: true)
+            .map { it ->
+                def meta = [:];
+                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                meta.single_end = single_end;
+                [meta, [file(it[1][0]), file(it[1][1])]]}
+    }
+}
+
+refs_fna = Channel.empty()
+if (params.refs_fna) {
+    refs_fna = channel.fromPath(params.refs_fna, checkIfExists: true)
 }
 
 // Header log info
@@ -415,7 +462,6 @@ summary['Reads']            = params.reads
 summary['Fasta Ref']        = params.fasta
 summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
 summary['Bulk']             = params.bulk ? 'Yes' : 'No'
-summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
 summary['Launch dir']       = workflow.launchDir
@@ -441,9 +487,6 @@ if(params.email) {
 }
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "\033[2m----------------------------------------------------\033[0m"
-
-// Check the hostnames against configured profiles
-checkHostname()
 
 def create_workflow_summary(summary) {
     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
@@ -491,6 +534,9 @@ include { NORMALIZE             } from '../modules/local/normalize'
 include { BBNORM                } from '../modules/local/bbnorm'
 include { CANU                  } from '../modules/local/canu'
 include { SPADES                } from '../modules/local/spades'
+include { PANTA; PASA           } from '../modules/local/pasa'
+include { COMPLETENESS          } from '../modules/local/pangenome/completeness'
+include { TREE                  } from '../modules/local/pangenome/tree'
 include { QUAST_REF             } from '../modules/local/quast_ref'
 include { QUAST_DENOVO          } from '../modules/local/quast_denovo'
 include { BOWTIE2_REMAP         } from '../modules/local/bowtie2_remap'
@@ -505,6 +551,7 @@ include { ACDC                  } from '../modules/local/acdc'
 include { TSNE                  } from '../modules/local/tsne'
 include { PROKKA                } from '../modules/local/prokka'
 include { PRODIGAL              } from '../modules/local/prodigal'
+include { METARON               } from '../modules/local/metaron'
 include { AUGUSTUS              } from '../modules/local/augustus'
 include { EUKCC                 } from '../modules/local/eukcc'
 include { EGGNOG                } from '../modules/local/eggnog'
@@ -518,6 +565,8 @@ include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions/m
 
 
 /** subworkflow */
+include { completionEmail       } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
+include { completionSummary     } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
 include { VG                    } from '../subworkflows/local/vg'
 
 // MULTIQC
@@ -584,11 +633,14 @@ workflow SCGS {
     // KRAKEN
     ch_multiqc_kraken = Channel.empty()
     if (params.kraken) {
-        KTUPDATETAXONOMY ()
+        if (!krona_db) {
+            KTUPDATETAXONOMY ()
+            krona_db = KTUPDATETAXONOMY.out.taxonomy
+        }
         KRAKEN (
             trimmed_reads,
             kraken_db,
-            KTUPDATETAXONOMY.out.taxonomy
+            krona_db
         )
         ch_multiqc_kraken = KRAKEN.out.report
     }
@@ -721,17 +773,28 @@ workflow SCGS {
             contig = SPADES.out.contig
             contig_path = SPADES.out.contig_path
             contig_graph = SPADES.out.contig_graph
-            ctg200 = SPADES.out.ctg200
-            ctg = SPADES.out.ctg
+            // ctg200 = SPADES.out.ctg200
+            // ctg = SPADES.out.ctg
             ch_versions = ch_versions.mix(SPADES.out.versions)
+            if (!euk && params.refs_fna) {
+                PANTA(refs_fna.collect())
+                ch_versions = ch_versions.mix(PANTA.out.versions)
+                PASA(SPADES.out.assembly, PANTA.out.db)
+                ch_versions = ch_versions.mix(PASA.out.versions)
+                ctg200 = PASA.out.ctg200
+                ctg = PASA.out.ctg
+            } else {
+                ctg200 = SPADES.out.ctg200
+                ctg = SPADES.out.ctg
+            }
         }
     }
 
     // GENOMAD
     if ( params.genomad ) {
         GENOMAD_ENDTOEND(
-          ctg,
-          genomad_db
+            ctg,
+            genomad_db
         )
         ch_versions = ch_versions.mix(GENOMAD_ENDTOEND.out.versions)
     }
@@ -840,14 +903,35 @@ workflow SCGS {
 
         if (params.acdc) {
             ACDC (
-              acdc_contigs,
-              acdc_tax,
-              kraken_db
+                acdc_contigs,
+                acdc_tax,
+                kraken_db
             )
         }
     }
     TSNE(ctg)
 
+    // PANGENOME ANALYSIS
+    if (params.pangenome) {
+        if (params.genusName && params.coreGenesFile) {
+            if (params.completeness) {
+                COMPLETENESS (
+                    ctg,
+                    params.genusName,
+                    mgpg_db,
+                    coreGenesFile
+                )
+            }
+            if (params.tree) {
+                TREE (
+                    ctg,
+                    params.genusName,
+                    mgpg_db,
+                    coreGenesFile
+                )
+            }
+        }
+    }
 
     faa = Channel.empty()
     prokka_for_split  = Channel.empty()
@@ -857,6 +941,8 @@ workflow SCGS {
         ch_versions = ch_versions.mix(PROKKA.out.versions)
         PRODIGAL(ctg)
         ch_versions = ch_versions.mix(PRODIGAL.out.versions)
+        METARON(ctg, PRODIGAL.out.gff.collect{it[1]})
+        ch_versions = ch_versions.mix(METARON.out.versions)
         faa = PROKKA.out.faa
         prokka_for_split  = PROKKA.out.prokka_for_split
         ch_multiqc_prokka = PROKKA.out.prokka_for_split
@@ -870,11 +956,11 @@ workflow SCGS {
     }
 
     if (params.eggnog) {
-      EGGNOG (
-          faa,
-          eggnog_db
-      )
-      ch_versions = ch_versions.mix(EGGNOG.out.versions)
+        EGGNOG (
+            faa,
+            eggnog_db
+        )
+        ch_versions = ch_versions.mix(EGGNOG.out.versions)
     }
 
     // KOFAMSCAN
@@ -993,9 +1079,17 @@ workflow SCGS {
  */
 workflow.onComplete {
     if (params.email){
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        // Helpers.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        completionEmail(summary_params,
+            params.email,
+            null,
+            false,
+            params.outdir,
+            log,
+            multiqc_report.getVal()
+        )
     }
-    NfcoreTemplate.summary(workflow, params, log)
+    completionSummary()
 }
 
 def nfcoreHeader(){
@@ -1019,25 +1113,4 @@ def nfcoreHeader(){
     ${c_purple}  gongyh/nf-core-scgs v${workflow.manifest.version}${c_reset}
     ${c_dim}----------------------------------------------------${c_reset}
     """.stripIndent()
-}
-
-def checkHostname(){
-    def c_reset = params.monochrome_logs ? '' : "\033[0m"
-    def c_white = params.monochrome_logs ? '' : "\033[0;37m"
-    def c_red = params.monochrome_logs ? '' : "\033[1;91m"
-    def c_yellow_bold = params.monochrome_logs ? '' : "\033[1;93m"
-    if(params.hostnames){
-        def hostname = "hostname".execute().text.trim()
-        params.hostnames.each { prof, hnames ->
-            hnames.each { hname ->
-                if(hostname.contains(hname) && !workflow.profile.contains(prof)){
-                    log.error "====================================================\n" +
-                            "  ${c_red}WARNING!${c_reset} You are running with `-profile $workflow.profile`\n" +
-                            "  but your machine hostname is ${c_white}'$hostname'${c_reset}\n" +
-                            "  ${c_yellow_bold}It's highly recommended that you use `-profile $prof${c_reset}`\n" +
-                            "============================================================"
-                }
-            }
-        }
-    }
 }

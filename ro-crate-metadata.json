@@ -1,0 +1,353 @@
+{
+    "@context": [
+        "https://w3id.org/ro/crate/1.1/context",
+        {
+            "GithubService": "https://w3id.org/ro/terms/test#GithubService",
+            "JenkinsService": "https://w3id.org/ro/terms/test#JenkinsService",
+            "PlanemoEngine": "https://w3id.org/ro/terms/test#PlanemoEngine",
+            "TestDefinition": "https://w3id.org/ro/terms/test#TestDefinition",
+            "TestInstance": "https://w3id.org/ro/terms/test#TestInstance",
+            "TestService": "https://w3id.org/ro/terms/test#TestService",
+            "TestSuite": "https://w3id.org/ro/terms/test#TestSuite",
+            "TravisService": "https://w3id.org/ro/terms/test#TravisService",
+            "definition": "https://w3id.org/ro/terms/test#definition",
+            "engineVersion": "https://w3id.org/ro/terms/test#engineVersion",
+            "instance": "https://w3id.org/ro/terms/test#instance",
+            "resource": "https://w3id.org/ro/terms/test#resource",
+            "runsOn": "https://w3id.org/ro/terms/test#runsOn"
+        }
+    ],
+    "@graph": [
+        {
+            "@id": "./",
+            "@type": "Dataset",
+            "creativeWorkStatus": "Stable",
+            "datePublished": "2025-05-19T06:25:48+00:00",
+            "description": "# gongyh/nf-core-scgs\n\n**Single Cell Genome Sequencing data analysis pipeline**.\n\n[![CircleCI](https://dl.circleci.com/status-badge/img/gh/gongyh/nf-core-scgs/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/gongyh/nf-core-scgs/tree/master)\n[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A524.04.0-23aa62.svg)](https://www.nextflow.io/)\n[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)\n[![run with podman](https://img.shields.io/badge/run%20with-podman-0dffed?labelColor=000000)](https://podman.io/)\n[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)\n[![run with conda](https://img.shields.io/badge/run%20with-conda-ffb7ed?labelColor=000000&logo=anaconda)](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)\n\n## Introduction\n\nThe pipeline is used for single cell genome sequencing data analysis and built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker / singularity containers making installation trivial and results highly reproducible.\n\n![Schematic image of scgs pipeline](scgs_pipeline.png)\n\n## Quick start\n\nPrerequisites: Git, Java 11 or later, Docker\n\n```bash\n## Install Nextflow\n$ curl -s https://get.nextflow.io | bash\n## Get the pipeline\n$ git clone -b v2.0.2 https://github.com/gongyh/nf-core-scgs.git\n## Test\n$ ./nextflow run nf-core-scgs -profile test_local,docker\nor $ ./nextflow run nf-core-scgs -profile test_local,podman\nor $ APPTAINER_DISABLE_CACHE=true ./nextflow run nf-core-scgs -profile test_local,apptainer\nor $ SINGULARITY_DISABLE_CACHE=true ./nextflow run nf-core-scgs -profile test_local,singularity\nor $ ./nextflow run nf-core-scgs -profile test_local,conda\n# for conda, add `disable_lockfile: true` to ~/.condarc or ~/.mambarc\n```\n\n## Documentation\n\nThe gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, found in the `docs/` directory:\n\n1. [Installation](docs/installation.md)\n2. Pipeline configuration\n\n- [Local installation](docs/configuration/local.md)\n- [Adding your own system](docs/configuration/adding_your_own.md)\n- [Reference genomes](docs/configuration/reference_genomes.md)\n\n3. [Running the pipeline](docs/usage.md)\n4. [Output and how to interpret the results](docs/output.md)\n5. [Troubleshooting](docs/troubleshooting.md)\n\n## Related publications\n\n[1] Jing, X., Gong, Y., Pan, H. et al. Single-cell Raman-activated sorting and cultivation (scRACS-Culture) for assessing and mining in situ phosphate-solubilizing microbes from nature. _ISME COMMUN_. 2, 106 (2022). [https://doi.org/10.1038/s43705-022-00188-3](https://doi.org/10.1038/s43705-022-00188-3)\n\n[2] Jing X, Gong Y, Xu T, Meng Y, Han X, Su X, Wang J, Ji Y, Li Y, Jia Z, Ma B, Xu J. One-Cell Metabolic Phenotyping and Sequencing of Soil Microbiome by Raman-Activated Gravity-Driven Encapsulation (RAGE). _mSystems_. 2021 Jun 29;6(3):e0018121. doi: 10.1128/mSystems.00181-21. Epub 2021 May 27. PMID: [34042466](https://pubmed.ncbi.nlm.nih.gov/34042466/); PMCID: [PMC8269212](http://www.ncbi.nlm.nih.gov/pmc/articles/pmc8269212/)\n\n[3] Xu, T., Gong, Y., Su, X., Zhu, P., Dai, J., Xu, J., Ma, B., Phenome-Genome Profiling of Single Bacterial Cell by Raman-Activated Gravity-Driven Encapsulation and Sequencing. _Small_ 2020, 2001172. [https://doi.org/10.1002/smll.202001172](https://doi.org/10.1002/smll.202001172)\n\n[4] Su, X., Gong, Y., Gou, H., Jing, X., Xu, T., Zheng, X., Chen, R., Li, Y., Ji, Y., Ma, B., Xu, J., Rational Optimization of Raman-Activated Cell Ejection and Sequencing for Bacteria. _Analytical Chemistry_, 2020. [https://doi.org/10.1021/acs.analchem.9b05345](https://doi.org/10.1021/acs.analchem.9b05345)\n\n## Contact\n\ngongyh/nf-core-scgs is developed by [Yanhai Gong](mailto:gongyh@qibebt.ac.cn), maintained by [Yanhai Gong](mailto:gongyh@qibebt.ac.cn) and [Shiqi Zhou](mailto:zhousq@qibebt.ac.cn). We look forward to receive your feedback, bug reports, or suggestions for the further development of this pipeline.\n\n## [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\n\nThis pipeline is open source under the MIT license, and integrates wonderful third-party softwares, which remain owned and copyrighted by their respective developers. Authors cannot be held legally or morally responsible for any consequences that may arise from using or misusing it.\n",
+            "hasPart": [
+                {
+                    "@id": "main.nf"
+                },
+                {
+                    "@id": "assets/"
+                },
+                {
+                    "@id": "bin/"
+                },
+                {
+                    "@id": "conf/"
+                },
+                {
+                    "@id": "docs/"
+                },
+                {
+                    "@id": "docs/images/"
+                },
+                {
+                    "@id": "lib/"
+                },
+                {
+                    "@id": "modules/"
+                },
+                {
+                    "@id": "modules/local/"
+                },
+                {
+                    "@id": "modules/nf-core/"
+                },
+                {
+                    "@id": "workflows/"
+                },
+                {
+                    "@id": "subworkflows/"
+                },
+                {
+                    "@id": "nextflow.config"
+                },
+                {
+                    "@id": "README.md"
+                },
+                {
+                    "@id": "nextflow_schema.json"
+                },
+                {
+                    "@id": "CHANGELOG.md"
+                },
+                {
+                    "@id": "LICENSE"
+                },
+                {
+                    "@id": "CODE_OF_CONDUCT.md"
+                },
+                {
+                    "@id": "CITATIONS.md"
+                },
+                {
+                    "@id": "modules.json"
+                },
+                {
+                    "@id": "docs/usage.md"
+                },
+                {
+                    "@id": "docs/output.md"
+                },
+                {
+                    "@id": ".nf-core.yml"
+                },
+                {
+                    "@id": ".pre-commit-config.yaml"
+                },
+                {
+                    "@id": ".prettierignore"
+                }
+            ],
+            "isBasedOn": "https://github.com/gongyh/nf-core-scgs",
+            "license": "MIT",
+            "mainEntity": {
+                "@id": "main.nf"
+            },
+            "mentions": [
+                {
+                    "@id": "#c168fe0e-7aa1-4a5b-b86f-19c56d638774"
+                }
+            ],
+            "name": "nf-core/scgs"
+        },
+        {
+            "@id": "ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "about": {
+                "@id": "./"
+            },
+            "conformsTo": [
+                {
+                    "@id": "https://w3id.org/ro/crate/1.1"
+                },
+                {
+                    "@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"
+                }
+            ]
+        },
+        {
+            "@id": "main.nf",
+            "@type": [
+                "File",
+                "SoftwareSourceCode",
+                "ComputationalWorkflow"
+            ],
+            "creator": [
+                "Yanhai Gong",
+                {
+                    "@id": "https://orcid.org/0000-0003-2459-8724"
+                }
+            ],
+            "dateCreated": "",
+            "dateModified": "2025-05-19T14:25:48Z",
+            "dct:conformsTo": "https://bioschemas.org/profiles/ComputationalWorkflow/1.0-RELEASE/",
+            "description": "Single Cell Genome Sequencing data analysis pipeline",
+            "keywords": [
+                "nf-core",
+                "nextflow"
+            ],
+            "license": [
+                "MIT"
+            ],
+            "maintainer": [
+                {
+                    "@id": "https://orcid.org/0000-0003-2459-8724"
+                }
+            ],
+            "name": [
+                "nf-core/scgs"
+            ],
+            "programmingLanguage": {
+                "@id": "https://w3id.org/workflowhub/workflow-ro-crate#nextflow"
+            },
+            "sdPublisher": {
+                "@id": "https://nf-co.re/"
+            },
+            "url": [
+                "https://github.com/gongyh/nf-core-scgs",
+                "https://nf-co.re/scgs/2.0.2/"
+            ],
+            "version": [
+                "2.0.2"
+            ]
+        },
+        {
+            "@id": "https://w3id.org/workflowhub/workflow-ro-crate#nextflow",
+            "@type": "ComputerLanguage",
+            "identifier": {
+                "@id": "https://www.nextflow.io/"
+            },
+            "name": "Nextflow",
+            "url": {
+                "@id": "https://www.nextflow.io/"
+            },
+            "version": "!>=24.04.0"
+        },
+        {
+            "@id": "#c168fe0e-7aa1-4a5b-b86f-19c56d638774",
+            "@type": "TestSuite",
+            "instance": [
+                {
+                    "@id": "#6c3d5ed9-12b4-4020-b02b-d6fbb2c3f1c9"
+                }
+            ],
+            "mainEntity": {
+                "@id": "main.nf"
+            },
+            "name": "Test suite for nf-core/scgs"
+        },
+        {
+            "@id": "#6c3d5ed9-12b4-4020-b02b-d6fbb2c3f1c9",
+            "@type": "TestInstance",
+            "name": "GitHub Actions workflow for testing nf-core/scgs",
+            "resource": "repos/gongyh/nf-core-scgs/actions/workflows/ci.yml",
+            "runsOn": {
+                "@id": "https://w3id.org/ro/terms/test#GithubService"
+            },
+            "url": "https://api.github.com"
+        },
+        {
+            "@id": "https://w3id.org/ro/terms/test#GithubService",
+            "@type": "TestService",
+            "name": "Github Actions",
+            "url": {
+                "@id": "https://github.com"
+            }
+        },
+        {
+            "@id": "assets/",
+            "@type": "Dataset",
+            "description": "Additional files"
+        },
+        {
+            "@id": "bin/",
+            "@type": "Dataset",
+            "description": "Scripts that must be callable from a pipeline process"
+        },
+        {
+            "@id": "conf/",
+            "@type": "Dataset",
+            "description": "Configuration files"
+        },
+        {
+            "@id": "docs/",
+            "@type": "Dataset",
+            "description": "Markdown files for documenting the pipeline"
+        },
+        {
+            "@id": "docs/images/",
+            "@type": "Dataset",
+            "description": "Images for the documentation files"
+        },
+        {
+            "@id": "lib/",
+            "@type": "Dataset",
+            "description": "Groovy utility functions"
+        },
+        {
+            "@id": "modules/",
+            "@type": "Dataset",
+            "description": "Modules used by the pipeline"
+        },
+        {
+            "@id": "modules/local/",
+            "@type": "Dataset",
+            "description": "Pipeline-specific modules"
+        },
+        {
+            "@id": "modules/nf-core/",
+            "@type": "Dataset",
+            "description": "nf-core modules"
+        },
+        {
+            "@id": "workflows/",
+            "@type": "Dataset",
+            "description": "Main pipeline workflows to be executed in main.nf"
+        },
+        {
+            "@id": "subworkflows/",
+            "@type": "Dataset",
+            "description": "Smaller subworkflows"
+        },
+        {
+            "@id": "nextflow.config",
+            "@type": "File",
+            "description": "Main Nextflow configuration file"
+        },
+        {
+            "@id": "README.md",
+            "@type": "File",
+            "description": "Basic pipeline usage information"
+        },
+        {
+            "@id": "nextflow_schema.json",
+            "@type": "File",
+            "description": "JSON schema for pipeline parameter specification"
+        },
+        {
+            "@id": "CHANGELOG.md",
+            "@type": "File",
+            "description": "Information on changes made to the pipeline"
+        },
+        {
+            "@id": "LICENSE",
+            "@type": "File",
+            "description": "The license - should be MIT"
+        },
+        {
+            "@id": "CODE_OF_CONDUCT.md",
+            "@type": "File",
+            "description": "The nf-core code of conduct"
+        },
+        {
+            "@id": "CITATIONS.md",
+            "@type": "File",
+            "description": "Citations needed when using the pipeline"
+        },
+        {
+            "@id": "modules.json",
+            "@type": "File",
+            "description": "Version information for modules from nf-core/modules"
+        },
+        {
+            "@id": "docs/usage.md",
+            "@type": "File",
+            "description": "Usage documentation"
+        },
+        {
+            "@id": "docs/output.md",
+            "@type": "File",
+            "description": "Output documentation"
+        },
+        {
+            "@id": ".nf-core.yml",
+            "@type": "File",
+            "description": "nf-core configuration file, configuring template features and linting rules"
+        },
+        {
+            "@id": ".pre-commit-config.yaml",
+            "@type": "File",
+            "description": "Configuration file for pre-commit hooks"
+        },
+        {
+            "@id": ".prettierignore",
+            "@type": "File",
+            "description": "Ignore file for prettier"
+        },
+        {
+            "@id": "https://nf-co.re/",
+            "@type": "Organization",
+            "name": "nf-core",
+            "url": "https://nf-co.re/"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-2459-8724",
+            "@type": "Person",
+            "email": "gongyh@qibebt.ac.cn",
+            "name": "Yanhai Gong"
+        }
+    ]
+}

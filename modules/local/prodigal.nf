@@ -11,8 +11,9 @@ process PRODIGAL {
     tuple val(meta), path(contigs)
 
     output:
-    tuple val(meta), path("$prefix"), emit: out_put
-    path "versions.yml"             , emit: versions
+    tuple val(meta), path("$prefix")                 , emit: out_put
+    tuple val(meta), path("${prefix}/${prefix}.gff") , emit: gff
+    path "versions.yml"                              , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -21,7 +22,7 @@ process PRODIGAL {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}
-    prodigal -i $contigs -o ${prefix}/${prefix}.gbk -a ${prefix}/${prefix}.proteins.faa -p meta
+    prodigal -i $contigs -f gff -o ${prefix}/${prefix}.gff -a ${prefix}/${prefix}.proteins.faa -p meta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

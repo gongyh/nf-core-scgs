@@ -21,7 +21,7 @@ nextflow.enable.dsl=2
 include { SCGS } from './workflows/scgs'
 
 //
-// WORKFLOW: Run main scrnaseq analysis pipeline
+// WORKFLOW: Run SCGS analysis pipeline
 //
 
 workflow NFCORE_SCGS {

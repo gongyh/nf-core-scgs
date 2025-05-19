@@ -34,7 +34,7 @@ def real_split(
             for line in gfh:
                 cl = line.strip().split("\t")
                 if len(cl) >= 9:  # gene annotation line
-                    ctg_id = cl[0]
+                    ctg_id = cl[0].split("_length_")[0]  # NODE_XXX
                     anno8 = cl[8].split(";")[0]
                     if anno8.startswith("ID=") and anno8.endswith("_gene"):  # correct line
                         gid = anno8[3 : len(anno8) - 5]

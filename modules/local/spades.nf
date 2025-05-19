@@ -16,6 +16,7 @@ process SPADES {
     tuple val(meta), path("${prefix}.spades_out/${prefix}.contigs.gfa")    , emit: contig_graph
     tuple val(meta), path("${prefix}.ctg200.fasta")                        , emit: ctg200
     tuple val(meta), path("${prefix}.ctgs.fasta")                          , emit: ctg
+    tuple val(meta), path("${prefix}.spades_out")                          , emit: assembly
     path "versions.yml"                                                    , emit: versions
 
     when:
@@ -23,14 +24,11 @@ process SPADES {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def mode = params.bulk ? "bulk" : "mda"
-    if (meta.single_end) {
+    def args = task.ext.args ?: ''
+    def mode = params.bulk ? "--cov-cutoff auto" : "--sc"
+    def rcl = meta.single_end ? "-s ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
     """
-    if [ \"${mode}\" == \"bulk\" ]; then
-        spades.py -s ${reads[0]} --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
-    else
-        spades.py --sc -s ${reads[0]} --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
-    fi
+    spades.py ${rcl} ${mode} ${args} -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     mv ${prefix}.spades_out/assembly_graph_after_simplification.gfa ${prefix}.spades_out/${prefix}.contigs.gfa
     ln -s ${prefix}.spades_out/contigs.paths ${prefix}.contigs.paths
     ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
@@ -43,24 +41,4 @@ process SPADES {
         spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
     END_VERSIONS
     """
-    } else {
-    """
-    if [ \"${mode}\" == \"bulk\" ]; then
-        spades.py -1 ${reads[0]} -2 ${reads[1]} --careful --cov-cutoff auto -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
-    else
-        spades.py --sc -1 ${reads[0]} -2 ${reads[1]} --careful -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
-    fi
-    mv ${prefix}.spades_out/assembly_graph_after_simplification.gfa ${prefix}.spades_out/${prefix}.contigs.gfa
-    ln -s ${prefix}.spades_out/contigs.paths ${prefix}.contigs.paths
-    ln -s ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
-    faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
-    cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
-    correctPaths.py ${prefix}.contigs.fasta ${prefix}.contigs.paths
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
-    END_VERSIONS
-    """
-    }
 }
