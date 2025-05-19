@@ -3,7 +3,7 @@
 **Single Cell Genome Sequencing data analysis pipeline**.
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/gongyh/nf-core-scgs/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/gongyh/nf-core-scgs/tree/master)
-[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A522.10.1-23aa62.svg)](https://www.nextflow.io/)
+[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A524.04.0-23aa62.svg)](https://www.nextflow.io/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with podman](https://img.shields.io/badge/run%20with-podman-0dffed?labelColor=000000)](https://podman.io/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
@@ -23,7 +23,7 @@ Prerequisites: Git, Java 11 or later, Docker
 ## Install Nextflow
 $ curl -s https://get.nextflow.io | bash
 ## Get the pipeline
-$ git clone -b v2.0.1 https://github.com/gongyh/nf-core-scgs.git
+$ git clone -b v2.0.2 https://github.com/gongyh/nf-core-scgs.git
 ## Test
 $ ./nextflow run nf-core-scgs -profile test_local,docker
 or $ ./nextflow run nf-core-scgs -profile test_local,podman
