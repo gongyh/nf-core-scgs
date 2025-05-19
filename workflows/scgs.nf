@@ -462,7 +462,6 @@ summary['Reads']            = params.reads
 summary['Fasta Ref']        = params.fasta
 summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
 summary['Bulk']             = params.bulk ? 'Yes' : 'No'
-summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
 summary['Launch dir']       = workflow.launchDir
