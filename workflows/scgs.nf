@@ -565,7 +565,8 @@ include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions/m
 
 
 /** subworkflow */
-include { HELPERS               } from '../subworkflows/local/helpers'
+include { completionEmail       } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
+include { completionSummary     } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
 include { VG                    } from '../subworkflows/local/vg'
 
 // MULTIQC
@@ -1078,9 +1079,17 @@ workflow SCGS {
  */
 workflow.onComplete {
     if (params.email){
-        Helpers.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        // Helpers.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        completionEmail(summary_params,
+            params.email,
+            null,
+            false,
+            params.outdir,
+            log,
+            multiqc_report.getVal()
+        )
     }
-    Helpers.summary(workflow, params, log)
+    completionSummary()
 }
 
 def nfcoreHeader(){
