@@ -5,5 +5,6 @@ lint:
     - manifest.name
     - manifest.version
     - manifest.homePage
+    - params.custom_config_base
   actions_awsfulltest: False
   local_component_structure: False
