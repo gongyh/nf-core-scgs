@@ -11,6 +11,10 @@ indent_style = space
 [*.{md,yml,yaml,html,css,scss,js,config,R,sh}]
 indent_size = 2
 
+[*.py]
+end_of_line = unset
+insert_final_newline = unset
+
 # These files are edited and tested upstream in nf-core/modules
 [/modules/nf-core/**]
 charset = unset
