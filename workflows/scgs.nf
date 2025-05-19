@@ -1077,9 +1077,9 @@ workflow SCGS {
  */
 workflow.onComplete {
     if (params.email){
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        Helpers.email(workflow, params, summary_params, projectDir, log, multiqc_report)
     }
-    NfcoreTemplate.summary(workflow, params, log)
+    Helpers.summary(workflow, params, log)
 }
 
 def nfcoreHeader(){
