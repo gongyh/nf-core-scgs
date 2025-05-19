@@ -181,24 +181,12 @@ class Core(object):
             for i in b:
                 geneMatrix.at[a, i] = 0
         # 基因矩阵输出到gene_presence_absence.tsv
-        geneMatrix.to_csv(
-            os.path.join(self.outdir, "gene_presence_absence.tsv"), sep="\t", index=True
-        )
+        geneMatrix.to_csv(os.path.join(self.outdir, "gene_presence_absence.tsv"), sep="\t", index=True)
         # 写入summary_statistics.txt
         with open(os.path.join(self.outdir, "summary_statistics.txt"), "w") as f:
             f.write("Core genes(99% <= strains <= 100%): {}\n".format(gene_99_100))
-            f.write(
-                "Soft core genes(95% <= strains < 99%): {}\n".format(
-                    len(coreGene["95-99%"])
-                )
-            )
-            f.write(
-                "Shell genes(15% <= strains < 95%): {}\n".format(
-                    len(coreGene["15-95%"])
-                )
-            )
-            f.write(
-                "Cloud genes(0% <= strains < 15%): {}\n".format(len(coreGene["0-15%"]))
-            )
+            f.write("Soft core genes(95% <= strains < 99%): {}\n".format(len(coreGene["95-99%"])))
+            f.write("Shell genes(15% <= strains < 95%): {}\n".format(len(coreGene["15-95%"])))
+            f.write("Cloud genes(0% <= strains < 15%): {}\n".format(len(coreGene["0-15%"])))
             f.write("Total genes: {}".format(total_genes))
         delete_temp_dir(os.path.join(self.outdir, "tmp"))

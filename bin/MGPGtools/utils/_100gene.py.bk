@@ -24,11 +24,7 @@ def core_genome_extract(gfaFile, ogFile, geneDict, threads):
         ref_chrom_list.append(chrom)
     gfa_link, unsigned_gfa_link, gfa_path = gfa_parse_link_path()
     # 除参考基因组外的其他path
-    alt_path_range = {
-        key: value["path"]
-        for key, value in gfa_path.items()
-        if key not in ref_chrom_path_list
-    }
+    alt_path_range = {key: value["path"] for key, value in gfa_path.items() if key not in ref_chrom_path_list}
     genes = extract_gene(database, name)
     variant_dict = {}
     _100_gene_list = []
@@ -103,9 +99,7 @@ def write_positions_file(variant_dict, tmp_path):
                 f.write(v["end"] + ",0,+\n")
 
 
-def combine_chrom_gfa_file(
-    ref, chrom_list, chrom_path_list, gfa_path, combine_gfa_path
-):
+def combine_chrom_gfa_file(ref, chrom_list, chrom_path_list, gfa_path, combine_gfa_path):
     ref_path_segment = dict()
     ref_segment = ""
     with open(gfa_path, "r") as fin, open(combine_gfa_path, "w") as fout:

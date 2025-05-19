@@ -10,8 +10,7 @@ def helpMessage() {
 
     Mandatory arguments:
     --reads                       Path to input data (must be surrounded with quotes)
-    -profile                      Configuration profile to use. Can use multiple (comma separated)
-                                  Available: conda, docker, singularity, awsbatch, test and more.
+    -profile                      Configuration profile to use. Can use multiple (comma separated). Available: conda, docker, singularity, awsbatch, test and more.
 
     Options:
     --vcf                         Variantion graph construction
@@ -452,7 +451,7 @@ if(params.readPaths){
 
 refs_fna = Channel.empty()
 if (params.refs_fna) {
-  refs_fna = channel.fromPath(params.refs_fna, checkIfExists: true)
+    refs_fna = channel.fromPath(params.refs_fna, checkIfExists: true)
 }
 
 // Header log info
@@ -793,8 +792,8 @@ workflow SCGS {
     // GENOMAD
     if ( params.genomad ) {
         GENOMAD_ENDTOEND(
-          ctg,
-          genomad_db
+            ctg,
+            genomad_db
         )
         ch_versions = ch_versions.mix(GENOMAD_ENDTOEND.out.versions)
     }
@@ -903,9 +902,9 @@ workflow SCGS {
 
         if (params.acdc) {
             ACDC (
-              acdc_contigs,
-              acdc_tax,
-              kraken_db
+                acdc_contigs,
+                acdc_tax,
+                kraken_db
             )
         }
     }
@@ -956,11 +955,11 @@ workflow SCGS {
     }
 
     if (params.eggnog) {
-      EGGNOG (
-          faa,
-          eggnog_db
-      )
-      ch_versions = ch_versions.mix(EGGNOG.out.versions)
+        EGGNOG (
+            faa,
+            eggnog_db
+        )
+        ch_versions = ch_versions.mix(EGGNOG.out.versions)
     }
 
     // KOFAMSCAN

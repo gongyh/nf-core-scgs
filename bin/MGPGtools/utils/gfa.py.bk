@@ -18,9 +18,7 @@ def gfa_parse_link_path(database, name):
     gfa_link = dict()
     unsigned_gfa_link = dict()
     details = get_info(os.path.join(database, "metadata", "Metadata.tsv"), name)
-    gfa_file = os.path.join(
-        database, "databases", "gfa", details["class"], name + ".gfa"
-    )
+    gfa_file = os.path.join(database, "databases", "gfa", details["class"], name + ".gfa")
     with open(gfa_file, "r") as f:
         lines = f.read().strip().split("\n")
         for line in lines:
@@ -58,9 +56,7 @@ def core_genome_extract():
     alt_path_range = dict()
     info, chrom_size = get_chromosome(database, name)
     details = get_info(os.path.join(database, "metadata", "Metadata.tsv"), name)
-    gfa_file = os.path.join(
-        database, "databases", "gfa", details["class"], name + ".gfa"
-    )
+    gfa_file = os.path.join(database, "databases", "gfa", details["class"], name + ".gfa")
     ref_genome = info["ref"].replace(".", "#")
     # ref_chrom_path_list: path形式list
     # ref_chrom_list: chromosome name形式list
@@ -73,14 +69,8 @@ def core_genome_extract():
         ref_nodes.extend(gfa_path[k]["path"])
     unsigned_ref_nodes = [x[:-1] for x in ref_nodes]
     # 除参考基因组外的其他path
-    alt_path_range = {
-        key: value["path"]
-        for key, value in gfa_path.items()
-        if key not in ref_chrom_path_list
-    }
-    unsigned_alt_path_range = {
-        key: [x[:-1] for x in value] for key, value in alt_path_range.items()
-    }
+    alt_path_range = {key: value["path"] for key, value in gfa_path.items() if key not in ref_chrom_path_list}
+    unsigned_alt_path_range = {key: [x[:-1] for x in value] for key, value in alt_path_range.items()}
     nodes_position_list, segment_length = nodes_position(ref_chrom_path_list)
     genes = extract_gene(database, name, ref_chrom_list)
     variant_dict = {}
@@ -100,17 +90,13 @@ def core_genome_extract():
                     variant_nodes_dict[node[:-1]] = [0]
             # 正向序列
             if v[0].endswith("+"):
-                new_index = conversed_nodes_index = [
-                    v.index(x) for x in v if x in ref_nodes
-                ]
+                new_index = conversed_nodes_index = [v.index(x) for x in v if x in ref_nodes]
             else:
                 rev_ref_nodes = []
                 for n in ref_nodes:
                     new_element = n.replace("+", "-")
                     rev_ref_nodes.append(new_element)
-                new_index = conversed_nodes_index = [
-                    v.index(x) for x in v if x in rev_ref_nodes
-                ]
+                new_index = conversed_nodes_index = [v.index(x) for x in v if x in rev_ref_nodes]
             for i in range(len(conversed_nodes_index) - 1):
                 if conversed_nodes_index[i + 1] - conversed_nodes_index[i] > 1:
                     var_bases = 0
@@ -130,11 +116,7 @@ def core_genome_extract():
             nodes_list = [v[i][:-1] for i in new_index]
             for n in nodes_list:
                 variant_nodes_dict[n][-1] = 1
-        common_nodes1 = [
-            key
-            for key, value in variant_nodes_dict.items()
-            if all(val == 1 for val in value)
-        ]
+        common_nodes1 = [key for key, value in variant_nodes_dict.items() if all(val == 1 for val in value)]
 
         check_directory(os.path.join(outdir, "tmp"))
         # 变异区域范围与ref范围对应
@@ -312,9 +294,7 @@ def write_positions_file(variant_dict, tmp_path):
                 f.write(v["end"] + ",0,+\n")
 
 
-def combine_chrom_gfa_file(
-    ref, chrom_list, chrom_path_list, gfa_path, combine_gfa_path
-):
+def combine_chrom_gfa_file(ref, chrom_list, chrom_path_list, gfa_path, combine_gfa_path):
     ref_path_segment = dict()
     ref_segment = ""
     with open(gfa_path, "r") as fin, open(combine_gfa_path, "w") as fout:
