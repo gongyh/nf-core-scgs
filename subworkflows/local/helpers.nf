@@ -339,7 +339,7 @@ class HELPERS {
     //
     public static String logo(workflow, monochrome_logs) {
         Map colors = logColours(monochrome_logs)
-        String workflow_version = Helpers.version(workflow)
+        String workflow_version = HELPERS.version(workflow)
         String.format(
             """\n
             ${dashedLine(monochrome_logs)}
