@@ -6,5 +6,6 @@ lint:
     - manifest.version
     - manifest.homePage
     - custom_config
-  actions_awsfulltest: False
-  local_component_structure: False
+  actions_awsfulltest: false
+  actions_ci: false
+  local_component_structure: false

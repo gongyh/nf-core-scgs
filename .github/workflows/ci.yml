@@ -3,7 +3,7 @@ name: nf-core CI
 on:
   push:
     branches:
-      - dev
+      - master
   pull_request:
   release:
     types: [published]
@@ -11,22 +11,25 @@ on:
 jobs:
   test:
     name: Run workflow tests
-    # Only run on push if this is the nf-core dev branch (merged PRs)
-    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/scgs') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       NXF_VER: ${{ matrix.nxf_ver }}
       NXF_ANSI_LOG: false
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        NXF_VER: ["24.04.0", "latest-everything"]
+        NXF_VER: ["24.04.0", "25.04.2"]
     steps:
       - name: Check out pipeline code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v1
+        uses: nf-core/setup-nextflow@v2
         with:
           version: "${{ matrix.NXF_VER }}"
 

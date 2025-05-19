@@ -34,4 +34,9 @@ jobs:
 workflows:
   test_pipeline:
     jobs:
-      - test_dsl2
+      - test_dsl2:
+          filters:
+            branches:
+              only: dev
+              ignore:
+                - gh-pages
