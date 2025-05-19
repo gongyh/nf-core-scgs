@@ -82,7 +82,7 @@ class Helpers {
         misc_fields['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 
         def email_fields = [:]
-        email_fields['version']      = NfcoreTemplate.version(workflow)
+        email_fields['version']      = Helpers.version(workflow)
         email_fields['runName']      = workflow.runName
         email_fields['success']      = workflow.success
         email_fields['dateComplete'] = workflow.complete
@@ -195,7 +195,7 @@ class Helpers {
         misc_fields['nxf_timestamp']                        = workflow.nextflow.timestamp
 
         def msg_fields = [:]
-        msg_fields['version']      = NfcoreTemplate.version(workflow)
+        msg_fields['version']      = Helpers.version(workflow)
         msg_fields['runName']      = workflow.runName
         msg_fields['success']      = workflow.success
         msg_fields['dateComplete'] = workflow.complete
@@ -339,7 +339,7 @@ class Helpers {
     //
     public static String logo(workflow, monochrome_logs) {
         Map colors = logColours(monochrome_logs)
-        String workflow_version = NfcoreTemplate.version(workflow)
+        String workflow_version = Helpers.version(workflow)
         String.format(
             """\n
             ${dashedLine(monochrome_logs)}
