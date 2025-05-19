@@ -11,6 +11,9 @@ indent_style = space
 [*.{md,yml,yaml,html,css,scss,js,config,R,sh}]
 indent_size = 2
 
+[*.{yml,yaml}]
+insert_final_newline = unset
+
 [*.{py,py.bk}]
 end_of_line = unset
 insert_final_newline = unset
