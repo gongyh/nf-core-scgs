@@ -6,7 +6,7 @@ import org.yaml.snakeyaml.Yaml
 import groovy.json.JsonOutput
 import nextflow.extension.FilesEx
 
-class Helpers {
+class HELPERS {
 
     //
     // Check AWS Batch related parameters have been specified correctly
@@ -82,7 +82,7 @@ class Helpers {
         misc_fields['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 
         def email_fields = [:]
-        email_fields['version']      = Helpers.version(workflow)
+        email_fields['version']      = HELPERS.version(workflow)
         email_fields['runName']      = workflow.runName
         email_fields['success']      = workflow.success
         email_fields['dateComplete'] = workflow.complete
@@ -195,7 +195,7 @@ class Helpers {
         misc_fields['nxf_timestamp']                        = workflow.nextflow.timestamp
 
         def msg_fields = [:]
-        msg_fields['version']      = Helpers.version(workflow)
+        msg_fields['version']      = HELPERS.version(workflow)
         msg_fields['runName']      = workflow.runName
         msg_fields['success']      = workflow.success
         msg_fields['dateComplete'] = workflow.complete
