@@ -565,6 +565,7 @@ include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions/m
 
 
 /** subworkflow */
+include { Helpers               } from '../subworkflows/local/helpers'
 include { VG                    } from '../subworkflows/local/vg'
 
 // MULTIQC
