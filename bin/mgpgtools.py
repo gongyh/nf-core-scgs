@@ -10,15 +10,15 @@ def print_help():
     print(
         """\
 
-              ...::: MGPGtools v%s:::...
+        ...::: MGPGtools v%s:::...
 
-  Methods:
+    Methods:
     describe -> basic information of gfa files
     stat -> statistic information of pangenome
     viz -> pangenome visualization
     search -> search pangenome information include: ref_genome, chromosome, size...
 
-  Use: MGPGtools <command> -h for command specific help
+    Use: MGPGtools <command> -h for command specific help
     """
         % __version__
     )

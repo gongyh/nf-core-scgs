@@ -293,9 +293,9 @@ def main():
     """Setup command-line interface"""
     parser = argparse.ArgumentParser()
     pipeline_help = """
-        Analysis pipeline: 
-        run initial pan-genome analysis (init), 
-        add new samples to previous collection (add)
+Analysis pipeline:
+run initial pan-genome analysis (init),
+add new samples to previous collection (add)
         """
     parser.add_argument("-p", "--pipeline", help=pipeline_help, action="store", choices=["init", "add"], required=True)
     parser.add_argument(
@@ -303,9 +303,9 @@ def main():
     )
     parser.add_argument("-a", "--fasta", help="genome assembly input files", default=None, nargs="*", type=str)
     tsv_help = """
-        when GFF file and FASTA file are seperated (e.g. produced by tools 
-        other than Prokka), they could be input through a tsv file. It should
-        have 3 columns (without header): Sample ID, path to GFF, path to FASTA.  
+when GFF file and FASTA file are seperated (e.g. produced by tools
+other than Prokka), they could be input through a tsv file. It should
+have 3 columns (without header): Sample ID, path to GFF, path to FASTA.
         """
     parser.add_argument("-f", "--tsv", help=tsv_help, default=None, type=str)
     parser.add_argument(
