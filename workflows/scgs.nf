@@ -15,14 +15,12 @@ def helpMessage() {
     Options:
     --vcf                         Variantion graph construction
     --bulk                        WGS of bulk DNA, not MDA
-    --nanopore                    Nanopore sequencing data, force single_end, assembly using Canu
     --genome                      Name of iGenomes reference
     --single_end                  Specifies that the input is single end reads
     --snv                         Enable detection of single nucleotide variation
     --cnv                         Enable detection of copy number variation
     --bbmap                       Enable bbmap to remove host-derived contamination
     --doubletd                    Enable detection of doublet
-    --remap                       Remap trimmed reads to contigs
     --acdc                        Enable acdc
     --saturation                  Enable sequencing saturation analysis
     --ass                         Assemble using SPAdes
@@ -125,7 +123,6 @@ if (params.help){
 
 // default values
 params.genome = false
-params.nanopore = false
 params.single_end = false
 params.fasta = false
 params.gff = false
@@ -137,7 +134,6 @@ params.saveAlignedIntermediates = false
 params.no_normalize = false
 params.euk = false
 params.fungus = false
-params.remap = false
 params.acdc = false
 params.snv = false
 params.cnv = false
@@ -218,12 +214,7 @@ if (params.vcf) {
     graph_vcf = file("/dev/null")
 }
 
-single_end = false
-if (params.nanopore) {
-    single_end = true
-} else {
-    single_end = params.single_end
-}
+single_end = params.single_end
 
 euk = false
 if (params.fungus || params.euk) {
@@ -532,7 +523,6 @@ include { ANEUFINDER            } from '../modules/local/aneufinder'
 include { CIRCLIZE              } from '../modules/local/circlize'
 include { NORMALIZE             } from '../modules/local/normalize'
 include { BBNORM                } from '../modules/local/bbnorm'
-include { CANU                  } from '../modules/local/canu'
 include { SPADES                } from '../modules/local/spades'
 include { PANTA; PASA           } from '../modules/local/pasa'
 include { COMPLETENESS          } from '../modules/local/pangenome/completeness'
@@ -652,27 +642,14 @@ workflow SCGS {
 
     // ALIGN
     if (denovo == false) {
-        bb_bam = Channel.empty()
-        if ( params.nanopore ) {
-            MINIMAP2_ALIGN (
-                trimmed_reads,
-                fasta,
-                true,
-                false,
-                false
-            )
-            MINIMAP2_ALIGN.out.bam.set{ bb_bam }
-            ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
-        } else {
-            BOWTIE2_ALIGN (
-                trimmed_reads,
-                bowtie2_index,
-                false,
-                true
-            )
-            BOWTIE2_ALIGN.out.bam.set{ bb_bam }
-            ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
-        }
+        BOWTIE2_ALIGN (
+            trimmed_reads,
+            bowtie2_index,
+            false,
+            true
+        )
+        BOWTIE2_ALIGN.out.bam.set{ bb_bam }
+        ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
     }
 
     // VG
@@ -699,11 +676,11 @@ workflow SCGS {
         SAMTOOLS.out.bai.set{quast_bai}
         ch_versions = ch_versions.mix(SAMTOOLS.out.versions)
         ch_multiqc_samtools = SAMTOOLS.out.stats
-        if (!params.nanopore) {
-            PRESEQ ( SAMTOOLS.out.bed )
-            ch_versions = ch_versions.mix(PRESEQ.out.versions)
-            ch_multiqc_preseq = PRESEQ.out.txt
-        }
+
+        PRESEQ ( SAMTOOLS.out.bed )
+        ch_versions = ch_versions.mix(PRESEQ.out.versions)
+        ch_multiqc_preseq = PRESEQ.out.txt
+
         if ( params.gff ) {
             QUALIMAP_BAMQC (
                 SAMTOOLS.out.bam,
@@ -712,14 +689,14 @@ workflow SCGS {
             ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
             ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
         }
-        if (params.snv && !params.nanopore) {
+        if (params.snv) {
             INDELREALIGN (
                 SAMTOOLS.out.bam,
                 fasta
             )
             ch_versions = ch_versions.mix(INDELREALIGN.out.versions)
         }
-        if (!params.bulk && params.snv && !params.nanopore) {
+        if (!params.bulk && params.snv) {
             MONOVAR (
                 INDELREALIGN.out.bam.collect{it[1]},
                 INDELREALIGN.out.bai.collect{it[1]},
@@ -730,7 +707,7 @@ workflow SCGS {
                 DOUBLETD ( MONOVAR.out.vcf )
             }
         }
-        if (!params.bulk && params.cnv && !single_end && !params.nanopore) {
+        if (!params.bulk && params.cnv && !single_end) {
             ANEUFINDER (
                 SAMTOOLS.out.bam.collect{it[1]},
                 SAMTOOLS.out.bai.collect{it[1]}
@@ -760,33 +737,25 @@ workflow SCGS {
             normalized_reads = BBNORM.out.fastq
             ch_versions = ch_versions.mix(BBNORM.out.versions)
         }
-        contig = Channel.empty()
-        contig_path = Channel.empty()
-        contig_graph = Channel.empty()
-        if (params.nanopore) {
-            CANU(normalized_reads)
-            ctg200 = CANU.out.ctg200
-            ctg = CANU.out.ctg
-            ch_versions = ch_versions.mix(CANU.out.versions)
+
+        SPADES(normalized_reads)
+        contig = SPADES.out.contig
+        contig_path = SPADES.out.contig_path
+        contig_graph = SPADES.out.contig_graph
+        // ctg200 = SPADES.out.ctg200
+        // ctg = SPADES.out.ctg
+        ch_versions = ch_versions.mix(SPADES.out.versions)
+
+        if (!euk && params.refs_fna) {
+            PANTA(refs_fna.collect())
+            ch_versions = ch_versions.mix(PANTA.out.versions)
+            PASA(SPADES.out.assembly, PANTA.out.db)
+            ch_versions = ch_versions.mix(PASA.out.versions)
+            ctg200 = PASA.out.ctg200
+            ctg = PASA.out.ctg
         } else {
-            SPADES(normalized_reads)
-            contig = SPADES.out.contig
-            contig_path = SPADES.out.contig_path
-            contig_graph = SPADES.out.contig_graph
-            // ctg200 = SPADES.out.ctg200
-            // ctg = SPADES.out.ctg
-            ch_versions = ch_versions.mix(SPADES.out.versions)
-            if (!euk && params.refs_fna) {
-                PANTA(refs_fna.collect())
-                ch_versions = ch_versions.mix(PANTA.out.versions)
-                PASA(SPADES.out.assembly, PANTA.out.db)
-                ch_versions = ch_versions.mix(PASA.out.versions)
-                ctg200 = PASA.out.ctg200
-                ctg = PASA.out.ctg
-            } else {
-                ctg200 = SPADES.out.ctg200
-                ctg = SPADES.out.ctg
-            }
+            ctg200 = SPADES.out.ctg200
+            ctg = SPADES.out.ctg
         }
     }
 
@@ -797,16 +766,6 @@ workflow SCGS {
             genomad_db
         )
         ch_versions = ch_versions.mix(GENOMAD_ENDTOEND.out.versions)
-    }
-
-    // REMAP
-    if (params.remap && !params.nanopore) {
-        BOWTIE2_REMAP(ctg200)
-        REMAP (
-            trimmed_reads,
-            BOWTIE2_REMAP.out.index.collect{it[1]},
-            params.allow_multi_align
-        )
     }
 
     // QUAST
@@ -877,36 +836,46 @@ workflow SCGS {
 
         // BLOBTOOLS
         if (params.blob) {
-            BLOBTOOLS (
-                DIAMOND_BLASTX.out.contigs,
-                DIAMOND_BLASTX.out.nt,
-                DIAMOND_BLASTX.out.uniprot,
-                DIAMOND_BLASTX.out.real,
-                blob_db
-            )
-            ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
-            acdc_contigs = BLOBTOOLS.out.contigs
-            acdc_tax = BLOBTOOLS.out.tax
-        }
+            if (params.no_normalize) {
+                BLOBTOOLS (
+                    DIAMOND_BLASTX.out.contigs,
+                    DIAMOND_BLASTX.out.nt,
+                    DIAMOND_BLASTX.out.uniprot,
+                    DIAMOND_BLASTX.out.real,
+                    blob_db
+                )
+                ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
+                acdc_contigs = BLOBTOOLS.out.contigs
+                acdc_tax = BLOBTOOLS.out.tax
+            } else {
+                BOWTIE2_REMAP(ctg200)
+                REMAP (
+                    trimmed_reads,
+                    BOWTIE2_REMAP.out.index.collect{it[1]},
+                    params.allow_multi_align
+                )
+                ch_versions = ch_versions.mix(REMAP.out.versions)
+                REBLOBTOOLS (
+                    DIAMOND_BLASTX.out.contigs,
+                    DIAMOND_BLASTX.out.nt,
+                    DIAMOND_BLASTX.out.real,
+                    DIAMOND_BLASTX.out.uniprot,
+                    blob_db,
+                    REMAP.out.bam.collect{it[1]},
+                    REMAP.out.bai.collect{it[1]}
+                )
+                ch_versions = ch_versions.mix(REBLOBTOOLS.out.versions)
+                acdc_contigs = REBLOBTOOLS.out.contigs
+                acdc_tax = REBLOBTOOLS.out.tax
+            }
 
-        if (params.remap) {
-            REBLOBTOOLS (
-                DIAMOND_BLASTX.out.contigs,
-                DIAMOND_BLASTX.out.nt,
-                DIAMOND_BLASTX.out.real,
-                DIAMOND_BLASTX.out.uniprot,
-                blob_db,
-                REMAP.out.bam.collect{it[1]},
-                REMAP.out.bai.collect{it[1]}
-            )
-        }
-
-        if (params.acdc) {
-            ACDC (
-                acdc_contigs,
-                acdc_tax,
-                kraken_db
-            )
+            if (params.acdc) {
+                ACDC (
+                    acdc_contigs,
+                    acdc_tax,
+                    kraken_db
+                )
+            }
         }
     }
     TSNE(ctg)
@@ -1017,7 +986,7 @@ workflow SCGS {
             bin_csv = SPLIT_CHECKM.out.csv
         }
 
-        if (params.graphbin && !params.nanopore) {
+        if (params.graphbin) {
             GRAPHBIN (
                 contig.collect{it[1]},
                 contig_path.collect{it[1]},
