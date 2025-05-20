@@ -1079,7 +1079,6 @@ workflow SCGS {
  */
 workflow.onComplete {
     if (params.email){
-        // Helpers.email(workflow, params, summary_params, projectDir, log, multiqc_report)
         completionEmail(summary_params,
             params.email,
             null,

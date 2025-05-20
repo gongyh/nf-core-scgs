@@ -9,11 +9,12 @@ process RAGTAG {
 
     input:
     tuple val(meta), path(refass_contigs) // reference guided assembly
-    tuple val(meta2), path(denovo_contigs) // denovo assembled assembly
+    tuple val(meta), path(denovo_contigs) // denovo assembled assembly
     tuple path(refs_fna)
 
     output:
     tuple val(meta), path("${prefix}_scaffolds.fasta"),   emit: scaffolded_assembly
+    tuple val(meta), path(denovo_contigs),                emit: denovo_assembly
     path "versions.yml",                                  emit: versions
 
     when:
@@ -42,7 +43,7 @@ process RAGTAG {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        ragtag: \$(echo \$(ragtag.py -v | sed 's/v//'))
+        RagTag: \$(echo \$(ragtag.py -v | sed 's/v//'))
     END_VERSIONS
     """
 }
