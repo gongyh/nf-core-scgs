@@ -37,7 +37,7 @@ process RAGTAG {
     ragtag.py merge -l 200 -u -o ragtag_merge ${refass_contigs} ref_*/*.agp
     ragtag.py patch -f 200 -o ragtag_patch -t ${task.cpus} -u --fill-only ragtag_merge/ragtag.merge.fasta ${denovo_contigs}
     ragtag.py correct -f 200 -o ragtag_correct -u -t ${task.cpus} --intra ${denovo_contigs} ragtag_patch/ragtag.patch.fasta
-    
+
     cp ragtag_correct/ragtag.correct.fasta ${prefix}_scaffolds.fasta
 
     cat <<-END_VERSIONS > versions.yml
