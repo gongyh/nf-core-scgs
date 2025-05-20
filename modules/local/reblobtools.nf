@@ -17,9 +17,9 @@ process REBLOBTOOLS {
     path bai
 
     output:
-    tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt"), emit: txt
+    tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt"), emit: tax
     tuple val(meta), path("${contigs}")                          , emit: contigs
-    tuple val(meta), path("${prefix}")                           , emit: out_put
+    tuple val(meta), path("${prefix}")                           , emit: tax_split
     path "versions.yml"                                          , emit: versions
 
     when:

@@ -814,6 +814,7 @@ workflow SCGS {
         ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
     }
 
+    tax_split = Channel.empty()
     if (params.blastn) {
         // BLASTN
         BLASTN (
@@ -847,6 +848,7 @@ workflow SCGS {
                 ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
                 acdc_contigs = BLOBTOOLS.out.contigs
                 acdc_tax = BLOBTOOLS.out.tax
+                tax_split = BLOBTOOLS.out.tax_split
             } else {
                 BOWTIE2_REMAP(ctg200)
                 REMAP (
@@ -867,6 +869,7 @@ workflow SCGS {
                 ch_versions = ch_versions.mix(REBLOBTOOLS.out.versions)
                 acdc_contigs = REBLOBTOOLS.out.contigs
                 acdc_tax = REBLOBTOOLS.out.tax
+                tax_split = REBLOBTOOLS.out.tax_split
             }
 
             if (params.acdc) {
@@ -964,7 +967,7 @@ workflow SCGS {
         if (params.split_euk) {
             SPLIT_CHECKM_EUKCC (
                 ctg200.collect{it[1]},
-                BLOBTOOLS.out.tax_split.collect{it[1]},
+                tax_split.collect{it[1]},
                 prokka_for_split.collect{it[1]}.ifEmpty([]),
                 kofam_scan.collect{it[1]}.ifEmpty([]),
                 eukcc_db,
@@ -976,7 +979,7 @@ workflow SCGS {
         } else {
             SPLIT_CHECKM (
                 ctg200.collect{it[1]},
-                BLOBTOOLS.out.tax_split.collect{it[1]},
+                tax_split.collect{it[1]},
                 prokka_for_split.collect{it[1]}.ifEmpty([]),
                 kofam_scan.collect{it[1]}.ifEmpty([]),
                 params.split_bac_level,
