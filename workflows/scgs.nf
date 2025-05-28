@@ -62,7 +62,7 @@ def helpMessage() {
     --eukcc_db                    EukCC database
     --checkm2_db                  CheckM2 database
     --gtdb                        GTDB database
-    --ref                         Specify the reference sequence for bbmap
+    --host_ref                    Specify the reference sequence for host removal
 
     Trimming options:
     --notrim                      Specifying --notrim will skip the adapter trimming step.
@@ -78,6 +78,8 @@ def helpMessage() {
 
     Assembly options:
     --no_normalize                Specifying --no_normalize will skip the reads normalizing step.
+    --refs_fna                    Genome files for scaffolding
+    --close_ref                   A close reference for genome-guided assembly
 
     Quast options:
     --euk                         Euk genome
@@ -87,7 +89,6 @@ def helpMessage() {
     --mgpg_db                     Microbiome graph pangenome database
     --genusName                   Genus Name
     --coreGenesFile               Core genes txt file
-    --refs_fna                    Genome files for scaffolding
 
     Taxa annotation options:
     --evalue                      E-value for blasting NCBI-nt and uniprot reference proteomes database (default=1e-25)
@@ -177,8 +178,9 @@ params.eggnog_db = null
 params.eukcc_db = null
 params.checkm2_db = null
 params.gtdb = null
-params.ref = null
+params.host_ref = null
 params.refs_fna = null
+params.close_ref = null
 params.evalue = 1e-25
 params.blockSize = 2.0
 params.split_bac_level = "genus"
@@ -345,12 +347,12 @@ if (params.coreGenesFile) {
 }
 
 // Configure reference sequence
-ref = false
-if (params.ref) {
-    ref  = file(params.ref)
-    if ( !ref.exists() ) exit 1, "Ref not found: ${params.ref}"
+host_ref = false
+if (params.host_ref) {
+    host_ref  = file(params.host_ref)
+    if ( !host_ref.exists() ) exit 1, "Host reference file not found: ${params.host_ref}"
 } else {
-    ref = file("/dev/null")
+    if (params.bbmap) exit 1, "Host reference file not set"
 }
 
 // Configure KOfam search database
@@ -584,7 +586,8 @@ workflow SCGS {
         bowtie2_index = [bowtie2, file(bowtie2)]
     } else {
         if (params.fasta) {
-            BOWTIE2_BUILD ( [ref, fasta] )
+            fasta_meta = params.fasta - ~/(\.fasta)?(\.fna)?(\.fa)?$/
+            BOWTIE2_BUILD ( [fasta_meta, fasta] )
             bowtie2_index = BOWTIE2_BUILD.out.index
         }
     }
@@ -596,7 +599,7 @@ workflow SCGS {
         if (params.bbmap) {
             BBMAP_ALIGN (
                 read_files_trimming.map{name, reads -> reads},
-                ref
+                host_ref
             )
             ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
             trimmed_reads = BBMAP_ALIGN.out.clean_fastq
@@ -611,7 +614,7 @@ workflow SCGS {
         if (params.bbmap) {
             BBMAP_ALIGN (
                 TRIMGALORE.out.reads,
-                ref
+                host_ref
             )
             ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
             trimmed_reads = BBMAP_ALIGN.out.clean_fastq
