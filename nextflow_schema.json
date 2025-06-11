@@ -180,6 +180,11 @@
                     "pattern": "^\\S+\\.gff$",
                     "description": "GFF annotation file."
                 },
+                "pasa": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to perform scaffolding using PASA?"
+                },
                 "refs_fna": {
                     "type": "string",
                     "pattern": "^\\S+\\.fna\\.gz$",

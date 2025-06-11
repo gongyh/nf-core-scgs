@@ -4,8 +4,8 @@ process METACOMPASS {
 
     conda "bioconda::metacompass=1.12"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/metacompass:1.12' :
-        'scgs/metacompass:1.12' }"
+        'https://depot.galaxyproject.org/singularity/metacompass:1.12--h9948957_0' :
+        'biocontainers/metacompass:1.12--h9948957_0' }"
 
     input:
     tuple val(meta), path(reads)

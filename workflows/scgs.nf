@@ -78,7 +78,8 @@ def helpMessage() {
 
     Assembly options:
     --no_normalize                Specifying --no_normalize will skip the reads normalizing step.
-    --refs_fna                    Genome files for scaffolding
+    --pasa                        Enable PASA scaffolding (default: false)
+    --refs_fna                    Genome files for PASA or RAGTAG scaffolding
     --close_ref                   A close reference for genome-guided assembly
 
     Quast options:
@@ -179,6 +180,7 @@ params.eukcc_db = null
 params.checkm2_db = null
 params.gtdb = null
 params.host_ref = null
+params.pasa = false
 params.refs_fna = null
 params.close_ref = null
 params.evalue = 1e-25
@@ -198,7 +200,6 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
 if (params.fasta) {
     fasta = file(params.fasta)
-    ref = params.fasta - ~/(\.fasta)?(\.fna)?(\.fa)?$/
     if( !fasta.exists() ) exit 1, "Fasta file not found: ${params.fasta}"
 }
 
@@ -235,7 +236,7 @@ if (params.genomad_db) {
 // Prokka trusted proteins database
 prokka_proteins = []
 if (params.prokka_proteins) {
-    faa = file(params.prokka_proteins)
+    def faa = file(params.prokka_proteins)
     if( !prokka_proteins.exists() ) exit 1, "Protein database not found: ${params.prokka_proteins}"
     prokka_proteins = [faa]
 }
@@ -442,9 +443,16 @@ if(params.readPaths){
     }
 }
 
-refs_fna = Channel.empty()
 if (params.refs_fna) {
-    refs_fna = channel.fromPath(params.refs_fna, checkIfExists: true)
+    refs_fna = file(params.refs_fna, checkIfExists: true)
+} else {
+    refs_fna = Channel.empty()
+}
+
+if (params.close_ref) {
+    close_ref = file(params.close_ref, checkIfExists: true)
+} else {
+    close_ref = Channel.empty()
 }
 
 // Header log info
@@ -555,6 +563,9 @@ include { GRAPHBIN              } from '../modules/local/graphbin'
 include { OUTPUT_DOCUMENTATION  } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions/main'
 
+include { METACOMPASS           } from '../modules/local/metacompass'
+include { QUICKMERGE            } from '../modules/local/quickmerge'
+include { RAGTAG                } from '../modules/local/ragtag'
 
 /** subworkflow */
 include { completionEmail       } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
@@ -586,7 +597,7 @@ workflow SCGS {
         bowtie2_index = [bowtie2, file(bowtie2)]
     } else {
         if (params.fasta) {
-            fasta_meta = params.fasta - ~/(\.fasta)?(\.fna)?(\.fa)?$/
+            def fasta_meta = params.fasta - ~/(\.fasta)?(\.fna)?(\.fa)?$/
             BOWTIE2_BUILD ( [fasta_meta, fasta] )
             bowtie2_index = BOWTIE2_BUILD.out.index
         }
@@ -749,13 +760,29 @@ workflow SCGS {
         // ctg = SPADES.out.ctg
         ch_versions = ch_versions.mix(SPADES.out.versions)
 
-        if (!euk && params.refs_fna) {
-            PANTA(refs_fna.collect())
-            ch_versions = ch_versions.mix(PANTA.out.versions)
-            PASA(SPADES.out.assembly, PANTA.out.db)
-            ch_versions = ch_versions.mix(PASA.out.versions)
-            ctg200 = PASA.out.ctg200
-            ctg = PASA.out.ctg
+        if (params.refs_fna) {
+            // scaffoldding
+            if (params.pasa && !params.close_ref) {
+                PANTA(refs_fna.collect())
+                ch_versions = ch_versions.mix(PANTA.out.versions)
+                PASA(SPADES.out.assembly, PANTA.out.db)
+                ch_versions = ch_versions.mix(PASA.out.versions)
+                ctg200 = PASA.out.ctg200
+                ctg = PASA.out.ctg
+            }
+
+            // integrate with reference based assembly
+            if (params.close_ref) {
+                // referenced based assembly
+                METACOMPASS(normalized_reads, close_ref)
+                ch_versions = ch_versions.mix(METACOMPASS.out.versions)
+                RAGTAG(METACOMPASS.out.contig, ctg, close_ref)
+                ch_versions = ch_versions.mix(RAGTAG.out.versions)
+                QUICKMERGE(RAGTAG.out.denovo_assembly, RAGTAG.out.scaffolded_assembly)
+                ch_versions = ch_versions.mix(QUICKMERGE.out.versions)
+                ctg200 = QUICKMERGE.out.merged_assembly
+                ctg = QUICKMERGE.out.merged_clean
+            }
         } else {
             ctg200 = SPADES.out.ctg200
             ctg = SPADES.out.ctg
