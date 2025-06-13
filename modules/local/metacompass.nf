@@ -2,10 +2,10 @@ process METACOMPASS {
     tag "${meta.id}"
     label 'process_high'
 
-    conda "bioconda::metacompass=1.12"
+    conda "scgs::metacompass=1.12=1.12--h9948957_1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/metacompass:1.12--h9948957_0' :
-        'biocontainers/metacompass:1.12--h9948957_0' }"
+        'https://depot.galaxyproject.org/singularity/metacompass:1.12--h9948957_1' :
+        'scgs/metacompass:1.12--h9948957_1' }"
 
     input:
     tuple val(meta), path(reads)
