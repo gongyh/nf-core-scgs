@@ -28,8 +28,8 @@ process QUAST_REF {
     def ref = fasta.exists() ? "-r $fasta" : ""
     def gene = gff.exists() ? "--features gene:$gff" : ""
     """
-    contigs=\$(ls *.ctgs.fasta | paste -sd " " -)
-    labels=\$(ls *.ctgs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
+    contigs=\$(ls *.fasta | paste -sd " " -)
+    labels=\$(ls *.fasta | paste -sd "," - | sed 's/.fasta//g')
     bams=\$(ls *.markdup.bam | paste -sd "," -)
     quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
 

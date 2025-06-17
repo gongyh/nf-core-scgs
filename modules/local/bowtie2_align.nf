@@ -63,8 +63,8 @@ process BOWTIE2_ALIGN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bowtie2: \$(echo \$(bowtie2 --version 2>&1) | sed 's/^.*bowtie2-align-s version //; s/ .*\$//')
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        bowtie2: \$( bowtie2 --version 2>&1 | head -n 1 | sed 's/^.*bowtie2-align-s version //; s/ .*\$//')
+        samtools: \$( samtools --version 2>&1 | head -n 1 | sed 's/^.*samtools //; s/Using.*\$//')
         pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
     END_VERSIONS
     """

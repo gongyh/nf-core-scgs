@@ -2,10 +2,10 @@ process REBLOBTOOLS {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::blobtools=1.0.1=py27_3"
+    conda "bioconda::blobtools=1.1.1=py_1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/blobtools:1.0.1--py27_3' :
-        'biocontainers/blobtools:1.0.1--py27_3' }"
+        'https://depot.galaxyproject.org/singularity/blobtools:1.1.1--py_1' :
+        'biocontainers/blobtools:1.1.1--py_1' }"
 
     input:
     tuple val(meta), path(contigs)
@@ -30,7 +30,7 @@ process REBLOBTOOLS {
     def uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
     """
     mkdir -p ${prefix}
-    blobtools create -i $contigs -y spades -t $anno $uniprot_anno_cmd -b ${prefix}_ass.sort.bam -o ${prefix}/${prefix} \
+    blobtools create -i $contigs -t $anno $uniprot_anno_cmd -b ${prefix}_ass.sort.bam -o ${prefix}/${prefix} \
         --db $db
     blobtools view -i ${prefix}/${prefix}.blobDB.json -r all -o ${prefix}/
     blobtools plot -i ${prefix}/${prefix}.blobDB.json --filelabel --notitle -l 200 -r phylum --format pdf -o ${prefix}/

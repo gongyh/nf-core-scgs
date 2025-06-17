@@ -4,13 +4,12 @@ process RAGTAG {
 
     conda "bioconda::ragtag=2.1.0"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/ragtag:2.1.0--pyhb7b1952_0'
-        : 'biocontainers/ragtag:2.1.0--pyhb7b1952_0'}"
+        ? 'https://depot.galaxyproject.org/singularity/ragtag:2.1.0'
+        : 'scgs/ragtag:2.1.0'}"
 
     input:
-    tuple val(meta), path(refass_contigs) // reference guided assembly
-    tuple val(meta), path(denovo_contigs) // denovo assembled assembly
-    tuple path(refs_fna)
+    tuple val(meta), path(refass_contigs), path(denovo_contigs) // ref and denovo assemblies
+    path(refs_fna)
 
     output:
     tuple val(meta), path("${prefix}_scaffolds.fasta"),   emit: scaffolded_assembly
@@ -22,7 +21,7 @@ process RAGTAG {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     refs=(${refs_fna})
     for fna in \${refs[*]}; do

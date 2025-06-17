@@ -770,6 +770,9 @@ workflow SCGS {
                 ch_versions = ch_versions.mix(PASA.out.versions)
                 ctg200 = PASA.out.ctg200
                 ctg = PASA.out.ctg
+                ctg_denovo = PASA.out.ctg
+            } else {
+                ctg_denovo = SPADES.out.ctg
             }
 
             // integrate with reference based assembly
@@ -777,7 +780,8 @@ workflow SCGS {
                 // referenced based assembly
                 METACOMPASS(normalized_reads, close_ref)
                 ch_versions = ch_versions.mix(METACOMPASS.out.versions)
-                RAGTAG(METACOMPASS.out.contig, ctg, close_ref)
+                ch_assemblies = METACOMPASS.out.contig.join(ctg_denovo)
+                RAGTAG(ch_assemblies, refs_fna.collect())
                 ch_versions = ch_versions.mix(RAGTAG.out.versions)
                 QUICKMERGE(RAGTAG.out.denovo_assembly, RAGTAG.out.scaffolded_assembly)
                 ch_versions = ch_versions.mix(QUICKMERGE.out.versions)
@@ -868,7 +872,7 @@ workflow SCGS {
 
         // BLOBTOOLS
         if (params.blob) {
-            if (params.no_normalize) {
+            if (params.no_normalize && !params.pasa && !(params.refs_fna && params.close_ref)) {
                 BLOBTOOLS (
                     DIAMOND_BLASTX.out.contigs,
                     DIAMOND_BLASTX.out.nt,
