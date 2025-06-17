@@ -806,12 +806,13 @@ workflow SCGS {
     // QUAST
     ch_multiqc_quast = Channel.empty()
     if (denovo == false) {
+        ch_ctg_bam_bai = ctg.join(quast_bam).join(quast_bai).collect(flat: false)
         QUAST_REF (
             fasta,
             gff,
-            ctg.collect{it[1]},
-            quast_bam.collect{it[1]},
-            quast_bai.collect{it[1]},
+            ch_ctg_bam_bai.flatMap{it}.map{it[1]}.collect(),
+            ch_ctg_bam_bai.flatMap{it}.map{it[2]}.collect(),
+            ch_ctg_bam_bai.flatMap{it}.map{it[3]}.collect(),
             euk,
             params.fungus
         )
