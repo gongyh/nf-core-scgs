@@ -15,6 +15,7 @@ process REMAP {
     output:
     tuple val(meta), path("${prefix}_ass.sort.bam")    , emit: bam
     tuple val(meta), path("${prefix}_ass.sort.bam.bai"), emit: bai
+    tuple val(meta), path("${prefix}_ass.sort.bam"), path("${prefix}_ass.sort.bam.bai"), emit: bam_bai
     path "versions.yml"                                , emit: versions
 
     when:

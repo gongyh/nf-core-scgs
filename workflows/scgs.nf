@@ -874,10 +874,7 @@ workflow SCGS {
         if (params.blob) {
             if (params.no_normalize && !params.pasa && !(params.refs_fna && params.close_ref)) {
                 BLOBTOOLS (
-                    DIAMOND_BLASTX.out.contigs,
-                    DIAMOND_BLASTX.out.nt,
-                    DIAMOND_BLASTX.out.uniprot,
-                    DIAMOND_BLASTX.out.real,
+                    DIAMOND_BLASTX.out.ctg_taxa,
                     blob_db
                 )
                 ch_versions = ch_versions.mix(BLOBTOOLS.out.versions)
@@ -893,13 +890,8 @@ workflow SCGS {
                 )
                 ch_versions = ch_versions.mix(REMAP.out.versions)
                 REBLOBTOOLS (
-                    DIAMOND_BLASTX.out.contigs,
-                    DIAMOND_BLASTX.out.nt,
-                    DIAMOND_BLASTX.out.real,
-                    DIAMOND_BLASTX.out.uniprot,
-                    blob_db,
-                    REMAP.out.bam.collect{it[1]},
-                    REMAP.out.bai.collect{it[1]}
+                    DIAMOND_BLASTX.out.ctg_taxa.join(REMAP.out.bam_bai),
+                    blob_db
                 )
                 ch_versions = ch_versions.mix(REBLOBTOOLS.out.versions)
                 acdc_contigs = REBLOBTOOLS.out.contigs

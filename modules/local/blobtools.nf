@@ -8,10 +8,7 @@ process BLOBTOOLS {
         'biocontainers/blobtools:1.1.1--py_1' }"
 
     input:
-    tuple val(meta), path(contigs)
-    tuple val(meta), path(anno)
-    tuple val(meta), path(uniprot_anno)
-    val has_uniprot
+    tuple val(meta), path(contigs), path(anno), path(uniprot_anno), val(has_uniprot)
     path db
 
     output:
