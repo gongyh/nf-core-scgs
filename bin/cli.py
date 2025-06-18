@@ -192,12 +192,6 @@ def tools_split(
             fg=typer.colors.RED,
         )
         raise typer.Abort()
-    else:  # check the existence of all genome assemblies
-        for sample in samples:
-            ass = spades_dir.joinpath(sample + ".ctg200.fasta")
-            if not ass.exists():
-                typer.secho(f"genome assembly file {ass} not found.", fg=typer.colors.RED)
-                raise typer.Abort()
 
     prokka_dir = results_dir.joinpath("prokka")
     anno_exist = False
@@ -235,6 +229,11 @@ def tools_split(
         for sample in progress:
             # typer.echo(sample)
             fa = spades_dir.joinpath(sample + ".ctg200.fasta")
+            if not fa.exists():
+                fa = spades_dir.joinpath(sample + "_merged200.fasta")
+                if not fa.exists():
+                    typer.secho(f"genome assembly file for {sample} not found.", fg=typer.colors.RED)
+                    raise typer.Abort()
             out_bac_subdir = output_dir.joinpath(sample + "_" + level_Bacteria + "_Bacteria")
             out_bac_subdir.mkdir(exist_ok=True)  # create subdir to store Bacteria fastas
             out_euk_subdir = output_dir.joinpath(sample + "_" + level_Eukaryota + "_Eukaryota")

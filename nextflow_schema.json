@@ -180,10 +180,19 @@
                     "pattern": "^\\S+\\.gff$",
                     "description": "GFF annotation file."
                 },
+                "pasa": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to perform scaffolding using PASA?"
+                },
                 "refs_fna": {
                     "type": "string",
                     "pattern": "^\\S+\\.fna\\.gz$",
                     "description": "Genomes for scaffolding."
+                },
+                "close_ref": {
+                    "type": "string",
+                    "description": "A close reference for genome-guided assembly."
                 },
                 "notrim": {
                     "type": "boolean",
@@ -408,9 +417,9 @@
                     "type": "string",
                     "description": "Path of gtdb database."
                 },
-                "ref": {
+                "host_ref": {
                     "type": "string",
-                    "description": "Path of reference sequence for bbmap."
+                    "description": "Path of reference sequence for host removal using bbmap."
                 },
                 "evalue": {
                     "type": "string",

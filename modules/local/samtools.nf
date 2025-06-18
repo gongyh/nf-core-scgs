@@ -3,9 +3,7 @@ process SAMTOOLS {
     label 'process_medium'
 
     conda "bioconda::samtools=1.17 bioconda::picard=2.19.0 bioconda::bedtools=2.31.0 conda-forge::r-magicaxis=2.2"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-a055626708da8b97b79d76d03667dba1cb4bb107:3785590b864aff1747a8d3237666cee5030d4c3e-0' :
-        'scgs/mulled-v2-a055626708da8b97b79d76d03667dba1cb4bb107:3785590b864aff1747a8d3237666cee5030d4c3e-0' }"
+    container "scgs/mulled-v2-a055626708da8b97b79d76d03667dba1cb4bb107:3785590b864aff1747a8d3237666cee5030d4c3e-0"
 
     input:
     tuple val(meta), path(bam)

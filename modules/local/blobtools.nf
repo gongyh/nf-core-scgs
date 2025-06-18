@@ -2,16 +2,13 @@ process BLOBTOOLS {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::blobtools=1.0.1=py27_3"
+    conda "bioconda::blobtools=1.1.1=py_1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/blobtools:1.0.1--py27_3' :
-        'biocontainers/blobtools:1.0.1--py27_3' }"
+        'https://depot.galaxyproject.org/singularity/blobtools:1.1.1--py_1' :
+        'biocontainers/blobtools:1.1.1--py_1' }"
 
     input:
-    tuple val(meta), path(contigs)
-    tuple val(meta), path(anno)
-    tuple val(meta), path(uniprot_anno)
-    val has_uniprot
+    tuple val(meta), path(contigs), path(anno), path(uniprot_anno), val(has_uniprot)
     path db
 
     output:

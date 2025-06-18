@@ -18,6 +18,7 @@ process DIAMOND_BLASTX {
     tuple val(meta), path("${contigs}")                    , emit: contigs
     tuple val(meta), path("${nt_out}")                     , emit: nt
     val used                                               , emit: real
+    tuple val(meta), path("${contigs}"), path("${nt_out}"), path("${prefix}_uniprot.taxified.out"), val(used), emit: ctg_taxa
     path "versions.yml"                                    , emit: versions
     path("${prefix}_uniprot.*")                            , emit: out_put
 

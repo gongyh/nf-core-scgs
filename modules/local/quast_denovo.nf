@@ -22,8 +22,8 @@ process QUAST_DENOVO {
     script:
     def euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
     """
-    contigs=\$(ls *.ctgs.fasta | paste -sd " " -)
-    labels=\$(ls *.ctgs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
+    contigs=\$(ls *.fasta | paste -sd " " -)
+    labels=\$(ls *.fasta | paste -sd "," - | sed 's/.fasta//g')
     quast.py -o quast -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
 
     cat <<-END_VERSIONS > versions.yml

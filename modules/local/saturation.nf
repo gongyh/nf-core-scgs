@@ -3,9 +3,7 @@ process SATURATION {
     label 'process_medium'
 
     conda "bioconda::fastp=0.20.1 bioconda::mccortex=1.0 conda-forge::r-magicaxis=2.2.14 conda-forge::r-rcolorbrewer=1.1_3"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-78a3de80258f15f00d10eb0e6b53b053cda0fdaf:a53e36beaf3f3c66855542ea44bf07fdb3309689-0' :
-        'scgs/mulled-v2-78a3de80258f15f00d10eb0e6b53b053cda0fdaf:a53e36beaf3f3c66855542ea44bf07fdb3309689-0' }"
+    container "scgs/mulled-v2-78a3de80258f15f00d10eb0e6b53b053cda0fdaf:a53e36beaf3f3c66855542ea44bf07fdb3309689-0"
 
     input:
     tuple val(meta), path(reads)

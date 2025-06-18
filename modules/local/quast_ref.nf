@@ -9,7 +9,7 @@ process QUAST_REF {
     input:
     path(fasta)
     path(gff)
-    path(contig)
+    path(contigs)
     path(bam)
     path(bai)
     val(euk)
@@ -28,10 +28,10 @@ process QUAST_REF {
     def ref = fasta.exists() ? "-r $fasta" : ""
     def gene = gff.exists() ? "--features gene:$gff" : ""
     """
-    contigs=\$(ls *.ctgs.fasta | paste -sd " " -)
-    labels=\$(ls *.ctgs.fasta | paste -sd "," - | sed 's/.ctgs.fasta//g')
-    bams=\$(ls *.markdup.bam | paste -sd "," -)
-    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams -l \$labels --no-sv --no-read-stats \$contigs
+    bams=($bam)
+    bams_param=\$(echo \${bams[*]} | sed 's/ /,/g')
+    labels=\$(echo \${bams[*]} | sed 's/.markdup.bam//g' | sed 's/ /,/g')
+    quast.py -o quast $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams_param -l \$labels --no-sv --no-read-stats $contigs
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

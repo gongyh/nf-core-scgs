@@ -8,8 +8,7 @@ process METARON {
         'biocontainers/multiqc:1.14--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(contigs)
-    path(gene_models)
+    tuple val(meta), path(contigs), path(gene_model)
 
     output:
     tuple val(meta), path("$prefix"), emit: out_operon
@@ -22,7 +21,7 @@ process METARON {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}
-    metaron.py -n ${prefix} -p op -i ${prefix}.gff -j ${contigs} -t 2 -o ${prefix}/
+    metaron.py -n ${prefix} -p op -i ${gene_model} -j ${contigs} -t 2 -o ${prefix}/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
