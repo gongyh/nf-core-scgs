@@ -2,10 +2,10 @@ process QUICKMERGE {
     tag "${meta.id}"
     label 'process_medium'
 
-    conda "bioconda::quickmerge=0.3 bioconda::seqkit=2.10.0 conda-forge::biopython=1.85 bioconda::perl-bioperl=1.7.8"
+    conda "bioconda::quickmerge=0.3 bioconda::seqkit=2.10.0 conda-forge::biopython=1.85 bioconda::perl-bioperl=1.7.8 bioconda::seqtk=1.4"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/mulled-v2-446fe851503c98aa856d04200e6a396c80d50643:181987cf2fc30068e34f3bcc5464c8219c8d6ec2-1'
-        : 'scgs/mulled-v2-446fe851503c98aa856d04200e6a396c80d50643:181987cf2fc30068e34f3bcc5464c8219c8d6ec2-1'}"
+        ? 'https://depot.galaxyproject.org/singularity/mulled-v2-d417af7602b66a7a02bee82c7dd6399da6f61ce0:d831d87d4fdb108118b1d07ed3b32621cd2472f2-0'
+        : 'scgs/mulled-v2-d417af7602b66a7a02bee82c7dd6399da6f61ce0:d831d87d4fdb108118b1d07ed3b32621cd2472f2-0'}"
 
     input:
     tuple val(meta), path(denovo_contigs) // denovo assembled assembly
@@ -31,9 +31,10 @@ process QUICKMERGE {
     cat merged_${prefix}.fasta unaln_${prefix}.fasta > merged2_${prefix}.fasta
     # extract contigs from scaffolds
     scf2ctg.py merged2_${prefix}.fasta ${prefix}_merged.fasta
+    # clean up read id
+    seqtk rename ${prefix}_merged.fasta ${prefix}_ | sed 's/ .*\$//g' > ${prefix}_clean.fasta
     # remove short contigs
-    faFilterByLen.pl ${prefix}_merged.fasta 200 > ${prefix}_merged200.fasta
-    cat ${prefix}_merged200.fasta | sed 's/_length.*\$//g' > ${prefix}_clean.fasta
+    faFilterByLen.pl ${prefix}_clean.fasta 200 > ${prefix}_merged200.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
