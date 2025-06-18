@@ -3,9 +3,7 @@ process METACOMPASS {
     label 'process_high'
 
     conda "scgs::metacompass=1.12=1.12--h9948957_4 bioconda::seqkit=2.10.0 bioconda::seqtk=1.4"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-0e7fe6bd3265990ffcdf96496fe08dc5aa55fd24:62c3137bd1d05677122f8069cb3981ac4e60651e-0' :
-        'scgs/mulled-v2-0e7fe6bd3265990ffcdf96496fe08dc5aa55fd24:62c3137bd1d05677122f8069cb3981ac4e60651e-0' }"
+    container "scgs/mulled-v2-0e7fe6bd3265990ffcdf96496fe08dc5aa55fd24:62c3137bd1d05677122f8069cb3981ac4e60651e-0"
 
     input:
     tuple val(meta), path(reads)

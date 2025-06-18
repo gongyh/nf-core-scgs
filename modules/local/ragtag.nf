@@ -3,9 +3,7 @@ process RAGTAG {
     label 'process_medium'
 
     conda "bioconda::ragtag=2.1.0"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/ragtag:2.1.0'
-        : 'scgs/ragtag:2.1.0'}"
+    container "scgs/ragtag:2.1.0"
 
     input:
     tuple val(meta), path(refass_contigs), path(denovo_contigs) // ref and denovo assemblies

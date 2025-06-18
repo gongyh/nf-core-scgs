@@ -3,9 +3,7 @@ process BBNORM {
     label 'process_medium'
 
     conda "fastx_toolkit=0.0.14 bioconda::bbmap=39.01"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-0f45a2e9949b9309cc37635f57bff7a66baf8095:86172d512030702a6bdb7b2cd7e301c3e1a14e56-1':
-        'scgs/mulled-v2-0f45a2e9949b9309cc37635f57bff7a66baf8095:86172d512030702a6bdb7b2cd7e301c3e1a14e56-1' }"
+    container "scgs/mulled-v2-0f45a2e9949b9309cc37635f57bff7a66baf8095:86172d512030702a6bdb7b2cd7e301c3e1a14e56-1"
 
     input:
     tuple val(meta), path(reads)

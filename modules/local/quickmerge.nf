@@ -3,9 +3,7 @@ process QUICKMERGE {
     label 'process_medium'
 
     conda "bioconda::quickmerge=0.3 bioconda::seqkit=2.10.0 conda-forge::biopython=1.85 bioconda::perl-bioperl=1.7.8 bioconda::seqtk=1.4"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/mulled-v2-d417af7602b66a7a02bee82c7dd6399da6f61ce0:d831d87d4fdb108118b1d07ed3b32621cd2472f2-0'
-        : 'scgs/mulled-v2-d417af7602b66a7a02bee82c7dd6399da6f61ce0:d831d87d4fdb108118b1d07ed3b32621cd2472f2-0'}"
+    container "scgs/mulled-v2-d417af7602b66a7a02bee82c7dd6399da6f61ce0:d831d87d4fdb108118b1d07ed3b32621cd2472f2-0"
 
     input:
     tuple val(meta), path(denovo_contigs) // denovo assembled assembly
