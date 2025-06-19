@@ -2,8 +2,8 @@ process SPADES {
     tag "${meta.id}"
     label 'process_high'
 
-    conda "bioconda::spades=3.15.5 bioconda::perl-bioperl=1.7.8"
-    container "scgs/mulled-v2-23d30bd0f79edd4339b884a2320935a5a236f7eb:824e273bd5969e5d2f8d617c66ab71e506b4ea71-1"
+    conda "bioconda::spades=3.15.5 bioconda::perl-bioperl=1.7.8 conda-forge::python=3.10.14"
+    container "scgs/mulled-v2-5524a20c8f39de906b127a66052c67b51c9a9ce1:c8e22953d04dee6a4da05f7a131bbd081ad78651-0"
 
     input:
     tuple val(meta), path(reads)
