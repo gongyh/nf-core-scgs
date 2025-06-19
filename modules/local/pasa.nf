@@ -68,12 +68,10 @@ process PASA {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     cp -arL ${panta_refs} panta_${prefix}
-    prodigal -i ${spades_out}/contigs.fasta -f gff -o tmp.gff
-    echo -e "##FASTA" | cat tmp.gff /dev/stdin ${spades_out}/contigs.fasta > ${prefix}.gff
+    cp -arL $spades_out spades_for_pasa
+    prodigal -i spades_for_pasa/contigs.fasta -f gff -o tmp.gff
+    echo -e "##FASTA" | cat tmp.gff /dev/stdin spades_for_pasa/contigs.fasta > ${prefix}.gff
     panta.py -p add -g ${prefix}.gff -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
-    cp -rL $spades_out spades_for_pasa
-    rm -f spades_for_pasa/contigs.paths
-    fix_spades_paths.py -f ${spades_out}/contigs.fasta -p ${spades_out}/contigs.paths -o spades_for_pasa/contigs.paths
     pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir spades_for_pasa --output_fasta ${prefix}.pasa.fasta
     fixSPAdesLen.py ${prefix}.pasa.fasta > ${prefix}.scaffolds.fasta
     faFilterByLen.pl ${prefix}.scaffolds.fasta 200 > ${prefix}.pasa200.fasta

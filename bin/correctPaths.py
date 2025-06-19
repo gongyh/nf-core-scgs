@@ -3,9 +3,9 @@ import sys
 
 contigsFasta = sys.argv[1]
 contigsPath = sys.argv[2]
+contigsCorrPath = sys.argv[3]
 contigsID = []
 
-contigsCorrPath = contigsPath.split(".")[0] + ".correct.paths"
 with open(contigsFasta, "r") as ffasta:
     fastaLines = ffasta.readlines()
     for fastaLine in fastaLines:
