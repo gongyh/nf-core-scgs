@@ -6,7 +6,7 @@ import argparse
 def update_paths_file(fasta_path: str, paths_path: str, output_path: str) -> None:
     """
     Update contig IDs in .paths file based on corresponding IDs from .fasta file
-    
+
     Args:
         fasta_path (str): Path to input contigs.fasta file
         paths_path (str): Path to input contigs.paths file
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--fasta', required=True, help='Path to contigs.fasta file')
     parser.add_argument('-p', '--paths', required=True, help='Path to contigs.paths file')
     parser.add_argument('-o', '--output', required=True, help='Path for updated output file')
-    
+
     args = parser.parse_args()
     update_paths_file(args.fasta, args.paths, args.output)
     print(f"Successfully updated paths file. Output saved to: {args.output}")

@@ -10,7 +10,7 @@ process SPADES {
 
     output:
     tuple val(meta), path("${prefix}.contigs.fasta")                       , emit: contig
-    tuple val(meta), path("${prefix}.correct.paths")                       , emit: contig_path
+    tuple val(meta), path("${prefix}.contigs.paths")                       , emit: contig_path
     tuple val(meta), path("${prefix}.spades_out/${prefix}.contigs.gfa")    , emit: contig_graph
     tuple val(meta), path("${prefix}.ctg200.fasta")                        , emit: ctg200
     tuple val(meta), path("${prefix}.ctgs.fasta")                          , emit: ctg
