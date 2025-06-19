@@ -10,8 +10,8 @@ process QUICKMERGE {
     tuple val(meta), path(refass_contigs) // reference guided assembly, after scaffolding
 
     output:
-    tuple val(meta), path("${prefix}_merged200.fasta"),   emit: merged_assembly
-    tuple val(meta), path("${prefix}_clean.fasta"),       emit: merged_clean
+    tuple val(meta), path("${prefix}.hybrid200.fasta"),   emit: merged_assembly
+    tuple val(meta), path("${prefix}.hybrid.fasta"),      emit: merged_clean
     path "versions.yml",                                  emit: versions
 
     when:
@@ -30,9 +30,9 @@ process QUICKMERGE {
     # extract contigs from scaffolds
     scf2ctg.py merged2_${prefix}.fasta ${prefix}_merged.fasta
     # clean up read id
-    seqtk rename ${prefix}_merged.fasta ${prefix}_ | sed 's/ .*\$//g' > ${prefix}_clean.fasta
+    seqtk rename ${prefix}_merged.fasta ${prefix}_ | sed 's/ .*\$//g' > ${prefix}.hybrid.fasta
     # remove short contigs
-    faFilterByLen.pl ${prefix}_clean.fasta 200 > ${prefix}_merged200.fasta
+    faFilterByLen.pl ${prefix}.hybrid.fasta 200 > ${prefix}.hybrid200.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

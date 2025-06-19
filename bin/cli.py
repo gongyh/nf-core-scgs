@@ -193,6 +193,15 @@ def tools_split(
         )
         raise typer.Abort()
 
+    genome_dir = spades_dir
+    fna_suffix = ".ctg200.fasta"
+    if results_dir.joinpath("hybrid").is_dir():
+        genome_dir = results_dir.joinpath("hybrid")
+        fna_suffix = ".hybrid200.fasta"
+    elif results_dir.joinpath("pasa").is_dir():
+        genome_dir = results_dir.joinpath("pasa")
+        fna_suffix = ".pasa200.fasta"
+
     prokka_dir = results_dir.joinpath("prokka")
     anno_exist = False
     if prokka_dir.exists() and prokka_dir.is_dir():  # exist the dir, ok
@@ -228,12 +237,10 @@ def tools_split(
     with typer.progressbar(samples, label="Processing") as progress:
         for sample in progress:
             # typer.echo(sample)
-            fa = spades_dir.joinpath(sample + ".ctg200.fasta")
+            fa = genome_dir.joinpath(sample + fna_suffix)
             if not fa.exists():
-                fa = spades_dir.joinpath(sample + "_merged200.fasta")
-                if not fa.exists():
-                    typer.secho(f"genome assembly file for {sample} not found.", fg=typer.colors.RED)
-                    raise typer.Abort()
+                typer.secho(f"genome assembly file for {sample} not found.", fg=typer.colors.RED)
+                raise typer.Abort()
             out_bac_subdir = output_dir.joinpath(sample + "_" + level_Bacteria + "_Bacteria")
             out_bac_subdir.mkdir(exist_ok=True)  # create subdir to store Bacteria fastas
             out_euk_subdir = output_dir.joinpath(sample + "_" + level_Eukaryota + "_Eukaryota")
