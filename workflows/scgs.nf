@@ -762,18 +762,12 @@ workflow SCGS {
         ch_versions = ch_versions.mix(SPADES.out.versions)
 
         if (params.refs_fna) {
-            // scaffoldding
-            if (params.pasa && !params.close_ref) {
-                PANTA(refs_fna.collect())
-                ch_versions = ch_versions.mix(PANTA.out.versions)
-                PASA(SPADES.out.assembly, PANTA.out.db)
-                ch_versions = ch_versions.mix(PASA.out.versions)
-                ctg200 = PASA.out.ctg200
-                ctg = PASA.out.ctg
-                ctg_denovo = PASA.out.ctg
-            } else {
-                ctg_denovo = SPADES.out.ctg
-            }
+            // scaffoldding denovo assembly using PASA
+            PANTA(refs_fna.collect())
+            ch_versions = ch_versions.mix(PANTA.out.versions)
+            PASA(SPADES.out.assembly, PANTA.out.db)
+            ch_versions = ch_versions.mix(PASA.out.versions)
+            ctg_denovo = PASA.out.ctg
 
             // integrate with reference based assembly
             if (params.close_ref) {
@@ -787,6 +781,9 @@ workflow SCGS {
                 ch_versions = ch_versions.mix(QUICKMERGE.out.versions)
                 ctg200 = QUICKMERGE.out.merged_assembly
                 ctg = QUICKMERGE.out.merged_clean
+            } else {
+                ctg200 = PASA.out.ctg200
+                ctg = PASA.out.ctg
             }
         } else {
             ctg200 = SPADES.out.ctg200

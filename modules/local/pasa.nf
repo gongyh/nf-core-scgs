@@ -26,6 +26,11 @@ process PANTA {
             gzip -cd \$fna > \${prefix}.fna
             prodigal -i \${prefix}.fna -f gff -o tmp.gff
             echo -e "##FASTA" | cat tmp.gff /dev/stdin \${prefix}.fna > gffs/\${prefix}.gff
+        else
+            bn=\$(basename \$fna)
+            prefix=\${bn%.fna}
+            prodigal -i \$fna -f gff -o tmp.gff
+            echo -e "##FASTA" | cat tmp.gff /dev/stdin \$fna > gffs/\${prefix}.gff
         fi
     done
     panta.py -p init -g gffs/*.gff -o panta_refs -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
@@ -52,8 +57,8 @@ process PASA {
 
     output:
     tuple val(meta), path("${prefix}.scaffolds.fasta")          , emit: scaffolds
-    tuple val(meta), path("${prefix}.ctg200.fasta")             , emit: ctg200
-    tuple val(meta), path("${prefix}.ctgs.fasta")               , emit: ctg
+    tuple val(meta), path("${prefix}.pasa200.fasta")            , emit: ctg200
+    tuple val(meta), path("${prefix}.pasa.fasta")               , emit: ctg
     path "versions.yml"                                         , emit: versions
 
     when:
@@ -63,13 +68,14 @@ process PASA {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     cp -arL ${panta_refs} panta_${prefix}
-    prodigal -i ${spades_out}/contigs.fasta -f gff -o tmp.gff
-    echo -e "##FASTA" | cat tmp.gff /dev/stdin ${spades_out}/contigs.fasta > ${prefix}.gff
+    cp -arL $spades_out spades_for_pasa
+    prodigal -i spades_for_pasa/contigs.fasta -f gff -o tmp.gff
+    echo -e "##FASTA" | cat tmp.gff /dev/stdin spades_for_pasa/contigs.fasta > ${prefix}.gff
     panta.py -p add -g ${prefix}.gff -o panta_${prefix} -as -s -i 85 -c 20 -e 0.01 -t ${task.cpus}
-    pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir $spades_out --output_fasta ${prefix}.pasa.fasta
+    pasa.py --data_dir panta_${prefix} --incomplete_sample_name ${prefix} --assem_dir spades_for_pasa --output_fasta ${prefix}.pasa.fasta
     fixSPAdesLen.py ${prefix}.pasa.fasta > ${prefix}.scaffolds.fasta
-    faFilterByLen.pl ${prefix}.scaffolds.fasta 200 > ${prefix}.ctg200.fasta
-    cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
+    faFilterByLen.pl ${prefix}.scaffolds.fasta 200 > ${prefix}.pasa200.fasta
+    cat ${prefix}.pasa200.fasta | sed 's/_length.*\$//g' > ${prefix}.pasa.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

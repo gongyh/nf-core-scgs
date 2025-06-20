@@ -9,3 +9,4 @@ lint:
   actions_awsfulltest: false
   actions_ci: false
   local_component_structure: false
+  included_configs: false
