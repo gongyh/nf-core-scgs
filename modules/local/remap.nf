@@ -6,8 +6,7 @@ process REMAP {
     container "scgs/mulled-v2-c742dccc9d8fabfcff2af0d8d6799dbc711366cf:7a723346025146e191fdbf519b8131c258b9eeab-0"
 
     input:
-    tuple val(meta), path(reads)
-    path(index)
+    tuple val(meta), path(reads), path(index)
     val(allow_multi_align)
 
     output:

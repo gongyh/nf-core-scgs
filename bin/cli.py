@@ -195,11 +195,9 @@ def tools_split(
 
     genome_dir = spades_dir
     fna_suffix = ".ctg200.fasta"
-    if results_dir.joinpath("hybrid").is_dir():
-        genome_dir = results_dir.joinpath("hybrid")
+    if len(list(genome_dir.glob(f"**/*.hybrid200.fasta"))) > 0:
         fna_suffix = ".hybrid200.fasta"
-    elif results_dir.joinpath("pasa").is_dir():
-        genome_dir = results_dir.joinpath("pasa")
+    elif len(list(genome_dir.glob(f"**/*.pasa200.fasta"))) > 0:
         fna_suffix = ".pasa200.fasta"
 
     prokka_dir = results_dir.joinpath("prokka")

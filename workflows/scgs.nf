@@ -882,8 +882,7 @@ workflow SCGS {
             } else {
                 BOWTIE2_REMAP(ctg200)
                 REMAP (
-                    trimmed_reads,
-                    BOWTIE2_REMAP.out.index.collect{it[1]},
+                    trimmed_reads.join(BOWTIE2_REMAP.out.index),
                     params.allow_multi_align
                 )
                 ch_versions = ch_versions.mix(REMAP.out.versions)
@@ -1014,7 +1013,7 @@ workflow SCGS {
             bin_csv = SPLIT_CHECKM.out.csv
         }
 
-        if (params.graphbin) {
+        if (params.graphbin && !params.refs_fna) {
             GRAPHBIN (
                 contig.collect{it[1]},
                 contig_path.collect{it[1]},
