@@ -54,7 +54,8 @@ def helpMessage() {
     --krona_db                    Krona taxonomy.tab (if used offline)
     --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
     --uniprot_taxids              Sequence id to taxa id mapping file
-    --kraken_db                   Kraken2 database
+    --kraken2_db                  Kraken2 database
+    --kraken1_db                  Kraken1 database (for ACDC)
     --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
     --kofam_profile               KOfam profile database
     --kofam_kolist                KOfam ko_list file
@@ -169,7 +170,8 @@ params.prokka_proteins = null
 params.nt_db = null
 params.krona_db = null
 params.blob_db = null
-params.kraken_db = null
+params.kraken1_db = null
+params.kraken2_db = null
 params.kofam_profile = null
 params.kofam_kolist = null
 params.readPaths = null
@@ -269,12 +271,20 @@ if (params.uniprot_taxids) {
 }
 
 // Configurable kraken database
-kraken_db = false
-if (params.kraken_db) {
-    kraken_db = file(params.kraken_db)
-    if( !kraken_db.exists() ) exit 1, "Kraken database not found: ${params.kraken_db}"
+kraken1_db = false
+if (params.kraken1_db) {
+    kraken1_db = file(params.kraken1_db)
+    if( !kraken1_db.exists() ) exit 1, "Kraken v1 database not found: ${params.kraken1_db}"
 } else {
-    kraken_db = file("/dev/null")
+    kraken1_db = file("/dev/null")
+}
+
+kraken2_db = false
+if (params.kraken2_db) {
+    kraken2_db = file(params.kraken2_db)
+    if( !kraken2_db.exists() ) exit 1, "Kraken v2 database not found: ${params.kraken2_db}"
+} else {
+    kraken2_db = file("/dev/null")
 }
 
 // Configurable Blobtools nodesDB.txt
@@ -644,7 +654,7 @@ workflow SCGS {
         }
         KRAKEN (
             trimmed_reads,
-            kraken_db,
+            kraken2_db,
             krona_db
         )
         ch_multiqc_kraken = KRAKEN.out.report
@@ -900,7 +910,7 @@ workflow SCGS {
                 ACDC (
                     acdc_contigs,
                     acdc_tax,
-                    kraken_db
+                    kraken1_db
                 )
             }
         }

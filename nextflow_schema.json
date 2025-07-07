@@ -389,9 +389,13 @@
                     "type": "string",
                     "description": "Path of Krona taxonomy.tab."
                 },
-                "kraken_db": {
+                "kraken1_db": {
                     "type": "string",
-                    "description": "Path of KRAKEN1 database."
+                    "description": "Path of KRAKEN1 database (for ACDC)."
+                },
+                "kraken2_db": {
+                    "type": "string",
+                    "description": "Path of KRAKEN2 database."
                 },
                 "readPaths": {
                     "type": "string",
