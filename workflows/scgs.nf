@@ -532,6 +532,7 @@ include { SAVE_REFERENCE        } from '../modules/local/save_reference'
 include { TRIMGALORE            } from '../modules/local/trimgalore'
 include { KTUPDATETAXONOMY      } from '../modules/local/ktupdatetaxonomy'
 include { KRAKEN                } from '../modules/local/kraken'
+include { UMAP                  } from '../modules/local/scanpy/umap'
 include { SATURATION            } from '../modules/local/saturation'
 include { SAMTOOLS              } from '../modules/local/samtools'
 include { PRESEQ                } from '../modules/local/preseq'
@@ -657,6 +658,7 @@ workflow SCGS {
             kraken2_db,
             krona_db
         )
+        UMAP ( KRAKEN.out.tda.collect(ifEmpty([])) )
         ch_multiqc_kraken = KRAKEN.out.report
     }
 
