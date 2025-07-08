@@ -5,7 +5,7 @@ process UMAP {
     container "scgs/mulled-v2-fe9371f6be95d197dedf7c0a65e9e322526829e0:8d6c60157f466e2d016b24eb850b151a57f390ab-0"
 
     input:
-    path("tda/*", arity: '3..*')
+    path("tda/*")
 
     output:
     path "umap.h5ad"
