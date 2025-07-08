@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import yaml
 import glob
+import shutil
 
 from threadpoolctl import threadpool_limits
 
@@ -28,7 +29,7 @@ sample_genus = {}
 
 for fp in file_paths:
     # Read the txt file
-    df = pd.read_csv(fp, sep="\t")
+    df = pd.read_csv(fp, sep="\\t")
 
     # Extract sample ID from the file name
     sample_id = fp.split("/")[-1].split(".TDA_genus")[0]
@@ -57,19 +58,17 @@ merged_table = combined_long.pivot_table(
     fill_value=0,  # Fill missing genera in a sample with 0
 )
 
-# Reset index to make "sample_id" a column (optional, for flat table)
-merged_table = merged_table.reset_index()
-
 adata = sc.AnnData(
-    X=df.values,  # Abundance matrix (samples × genera)
-    obs=pd.DataFrame(index=df.index),  # Sample metadata (index = sample IDs)
-    var=pd.DataFrame(index=df.columns),  # Genus metadata (index = genus names)
+    X=merged_table.values,  # Abundance matrix (samples × genera)
+    obs=pd.DataFrame(index=merged_table.index),  # Sample metadata (index = sample IDs)
+    var=pd.DataFrame(index=merged_table.columns)  # Genus metadata (index = genus names)
 )
 
 # Add sample metadata
 df_top_genus = pd.DataFrame(  # Convert dict to DataFrame
-    sample_genus.items(),  # Convert dict items to list of (key, value) tuples
-    columns=["sample_id", "sample_genus"],  # Define column names
+    sample_genus.values(),  # Convert dict items to list of (key, value) tuples
+    columns=["sample_genus"],  # Define column names
+    index=sample_genus.keys()
 )
 
 adata.obs = adata.obs.join(df_top_genus)  # Merge with existing sample metadata
@@ -77,18 +76,18 @@ adata.obs = adata.obs.join(df_top_genus)  # Merge with existing sample metadata
 # Perform clustering
 # Build the neighborhood graph (required for both Louvain and Leiden)
 n_samples = adata.n_obs
+sc.tl.pca(adata, n_comps=min(n_samples // 2, 50)) # Compute PCA (n_comps ≥ n_pcs)
 sc.pp.neighbors(
     adata,
     n_neighbors=int(np.sqrt(n_samples)),  # Number of nearest neighbors
     n_pcs=min(n_samples // 2, 50),  # Use PCA components
-    use_rep="X_pca",  # Use PCA-reduced data (default)
+    use_rep="X_pca"  # Use PCA-reduced data (default)
 )
 # Run Leiden clustering
 sc.tl.leiden(
     adata,
     resolution=1.0,  # Same granularity control as Louvain
-    key_added="leiden",  # Store results in adata.obs["leiden"]
-    objective_function="modularity",  # Default: optimize modularity
+    key_added="leiden"  # Store results in adata.obs["leiden"]
 )
 
 # Perform umap
@@ -102,7 +101,8 @@ df = pd.DataFrame(adata.obsm["X_umap"], index=adata.obs_names)
 df.to_pickle(f"umap.pkl")
 
 # Plot clusters
-sc.pl.umap(adata, color=["sample_genus", "leiden"], ncols=2, title=["UMAP (Genus)", "UMAP (Leiden)"], save="umap.pdf")
+sc.pl.umap(adata, color=["sample_genus", "leiden"], ncols=2, title=["UMAP (Genus)", "UMAP (Leiden)"], save=".pdf")
+shutil.copy("figures/umap.pdf", "umap.pdf")
 
 # Versions
 

@@ -28,7 +28,7 @@ process CANU {
         flye --nano-raw ${reads[0]} --out-dir ${prefix}.spades_out --threads ${task.cpus} --scaffold --meta
     fi
     #ln -s ${prefix}.spades_out/${prefix}.contigs.fasta ${prefix}.contigs.fasta # for canu
-    cut -f1,2,3 ${prefix}.spades_out/assembly_info.txt | awk -F'\t' 'NR>1{print \$1"\t"\$1"_length_"\$2"_cov_"\$3}' > flyeID_spadesID.txt
+    cut -f1,2,3 ${prefix}.spades_out/assembly_info.txt | awk -F'\\t' 'NR>1{print \$1"\\t"\$1"_length_"\$2"_cov_"\$3}' > flyeID_spadesID.txt
     fasta_tool --swap_ids flyeID_spadesID.txt ${prefix}.spades_out/assembly.fasta > ${prefix}.contigs.fasta
     ##ln -s ${prefix}.spades_out/assembly.fasta ${prefix}.contigs.fasta # for flye
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta

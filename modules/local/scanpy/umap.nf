@@ -1,8 +1,8 @@
 process UMAP {
     label 'process_medium'
 
-    conda "conda-forge::scanpy=1.11.2 conda-forge::pyyaml=6.0.2"
-    container "scgs/mulled-v2-9109a57576476a9373a70c6f48e5d8d64c8d6c77:1da6c154f4395390d27ed0224ea5055605acd644-0"
+    conda "conda-forge::scanpy=1.11.2 conda-forge::pyyaml=6.0.2 conda-forge::python-igraph=0.11.9 conda-forge::leidenalg=0.10.2"
+    container "scgs/mulled-v2-b72f30682a2b6401a020a481725ded0634ad5f6c:2ebc80117a8ef44f0d77a014d339c39059767495-0"
 
     input:
     path("tda/*")

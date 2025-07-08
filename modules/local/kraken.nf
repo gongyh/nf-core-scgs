@@ -3,7 +3,7 @@ process KRAKEN {
     label 'process_medium'
 
     conda "bioconda::kraken2=2.1.2 bioconda::krona=2.7.1 bioconda::krakentools=1.2"
-    container "scgs/mulled-v2-3bbb1b9ff2130265cf8d9498a097b04978fb988f:6688dcb6662e35001e709b425821fff321f15540-0"
+    container "scgs/mulled-v2-3bbb1b9ff2130265cf8d9498a097b04978fb988f:6688dcb6662e35001e709b425821fff321f15540-1"
 
     input:
     tuple val(meta), path(reads)
@@ -21,7 +21,7 @@ process KRAKEN {
 
     script:
     def mode = meta.single_end ? "" : "--paired"
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     TAXONOMY=\$(find -L . -name '*.tab' -exec dirname {} \\;)
     kraken2 --db $db --threads ${task.cpus} --report ${prefix}.krk --output ${prefix}.k2 --gzip-compressed ${mode} $reads
@@ -29,9 +29,9 @@ process KRAKEN {
     ktImportText -o ${prefix}_taxonomy.html ${prefix}.krn
     # Taxonomic Discovery Algorithm
     cat ${prefix}.krn | grep f__ | grep g__ | grep -v s__ > genus_${prefix}.krn
-    total_sum=\$(awk -F '\t' '{sum += \$1} END {print sum}' genus_${prefix}.krn)
-    awk -F '\t' -v total="\$total_sum" '
-    BEGIN{ print "genus\tabundance" }
+    total_sum=\$(awk -F '\\t' '{sum += \$1} END {print sum}' genus_${prefix}.krn)
+    awk -F '\\t' -v total="\$total_sum" '
+    BEGIN{ print "genus\\tabundance" }
     {
         f_val = "";
         g_val = "";
@@ -44,7 +44,7 @@ process KRAKEN {
             }
         }
         percent = (\$1 / total) * 100;
-        printf "%s|%s\t%.2f\n", f_val, g_val, percent;
+        printf "%s|%s\\t%.2f\\n", f_val, g_val, percent;
     }' genus_${prefix}.krn > ${prefix}.TDA_genus.txt
 
     cat <<-END_VERSIONS > versions.yml

@@ -24,7 +24,7 @@ process METACOMPASS {
     """
     go_metacompass.py -r ${ref_fna} ${rcl} -m 1 -g 100 -e ${prefix} -t ${task.cpus} -o ${prefix}.metacompass_out
     # only use reference based
-    awk -F'\t' 'NR>1{if(\$3) print \$1}' ${prefix}.metacompass_out/metacompass.tsv > refs.id
+    awk -F'\\t' 'NR>1{if(\$3) print \$1}' ${prefix}.metacompass_out/metacompass.tsv > refs.id
     seqkit grep -f refs.id -o ${prefix}.metacompass.ctg.fa ${prefix}.metacompass_out/metacompass.final.ctg.fa
 
     cat <<-END_VERSIONS > versions.yml
