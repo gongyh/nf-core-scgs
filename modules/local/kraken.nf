@@ -33,18 +33,18 @@ process KRAKEN {
     awk -F '\t' -v total="\$total_sum" '
     BEGIN{ print "genus\tabundance" }
     {
-      f_val = "";
-      g_val = "";
-      for (i=1; i<=NF; i++) {
-        if (\$i ~ /^f__/) {
-          f_val = \$i;
+        f_val = "";
+        g_val = "";
+        for (i=1; i<=NF; i++) {
+            if (\$i ~ /^f__/) {
+                f_val = \$i;
+            }
+            if (\$i ~ /^g__/) {
+                g_val = \$i;
+            }
         }
-        if (\$i ~ /^g__/) {
-          g_val = \$i;
-        }
-      }
-      percent = (\$1 / total) * 100;
-      printf "%s|%s\t%.2f\n", f_val, g_val, percent;
+        percent = (\$1 / total) * 100;
+        printf "%s|%s\t%.2f\n", f_val, g_val, percent;
     }' genus_${prefix}.krn > ${prefix}.TDA_genus.txt
 
     cat <<-END_VERSIONS > versions.yml
