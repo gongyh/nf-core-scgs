@@ -67,22 +67,42 @@ adata = sc.AnnData(
 )
 
 # Add sample metadata
-df_top_genus = pd.DataFrame( # Convert dict to DataFrame
+df_top_genus = pd.DataFrame(  # Convert dict to DataFrame
     sample_genus.items(),  # Convert dict items to list of (key, value) tuples
     columns=["sample_id", "sample_genus"],  # Define column names
 )
 
 adata.obs = adata.obs.join(df_top_genus)  # Merge with existing sample metadata
 
+# Perform clustering
+# Build the neighborhood graph (required for both Louvain and Leiden)
+n_samples = adata.n_obs
+sc.pp.neighbors(
+    adata,
+    n_neighbors=int(np.sqrt(n_samples)),  # Number of nearest neighbors
+    n_pcs=min(n_samples // 2, 50),  # Use PCA components
+    use_rep="X_pca",  # Use PCA-reduced data (default)
+)
+# Run Leiden clustering
+sc.tl.leiden(
+    adata,
+    resolution=1.0,  # Same granularity control as Louvain
+    key_added="leiden",  # Store results in adata.obs["leiden"]
+    objective_function="modularity",  # Default: optimize modularity
+)
+
 # Perform umap
 sc.tl.umap(adata, random_state=0)
-
 # Round to 10 decimal places to ensure stable hashes
 adata.obsm["X_umap"] = np.round(adata.obsm["X_umap"], 10)
 
+# Save results
 adata.write_h5ad(f"umap.h5ad")
 df = pd.DataFrame(adata.obsm["X_umap"], index=adata.obs_names)
 df.to_pickle(f"umap.pkl")
+
+# Plot clusters
+sc.pl.umap(adata, color=["sample_genus", "leiden"], ncols=2, title=["UMAP (Genus)", "UMAP (Leiden)"], save="umap.pdf")
 
 # Versions
 

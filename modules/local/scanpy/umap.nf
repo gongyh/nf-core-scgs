@@ -1,8 +1,8 @@
 process UMAP {
     label 'process_medium'
 
-    conda "bioconda::scanpy-scripts=1.9.301 conda-forge::python=3.9.23 conda-forge::loompy=3.0.6 conda-forge::pyyaml=6.0.2 conda-forge::r-ggpubr=0.6.1 bioconda::r-sceasy=0.0.7"
-    container "scgs/mulled-v2-fe9371f6be95d197dedf7c0a65e9e322526829e0:8d6c60157f466e2d016b24eb850b151a57f390ab-0"
+    conda "conda-forge::scanpy=1.11.2 conda-forge::pyyaml=6.0.2"
+    container "scgs/mulled-v2-9109a57576476a9373a70c6f48e5d8d64c8d6c77:1da6c154f4395390d27ed0224ea5055605acd644-0"
 
     input:
     path("tda/*")
@@ -18,14 +18,12 @@ process UMAP {
 
     script:
     template('umap.py')
-    """
-    scanpy-cli plot embed --projection 2d --color sample_genus --title UMAP umap.h5ad umap.pdf
-    """
 
     stub:
     """
     touch "umap.h5ad"
     touch "umap.pkl"
+    touch "umap.pdf"
     touch "versions.yml"
     """
 }
