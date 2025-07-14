@@ -25,28 +25,11 @@ process KRAKEN {
     """
     TAXONOMY=\$(find -L . -name '*.tab' -exec dirname {} \\;)
     kraken2 --db $db --threads ${task.cpus} --report ${prefix}.krk --output ${prefix}.k2 --gzip-compressed ${mode} $reads
-    bracken -d $db -i ${prefix}.krk -o /dev/null -w ${prefix}.bracken.krk -r 150 -l G
-    kreport2krona.py -r ${prefix}.bracken.krk -o ${prefix}.krn
+    kreport2krona.py -r ${prefix}.krk -o ${prefix}.krn
     ktImportText -o ${prefix}_taxonomy.html ${prefix}.krn
     # Taxonomic Discovery Algorithm
-    cat ${prefix}.krn | grep f__ | grep g__ | grep -v s__ > genus_${prefix}.krn
-    total_sum=\$(awk -F '\\t' '{sum += \$1} END {print sum}' genus_${prefix}.krn)
-    awk -F '\\t' -v total="\$total_sum" '
-    BEGIN{ print "genus\\tabundance" }
-    {
-        f_val = "";
-        g_val = "";
-        for (i=1; i<=NF; i++) {
-            if (\$i ~ /^f__/) {
-                f_val = \$i;
-            }
-            if (\$i ~ /^g__/) {
-                g_val = \$i;
-            }
-        }
-        percent = (\$1 / total) * 100;
-        printf "%s|%s\\t%.2f\\n", f_val, g_val, percent;
-    }' genus_${prefix}.krn > ${prefix}.TDA_genus.txt
+    bracken -d $db -i ${prefix}.krk -o ${prefix}.bracken -w /dev/null -r 150 -l G
+    awk -F '\\t' 'BEGIN{ print "genus\tabundance" }NR>1{print \$1"|"\$2"\\t"\$7}' ${prefix}.bracken > ${prefix}.TDA_genus.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
