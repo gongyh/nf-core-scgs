@@ -461,6 +461,7 @@ if (params.refs_fna) {
 
 if (params.close_ref) {
     close_ref = file(params.close_ref, checkIfExists: true)
+    exit 1, "params.close_ref is under testing; do not use it."
 } else {
     close_ref = Channel.empty()
 }
