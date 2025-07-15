@@ -19,8 +19,9 @@ from anndata import AnnData
 from plotly.subplots import make_subplots
 
 ERR_MSG_KEY_NOT_FOUND = "Could not find {} in {}."
-ERR_MSG_UNEXPECTED_CATEGORIES = ("The following categories were not found in specified groups: {}\\n"
-                                 "Specified groups: {}")
+ERR_MSG_UNEXPECTED_CATEGORIES = (
+    "The following categories were not found in specified groups: {}\\n" "Specified groups: {}"
+)
 
 
 def qc_metrics(
@@ -81,32 +82,33 @@ def qc_metrics(
     cols = min(num_plots, ncols)
     rows = int(np.ceil(num_plots / cols))
 
-    subplot_titles = (["N of UMI per cell", "N of genes per cell"] +
-                      [f"% of {qc_var} expression per cell" for qc_var in qc_vars] if qc_vars
-                      else ["N of UMI per cell", "N of genes per cell"])
+    subplot_titles = (
+        ["N of UMI per cell", "N of genes per cell"] + [f"% of {qc_var} expression per cell" for qc_var in qc_vars]
+        if qc_vars
+        else ["N of UMI per cell", "N of genes per cell"]
+    )
 
-    fig = make_subplots(rows=rows, cols=cols,
-                        horizontal_spacing=wspace,
-                        vertical_spacing=hspace,
-                        subplot_titles=subplot_titles)
+    fig = make_subplots(
+        rows=rows, cols=cols, horizontal_spacing=wspace, vertical_spacing=hspace, subplot_titles=subplot_titles
+    )
 
-    all_metrics = (["total_counts", "n_genes_by_counts"]
-                   + [f"pct_counts_{qc_var}" for qc_var in qc_vars] if qc_vars
-                   else ["total_counts", "n_genes_by_counts"])
+    all_metrics = (
+        ["total_counts", "n_genes_by_counts"] + [f"pct_counts_{qc_var}" for qc_var in qc_vars]
+        if qc_vars
+        else ["total_counts", "n_genes_by_counts"]
+    )
 
     for c, metric in enumerate(all_metrics):
         row = (c // cols) + 1
         col = (c % cols) + 1
         threshold = np.percentile(adata.obs[metric], quantile * 100)
-        fig.add_trace(go.Histogram(x=adata.obs[metric][adata.obs[metric] <= threshold]),
-                      row=row, col=col)
+        fig.add_trace(go.Histogram(x=adata.obs[metric][adata.obs[metric] <= threshold]), row=row, col=col)
 
-    for row in range(1, rows+1):
-        for col in range(1, cols+1):
+    for row in range(1, rows + 1):
+        for col in range(1, cols + 1):
             fig.update_yaxes(showticklabels=False, ticks="", showline=False, row=row, col=col)
 
-    fig.update_layout(showlegend=False, template=template,
-                      width=width, height=height)
+    fig.update_layout(showlegend=False, template=template, width=width, height=height)
     fig.update_layout(bargap=bargap)
     fig.update_annotations(font={"family": "Serif"})
 
@@ -121,15 +123,16 @@ def _get_basis(adata: AnnData, basis: str) -> np.ndarray:
     """
     Get array for basis from anndata. Just tries to add 'X_'.
     """
-    additional_message = (" Run sc.pp.pca first." if basis in ("pca", "X_pca") else
-                          " Run sc.tl.umap first." if basis in ("umap", "X_umap") else "")
+    additional_message = (
+        " Run sc.pp.pca first."
+        if basis in ("pca", "X_pca")
+        else " Run sc.tl.umap first." if basis in ("umap", "X_umap") else ""
+    )
     if basis in adata.obsm:
         return adata.obsm[basis]
     if f"X_{basis}" in adata.obsm:
         return adata.obsm[f"X_{basis}"]
-    raise KeyError(
-        ERR_MSG_KEY_NOT_FOUND.format(
-            f"{basis} or X_{basis}", ".obsm") + additional_message)
+    raise KeyError(ERR_MSG_KEY_NOT_FOUND.format(f"{basis} or X_{basis}", ".obsm") + additional_message)
 
 
 def _prepare_dimension_dataframes(adata, basis, dimensions, last_color_col, groups):
@@ -153,7 +156,8 @@ def _prepare_dimension_dataframes(adata, basis, dimensions, last_color_col, grou
 
         if groups:
             df_for_plot[last_color_col] = df_for_plot[last_color_col].where(
-                df_for_plot[last_color_col].isin(groups), "NA",
+                df_for_plot[last_color_col].isin(groups),
+                "NA",
             )
 
         dfs_for_plot.append(df_for_plot)
@@ -172,17 +176,16 @@ def _add_color_data(adata, dfs_for_plot, color):
             for color_col in color:
                 if color_col not in adata.obs.columns:
                     if color_col in adata.var_names:
-                        df_for_plot[color_col] = adata[:,
-                                                       adata.var_names == color_col].X.toarray().T[0]
+                        df_for_plot[color_col] = adata[:, adata.var_names == color_col].X.toarray().T[0]
                     else:
-                        raise KeyError(
-                            ERR_MSG_KEY_NOT_FOUND.format(color_col, ".var_names or .obs.columns"))
+                        raise KeyError(ERR_MSG_KEY_NOT_FOUND.format(color_col, ".var_names or .obs.columns"))
 
     return color
 
 
-def _add_trace_to_figure(fig, trace, row, col, counter, color_col, dim_pair,
-                         *, group_legends: bool, shared_coloraxes: bool):
+def _add_trace_to_figure(
+    fig, trace, row, col, counter, color_col, dim_pair, *, group_legends: bool, shared_coloraxes: bool
+):
     """
     Add a trace to the figure with proper formatting.
     """
@@ -224,7 +227,8 @@ def _add_annotations(fig, centroids, row, col):
                 showarrow=False,
                 xref=f"x{col}",
                 yref=f"y{row}",
-                name="annotations")
+                name="annotations",
+            )
 
 
 def _update_annotations(fig, annotations_font, annotations_outline_width, subtitles_font):
@@ -239,13 +243,13 @@ def _update_annotations(fig, annotations_font, annotations_outline_width, subtit
             f"0 {annotations_outline_width}px 0 white, "
             f"0 -{annotations_outline_width}px 0 white, "
             f"{annotations_outline_width}px 0 0 white, "
-            f"-{annotations_outline_width}px 0 0 white")
+            f"-{annotations_outline_width}px 0 0 white"
+        )
     fig.update_annotations(font=subtitles_font)
     fig.update_annotations(selector={"name": "annotations"}, font=annotations_font)
 
 
-def _update_legends(fig, rows, cols, num_plots, hspace, wspace,
-                    showcoloraxes, shared_coloraxes, shared_legends, cmap):
+def _update_legends(fig, rows, cols, num_plots, hspace, wspace, showcoloraxes, shared_coloraxes, shared_legends, cmap):
     if shared_coloraxes:
         fig.layout.coloraxis.colorbar.x = 1.05
         fig.layout.legend.x = 1.1
@@ -253,16 +257,16 @@ def _update_legends(fig, rows, cols, num_plots, hspace, wspace,
         fig.layout.coloraxis.colorbar.yref = "paper"
         fig.layout.coloraxis.colorbar.y = 0.5
         fig.layout.coloraxis.colorbar.thickness = 10
-        fig.layout.coloraxis.colorbar.len = 1/rows
+        fig.layout.coloraxis.colorbar.len = 1 / rows
         if cmap:
             fig.layout.coloraxis.colorscale = cmap
     else:
-        for i in range(1, num_plots+1):
+        for i in range(1, num_plots + 1):
             coloraxis = f"coloraxis{i}"
 
             # Determine row and column for the current subplot
             row = (i - 1) // cols  # 0-indexed row position
-            col = (i - 1) % cols   # 0-indexed column position
+            col = (i - 1) % cols  # 0-indexed column position
 
             # Calculate x position based on the column, spacing, and total number of columns
             x_position = (col + 1) / cols - (wspace * (cols - col - 1) / cols)
@@ -289,18 +293,21 @@ def _update_legends(fig, rows, cols, num_plots, hspace, wspace,
             fig.update_layout(legend=dict(x=1.12, groupclick="toggleitem"))
 
     else:
-        for i in range(1, num_plots+1):
+        for i in range(1, num_plots + 1):
             legend = f"legend{i}"
             row = (i - 1) // cols  # 0-indexed row position
-            col = (i - 1) % cols   # 0-indexed column position
+            col = (i - 1) % cols  # 0-indexed column position
             x_position = (col + 1) / cols - (wspace * (cols - col - 1) / cols)
             y_position = 1 - (row + 0.5) / rows * (1 + hspace) + (hspace / 2)
-            fig.update_layout({
-                legend: dict(
-                    x=x_position,
-                    y=y_position,
-                    yanchor="middle",
-                )})
+            fig.update_layout(
+                {
+                    legend: dict(
+                        x=x_position,
+                        y=y_position,
+                        yanchor="middle",
+                    )
+                }
+            )
 
 
 def _modify_cmap(cmap, zero_color):
@@ -313,41 +320,42 @@ def _modify_cmap(cmap, zero_color):
     return cmap
 
 
-def embedding(adata: AnnData,
-              basis: str,
-              *,
-              marker_size: float | None = 3,
-              marker_edgewidth: float | None = None,
-              marker_edgecolor: str | None = None,
-              template: str | None = None,
-              dimensions: tuple[int, int] | list[tuple[int, int]] = (0, 1),
-              color: str | list[str] | None = None,
-              groups: list[str] | None = None,
-              annotations: bool = False,
-              annotations_font: dict | None = None,
-              annotations_outline_width: int | None = None,
-              ncols: int = 3,
-              wspace: float = 0.1,
-              hspace: float = 0.15,
-              opacity: float = 1,
-              hover_name:  str | pd.Series | None = None,
-              hover_data: str | list[str] | pd.Series | dict | None = None,
-              shared_axes: bool | str = "all",
-              shared_coloraxes: bool = False,
-              shared_legends: bool = False,
-              width: int | None = None,
-              height: int | None = None,
-              subtitles: str | list[str] | None = None,
-              subtitles_font: dict | None = None,
-              cmap: str | list[list[int]] | None = None,
-              zero_color: str | None = None,
-              na_color: str = "lightgray",
-              showlegend: bool | None = None,
-              showcoloraxes: bool = True,
-              return_fig: bool = False,
-              _pca_annotate_variances: bool = False,
-              **kwargs,
-              ) -> go.Figure | None:
+def embedding(
+    adata: AnnData,
+    basis: str,
+    *,
+    marker_size: float | None = 3,
+    marker_edgewidth: float | None = None,
+    marker_edgecolor: str | None = None,
+    template: str | None = None,
+    dimensions: tuple[int, int] | list[tuple[int, int]] = (0, 1),
+    color: str | list[str] | None = None,
+    groups: list[str] | None = None,
+    annotations: bool = False,
+    annotations_font: dict | None = None,
+    annotations_outline_width: int | None = None,
+    ncols: int = 3,
+    wspace: float = 0.1,
+    hspace: float = 0.15,
+    opacity: float = 1,
+    hover_name: str | pd.Series | None = None,
+    hover_data: str | list[str] | pd.Series | dict | None = None,
+    shared_axes: bool | str = "all",
+    shared_coloraxes: bool = False,
+    shared_legends: bool = False,
+    width: int | None = None,
+    height: int | None = None,
+    subtitles: str | list[str] | None = None,
+    subtitles_font: dict | None = None,
+    cmap: str | list[list[int]] | None = None,
+    zero_color: str | None = None,
+    na_color: str = "lightgray",
+    showlegend: bool | None = None,
+    showcoloraxes: bool = True,
+    return_fig: bool = False,
+    _pca_annotate_variances: bool = False,
+    **kwargs,
+) -> go.Figure | None:
     """
     Create embedding plots with multiple dimensions and colors.
 
@@ -438,8 +446,7 @@ def embedding(adata: AnnData,
         color = [color] if isinstance(color, str) else list(color)
 
     last_color_col = color[-1]
-    dfs_for_plot, bas = _prepare_dimension_dataframes(
-        adata, basis, dimensions, last_color_col, groups)
+    dfs_for_plot, bas = _prepare_dimension_dataframes(adata, basis, dimensions, last_color_col, groups)
     color = _add_color_data(adata, dfs_for_plot, color)
 
     # Calculate layout
@@ -451,8 +458,11 @@ def embedding(adata: AnnData,
     fig = make_subplots(
         rows=rows,
         cols=cols,
-        subplot_titles=[subtitles] if isinstance(subtitles, str) else list(subtitles) if subtitles is not None else np.repeat(
-            color, len(dimensions)),
+        subplot_titles=(
+            [subtitles]
+            if isinstance(subtitles, str)
+            else list(subtitles) if subtitles is not None else np.repeat(color, len(dimensions))
+        ),
         horizontal_spacing=wspace,
         vertical_spacing=hspace,
         shared_xaxes=shared_axes,
@@ -480,14 +490,23 @@ def embedding(adata: AnnData,
                 hover_name=df_for_plot.index if hover_name is None else hover_name,
                 hover_data=hover_data,
                 color_discrete_map={"NA": na_color},
-                category_orders=category_orders)
+                category_orders=category_orders,
+            )
 
             for trace in px_fig["data"]:
                 row = (counter // cols) + 1
                 col = (counter % cols) + 1
-                _add_trace_to_figure(fig, trace, row, col, counter,
-                                     color_col, dim_pair, group_legends=shared_legends,
-                                     shared_coloraxes=shared_coloraxes)
+                _add_trace_to_figure(
+                    fig,
+                    trace,
+                    row,
+                    col,
+                    counter,
+                    color_col,
+                    dim_pair,
+                    group_legends=shared_legends,
+                    shared_coloraxes=shared_coloraxes,
+                )
 
             if annotations and df_for_plot[color_col].dtype.name == "category":
                 centroids = _calculate_centroids(df_for_plot, color_col, x_col, y_col)
@@ -507,23 +526,17 @@ def embedding(adata: AnnData,
 
     _update_annotations(fig, annotations_font, annotations_outline_width, subtitles_font)
 
-    _update_legends(fig, rows, cols, num_plots, hspace, wspace,
-                    showcoloraxes, shared_coloraxes, shared_legends, cmap)
+    _update_legends(fig, rows, cols, num_plots, hspace, wspace, showcoloraxes, shared_coloraxes, shared_legends, cmap)
     fig.update_yaxes(showticklabels=False, zeroline=False, ticks="")
     fig.update_xaxes(showticklabels=False, zeroline=False, ticks="")
-    fig.update_traces(marker_size=marker_size,
-                      marker_line=dict(width=marker_edgewidth,
-                                       color=marker_edgecolor))
+    fig.update_traces(marker_size=marker_size, marker_line=dict(width=marker_edgewidth, color=marker_edgecolor))
 
-    showlegend = (False if showlegend is None and annotations else
-                  True if showlegend is None and not annotations else showlegend)
+    showlegend = (
+        False if showlegend is None and annotations else True if showlegend is None and not annotations else showlegend
+    )
     fig.update_layout(
-        showlegend=showlegend,
-        template=template,
-        margin={"pad": 20},
-        width=width,
-        height=height,
-        **kwargs)
+        showlegend=showlegend, template=template, margin={"pad": 20}, width=width, height=height, **kwargs
+    )
 
     if return_fig:
         return fig
@@ -531,10 +544,12 @@ def embedding(adata: AnnData,
     return None
 
 
-def pca(adata: AnnData, *,
-        annotate_var_explained: bool = True,
-        **kwargs,
-        ) -> go.Figure | None:
+def pca(
+    adata: AnnData,
+    *,
+    annotate_var_explained: bool = True,
+    **kwargs,
+) -> go.Figure | None:
     """
     Scatter plot in PCA coordinates.
 
@@ -574,19 +589,20 @@ def umap(adata: AnnData, **kwargs):
     return embedding(adata, basis="umap", **kwargs)
 
 
-def highly_variable_genes(adata: AnnData,
-                          *,
-                          log: bool = True,
-                          shared_axes: bool = False,
-                          opacity: float = 1,
-                          marker_size: float | None = 3,
-                          marker_edgewidth: float | None = None,
-                          marker_edgecolor: str | None = None,
-                          width: int | None = None,
-                          height: int | None = None,
-                          template: str | None = None,
-                          return_fig: bool = False,
-                          ):
+def highly_variable_genes(
+    adata: AnnData,
+    *,
+    log: bool = True,
+    shared_axes: bool = False,
+    opacity: float = 1,
+    marker_size: float | None = 3,
+    marker_edgewidth: float | None = None,
+    marker_edgecolor: str | None = None,
+    width: int | None = None,
+    height: int | None = None,
+    template: str | None = None,
+    return_fig: bool = False,
+):
     """
     Create scatter plots comparing normalized and non-normalized variances of genes
     against their mean expression, highlighting highly variable genes.
@@ -625,36 +641,46 @@ def highly_variable_genes(adata: AnnData,
     template = template or pio.templates.default
 
     shared_axes = shared_axes if not shared_axes else "rows"
-    fig = make_subplots(rows=1, cols=2,
-                        shared_xaxes=shared_axes, shared_yaxes=shared_axes)
+    fig = make_subplots(rows=1, cols=2, shared_xaxes=shared_axes, shared_yaxes=shared_axes)
     y = "variances_norm" if "variances_norm" in adata.var else "dispersions_norm"
     norm_var_px = px.scatter(
-        adata.var, x="means", y=y, color="highly_variable",
-        hover_name=adata.var_names, opacity=opacity,
+        adata.var,
+        x="means",
+        y=y,
+        color="highly_variable",
+        hover_name=adata.var_names,
+        opacity=opacity,
         category_orders={"highly_variable": [True, False]},
-        color_discrete_sequence=[pio.templates[pio.templates.default].layout.colorway[1],
-                                 pio.templates[pio.templates.default].layout.colorway[0]])
+        color_discrete_sequence=[
+            pio.templates[pio.templates.default].layout.colorway[1],
+            pio.templates[pio.templates.default].layout.colorway[0],
+        ],
+    )
     y = "variances" if "variances" in adata.var else "dispersions"
     var_px = px.scatter(
-        adata.var, x="means", y=y, color="highly_variable",
-        hover_name=adata.var_names, opacity=opacity,
+        adata.var,
+        x="means",
+        y=y,
+        color="highly_variable",
+        hover_name=adata.var_names,
+        opacity=opacity,
         category_orders={"highly_variable": [True, False]},
-        color_discrete_sequence=[pio.templates[pio.templates.default].layout.colorway[1],
-                                 pio.templates[pio.templates.default].layout.colorway[0]])
+        color_discrete_sequence=[
+            pio.templates[pio.templates.default].layout.colorway[1],
+            pio.templates[pio.templates.default].layout.colorway[0],
+        ],
+    )
     for trace in norm_var_px["data"]:
         fig.add_trace(trace, row=1, col=1)
         fig.update_traces(showlegend=False)
     for trace in var_px["data"]:
         fig.add_trace(trace, row=1, col=2)
 
-    fig.for_each_trace(lambda t: t.update(
-        name={"False": "other", "True": "highly variable"}[t.name]))
-    fig.update_layout(width=width, height=height, legend_title_text="",
-                      template=template,
-                      title="Highly variable genes")
-    fig.update_traces(marker_size=marker_size,
-                      marker_line=dict(width=marker_edgewidth,
-                                       color=marker_edgecolor))
+    fig.for_each_trace(lambda t: t.update(name={"False": "other", "True": "highly variable"}[t.name]))
+    fig.update_layout(
+        width=width, height=height, legend_title_text="", template=template, title="Highly variable genes"
+    )
+    fig.update_traces(marker_size=marker_size, marker_line=dict(width=marker_edgewidth, color=marker_edgecolor))
     if log:
         fig.update_xaxes(type="log")
         fig.update_yaxes(type="log")
@@ -667,14 +693,16 @@ def highly_variable_genes(adata: AnnData,
     return None
 
 
-def pca_variance_ratio(adata: AnnData,
-                       n_pcs: int | None = None,
-                       *,
-                       log: bool = False,
-                       template: str | None = None,
-                       annotations: bool = True,
-                       return_fig: bool = False,
-                       **kwargs):
+def pca_variance_ratio(
+    adata: AnnData,
+    n_pcs: int | None = None,
+    *,
+    log: bool = False,
+    template: str | None = None,
+    annotations: bool = True,
+    return_fig: bool = False,
+    **kwargs,
+):
     """
     Create a scree plot showing explained variance ratio for principal components.
 
@@ -705,11 +733,9 @@ def pca_variance_ratio(adata: AnnData,
     template = template or pio.templates.default
 
     y = adata.uns["pca"]["variance_ratio"][:n_pcs]
-    x = np.arange(1, len(y)+1)
-    plot_df = pd.DataFrame({"ranking": x, "explained variance": y,
-                            "PC": [f"PC{i}" for i in x]}).set_index("ranking")
-    fig = px.line(plot_df, y="explained variance", markers=True,
-                  hover_name="PC")
+    x = np.arange(1, len(y) + 1)
+    plot_df = pd.DataFrame({"ranking": x, "explained variance": y, "PC": [f"PC{i}" for i in x]}).set_index("ranking")
+    fig = px.line(plot_df, y="explained variance", markers=True, hover_name="PC")
     if log:
         fig.update_yaxes(type="log", dtick=1)
     if annotations:
@@ -721,8 +747,9 @@ def pca_variance_ratio(adata: AnnData,
                 showarrow=False,
                 xanchor="left",
                 yanchor="bottom",
-                textangle=90)
-    fig.update_xaxes(range=(0, len(y)+1))
+                textangle=90,
+            )
+    fig.update_xaxes(range=(0, len(y) + 1))
     fig.update_layout(yaxis_tickformat=",.0%", title=" PCA scree plot", template=template, **kwargs)
     if return_fig:
         return fig
@@ -738,10 +765,7 @@ def _create_group_combinations(adata, groupby):
     if len(groupby) > 1:
         unique_values = [adata.obs[col].unique() for col in groupby]
         combinations = list(itertools.product(*unique_values))
-        group_combinations = [
-            "_".join(f"{val}" for val in comb)
-            for comb in combinations
-        ]
+        group_combinations = ["_".join(f"{val}" for val in comb) for comb in combinations]
     else:
         group_combinations = adata.obs[groupby[0]].unique()
     return group_combinations
@@ -770,26 +794,40 @@ def _add_category_labels_annotations(fig, var_names, plot_df, dendrogram):
 
         for cat, pos, (start_pos, end_pos) in zip(unique_cats, cat_positions, cat_ranges):
             # Add bracket lines
-            all_shapes.extend([
-                dict(
-                    type="line",
-                    xref="paper", yref=yref,
-                    x0=1.025, x1=1.025,
-                    y0=start_pos, y1=end_pos,
-                    line=dict(color="black", width=1)),
-                dict(
-                    type="line",
-                    xref="paper", yref=yref,
-                    x0=1, x1=1.025,
-                    y0=start_pos, y1=start_pos,
-                    line=dict(color="black", width=1)),
-                dict(
-                    type="line",
-                    xref="paper", yref=yref,
-                    x0=1, x1=1.025,
-                    y0=end_pos, y1=end_pos,
-                    line=dict(color="black", width=1)),
-            ])
+            all_shapes.extend(
+                [
+                    dict(
+                        type="line",
+                        xref="paper",
+                        yref=yref,
+                        x0=1.025,
+                        x1=1.025,
+                        y0=start_pos,
+                        y1=end_pos,
+                        line=dict(color="black", width=1),
+                    ),
+                    dict(
+                        type="line",
+                        xref="paper",
+                        yref=yref,
+                        x0=1,
+                        x1=1.025,
+                        y0=start_pos,
+                        y1=start_pos,
+                        line=dict(color="black", width=1),
+                    ),
+                    dict(
+                        type="line",
+                        xref="paper",
+                        yref=yref,
+                        x0=1,
+                        x1=1.025,
+                        y0=end_pos,
+                        y1=end_pos,
+                        line=dict(color="black", width=1),
+                    ),
+                ]
+            )
 
             # Add rotated text label
             fig.add_annotation(
@@ -814,8 +852,9 @@ def _create_plot_data(adata, var_names, groupby):
     group_combinations = _create_group_combinations(adata, groupby)
     genes_df = adata.var[["means"]].copy()
     n_cells_by_counts = (adata.X > 0).sum(axis=0)
-    genes_df["n_cells_by_counts"] = n_cells_by_counts.A1 if isinstance(
-        n_cells_by_counts, np.matrix) else n_cells_by_counts
+    genes_df["n_cells_by_counts"] = (
+        n_cells_by_counts.A1 if isinstance(n_cells_by_counts, np.matrix) else n_cells_by_counts
+    )
     genes_df["pct_cells"] = genes_df["n_cells_by_counts"] / adata.n_obs * 100
 
     if isinstance(var_names, dict):
@@ -834,51 +873,61 @@ def _create_plot_data(adata, var_names, groupby):
             # Create mask for multiple groupby columns
             mask = np.ones(len(adata), dtype=bool)
             for col, val in zip(groupby, group_combo.split("_"), strict=True):
-                mask &= (adata.obs[col] == val)
+                mask &= adata.obs[col] == val
         else:
             # Single groupby column
-            mask = (adata.obs[groupby[0]] == group_combo)
+            mask = adata.obs[groupby[0]] == group_combo
 
         # Get subset for this group
         adata_group = adata[mask]
 
         # Calculate statistics for each gene in this group
         group_stats = pd.DataFrame(index=genes_flat)
-        group_stats["means"] = adata_group[:, genes_flat].X.mean(axis=0).A1 if scipy.sparse.issparse(
-            adata_group.X) else adata_group[:, genes_flat].X.mean(axis=0)
-        group_stats["n_cells_by_counts"] = (adata_group[:, genes_flat].X > 0).sum(axis=0).A1 if scipy.sparse.issparse(
-            adata_group.X) else (adata_group[:, genes_flat].X > 0).sum(axis=0)
+        group_stats["means"] = (
+            adata_group[:, genes_flat].X.mean(axis=0).A1
+            if scipy.sparse.issparse(adata_group.X)
+            else adata_group[:, genes_flat].X.mean(axis=0)
+        )
+        group_stats["n_cells_by_counts"] = (
+            (adata_group[:, genes_flat].X > 0).sum(axis=0).A1
+            if scipy.sparse.issparse(adata_group.X)
+            else (adata_group[:, genes_flat].X > 0).sum(axis=0)
+        )
         group_stats["pct_cells"] = group_stats["n_cells_by_counts"] / len(adata_group) * 100
 
         for gene in genes_flat:
-            plot_data.append({  # noqa: PERF401
-                "gene": gene,
-                "category": categories[genes_flat.index(gene)],
-                "group": str(group_combo),
-                "cells_fraction": group_stats.loc[gene, "pct_cells"],
-                "mean_expression": group_stats.loc[gene, "means"],
-            })
+            plot_data.append(
+                {  # noqa: PERF401
+                    "gene": gene,
+                    "category": categories[genes_flat.index(gene)],
+                    "group": str(group_combo),
+                    "cells_fraction": group_stats.loc[gene, "pct_cells"],
+                    "mean_expression": group_stats.loc[gene, "means"],
+                }
+            )
 
     return pd.DataFrame(plot_data)
 
 
-def dotplot(adata: AnnData,
-            var_names: list[str] | dict[str, str],
-            groupby: str | list[str],
-            *,
-            dendrogram: bool = False,
-            categories_order: list | None = None,
-            size_max: int = 15,
-            marker_edgewidth: float | None = 0.5,
-            marker_edgecolor: str | None = "darkslategray",
-            title: str = "",
-            colorbar_title: str = "Mean expression",
-            cmap: str | None = None,
-            height: int | None = None,
-            width: int | None = None,
-            return_fig: bool = False,
-            template: str | None = None,
-            **kwargs):
+def dotplot(
+    adata: AnnData,
+    var_names: list[str] | dict[str, str],
+    groupby: str | list[str],
+    *,
+    dendrogram: bool = False,
+    categories_order: list | None = None,
+    size_max: int = 15,
+    marker_edgewidth: float | None = 0.5,
+    marker_edgecolor: str | None = "darkslategray",
+    title: str = "",
+    colorbar_title: str = "Mean expression",
+    cmap: str | None = None,
+    height: int | None = None,
+    width: int | None = None,
+    return_fig: bool = False,
+    template: str | None = None,
+    **kwargs,
+):
     """
     Create a dot plot visualization with optional dendrogram support
     (use sc.tl.dendrogram beforehand to be able to plot dendrogram).
@@ -929,8 +978,10 @@ def dotplot(adata: AnnData,
     groupby = [groupby] if isinstance(groupby, str) else list(groupby)
     if dendrogram:
         if "_".join(["dendrogram", *groupby]) not in adata.uns:
-            raise KeyError(ERR_MSG_KEY_NOT_FOUND.format(
-                "_".join(["dendrogram", *groupby]), ".uns") + " Run sc.tl.dendrogram first.")
+            raise KeyError(
+                ERR_MSG_KEY_NOT_FOUND.format("_".join(["dendrogram", *groupby]), ".uns")
+                + " Run sc.tl.dendrogram first."
+            )
         dendrogram_data = adata.uns["_".join(["dendrogram", *groupby])]
     categories_order = dendrogram_data["categories_ordered"] if dendrogram else categories_order
 
@@ -939,12 +990,9 @@ def dotplot(adata: AnnData,
     if categories_order:
         unmatched_categories = set(categories_order) - set(plot_df["group"].unique())
         if unmatched_categories:
-            raise KeyError(
-                ERR_MSG_UNEXPECTED_CATEGORIES.format(
-                    unmatched_categories, plot_df["group"].unique()))
+            raise KeyError(ERR_MSG_UNEXPECTED_CATEGORIES.format(unmatched_categories, plot_df["group"].unique()))
 
-    plot_df["gene"] = pd.Categorical(
-        plot_df["gene"], categories=plot_df["gene"].unique(), ordered=True)
+    plot_df["gene"] = pd.Categorical(plot_df["gene"], categories=plot_df["gene"].unique(), ordered=True)
     plot_df["group"] = pd.Categorical(plot_df["group"], categories=categories_order, ordered=True)
     plot_df = plot_df.sort_values(["group", "gene"])
 
@@ -957,10 +1005,11 @@ def dotplot(adata: AnnData,
         color="mean_expression",
         custom_data=["cells_fraction", "mean_expression"],
         size_max=size_max,
-        range_x=[-0.5, len(plot_df["group"].unique())-0.5],
-        range_y=[-0.5, len(plot_df["gene"].unique())-0.5],
+        range_x=[-0.5, len(plot_df["group"].unique()) - 0.5],
+        range_y=[-0.5, len(plot_df["gene"].unique()) - 0.5],
         width=width,
-        height=height)
+        height=height,
+    )
 
     if not dendrogram:
         scatter_fig.update_layout(
@@ -977,7 +1026,9 @@ def dotplot(adata: AnnData,
                     yanchor="middle",
                     showarrow=False,
                     textangle=-90,  # Vertical text
-                )])
+                )
+            ],
+        )
         fig = scatter_fig
         fig.update_xaxes(type="category")
 
@@ -987,7 +1038,7 @@ def dotplot(adata: AnnData,
             rows=2,
             cols=1,
             shared_xaxes=True,
-            row_heights=[dendrogram_height_ratio, 1-dendrogram_height_ratio],
+            row_heights=[dendrogram_height_ratio, 1 - dendrogram_height_ratio],
             vertical_spacing=0,
         )
 
@@ -997,68 +1048,72 @@ def dotplot(adata: AnnData,
         for xs, ys in zip(dendr_xs, dendr_ys):
             fig.add_trace(
                 go.Scatter(
-                    x=xs,
-                    y=ys,
-                    mode="lines",
-                    hoverinfo="skip",
-                    line=dict(color="black", width=1),
-                    showlegend=False),
+                    x=xs, y=ys, mode="lines", hoverinfo="skip", line=dict(color="black", width=1), showlegend=False
+                ),
                 row=1,
-                col=1)
+                col=1,
+            )
 
         for trace in scatter_fig.data:
             fig.add_trace(trace, row=2, col=1)
 
         factor = (np.max(dendr_xs) - np.min(dendr_xs)) / len(plot_df["group"].unique())
 
-        fig.update_xaxes(showticklabels=False, showgrid=False, zeroline=False,
-                         range=[-0.5*factor + np.min(dendr_xs), 0.5*factor+np.max(dendr_xs)],
-                         showline=False, row=1, col=1)
-        fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False,
-                         showline=False, row=1, col=1)
-        fig.update_xaxes(title="", type="category",
-                         range=[-0.5, len(plot_df["group"].unique())-0.5], row=2, col=1)
-        fig.update_yaxes(title="", range=[-0.5, len(plot_df["gene"].unique())-0.5], row=2, col=1)
-        fig.update_layout(annotations=[
-            dict(
-                text="Dot size — % cells",
-                xref="paper",
-                yref="paper",
-                x=1.075,
-                y=0.5,
-                xanchor="left",
-                yanchor="middle",
-                showarrow=False,
-                textangle=-90,  # Vertical text
-            )])
+        fig.update_xaxes(
+            showticklabels=False,
+            showgrid=False,
+            zeroline=False,
+            range=[-0.5 * factor + np.min(dendr_xs), 0.5 * factor + np.max(dendr_xs)],
+            showline=False,
+            row=1,
+            col=1,
+        )
+        fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False, showline=False, row=1, col=1)
+        fig.update_xaxes(title="", type="category", range=[-0.5, len(plot_df["group"].unique()) - 0.5], row=2, col=1)
+        fig.update_yaxes(title="", range=[-0.5, len(plot_df["gene"].unique()) - 0.5], row=2, col=1)
+        fig.update_layout(
+            annotations=[
+                dict(
+                    text="Dot size — % cells",
+                    xref="paper",
+                    yref="paper",
+                    x=1.075,
+                    y=0.5,
+                    xanchor="left",
+                    yanchor="middle",
+                    showarrow=False,
+                    textangle=-90,  # Vertical text
+                )
+            ]
+        )
 
     _add_category_labels_annotations(fig, var_names, plot_df, dendrogram)
 
-    fig.update_coloraxes(reversescale=True,
-                         colorscale=cmap,
-                         colorbar_title=colorbar_title,
-                         colorbar_lenmode="pixels",
-                         colorbar_len=200,
-                         colorbar_thickness=20,
-                         colorbar_x=1.1)
+    fig.update_coloraxes(
+        reversescale=True,
+        colorscale=cmap,
+        colorbar_title=colorbar_title,
+        colorbar_lenmode="pixels",
+        colorbar_len=200,
+        colorbar_thickness=20,
+        colorbar_x=1.1,
+    )
 
-    fig.update_layout(
-        height=height,
-        width=width,
-        title=title,
-        template=template,
-        **kwargs)
+    fig.update_layout(height=height, width=width, title=title, template=template, **kwargs)
 
     # Customize hover template
     fig.update_traces(
-        hovertemplate="<br>".join([
-            "Group: %{x}",
-            "Gene: %{y}",
-            "Cells expressing: %{customdata[0]:.1f}%",
-            "Mean expression: %{customdata[1]:.2f}",
-            "<extra></extra>"]),
-        marker_line=dict(width=marker_edgewidth,
-                         color=marker_edgecolor))
+        hovertemplate="<br>".join(
+            [
+                "Group: %{x}",
+                "Gene: %{y}",
+                "Cells expressing: %{customdata[0]:.1f}%",
+                "Mean expression: %{customdata[1]:.2f}",
+                "<extra></extra>",
+            ]
+        ),
+        marker_line=dict(width=marker_edgewidth, color=marker_edgecolor),
+    )
 
     if return_fig:
         return fig
@@ -1077,9 +1132,9 @@ def _calculate_n_degs(deg_df: pd.DataFrame, logfc: float = 0.3, pval: float = 0.
     return len(deg_df[(abs(deg_df["LFC"]) > logfc) & (deg_df["pval_adj"] < pval)])
 
 
-def _process_df_for_volcano(deg_df: pd.DataFrame,
-                            logfc: float = 0.3, pval: float = 0.05, *,
-                            remove_outliers: bool = True) -> pd.DataFrame:
+def _process_df_for_volcano(
+    deg_df: pd.DataFrame, logfc: float = 0.3, pval: float = 0.05, *, remove_outliers: bool = True
+) -> pd.DataFrame:
     """
     rename columns, add columns '-log10 P-value' and 'DEG type',
     remove outliers using interquantile range method
@@ -1103,50 +1158,72 @@ def _process_df_for_volcano(deg_df: pd.DataFrame,
             logging.warning("%s genes were removed as outliers", n_removed_genes)
 
     deg_df["DEG type"] = deg_df.apply(
-        lambda x: "Down-regulated genes"
-        if ((x["LFC"] < -logfc) and (x["pval_adj"] < pval))
-        else "Up-regulated genes" if ((x["LFC"] > logfc) and (x["pval_adj"] < pval))
-        else "Insignificant genes",
+        lambda x: (
+            "Down-regulated genes"
+            if ((x["LFC"] < -logfc) and (x["pval_adj"] < pval))
+            else "Up-regulated genes" if ((x["LFC"] > logfc) and (x["pval_adj"] < pval)) else "Insignificant genes"
+        ),
         axis=1,
     )
     deg_df["-log10 P-value"] = -np.log10(deg_df["pval_adj"])
     return deg_df.rename(columns={"LFC": "log Fold Change"})
 
 
-def _plot_degs(deg_df: pd.DataFrame, logfc: float = 0.3, pval: float = 0.05,
-               title: str | None = None, color_discrete_map=None, **kwargs):
+def _plot_degs(
+    deg_df: pd.DataFrame,
+    logfc: float = 0.3,
+    pval: float = 0.05,
+    title: str | None = None,
+    color_discrete_map=None,
+    **kwargs,
+):
     """
     volcano plot
     """
-    color_discrete_map = color_discrete_map or {"Up-regulated genes": "seagreen",
-                                                "Down-regulated genes": "pink",
-                                                "Insignificant genes": "darkgray"}
-    fig = px.scatter(deg_df, x="log Fold Change", y="-log10 P-value", color="DEG type",
-                     hover_name="Gene", hover_data=["pval_adj"], title=title,
-                     color_discrete_map=color_discrete_map,
-                     **kwargs)
-    fig.update_yaxes(range=[0, deg_df["-log10 P-value"].max()+1])
+    color_discrete_map = color_discrete_map or {
+        "Up-regulated genes": "seagreen",
+        "Down-regulated genes": "pink",
+        "Insignificant genes": "darkgray",
+    }
+    fig = px.scatter(
+        deg_df,
+        x="log Fold Change",
+        y="-log10 P-value",
+        color="DEG type",
+        hover_name="Gene",
+        hover_data=["pval_adj"],
+        title=title,
+        color_discrete_map=color_discrete_map,
+        **kwargs,
+    )
+    fig.update_yaxes(range=[0, deg_df["-log10 P-value"].max() + 1])
 
     fig.add_shape(
         type="line",
-        x0=logfc, x1=logfc,
-        y0=0, y1=1,
+        x0=logfc,
+        x1=logfc,
+        y0=0,
+        y1=1,
         xref="x",
         yref="paper",
         line=dict(color="lightgray", width=0.5),
     )
     fig.add_shape(
         type="line",
-        x0=-logfc, x1=-logfc,
-        y0=0, y1=1,
+        x0=-logfc,
+        x1=-logfc,
+        y0=0,
+        y1=1,
         xref="x",
         yref="paper",
         line=dict(color="lightgray", width=0.5),
     )
     fig.add_shape(
         type="line",
-        x0=0, x1=1,
-        y0=-np.log10(pval), y1=-np.log10(pval),
+        x0=0,
+        x1=1,
+        y0=-np.log10(pval),
+        y1=-np.log10(pval),
         xref="paper",
         yref="y",
         line=dict(color="lightgray", width=0.5),
@@ -1164,20 +1241,22 @@ def _plot_degs(deg_df: pd.DataFrame, logfc: float = 0.3, pval: float = 0.05,
     return fig
 
 
-def volcano(degs_df: pd.DataFrame,
-            logfc: float = 0.3,
-            pval: float = 0.05,
-            *,
-            logfc_col: str = "logfoldchanges",
-            padj_col: str = "pvals_adj",
-            gene_col: str = "names",
-            title: str | None = None,
-            remove_outliers: bool = True,
-            color_discrete_map: dict | None = None,
-            opacity: float = 0.5,
-            return_fig: bool = False,
-            template: str | None = None,
-            **kwargs):
+def volcano(
+    degs_df: pd.DataFrame,
+    logfc: float = 0.3,
+    pval: float = 0.05,
+    *,
+    logfc_col: str = "logfoldchanges",
+    padj_col: str = "pvals_adj",
+    gene_col: str = "names",
+    title: str | None = None,
+    remove_outliers: bool = True,
+    color_discrete_map: dict | None = None,
+    opacity: float = 0.5,
+    return_fig: bool = False,
+    template: str | None = None,
+    **kwargs,
+):
     """
     Create a volcano visualization of differentially expressed genes
 
@@ -1218,17 +1297,23 @@ def volcano(degs_df: pd.DataFrame,
     """
     template = template or pio.templates.default
     degs_df = degs_df.copy()
-    degs_df = degs_df.rename(
-        columns={logfc_col: "LFC", gene_col: "Gene", padj_col: "pval_adj"})
+    degs_df = degs_df.rename(columns={logfc_col: "LFC", gene_col: "Gene", padj_col: "pval_adj"})
     if not title:
         n_degs = _calculate_n_degs(degs_df, logfc, pval)
         n_genes = len(degs_df)
         degs_percent = round(n_degs / n_genes * 100, 2)
         title = f"{n_degs} DEGs ({degs_percent}%)"
     degs_df = _process_df_for_volcano(degs_df, logfc, pval, remove_outliers=remove_outliers)
-    fig = _plot_degs(degs_df, logfc, pval, title=title,
-                     color_discrete_map=color_discrete_map,
-                     opacity=opacity, template=template, **kwargs)
+    fig = _plot_degs(
+        degs_df,
+        logfc,
+        pval,
+        title=title,
+        color_discrete_map=color_discrete_map,
+        opacity=opacity,
+        template=template,
+        **kwargs,
+    )
     fig.update_xaxes(zeroline=False)
     fig.update_yaxes(zeroline=False)
 
@@ -1238,14 +1323,16 @@ def volcano(degs_df: pd.DataFrame,
     return None
 
 
-def savefig(fig: go.Figure,
-            savepath: str | Path,
-            *,
-            dragmode: str = "pan",
-            config: dict | None = None,
-            save_html: bool = True,
-            save_png: bool = True,
-            **kwargs) -> None:
+def savefig(
+    fig: go.Figure,
+    savepath: str | Path,
+    *,
+    dragmode: str = "pan",
+    config: dict | None = None,
+    save_html: bool = True,
+    save_png: bool = True,
+    **kwargs,
+) -> None:
     """
     Plot saving function with adjusted defaults.
 
@@ -1279,11 +1366,10 @@ def savefig(fig: go.Figure,
 
     fig.update_layout(dragmode=dragmode)
     if save_html:
-        fig.write_html(savepath.with_suffix(".html"),
-                       config=config,
-                       **kwargs)
+        fig.write_html(savepath.with_suffix(".html"), config=config, **kwargs)
     if save_png:
         fig.write_image(savepath.with_suffix(".png"))
+
 
 import os
 import platform
@@ -1300,6 +1386,7 @@ import shutil
 from collections import Counter
 
 from threadpoolctl import threadpool_limits
+
 threadpool_limits(int("${task.cpus}"))
 sc.settings.n_jobs = int("${task.cpus}")
 
@@ -1338,7 +1425,7 @@ combined_long = pd.concat(sample_dfs, ignore_index=True)
 genus_counts = Counter(sample_genus.values())
 top30 = genus_counts.most_common(29)
 top30_genus = []
-for k,v in top30:
+for k, v in top30:
     top30_genus.append(k)
 
 # Pivot: rows = samples, columns = genera, values = abundance (fill missing with 0)
@@ -1353,14 +1440,14 @@ merged_table = combined_long.pivot_table(
 adata = sc.AnnData(
     X=merged_table.values,  # Abundance matrix (samples × genera)
     obs=pd.DataFrame(index=merged_table.index),  # Sample metadata (index = sample IDs)
-    var=pd.DataFrame(index=merged_table.columns)  # Genus metadata (index = genus names)
+    var=pd.DataFrame(index=merged_table.columns),  # Genus metadata (index = genus names)
 )
 
 # Add sample metadata
 df_top_genus = pd.DataFrame(  # Convert dict to DataFrame
     sample_genus.values(),  # Convert dict items to list of (key, value) tuples
     columns=["sample_genus"],  # Define column names
-    index=sample_genus.keys()
+    index=sample_genus.keys(),
 )
 
 adata.obs = adata.obs.join(df_top_genus)  # Merge with existing sample metadata
@@ -1368,18 +1455,18 @@ adata.obs = adata.obs.join(df_top_genus)  # Merge with existing sample metadata
 # Perform clustering
 # Build the neighborhood graph (required for both Louvain and Leiden)
 n_samples = adata.n_obs
-sc.tl.pca(adata, n_comps=min(n_samples // 2, 50)) # Compute PCA (n_comps ≥ n_pcs)
+sc.tl.pca(adata, n_comps=min(n_samples // 2, 50))  # Compute PCA (n_comps ≥ n_pcs)
 sc.pp.neighbors(
     adata,
     n_neighbors=int(np.sqrt(n_samples)),  # Number of nearest neighbors
     n_pcs=min(n_samples // 2, 50),  # Use PCA components
-    use_rep="X_pca"  # Use PCA-reduced data (default)
+    use_rep="X_pca",  # Use PCA-reduced data (default)
 )
 # Run Leiden clustering
 sc.tl.leiden(
     adata,
     resolution=1.0,  # Same granularity control as Louvain
-    key_added="leiden"  # Store results in adata.obs["leiden"]
+    key_added="leiden",  # Store results in adata.obs["leiden"]
 )
 
 # Perform umap
