@@ -81,7 +81,6 @@ def helpMessage() {
     --no_normalize                Specifying --no_normalize will skip the reads normalizing step.
     --pasa                        Enable PASA scaffolding (default: false)
     --refs_fna                    Genome files for PASA or RAGTAG scaffolding
-    --close_ref                   A close reference for genome-guided assembly
 
     Quast options:
     --euk                         Euk genome
@@ -184,7 +183,6 @@ params.gtdb = null
 params.host_ref = null
 params.pasa = false
 params.refs_fna = null
-params.close_ref = null
 params.evalue = 1e-25
 params.blockSize = 2.0
 params.split_bac_level = "genus"
@@ -457,13 +455,6 @@ if (params.refs_fna) {
     refs_fna = file(params.refs_fna, checkIfExists: true)
 } else {
     refs_fna = Channel.empty()
-}
-
-if (params.close_ref) {
-    close_ref = file(params.close_ref, checkIfExists: true)
-    exit 1, "params.close_ref is under testing; do not use it."
-} else {
-    close_ref = Channel.empty()
 }
 
 // Header log info
@@ -775,29 +766,13 @@ workflow SCGS {
         ch_versions = ch_versions.mix(SPADES.out.versions)
 
         if (params.refs_fna) {
-            // scaffoldding denovo assembly using PASA
-            PANTA(refs_fna.collect())
-            ch_versions = ch_versions.mix(PANTA.out.versions)
-            PASA(SPADES.out.assembly, PANTA.out.db)
-            ch_versions = ch_versions.mix(PASA.out.versions)
-            ctg_denovo = PASA.out.ctg
-
             // integrate with reference based assembly
-            if (params.close_ref) {
-                // referenced based assembly
-                METACOMPASS(normalized_reads, close_ref)
-                ch_versions = ch_versions.mix(METACOMPASS.out.versions)
-                ch_assemblies = METACOMPASS.out.contig.join(ctg_denovo)
-                RAGTAG(ch_assemblies, refs_fna.collect())
-                ch_versions = ch_versions.mix(RAGTAG.out.versions)
-                QUICKMERGE(RAGTAG.out.denovo_assembly, RAGTAG.out.scaffolded_assembly)
-                ch_versions = ch_versions.mix(QUICKMERGE.out.versions)
-                ctg200 = QUICKMERGE.out.merged_assembly
-                ctg = QUICKMERGE.out.merged_clean
-            } else {
-                ctg200 = PASA.out.ctg200
-                ctg = PASA.out.ctg
-            }
+            METACOMPASS(normalized_reads, refs_fna)
+            ch_versions = ch_versions.mix(METACOMPASS.out.versions)
+            QUICKMERGE(SPADES.out.ctg.join(METACOMPASS.out.contig))
+            ch_versions = ch_versions.mix(QUICKMERGE.out.versions)
+            ctg200 = QUICKMERGE.out.merged_assembly
+            ctg = QUICKMERGE.out.merged_clean
         } else {
             ctg200 = SPADES.out.ctg200
             ctg = SPADES.out.ctg
@@ -883,7 +858,7 @@ workflow SCGS {
 
         // BLOBTOOLS
         if (params.blob) {
-            if (params.no_normalize && !params.pasa && !(params.refs_fna && params.close_ref)) {
+            if (params.no_normalize && !params.refs_fna) {
                 BLOBTOOLS (
                     DIAMOND_BLASTX.out.ctg_taxa,
                     blob_db

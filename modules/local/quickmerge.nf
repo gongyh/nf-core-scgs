@@ -6,8 +6,7 @@ process QUICKMERGE {
     container "scgs/mulled-v2-d417af7602b66a7a02bee82c7dd6399da6f61ce0:d831d87d4fdb108118b1d07ed3b32621cd2472f2-0"
 
     input:
-    tuple val(meta), path(denovo_contigs) // denovo assembled assembly
-    tuple val(meta), path(refass_contigs) // reference guided assembly, after scaffolding
+    tuple val(meta), path(denovo_contigs), path(refass_contigs) // denovo and ref-guided assembled assemblies
 
     output:
     tuple val(meta), path("${prefix}.hybrid200.fasta"),   emit: merged_assembly
@@ -22,15 +21,14 @@ process QUICKMERGE {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     ## merge denovo and ref-based SAGs
-    merge_wrapper.py -pre ${prefix} -ml 100 ${denovo_contigs} ${refass_contigs}
-    # append unaligned seqs
-    cut -f1 aln_summary_${prefix}.tsv | grep -v REF | sort | uniq > aln_${prefix}.ids
-    seqkit grep -v -n -f aln_${prefix}.ids ${refass_contigs} > unaln_${prefix}.fasta
-    cat merged_${prefix}.fasta unaln_${prefix}.fasta > merged2_${prefix}.fasta
-    # extract contigs from scaffolds
-    scf2ctg.py merged2_${prefix}.fasta ${prefix}_merged.fasta
+    cp ${denovo_contigs} tmp.fasta
+    refass_contigs=(${refass_contigs})
+    for refass_contig in \${refass_contigs[*]}; do
+        merge_wrapper.py -pre ${prefix} -ml 100 \${refass_contig} tmp.fasta
+        cp -f merged_${prefix}.fasta tmp.fasta
+    done
     # clean up read id
-    seqtk rename ${prefix}_merged.fasta ${prefix}_ | sed 's/ .*\$//g' > ${prefix}.hybrid.fasta
+    seqtk rename merged_${prefix}.fasta ${prefix}_ | sed 's/ .*\$//g' > ${prefix}.hybrid.fasta
     # remove short contigs
     faFilterByLen.pl ${prefix}.hybrid.fasta 200 > ${prefix}.hybrid200.fasta
 

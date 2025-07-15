@@ -190,10 +190,6 @@
                     "pattern": "^\\S+\\.fna\\.gz$",
                     "description": "Genomes for scaffolding."
                 },
-                "close_ref": {
-                    "type": "string",
-                    "description": "A close reference for genome-guided assembly."
-                },
                 "notrim": {
                     "type": "boolean",
                     "default": false,
