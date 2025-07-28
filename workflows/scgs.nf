@@ -650,7 +650,7 @@ workflow SCGS {
             kraken2_db,
             krona_db
         )
-        UMAP ( KRAKEN.out.tda.collect().map{it -> it.size() < 4 ? [] : it} )
+        UMAP ( KRAKEN.out.tda.collect().filter{it -> it.size() >=4} )
         ch_multiqc_kraken = KRAKEN.out.report
     }
 
