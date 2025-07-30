@@ -2,8 +2,8 @@ process QUICKMERGE {
     tag "${meta.id}"
     label 'process_medium'
 
-    conda "bioconda::quickmerge=0.3 bioconda::seqkit=2.10.0 conda-forge::biopython=1.85 bioconda::perl-bioperl=1.7.8 bioconda::seqtk=1.4"
-    container "scgs/mulled-v2-d417af7602b66a7a02bee82c7dd6399da6f61ce0:d831d87d4fdb108118b1d07ed3b32621cd2472f2-0"
+    conda "scgs::quickmerge-vt=0.4 bioconda::seqkit=2.10.0 conda-forge::biopython=1.85 bioconda::perl-bioperl=1.7.8 bioconda::seqtk=1.4"
+    container "scgs/mulled-v2-3d7dbca3694e0bc412a351a0d57cbefcab830270:13f4c4f6b30adc2e47d2dfca9753708b5d6e5cc7-0"
 
     input:
     tuple val(meta), path(denovo_contigs), path(refass_contigs) // denovo and ref-guided assembled assemblies
@@ -24,7 +24,7 @@ process QUICKMERGE {
     cp ${denovo_contigs} tmp.fasta
     refass_contigs=(${refass_contigs})
     for refass_contig in \${refass_contigs[*]}; do
-        merge_wrapper.py -pre ${prefix} -ml 100 \${refass_contig} tmp.fasta
+        merge_wrapper.py -v -t ${task.cpus} -l 0 -pre ${prefix} -ml 100 \${refass_contig} tmp.fasta
         cp -f merged_${prefix}.fasta tmp.fasta
     done
     # clean up read id
@@ -34,7 +34,7 @@ process QUICKMERGE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        quickmerge: 0.3
+        quickmerge: 0.4
     END_VERSIONS
     """
 }
