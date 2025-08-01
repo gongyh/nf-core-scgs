@@ -2,8 +2,8 @@ process METACOMPASS {
     tag "${meta.id}"
     label 'process_high'
 
-    conda "scgs::metacompass=1.12=1.12--h9948957_5 bioconda::seqkit=2.10.0 bioconda::seqtk=1.4"
-    container "scgs/mulled-v2-0e7fe6bd3265990ffcdf96496fe08dc5aa55fd24:62c3137bd1d05677122f8069cb3981ac4e60651e-1"
+    conda "scgs::metacompass=1.12=1.12--h9948957_6 bioconda::seqkit=2.10.0 bioconda::seqtk=1.4"
+    container "scgs/mulled-v2-0e7fe6bd3265990ffcdf96496fe08dc5aa55fd24:62c3137bd1d05677122f8069cb3981ac4e60651e-6"
 
     input:
     tuple val(meta), path(reads)

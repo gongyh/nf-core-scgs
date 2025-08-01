@@ -541,8 +541,10 @@ include { SPADES                } from '../modules/local/spades'
 include { PANTA; PASA           } from '../modules/local/pasa'
 include { COMPLETENESS          } from '../modules/local/pangenome/completeness'
 include { TREE                  } from '../modules/local/pangenome/tree'
-include { QUAST_REF             } from '../modules/local/quast_ref'
-include { QUAST_DENOVO          } from '../modules/local/quast_denovo'
+
+include { QUAST_REF; QUAST_REF as QUAST_REF0          } from '../modules/local/quast_ref'
+include { QUAST_DENOVO; QUAST_DENOVO as QUAST_DENOVO0 } from '../modules/local/quast_denovo'
+
 include { BOWTIE2_REMAP         } from '../modules/local/bowtie2_remap'
 include { REMAP                 } from '../modules/local/remap'
 include { CHECKM_LINEAGEWF      } from '../modules/local/checkm_lineagewf'
@@ -761,8 +763,8 @@ workflow SCGS {
         contig = SPADES.out.contig
         contig_path = SPADES.out.contig_path
         contig_graph = SPADES.out.contig_graph
-        // ctg200 = SPADES.out.ctg200
-        // ctg = SPADES.out.ctg
+        ctg200_denovo = SPADES.out.ctg200
+        ctg_denovo = SPADES.out.ctg
         ch_versions = ch_versions.mix(SPADES.out.versions)
 
         if (params.refs_fna) {
@@ -791,6 +793,19 @@ workflow SCGS {
     // QUAST
     ch_multiqc_quast = Channel.empty()
     if (denovo == false) {
+        if (params.refs_fna) { // hybrid assembly, add quast for spades
+            ch_ctgd_bam_bai = ctg_denovo.join(quast_bam).join(quast_bai).collect(flat: false)
+            QUAST_REF0 (
+                fasta,
+                gff,
+                ch_ctgd_bam_bai.flatMap{it}.map{it[1]}.collect(),
+                ch_ctgd_bam_bai.flatMap{it}.map{it[2]}.collect(),
+                ch_ctgd_bam_bai.flatMap{it}.map{it[3]}.collect(),
+                euk,
+                params.fungus,
+                "quast_spades"
+            )
+        }
         ch_ctg_bam_bai = ctg.join(quast_bam).join(quast_bai).collect(flat: false)
         QUAST_REF (
             fasta,
@@ -799,15 +814,25 @@ workflow SCGS {
             ch_ctg_bam_bai.flatMap{it}.map{it[2]}.collect(),
             ch_ctg_bam_bai.flatMap{it}.map{it[3]}.collect(),
             euk,
-            params.fungus
+            params.fungus,
+            "quast_ref"
         )
         ch_multiqc_quast = QUAST_REF.out.tsv
         ch_versions = ch_versions.mix(QUAST_REF.out.versions)
     } else {
+        if (params.refs_fna) { // hybrid assembly, add quast for spades
+            QUAST_DENOVO0 (
+                ctg_denovo.collect{it[1]},
+                euk,
+                params.fungus,
+                "quast_spades"
+            )
+        }
         QUAST_DENOVO (
             ctg.collect{it[1]},
             euk,
-            params.fungus
+            params.fungus,
+            "quast_denovo"
         )
         ch_multiqc_quast = QUAST_DENOVO.out.tsv
         ch_versions = ch_versions.mix(QUAST_DENOVO.out.versions)
