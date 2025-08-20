@@ -452,9 +452,17 @@ if(params.readPaths){
 }
 
 if (params.refs_fna) {
-    refs_fna = file(params.refs_fna, checkIfExists: true)
+    def rfna = file(params.refs_fna, checkIfExists: true)
+    if (rfna.size()==1 && rfna.isDirectory()) {
+        panta_db = rfna
+        refs_fna = Channel.empty()
+    } else {
+        refs_fna = rfna
+        panta_db = Channel.empty()
+    }
 } else {
     refs_fna = Channel.empty()
+    panta_db = Channel.empty()
 }
 
 // Header log info
@@ -768,13 +776,15 @@ workflow SCGS {
         ch_versions = ch_versions.mix(SPADES.out.versions)
 
         if (params.refs_fna) {
-            // integrate with reference based assembly
-            METACOMPASS(normalized_reads, refs_fna)
-            ch_versions = ch_versions.mix(METACOMPASS.out.versions)
-            QUICKMERGE(SPADES.out.ctg.join(METACOMPASS.out.contig))
-            ch_versions = ch_versions.mix(QUICKMERGE.out.versions)
-            ctg200 = QUICKMERGE.out.merged_assembly
-            ctg = QUICKMERGE.out.merged_clean
+            if (refs_fna.size()>1) {
+                PANTA(refs_fna.collect())
+                ch_versions = ch_versions.mix(PANTA.out.versions)
+                panta_db = PANTA.out.db
+            }
+            PASA(SPADES.out.assembly, panta_db)
+            ch_versions = ch_versions.mix(PASA.out.versions)
+            ctg200 = PASA.out.ctg200
+            ctg = PASA.out.ctg
         } else {
             ctg200 = SPADES.out.ctg200
             ctg = SPADES.out.ctg

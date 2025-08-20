@@ -187,8 +187,7 @@
                 },
                 "refs_fna": {
                     "type": "string",
-                    "pattern": "^\\S+\\.fna\\.gz$",
-                    "description": "Genomes for scaffolding."
+                    "description": "Genomes for scaffolding (*.fna *.fna.gz) or PanTA database (dir)."
                 },
                 "notrim": {
                     "type": "boolean",
