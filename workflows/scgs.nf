@@ -565,7 +565,7 @@ include { ACDC                  } from '../modules/local/acdc'
 include { TSNE                  } from '../modules/local/tsne'
 include { PROKKA                } from '../modules/local/prokka'
 include { PRODIGAL              } from '../modules/local/prodigal'
-include { METARON               } from '../modules/local/metaron'
+include { UNIOP                 } from '../modules/local/uniop'
 include { AUGUSTUS              } from '../modules/local/augustus'
 include { EUKCC                 } from '../modules/local/eukcc'
 include { EGGNOG                } from '../modules/local/eggnog'
@@ -960,8 +960,8 @@ workflow SCGS {
         ch_versions = ch_versions.mix(PROKKA.out.versions)
         PRODIGAL(ctg)
         ch_versions = ch_versions.mix(PRODIGAL.out.versions)
-        METARON( ctg.join(PRODIGAL.out.gff) )
-        ch_versions = ch_versions.mix(METARON.out.versions)
+        UNIOP( PRODIGAL.out.faa )
+        ch_versions = ch_versions.mix(UNIOP.out.versions)
         faa = PROKKA.out.faa
         prokka_for_split  = PROKKA.out.prokka_for_split
         ch_multiqc_prokka = PROKKA.out.prokka_for_split
