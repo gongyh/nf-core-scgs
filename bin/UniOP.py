@@ -24,8 +24,8 @@ def create_parser():
     parser = argparse.ArgumentParser(
         description="Operon prediction using intergenic distance.",
         epilog="""Examples:
-	python3 UniOP.py -i ../demo/GCF_000005845.2.fna
-	python3 UniOP.py -a ../demo/GCF_000005845.2.faa""",
+        python3 UniOP.py -i ../demo/GCF_000005845.2.fna
+        python3 UniOP.py -a ../demo/GCF_000005845.2.faa""",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
