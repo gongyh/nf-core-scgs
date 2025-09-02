@@ -416,6 +416,10 @@
                     "type": "string",
                     "description": "Path of gtdb database."
                 },
+                "bakta_db": {
+                    "type": "string",
+                    "description": "Path of bakta database."
+                },
                 "host_ref": {
                     "type": "string",
                     "description": "Path of reference sequence for host removal using bbmap."

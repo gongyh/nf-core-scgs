@@ -63,6 +63,7 @@ def helpMessage() {
     --eukcc_db                    EukCC database
     --checkm2_db                  CheckM2 database
     --gtdb                        GTDB database
+    --bakta_db                    Bakta database
     --host_ref                    Specify the reference sequence for host removal
 
     Trimming options:
@@ -180,6 +181,7 @@ params.eggnog_db = null
 params.eukcc_db = null
 params.checkm2_db = null
 params.gtdb = null
+params.bakta_db = null
 params.host_ref = null
 params.pasa = false
 params.refs_fna = null
@@ -335,6 +337,15 @@ if (params.gtdb) {
     if ( !gtdb.exists() ) exit 1, "GTDB database not found: ${params.gtdb}"
 } else {
     gtdb = file("/dev/null")
+}
+
+// Configure bakta database
+bakta_db = false
+if (params.bakta_db) {
+    bakta_db  = file(params.bakta_db)
+    if ( !bakta_db.exists() ) exit 1, "Bakta database not found: ${params.bakta_db}"
+} else {
+    bakta_db = file("/dev/null")
 }
 
 // Configure pangenome database
@@ -525,7 +536,7 @@ include { MINIMAP2_ALIGN        } from '../modules/nf-core/minimap2/align/main'
 include { QUALIMAP_BAMQC        } from '../modules/nf-core/qualimap/bamqc/main'
 include { GENOMAD_ENDTOEND      } from '../modules/nf-core/genomad/endtoend/main'
 include { MULTIQC               } from '../modules/nf-core/multiqc/main'
-
+include { BAKTA_BAKTA           } from '../modules/nf-core/bakta/bakta/main'
 
 // Import modules from local
 include { SAVE_REFERENCE        } from '../modules/local/save_reference'
@@ -958,7 +969,16 @@ workflow SCGS {
     if (!euk) {
         PROKKA(ctg, prokka_proteins)
         ch_versions = ch_versions.mix(PROKKA.out.versions)
-        PRODIGAL(ctg)
+        if (params.bakta_db) {
+            BAKTA_BAKTA (
+                ctg,
+                bakta_db,
+                prokka_proteins,
+                null
+            )
+            ch_versions = ch_versions.mix(BAKTA_BAKTA.out.versions)
+        }
+        PRODIGAL(ctg) // for UniOP
         ch_versions = ch_versions.mix(PRODIGAL.out.versions)
         UNIOP( PRODIGAL.out.faa )
         ch_versions = ch_versions.mix(UNIOP.out.versions)
