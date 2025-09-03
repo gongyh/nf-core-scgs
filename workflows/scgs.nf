@@ -536,7 +536,6 @@ include { MINIMAP2_ALIGN        } from '../modules/nf-core/minimap2/align/main'
 include { QUALIMAP_BAMQC        } from '../modules/nf-core/qualimap/bamqc/main'
 include { GENOMAD_ENDTOEND      } from '../modules/nf-core/genomad/endtoend/main'
 include { MULTIQC               } from '../modules/nf-core/multiqc/main'
-include { BAKTA_BAKTA           } from '../modules/nf-core/bakta/bakta/main'
 
 // Import modules from local
 include { SAVE_REFERENCE        } from '../modules/local/save_reference'
@@ -575,8 +574,11 @@ include { REBLOBTOOLS           } from '../modules/local/reblobtools'
 include { ACDC                  } from '../modules/local/acdc'
 include { TSNE                  } from '../modules/local/tsne'
 include { PROKKA                } from '../modules/local/prokka'
+include { BAKTA                 } from '../modules/local/bakta'
 include { PRODIGAL              } from '../modules/local/prodigal'
 include { UNIOP                 } from '../modules/local/uniop'
+include { PROMPREDICT           } from '../modules/local/prompredict'
+include { PHISPY                } from '../modules/local/phispy'
 include { AUGUSTUS              } from '../modules/local/augustus'
 include { EUKCC                 } from '../modules/local/eukcc'
 include { EGGNOG                } from '../modules/local/eggnog'
@@ -970,18 +972,20 @@ workflow SCGS {
         PROKKA(ctg, prokka_proteins)
         ch_versions = ch_versions.mix(PROKKA.out.versions)
         if (params.bakta_db) {
-            BAKTA_BAKTA (
+            BAKTA (
                 ctg,
                 bakta_db,
                 prokka_proteins,
-                null
+                []
             )
-            ch_versions = ch_versions.mix(BAKTA_BAKTA.out.versions)
+            ch_versions = ch_versions.mix(BAKTA.out.versions)
         }
-        PRODIGAL(ctg) // for UniOP
-        ch_versions = ch_versions.mix(PRODIGAL.out.versions)
-        UNIOP( PRODIGAL.out.faa )
+        UNIOP( ctg )
         ch_versions = ch_versions.mix(UNIOP.out.versions)
+        PROMPREDICT( ctg )
+        ch_versions = ch_versions.mix(PROMPREDICT.out.versions)
+        PHISPY( PROKKA.out.gbk )
+        ch_versions = ch_versions.mix(PHISPY.out.versions)
         faa = PROKKA.out.faa
         prokka_for_split  = PROKKA.out.prokka_for_split
         ch_multiqc_prokka = PROKKA.out.prokka_for_split

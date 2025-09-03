@@ -12,6 +12,7 @@ process PROKKA {
     output:
     tuple val(meta), path("$prefix")                , emit: prokka_for_split
     tuple val(meta), path("${prefix}/${prefix}.faa"), emit: faa
+    tuple val(meta), path("${prefix}/${prefix}.gbk"), emit: gbk
     path "versions.yml"                             , emit: versions
 
     when:

@@ -1,4 +1,4 @@
-process UNIOP {
+process PROMPREDICT {
     tag "$meta.id"
     label 'process_single'
 
@@ -9,7 +9,7 @@ process UNIOP {
     tuple val(meta), path("genome.fasta")
 
     output:
-    tuple val(meta), path("$prefix"), emit: out_operon
+    tuple val(meta), path("$prefix")
     path "versions.yml"             , emit: versions
 
     when:
@@ -20,12 +20,13 @@ process UNIOP {
     """
     cp genome.fasta ${prefix}.fna
     mkdir -p ${prefix}
-    # operon prediction
-    UniOP.py -i ${prefix}.fna -t ${prefix}/
+    # promoter identification
+    PromPredict_genome_V1.py --genome_fasta ${prefix}.fna
+    cp ${prefix}_*.txt ${prefix}/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        UniOP: 1.0
+        PromPredict: V1
     END_VERSIONS
     """
 }

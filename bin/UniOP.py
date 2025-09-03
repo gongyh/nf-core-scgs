@@ -15,6 +15,9 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from sklearn.neighbors import KernelDensity
+import Bio.SeqIO
+import pyrodigal
+from pathlib import Path
 
 
 def create_parser():
@@ -196,14 +199,38 @@ def distPred(q, df_pairs, n_sample, smooth=1):
 
 def gene_prediction(inputfile, path=None):
     """
-    predict .gff and .faa files by Prodigal
+    predict .gff and .faa files by Pyrodigal
     """
     head, tail = os.path.split(inputfile)
     qname = tail.replace(".fna", "")
     gff_file = f"{path}/{qname}.gff"
     faa_file = f"{path}/{qname}.faa"
+    gbk_file = f"{path}/{qname}.gb"
 
-    os.system(f"prodigal -i {inputfile} -f gff -o {gff_file} -a {faa_file}")
+    path_obj = Path(path)
+    if not path_obj.exists():
+        path_obj.mkdir(parents=True, exist_ok=True)
+
+    dst_gff = open(gff_file, "w")
+    dst_faa = open(faa_file, "w")
+    dst_gb = open(gbk_file, "w")
+
+    records = list(Bio.SeqIO.parse(inputfile, "fasta"))
+    records_seq = "TTAATTAATTAA".join(str(rec.seq).upper() for rec in records)
+    orf_finder = pyrodigal.GeneFinder()
+    orf_finder.train(records_seq)
+
+    for record in Bio.SeqIO.parse(inputfile, "fasta"):
+        genes = orf_finder.find_genes(bytes(record.seq))
+        genes.write_gff(dst_gff, sequence_id=record.id)
+        genes.write_translations(dst_faa, sequence_id=record.id)
+        genes.write_genbank(dst_gb, sequence_id=record.id)
+
+    dst_gff.close()
+    dst_faa.close()
+    dst_gb.close()
+
+    # os.system(f"prodigal -i {inputfile} -f gff -o {gff_file} -a {faa_file}")
     return faa_file
 
 
