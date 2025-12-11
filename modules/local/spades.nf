@@ -23,7 +23,8 @@ process SPADES {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ''
-    def mode = params.bulk ? "--cov-cutoff auto" : "--sc"
+    def mode = params.bulk ? "--cov-cutoff auto --careful" : "--sc --careful"
+    mode = params.mg ? "--meta" : "--sc --careful"
     def rcl = meta.single_end ? "-s ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
     """
     spades.py ${rcl} ${mode} ${args} -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out

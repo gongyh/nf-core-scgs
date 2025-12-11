@@ -334,6 +334,11 @@
                     "default": false,
                     "description": "Bulk sequencing data?"
                 },
+		"mg": {
+		    "type": "boolean",
+		    "default": false,
+		    "description": "Metagenomic sequencing data?"
+		},
                 "ass": {
                     "type": "boolean",
                     "default": false,

@@ -15,6 +15,7 @@ def helpMessage() {
     Options:
     --vcf                         Variantion graph construction
     --bulk                        WGS of bulk DNA, not MDA
+    --mg                          WGS of bulk DNA, assemble in metagenome mode
     --genome                      Name of iGenomes reference
     --single_end                  Specifies that the input is single end reads
     --snv                         Enable detection of single nucleotide variation
@@ -144,6 +145,7 @@ params.bbmap = false
 params.doubletd = false
 params.saturation = false
 params.bulk = false
+params.mg = false
 params.genomad = false
 params.ass = false
 params.kofam = true
