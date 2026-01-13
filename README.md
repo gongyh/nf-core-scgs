@@ -8,6 +8,7 @@
 [![run with podman](https://img.shields.io/badge/run%20with-podman-0dffed?labelColor=000000)](https://podman.io/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 [![run with conda](https://img.shields.io/badge/run%20with-conda-ffb7ed?labelColor=000000&logo=anaconda)](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/gongyh/nf-core-scgs)
 
 ## Introduction
 
