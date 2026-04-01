@@ -349,6 +349,11 @@
                     "default": false,
                     "description": "Enable genomad analysis?"
                 },
+                "minimeta": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable minimeta single-cell metagenomics analysis workflow"
+                },
                 "genus": {
                     "type": "string",
                     "description": "Genus name of the genome."
