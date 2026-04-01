@@ -1,5 +1,5 @@
 repository_type: pipeline
-nf_core_version: 3.2.1
+nf_core_version: 3.5.2
 lint:
   nextflow_config:
     - manifest.name
