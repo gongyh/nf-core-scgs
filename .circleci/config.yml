@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  test_dsl2:
+  test_scgs:
     machine:
       image: ubuntu-2204:2023.04.2
       resource_class: large
@@ -31,10 +31,45 @@ jobs:
           path: test/.nextflow.log
           destination: dsl2/nextflow-log.txt
 
+  test_minimeta:
+    machine:
+      image: ubuntu-2204:2023.04.2
+      resource_class: large
+      docker_layer_caching: true
+    environment:
+      - GIT_LFS_SKIP_SMUDGE: 1
+    steps:
+      - checkout
+      - run:
+          name: install nextflow
+          command: |
+            curl -s https://get.nextflow.io | bash
+      - run:
+          name: test minimeta workflow
+          command: |
+            mkdir -p test_minimeta && cd test_minimeta
+            ../nextflow run .. -profile test_denovo,docker --minimeta
+          no_output_timeout: 30m
+      - store_artifacts:
+          path: test_minimeta/results/pipeline_info
+          destination: minimeta/pipeline_info
+      - store_artifacts:
+          path: test_minimeta/results/MultiQC/multiqc_report.html
+          destination: minimeta/multiqc_report.html
+      - store_artifacts:
+          path: test_minimeta/.nextflow.log
+          destination: minimeta/nextflow-log.txt
+
 workflows:
   test_pipeline:
     jobs:
-      - test_dsl2:
+      - test_scgs:
+          filters:
+            branches:
+              only: dev
+              ignore:
+                - gh-pages
+      - test_minimeta:
           filters:
             branches:
               only: dev

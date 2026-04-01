@@ -19,6 +19,7 @@ nextflow.enable.dsl=2
 */
 
 include { SCGS } from './workflows/scgs'
+include { MINIMETA } from './workflows/minimeta'
 
 //
 // WORKFLOW: Run SCGS analysis pipeline
@@ -28,14 +29,26 @@ workflow NFCORE_SCGS {
     SCGS ()
 }
 
+//
+// WORKFLOW: Run MINIMETA analysis pipeline
+//
+
+workflow NFCORE_MINIMETA {
+    MINIMETA ()
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN ALL WORKFLOWS
+    RUN WORKFLOW BASED ON PARAMETERS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 workflow {
-    NFCORE_SCGS ()
+    if (params.minimeta) {
+        NFCORE_MINIMETA ()
+    } else {
+        NFCORE_SCGS ()
+    }
 }
 
 /*
