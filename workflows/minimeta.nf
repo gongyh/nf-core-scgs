@@ -217,6 +217,23 @@ workflow MINIMETA {
     assembly      = SPADES.out.assembly
     ch_versions   = ch_versions.mix(SPADES.out.versions)
 
+    // ========== 第二阶段：手动联合组装 ==========
+    // 收集所有子样本的校正 reads
+    p1_ch = p1_corr.collect()
+    p2_ch = p2_corr.collect()
+    s_ch  = s_corr.collect()
+    COLLECT_CORRECTED( p1_ch, p2_ch, s_ch )
+    ch_versions = ch_versions.mix(COLLECT_CORRECTED.out.versions)
+
+    // 2. 联合组装（大内存）
+    SPADES_JOINT( COLLECT_CORRECTED.out.r1, COLLECT_CORRECTED.out.r2, COLLECT_CORRECTED.out.s )
+    ch_versions = ch_versions.mix(SPADES_JOINT.out.versions)
+
+    // 3. 重命名 super_contigs
+    RENAME_SUPERCONTIGS( SPADES_JOINT.out.contigs )
+    ch_versions = ch_versions.mix(RENAME_SUPERCONTIGS.out.versions)
+    super_contigs = RENAME_SUPERCONTIGS.out.super_contigs
+
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
