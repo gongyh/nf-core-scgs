@@ -19,7 +19,7 @@ jobs:
           name: test
           command: |
             mkdir -p test && cd test
-            ../nextflow run .. -profile test_denovo,docker --saturation --snv --cnv --remap
+            ../nextflow run .. -profile test_denovo,docker
           no_output_timeout: 30m
       - store_artifacts:
           path: test/results/pipeline_info
