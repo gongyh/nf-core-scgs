@@ -167,7 +167,7 @@ include { FASTQC                } from '../modules/nf-core/fastqc/main'
 include { MULTIQC               } from '../modules/nf-core/multiqc/main'
 
 include { TRIMGALORE            } from '../modules/local/trimgalore'
-include { BBNORM                } from '../modules/local/bbnorm'
+//include { BBNORM                } from '../modules/local/bbnorm'
 include { SPADES                } from '../modules/local/spades'
 include { OUTPUT_DOCUMENTATION  } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions/main'
@@ -202,18 +202,16 @@ workflow MINIMETA {
         trimmed_reads = TRIMGALORE.out.reads
     }
 
-    // BBNORM
-    BBNORM(trimmed_reads)
-    normalized_reads = BBNORM.out.fastq
-    ch_versions = ch_versions.mix(BBNORM.out.versions)
-
     // SPADES
-    SPADES(normalized_reads)
+    SPADES(trimmed_reads)
     contig        = SPADES.out.contig
-    contig_path   = SPADES.out.contig_path
-    contig_graph  = SPADES.out.contig_graph
-    ctg200        = SPADES.out.ctg200
-    ctg           = SPADES.out.ctg
+    p1_corr       = SPADES_SS.out.p1_corr        // 校正 reads R1，用于联合组装
+    p2_corr       = SPADES_SS.out.p2_corr        // 校正 reads R2
+    s_corr        = SPADES_SS.out.s_corr         // 校正 reads 单端
+    //contig_path     = SPADES.out.contig_path
+    //contig_graph    = SPADES.out.contig_graph
+    // ctg200         = SPADES.out.ctg200
+    //ctg             = SPADES.out.ctg
     assembly      = SPADES.out.assembly
     ch_versions   = ch_versions.mix(SPADES.out.versions)
 
