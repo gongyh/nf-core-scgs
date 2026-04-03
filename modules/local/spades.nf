@@ -15,6 +15,9 @@ process SPADES {
     tuple val(meta), path("${prefix}.ctg200.fasta")                        , emit: ctg200
     tuple val(meta), path("${prefix}.ctgs.fasta")                          , emit: ctg
     tuple val(meta), path("${prefix}.spades_out")                          , emit: assembly
+    tuple val(meta), path("${meta.id}.P1_corrected.fastq.gz")              , emit: p1_corr   // 新增
+    tuple val(meta), path("${meta.id}.P2_corrected.fastq.gz")              , emit: p2_corr   // 新增
+    tuple val(meta), path("${meta.id}.S_corrected.fastq.gz")               , emit: s_corr   // 新增
     path "versions.yml"                                                    , emit: versions
 
     when:
@@ -37,7 +40,10 @@ process SPADES {
     cp ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
-
+    cp ${prefix}.spades_out/corrected/*_1.fastq.gz ${prefix}.P1_corrected.fastq.gz        //新增
+    cp ${prefix}.spades_out/corrected/*_2.fastq.gz ${prefix}.P2_corrected.fastq.gz        //新增
+    cp ${prefix}.spades_out/corrected/*_unpaired.fastq.gz ${prefix}.S_corrected.fastq.gz  //新增
+   
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
