@@ -48,7 +48,7 @@ jobs:
           name: test minimeta workflow
           command: |
             mkdir -p test_minimeta && cd test_minimeta
-            ../nextflow run .. -profile test_denovo,docker --minimeta
+            ../nextflow run .. -profile test_minimeta,docker --minimeta
           no_output_timeout: 30m
       - store_artifacts:
           path: test_minimeta/results/pipeline_info
