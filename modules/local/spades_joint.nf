@@ -8,9 +8,9 @@ process SPADES {
         'community.wave.seqera.io/library/spades:4.1.0--77799c52e1d1054a' }"
 
     input:
-    path p1_files   
-    path p2_files  
-    path s_files   
+    path p1_files
+    path p2_files
+    path s_files
 
     output:
     tuple val(meta), path('*.scaffolds.fa.gz')    , optional:true, emit: scaffolds
