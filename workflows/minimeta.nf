@@ -163,18 +163,18 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '
 }
 
 // Import modules
-include { FASTQC                } from '../modules/nf-core/fastqc/main'
-include { MULTIQC               } from '../modules/nf-core/multiqc/main'
+include { FASTQC                            } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                           } from '../modules/nf-core/multiqc/main'
 
-include { TRIMGALORE            } from '../modules/local/trimgalore'
-include { BBNORM                } from '../modules/local/bbnorm'
-include { SPADES                } from '../modules/local/spades'
-include { OUTPUT_DOCUMENTATION  } from '../modules/local/output_documentation'
-include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions/main'
+include { TRIMGALORE                        } from '../modules/local/trimgalore'
+include { BBNORM                            } from '../modules/local/bbnorm'
+include { SPADES as READ_CORRECTION; SPADES } from '../modules/local/spades'
+include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
+include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
 /** subworkflow */
-include { completionEmail       } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
-include { completionSummary     } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
+include { completionEmail                   } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
+include { completionSummary                 } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
 
 // MULTIQC
 def multiqc_report = []
@@ -207,15 +207,14 @@ workflow MINIMETA {
     normalized_reads = BBNORM.out.fastq
     ch_versions = ch_versions.mix(BBNORM.out.versions)
 
-    // SPADES
-    SPADES(normalized_reads)
-    contig        = SPADES.out.contig
-    contig_path   = SPADES.out.contig_path
-    contig_graph  = SPADES.out.contig_graph
-    ctg200        = SPADES.out.ctg200
-    ctg           = SPADES.out.ctg
-    assembly      = SPADES.out.assembly
-    ch_versions   = ch_versions.mix(SPADES.out.versions)
+    // Performs read error correction for each minimeta sample
+    READ_CORRECTION(normalized_reads.map { meta, reads ->
+        def meta_clone = meta.clone()
+        meta_clone.only_error_correction = true;
+        [meta_clone, reads]
+    })
+    corrected_reads = READ_CORRECTION.out.reads
+    ch_versions = ch_versions.mix(READ_CORRECTION.out.versions)
 
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
