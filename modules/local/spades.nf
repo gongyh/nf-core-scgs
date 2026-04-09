@@ -4,7 +4,7 @@ process SPADES {
     publishDir "${params.outdir}/spades_ss", mode: 'copy'
     conda "/home/dingm/micromamba/envs/spades_fixed2"
     container "scgs/mulled-v2-5524a20c8f39de906b127a66052c67b51c9a9ce1:c8e22953d04dee6a4da05f7a131bbd081ad78651-0"
-    
+
     input:
     tuple val(meta), path(reads)
 
@@ -30,7 +30,7 @@ process SPADES {
     mode = params.mg ? "--meta" : "--sc --careful"
     def rcl = meta.single_end ? "-s ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
     """
-    echo "Publishing to ${params.outdir}/spades_ss" >&2 
+    echo "Publishing to ${params.outdir}/spades_ss" >&2
     spades.py ${rcl} ${mode} ${args} -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
     cp ${prefix}.spades_out/assembly_graph_after_simplification.gfa ${prefix}.spades_out/${prefix}.contigs.gfa
     cp ${prefix}.spades_out/contigs.paths ${prefix}.spades_out/contigs.paths_raw
@@ -41,7 +41,7 @@ process SPADES {
     cp ${prefix}.spades_out/contigs.fasta ${prefix}.contigs.fasta
     faFilterByLen.pl ${prefix}.contigs.fasta 200 > ${prefix}.ctg200.fasta
     cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
-    
+
     cp ${prefix}.spades_out/corrected/*_R1.*.cor.fastq.gz ${prefix}.P1_corrected.fastq.gz
     cp ${prefix}.spades_out/corrected/*_R2.*.cor.fastq.gz ${prefix}.P2_corrected.fastq.gz
     cp ${prefix}.spades_out/corrected/*_R_unpaired.*.cor.fastq.gz ${prefix}.S_corrected.fastq.gz
