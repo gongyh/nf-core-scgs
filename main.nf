@@ -18,8 +18,10 @@ nextflow.enable.dsl=2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { SCGS } from './workflows/scgs'
-include { MINIMETA } from './workflows/minimeta'
+include { SCGS              } from './workflows/scgs'
+include { MINIMETA          } from './workflows/minimeta'
+include { completionEmail   } from './subworkflows/nf-core/utils_nfcore_pipeline/main'
+include { completionSummary } from './subworkflows/nf-core/utils_nfcore_pipeline/main'
 
 //
 // WORKFLOW: Run SCGS analysis pipeline
@@ -49,6 +51,23 @@ workflow {
     } else {
         NFCORE_SCGS ()
     }
+}
+
+/*
+ * Completion e-mail notification
+ */
+workflow.onComplete {
+    if (params.email){
+        completionEmail(summary_params,
+            params.email,
+            null,
+            false,
+            params.outdir,
+            log,
+            multiqc_report.getVal()
+        )
+    }
+    completionSummary()
 }
 
 /*

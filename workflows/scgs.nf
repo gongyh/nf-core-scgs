@@ -478,39 +478,42 @@ if (params.refs_fna) {
     panta_db = Channel.empty()
 }
 
-// Header log info
-log.info nfcoreHeader()
-def summary = [:]
-summary['Run Name']         = custom_runName ?: workflow.runName
-summary['Reads']            = params.reads
-summary['Fasta Ref']        = params.fasta
-summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
-summary['Bulk']             = params.bulk ? 'Yes' : 'No'
-if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
-summary['Output dir']       = params.outdir
-summary['Launch dir']       = workflow.launchDir
-summary['Working dir']      = workflow.workDir
-summary['Script dir']       = workflow.projectDir
-summary['User']             = workflow.userName
-if( params.notrim ){
-    summary['Trimming Step'] = 'Skipped'
-} else {
-    summary["Trimming Step"] = 'Trim Glore'
+summary = [:]
+def display_header() {
+    // Header log info
+    log.info nfcoreHeader()
+    //def summary = [:]
+    summary['Run Name']         = custom_runName ?: workflow.runName
+    summary['Reads']            = params.reads
+    summary['Fasta Ref']        = params.fasta
+    summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
+    summary['Bulk']             = params.bulk ? 'Yes' : 'No'
+    if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
+    summary['Output dir']       = params.outdir
+    summary['Launch dir']       = workflow.launchDir
+    summary['Working dir']      = workflow.workDir
+    summary['Script dir']       = workflow.projectDir
+    summary['User']             = workflow.userName
+    if( params.notrim ){
+        summary['Trimming Step'] = 'Skipped'
+    } else {
+        summary["Trimming Step"] = 'Trim Glore'
+    }
+    if(workflow.profile == 'awsbatch'){
+        summary['AWS Region']    = params.awsregion
+        summary['AWS Queue']     = params.awsqueue
+    }
+    summary['Config Profile'] = workflow.profile
+    if(params.config_profile_description) summary['Config Description'] = params.config_profile_description
+    if(params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
+    if(params.config_profile_url)         summary['Config URL']         = params.config_profile_url
+    if(params.email) {
+        summary['E-mail Address']  = params.email
+        summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
+    }
+    log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
+    log.info "\033[2m----------------------------------------------------\033[0m"
 }
-if(workflow.profile == 'awsbatch'){
-    summary['AWS Region']    = params.awsregion
-    summary['AWS Queue']     = params.awsqueue
-}
-summary['Config Profile'] = workflow.profile
-if(params.config_profile_description) summary['Config Description'] = params.config_profile_description
-if(params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
-if(params.config_profile_url)         summary['Config URL']         = params.config_profile_url
-if(params.email) {
-    summary['E-mail Address']  = params.email
-    summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
-}
-log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
-log.info "\033[2m----------------------------------------------------\033[0m"
 
 def create_workflow_summary(summary) {
     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
@@ -597,14 +600,13 @@ include { QUICKMERGE            } from '../modules/local/quickmerge'
 include { RAGTAG                } from '../modules/local/ragtag'
 
 /** subworkflow */
-include { completionEmail       } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
-include { completionSummary     } from '../subworkflows/nf-core/utils_nfcore_pipeline/main'
 include { VG                    } from '../subworkflows/local/vg'
 
 // MULTIQC
 def multiqc_report = []
 
 workflow SCGS {
+    display_header()
     ch_versions = Channel.empty()
 
     // FASTQC
@@ -1117,23 +1119,6 @@ workflow SCGS {
     multiqc_report = MULTIQC.out.report.toList()
 
     OUTPUT_DOCUMENTATION(ch_output_docs)
-}
-
-/*
- * Completion e-mail notification
- */
-workflow.onComplete {
-    if (params.email){
-        completionEmail(summary_params,
-            params.email,
-            null,
-            false,
-            params.outdir,
-            log,
-            multiqc_report.getVal()
-        )
-    }
-    completionSummary()
 }
 
 def nfcoreHeader(){
