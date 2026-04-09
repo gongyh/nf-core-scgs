@@ -39,3 +39,6 @@ jobs:
         # Remember that you can parallelise this by using strategy.matrix
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+          mkdir -p test_minimeta
+          cd test_minimeta
+          nextflow run ${GITHUB_WORKSPACE} -profile test_minimeta,docker
