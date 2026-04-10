@@ -38,12 +38,6 @@ def helpMessage() {
  * SET UP CONFIGURATION VARIABLES
  */
 
-// Show help message
-if (params.help){
-    helpMessage()
-    exit 0
-}
-
 // default values
 params.single_end = false
 params.notrim = false

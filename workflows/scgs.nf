@@ -119,12 +119,6 @@ def helpMessage() {
  * SET UP CONFIGURATION VARIABLES
  */
 
-// Show help emssage
-if (params.help){
-    helpMessage()
-    exit 0
-}
-
 // default values
 params.genome = false
 params.single_end = false

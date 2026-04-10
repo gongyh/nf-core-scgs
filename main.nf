@@ -20,8 +20,12 @@ nextflow.enable.dsl=2
 
 include { SCGS              } from './workflows/scgs'
 include { MINIMETA          } from './workflows/minimeta'
+
 include { completionEmail   } from './subworkflows/nf-core/utils_nfcore_pipeline/main'
 include { completionSummary } from './subworkflows/nf-core/utils_nfcore_pipeline/main'
+
+include { helpMessage as helpMessageSCGS     } from './workflows/scgs'
+include { helpMessage as helpMessageMinimeta } from './workflows/minimeta'
 
 //
 // WORKFLOW: Run SCGS analysis pipeline
@@ -47,8 +51,18 @@ workflow NFCORE_MINIMETA {
 
 workflow {
     if (params.minimeta) {
+        // Show help message
+        if (params.help){
+            helpMessageMinimeta()
+            exit 0
+        }
         NFCORE_MINIMETA ()
     } else {
+        // Show help message
+        if (params.help){
+            helpMessageSCGS()
+            exit 0
+        }
         NFCORE_SCGS ()
     }
 }
