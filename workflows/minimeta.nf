@@ -218,10 +218,11 @@ workflow MINIMETA {
     })
     corrected_reads = READ_CORRECTION.out.reads
     ch_versions = ch_versions.mix(READ_CORRECTION.out.versions)
-    //Merge_corrected
+    // Sort
     p1_list = corrected_reads.map { meta, reads -> reads[0] }.collect()
     p2_list = corrected_reads.map { meta, reads -> reads[1] }.collect()
 
+    //Merge_corrected
     MERGE_CORRECTED( p1_list, p2_list )
     ch_versions = ch_versions.mix(MERGE_CORRECTED.out.versions)
 
