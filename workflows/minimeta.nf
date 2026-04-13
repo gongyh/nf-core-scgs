@@ -169,6 +169,7 @@ include { BBNORM                            } from '../modules/local/bbnorm'
 include { SPADES as READ_CORRECTION; SPADES } from '../modules/local/spades'
 include { MERGE_CORRECTED                   } from '../modules/local/merge_corrected'
 include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
+include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_remap'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -225,6 +226,11 @@ workflow MINIMETA {
     //SPADES_JOINT
     SPADES_JOINT( joint_reads )
     ch_versions = ch_versions.mix(SPADES_JOINT.out.versions)
+
+    //BOWTIE2_REMAP
+    BOWTIE2_REMAP( SPADES_JOINT.out.contig )
+    ch_versions = ch_versions.mix(BOWTIE2_REMAP.out.versions)
+    index_ch = BOWTIE2_REMAP.out.index
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
