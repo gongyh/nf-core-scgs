@@ -38,12 +38,6 @@ def helpMessage() {
  * SET UP CONFIGURATION VARIABLES
  */
 
-// Show help message
-if (params.help){
-    helpMessage()
-    exit 0
-}
-
 // default values
 params.single_end = false
 params.notrim = false
@@ -224,8 +218,8 @@ workflow MINIMETA {
 
     //Merge_corrected
     MERGE_CORRECTED( p1_list, p2_list )
-    ch_versions = ch_versions.mix(MERGE_CORRECTED.out.versions)
-
+    joint_meta = [id:'merged', single_end:false]
+    joint_reads = Channel.of([joint_meta, [MERGE_CORRECTED.out.r1, MERGE_CORRECTED.out.r2]])
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
