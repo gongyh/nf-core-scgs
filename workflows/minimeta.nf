@@ -1,4 +1,4 @@
-def helpMessage() {
+\def helpMessage() {
     log.info nfcoreHeader()
     log.info"""
 
@@ -168,6 +168,7 @@ include { TRIMGALORE                        } from '../modules/local/trimgalore'
 include { BBNORM                            } from '../modules/local/bbnorm'
 include { SPADES as READ_CORRECTION; SPADES } from '../modules/local/spades'
 include { MERGE_CORRECTED                   } from '../modules/local/merge_corrected'
+include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -218,8 +219,12 @@ workflow MINIMETA {
 
     //Merge_corrected
     MERGE_CORRECTED( p1_list, p2_list )
-    joint_meta = [id:'merged', single_end:false]
-    joint_reads = Channel.of([joint_meta, [MERGE_CORRECTED.out.r1, MERGE_CORRECTED.out.r2]])
+    joint_reads = MERGE_CORRECTED.out.r1
+        .combine(MERGE_CORRECTED.out.r2)
+        .map { r1, r2 -> [ [id:'merged', single_end:false], [r1, r2] ] }
+    //SPADES_JOINT
+    SPADES_JOINT( joint_reads )
+    ch_versions = ch_versions.mix(SPADES_JOINT.out.versions)
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
