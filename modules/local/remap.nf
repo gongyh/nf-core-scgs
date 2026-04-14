@@ -15,15 +15,16 @@ process REMAP {
     tuple val(meta), path("${prefix}_ass.sort.bam"), path("${prefix}_ass.sort.bam.bai"), emit: bam_bai
     path "versions.yml"                                , emit: versions
 
-    when:
-    task.ext.when == null || task.ext.when
-
+    when:true
+    println "REMAP process started for ${meta.id}"
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def filtering = allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
+    index_prefix = index.find { it.toString().endsWith(".1.bt2") }?.toString()?.replaceAll("\\.1.bt2\$", "")
+    if (!index_prefix) error "Index files not found in ${index}"
+    def filter_args = allow_multi_align ? '' : '| samtools view -b -q 40 -F 4 -F 256 -'
     if (meta.single_end) {
     """
-    bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U ${reads} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    bowtie2 -x ${index_prefix} -p ${task.cpus} -U ${reads} | samtools view -bS ${filter_args} > ${prefix}_ass.bam
     samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
     samtools index ${prefix}_ass.sort.bam
 
@@ -35,7 +36,7 @@ process REMAP {
     """
     } else {
     """
-    bowtie2 --no-mixed --no-discordant -X 1000 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    bowtie2 --no-mixed --no-discordant -X 1000 -x ${index_prefix} -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} | samtools view -bS - ${filter_args} > ${prefix}_ass.bam
     samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
     samtools index ${prefix}_ass.sort.bam
 
