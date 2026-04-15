@@ -201,12 +201,16 @@ workflow MINIMETA {
         ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
         trimmed_reads = TRIMGALORE.out.reads
     }
-    // BBNORM
-    BBNORM(trimmed_reads)
+
+    def samplesList = trimmed_reads.collect()
+    def norm_ch = Channel.fromList(samplesList)
+    def align_ch = Channel.fromList(samplesList)
+
+    //BBNORM
+    BBNORM(norm_ch)
     normalized_reads = BBNORM.out.fastq
     ch_versions = ch_versions.mix(BBNORM.out.versions)
-
-    // Performs read error correction for each minimeta sample
+    // READ_CORRECTION
     READ_CORRECTION(normalized_reads.map { meta, reads ->
         def meta_clone = meta.clone()
         meta_clone.only_error_correction = true;
@@ -214,38 +218,40 @@ workflow MINIMETA {
     })
     corrected_reads = READ_CORRECTION.out.reads
     ch_versions = ch_versions.mix(READ_CORRECTION.out.versions)
-    // Sort
+    //SORT
     p1_list = corrected_reads.map { meta, reads -> reads[0] }.collect()
     p2_list = corrected_reads.map { meta, reads -> reads[1] }.collect()
-
-    //Merge_corrected
+    //MERGE_CORRECTED
     MERGE_CORRECTED( p1_list, p2_list )
     joint_reads = MERGE_CORRECTED.out.r1
         .combine(MERGE_CORRECTED.out.r2)
         .map { r1, r2 -> [ [id:'merged', single_end:false], [r1, r2] ] }
-    //SPADES_JOINT
+    // SPADES_JOINT
     SPADES_JOINT( joint_reads )
     ch_versions = ch_versions.mix(SPADES_JOINT.out.versions)
 
     //BOWTIE2_REMAP
     BOWTIE2_REMAP( SPADES_JOINT.out.contig )
     ch_versions = ch_versions.mix(BOWTIE2_REMAP.out.versions)
-    index_dir = BOWTIE2_REMAP.out.index.map { it[1] }
-    remap_input = trimmed_reads.cross(index_dir).map { sample, idx ->
+ 
+    def index_dir = BOWTIE2_REMAP.out.index.map { it[1] }
+    def remap_input = align_ch.cross(index_dir).map { sample, idx ->
         [sample[0], sample[1], idx]
     }
-    // REMAP
+
+    //REMAP
+
     REMAP( remap_input, false )
     ch_versions = ch_versions.mix(REMAP.out.versions)
     bam_files = REMAP.out.bam
-    // GET_SOFTWARE_VERSIONS
+
+    // MultiQC 
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
     ch_multiqc_versions = GET_SOFTWARE_VERSIONS.out.mqc_yml
 
-    // MODULE: MULTIQC
     workflow_summary = create_workflow_summary(summary)
     ch_workflow_summary = Channel.value(workflow_summary)
 
