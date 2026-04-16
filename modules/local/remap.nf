@@ -20,10 +20,11 @@ process REMAP {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
+    index = meta.id_index ? "${meta.id_index}" : prefix
     def filtering = allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
     if (meta.single_end) {
     """
-    bowtie2 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -U ${reads} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    bowtie2 -x ${index}Bowtie2Index/${index} -p ${task.cpus} -U ${reads} | samtools view -bT ${index}Bowtie2Index - $filtering > ${prefix}_ass.bam
     samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
     samtools index ${prefix}_ass.sort.bam
 
@@ -35,7 +36,7 @@ process REMAP {
     """
     } else {
     """
-    bowtie2 --no-mixed --no-discordant -X 1000 -x ${prefix}Bowtie2Index/${prefix} -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} | samtools view -bT ${prefix}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    bowtie2 --no-mixed --no-discordant -X 1000 -x ${index}Bowtie2Index/${index} -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} | samtools view -bT ${index}Bowtie2Index - $filtering > ${prefix}_ass.bam
     samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
     samtools index ${prefix}_ass.sort.bam
 
