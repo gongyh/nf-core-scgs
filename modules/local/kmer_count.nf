@@ -3,7 +3,7 @@ process KMER_COUNT {
     label 'process_low'
     publishDir "${params.outdir}/kmer", mode: 'copy'
     conda     = "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81 conda-forge::python=3.11"
-    container = "https://depot.galaxyproject.org/singularity/pandas:1.5.3" 
+    container = "https://depot.galaxyproject.org/singularity/pandas:1.5.3"
 
 
 
