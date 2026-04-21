@@ -5,7 +5,7 @@ process SAMTOOLS_FAIDX {
     conda "bioconda::samtools=1.17"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/samtools:1.17--h003b2ad_1' :
-        'biocontainers/samtools:1.17--h003b2ad_1' }"
+        'staphb/samtools:1.17' }"
     input:
     tuple val(meta), path(fasta)
 
