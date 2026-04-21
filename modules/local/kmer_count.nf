@@ -1,11 +1,9 @@
 process KMER_COUNT {
     tag "$meta.id - k$kmer"
     label 'process_low'
-    publishDir "${params.outdir}/kmer", mode: 'copy'  
+    publishDir "${params.outdir}/kmer", mode: 'copy'
     conda "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-495ccdfd54ba4737d7a7590886c99f913d808e2f:a28469e35492d529dcd58b09320e4088a826a7e0-0' :
-        'biocontainers/mulled-v2-495ccdfd54ba4737d7a7590886c99f913d808e2f:a28469e35492d529dcd58b09320e4088a826a7e0-0' }"
+    container "quay.io/biocontainers/pandas:1.5.3--pyhdfd78af_0"
 
     input:
     tuple val(meta), path(fasta)
@@ -31,17 +29,17 @@ process KMER_COUNT {
     def count_kmers(fasta_file, k):
         kmers = get_kmers(k)
         results = []
-        
+
         for record in SeqIO.parse(fasta_file, "fasta"):
             name = record.id
             sequence = str(record.seq).upper()
-            
+
             counts = collections.Counter()
             for i in range(len(sequence) - k + 1):
                 kmer_seq = sequence[i:i+k]
                 if 'N' not in kmer_seq and len(kmer_seq) == k:
                     counts[kmer_seq] += 1
-            
+
             total = sum(counts.values()) if sum(counts.values()) > 0 else 1
             row = {'contig_id': name}
             for k_str in kmers:
@@ -52,7 +50,7 @@ process KMER_COUNT {
             df = pd.DataFrame(columns=['contig_id'] + kmers)
         else:
             df = pd.DataFrame(results)
-        
+
         df.to_csv('${prefix}_k${kmer}.csv', index=False)
 
     try:

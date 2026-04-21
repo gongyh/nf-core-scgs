@@ -18,14 +18,14 @@ process SUMMARIZE_FEATURE_MATRIX {
     """
     python -c "
     import pandas as pd
-    
+
     df_depth = pd.read_csv('${depth}', sep='\\t', index_col=0)
-    
+
     df_kmer = pd.read_csv('${k4_csv}', index_col=0)
-    
+
     result = pd.concat([df_depth, df_kmer], axis=1)
-    
-    
+
+
     result.to_csv('final_feature_matrix.csv')
     "
 
