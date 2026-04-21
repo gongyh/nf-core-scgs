@@ -2,8 +2,8 @@ process SUMMARIZE_FEATURE_MATRIX {
     tag "summarize_all"
     label 'process_low'
     publishDir "${params.outdir}/feature_matrix", mode: 'copy'
-    conda "bioconda::samtools=1.17 conda-forge::pandas=1.5.3 conda-forge::python=3.11"
-    container "community.wave.seqera.io/library/samtools_pandas:bc6974910398686e"
+    conda "conda-forge::pandas=1.5.3 conda-forge::python=3.11"
+    container "https://depot.galaxyproject.org/singularity/pandas:1.5.3"
     input:
     tuple val(meta), path(fasta)
     path depth

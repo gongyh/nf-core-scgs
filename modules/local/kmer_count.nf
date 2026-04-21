@@ -2,10 +2,9 @@ process KMER_COUNT {
     tag "$meta.id - k$kmer"
     label 'process_low'
     publishDir "${params.outdir}/kmer", mode: 'copy'
-    conda "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/multiqc:1.19--pyhdfd78af_0' :
-        'biocontainers/multiqc:1.19--pyhdfd78af_0' }"
+    conda     = "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81 conda-forge::python=3.11"
+    container = "https://depot.galaxyproject.org/singularity/pandas:1.5.3" 
+
 
 
     input:
