@@ -2,7 +2,7 @@ process KMER_COUNT {
     tag "$meta.id - k$kmer"
     label 'process_low'
     publishDir "${params.outdir}/kmer", mode: 'copy'
-    conda     = "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81 conda-forge::python=3.11"
+    conda "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81"
 
     input:
     tuple val(meta), path(fasta)
