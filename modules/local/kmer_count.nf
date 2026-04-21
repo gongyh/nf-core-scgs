@@ -3,7 +3,6 @@ process KMER_COUNT {
     label 'process_low'
     publishDir "${params.outdir}/kmer", mode: 'copy'
     conda     = "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81 conda-forge::python=3.11"
-    container "quay.io/biocontainers/mulled-v2-d779899fb3559385217430932c1c73ad7c10b777:c941581e7d8da717f90117b960589255a0063c68-0"
 
     input:
     tuple val(meta), path(fasta)
