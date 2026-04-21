@@ -3,7 +3,6 @@ process SAMTOOLS_COVERAGE_COMBINED {
     label 'process_medium'
     publishDir "${params.outdir}/coverage_matrix", mode: 'copy'
     conda "bioconda::samtools=1.17 conda-forge::pandas=1.5.3 conda-forge::python=3.11"
-    container "community.wave.seqera.io/library/samtools_pandas:bc6974910398686e"
 
     input:
     path bams

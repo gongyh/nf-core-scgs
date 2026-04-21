@@ -3,7 +3,6 @@ process SAMTOOLS_FAIDX {
     label 'process_low'
 
     conda "bioconda::samtools=1.17"
-    container "quay.io/biocontainers/samtools:1.17--h2bcbf2f_1"
 
     input:
     tuple val(meta), path(fasta)
