@@ -3,7 +3,10 @@ process KMER_COUNT {
     label 'process_low'
     publishDir "${params.outdir}/kmer", mode: 'copy'
     conda "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81"
-    container "community.wave.seqera.io/library/samtools_pandas:bc6974910398686e"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/multiqc:1.19--pyhdfd78af_0' :
+        'biocontainers/multiqc:1.19--pyhdfd78af_0' }"
+
 
     input:
     tuple val(meta), path(fasta)
