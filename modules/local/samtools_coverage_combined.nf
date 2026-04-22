@@ -2,7 +2,9 @@ process SAMTOOLS_COVERAGE_COMBINED {
     tag "all_samples"
     label 'process_medium'
     conda "bioconda::samtools=1.17 conda-forge::python=3.11"
-    container "community.wave.seqera.io/library/samtools_pandas:bc6974910398686e" 
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/samtools:1.17--h00c71ee_0' :
+        'docker.io/biocontainers/samtools:1.17--h00c71ee_0' }"
     input:
     path bams
     path fasta
