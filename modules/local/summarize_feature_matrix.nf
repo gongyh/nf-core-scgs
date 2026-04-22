@@ -4,6 +4,7 @@ process SUMMARIZE_FEATURE_MATRIX {
     conda "conda-forge::pandas=1.5.3 conda-forge::python=3.11"
     container "community.wave.seqera.io/library/samtools_pandas:bc6974910398686e"
 
+
     input:
     tuple val(meta), path(fasta)
     path depth
@@ -16,22 +17,37 @@ process SUMMARIZE_FEATURE_MATRIX {
 
     script:
     """
-    python -c "
-    import pandas as pd
+    python3 - <<'EOF'
+import csv
+data_depth = {}
+header_depth = []
+with open('${depth}', 'r') as f:
+    reader = csv.reader(f, delimiter='\\t')
+    header_depth = next(reader)
+    for row in reader:
+        if row:
+            data_depth[row[0]] = row[1:]
+data_kmer = {}
+header_kmer = []
+with open('${k4_csv}', 'r') as f:
+    reader = csv.reader(f, delimiter=',')
+    header_kmer = next(reader)
+    for row in reader:
+        if row:
+            data_kmer[row[0]] = row[1:]
 
-    df_depth = pd.read_csv('${depth}', sep='\\t', index_col=0)
+common_ids = sorted(set(data_depth.keys()) & set(data_kmer.keys()))
 
-    df_kmer = pd.read_csv('${k4_csv}', index_col=0)
+with open('final_feature_matrix.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow([header_depth[0]] + header_depth[1:] + header_kmer[1:])
+    for cid in common_ids:
+        writer.writerow([cid] + data_depth[cid] + data_kmer[cid])
+EOF
 
-    result = pd.concat([df_depth, df_kmer], axis=1)
-
-
-    result.to_csv('final_feature_matrix.csv')
-    "
-
-    cat <<EOF > versions.yml
-    "${task.process}":
-        pandas: \$(python -c 'import pandas; print(pandas.__version__)')
-    EOF
+cat <<EOF > versions.yml
+"${task.process}":
+    python: \$(python3 --version | sed 's/Python //')
+EOF
     """
 }

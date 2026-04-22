@@ -19,36 +19,25 @@ process SAMTOOLS_COVERAGE_COMBINED {
         sample_name=\$(basename \${bam_file} .bam)
         samtools coverage --reference ${fasta} -o \${sample_name}.cov \${bam_file}
     done
-        python3 -c "
-import csv
-import glob
-cov_files = glob.glob('*.cov')
-samples = []
-data = {}  # contig_id -> {sample: meandepth}
-for f in cov_files:
-    sample = f.replace('.cov', '')
-    samples.append(sample)
-    with open(f, 'r') as inf:
-        reader = csv.reader(inf, delimiter='\\t')
-        header = next(reader)
-        for row in reader:
-            contig = row[0]
-            meandepth = float(row[6])
-            if contig not in data:
-                data[contig] = {}
-            data[contig][sample] = meandepth
-with open('abundance_matrix.tsv', 'w', newline='') as outf:
-    writer = csv.writer(outf, delimiter='\\t')
-    writer.writerow(['contig_id'] + samples)
-    for contig in sorted(data.keys()):
-        row = [contig] + [str(data[contig].get(s, '0')) for s in samples]
-        writer.writerow(row)
-"
-
+    for cov in *.cov; do
+        sample=\${cov%.cov}
+        awk '!/^#/ {print \$1"\t"\$7}' \$cov | sort -k1,1 > \${sample}.depth
+    done
+    samples=(\$(ls *.depth | sed 's/.depth//'))
+    cut -f1 *.depth | sort -u > all_contigs.tmp
+    for sample in \${samples[*]}; do
+        join -a1 -e0 -o '2.2' -t \$'\t' all_contigs.tmp \${sample}.depth > \${sample}.depth_col
+    done
+    paste all_contigs.tmp \$(for s in \${samples[*]}; do echo \${s}.depth_col; done) > abundance_matrix.tsv
+    header="contig_id"
+    for sample in \${samples[*]}; do
+        header="\${header}\t\${sample}"
+    done
+    (echo -e "\${header}" && cat abundance_matrix.tsv) > abundance_matrix.tsv.tmp && mv abundance_matrix.tsv.tmp abundance_matrix.tsv
+    rm -f *.depth *.depth_col all_contigs.tmp
     cat <<EOF > versions.yml
     "${task.process}":
         samtools: \$(samtools version | sed '1!d;s/.* //')
-        python: \$(python3 --version | sed 's/Python //')
     EOF
     """
 }
