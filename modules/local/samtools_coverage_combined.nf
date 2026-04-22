@@ -1,8 +1,10 @@
 process SAMTOOLS_COVERAGE_COMBINED {
     tag "all_samples"
     label 'process_medium'
-    conda "bioconda::samtools=1.17 conda-forge::python=3.11"
-    container "community.wave.seqera.io/library/samtools:1.17--0ea63ba5ba16ccb9"
+    conda "bioconda::samtools=1.17"
+    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/8c/8c5d2818c8b9f58e1fba77ce219fdaf32087ae53e857c4a496402978af26e78c/data'
+        : 'community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5'}"
     input:
     path bams
     path fasta
