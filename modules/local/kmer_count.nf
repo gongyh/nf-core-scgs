@@ -1,10 +1,8 @@
 process KMER_COUNT {
     tag "$meta.id - k$kmer"
     label 'process_low'
-    conda "conda-forge::pandas=1.5.3 conda-forge::biopython=1.81 conda-forge::python=3.11"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/python-pandas-biopython:1.0' :
-        'evolbioinfo/python-pandas-biopython:1.0' }"
+    conda "conda-forge::opentsne=1.0.0 conda-forge::h5py=3.9.0 conda-forge::numpy=1.25.0 conda-forge::pandas=2.0.2 bioconda::kpal=2.1.1 bioconda::perl-bioperl=1.7.8"
+    container "scgs/mulled-v2-8905087433117c98a93e379c07447431e85bdd71:5402918794aa21f8f7e4b46973655d86142c9ffb-0"
 
     input:
     tuple val(meta), path(fasta)
@@ -16,56 +14,46 @@ process KMER_COUNT {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def k = kmer
     """
-    python - <<EOF
+    python3 - <<EOF
     import pandas as pd
     from Bio import SeqIO
+    import kpal.klib as klib
     from itertools import product
-    import collections
+    import numpy as np
     import sys
 
-    def get_kmers(k):
-        return [''.join(p) for p in product('ACGT', repeat=k)]
-
-    def count_kmers(fasta_file, k):
-        kmers = get_kmers(k)
+    def run_kpal_matrix(infile, k, outfile):
+        kmers = [''.join(p) for p in product('ACGT', repeat=k)]
         results = []
-
-        for record in SeqIO.parse(fasta_file, "fasta"):
-            name = record.id
-            sequence = str(record.seq).upper()
-
-            counts = collections.Counter()
-            for i in range(len(sequence) - k + 1):
-                kmer_seq = sequence[i:i+k]
-                if 'N' not in kmer_seq and len(kmer_seq) == k:
-                    counts[kmer_seq] += 1
-
-            total = sum(counts.values()) if sum(counts.values()) > 0 else 1
-            row = {'contig_id': name}
-            for k_str in kmers:
-                row[k_str] = counts[k_str] / total
-            results.append(row)
-
-        if not results:
-            df = pd.DataFrame(columns=['contig_id'] + kmers)
+        contig_ids = []
+        for record in SeqIO.parse(infile, "fasta"):
+            seq = str(record.seq).upper()
+            if len(seq) < k:
+                continue
+            try:
+                counts = klib.count(seq, k)
+                total = counts.sum()
+                freqs = counts / total if total > 0 else counts
+                results.append(freqs)
+                contig_ids.append(record.id)
+            except Exception as e:
+                print(f"Warning: Could not process {record.id}: {e}", file=sys.stderr)
+        if results:
+            df = pd.DataFrame(results, columns=kmers)
+            df.insert(0, 'contig_id', contig_ids)
+            df.to_csv(outfile, index=False)
         else:
-            df = pd.DataFrame(results)
+            pd.DataFrame(columns=['contig_id'] + kmers).to_csv(outfile, index=False)
 
-        df.to_csv('${prefix}_k${kmer}.csv', index=False)
-
-    try:
-        count_kmers('$fasta', int('$kmer'))
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
+    run_kpal_matrix("${fasta}", int("${k}"), "${prefix}_k${k}.csv")
     EOF
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(python --version | sed 's/Python //')
-        pandas: \$(python -c "import pandas; print(pandas.__version__)")
-        biopython: \$(python -c "import Bio; print(Bio.__version__)")
+        python: \$(python3 --version | sed 's/Python //')
+        kpal: \$(kpal --version 2>&1 | sed 's/kpal //')
     END_VERSIONS
     """
 }
