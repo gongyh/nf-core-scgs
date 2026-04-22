@@ -1,8 +1,10 @@
 process SUMMARIZE_FEATURE_MATRIX {
     tag "summarize_all"
     label 'process_low'
-    conda "conda-forge::pandas=1.5.3 conda-forge::python=3.11"
-    container "community.wave.seqera.io/library/samtools_pandas:bc6974910398686e"
+    conda "bioconda::hamronization=1.1.9"
+    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+        ? 'https://depot.galaxyproject.org/singularity/hamronization:1.1.9--pyhdfd78af_0'
+        : 'biocontainers/hamronization:1.1.9--pyhdfd78af_0'}"
 
 
     input:
