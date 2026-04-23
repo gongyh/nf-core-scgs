@@ -1,10 +1,10 @@
 process MULTIQC {
     label 'process_single'
 
-    conda "bioconda::multiqc=1.14 conda-forge::setuptools=68.0.0"
+    conda "bioconda::multiqc=1.14 "
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/multiqc:1.14--pyhdfd78af_0' :
-        'biocontainers/multiqc:1.14--pyhdfd78af_0' }"
+        'https://wave.seqera.io/view/builds/bd-6b47f2de291d4ad2_1' :
+        'community.wave.seqera.io/library/multiqc_setuptools:6b47f2de291d4ad2' }"
 
     input:
     path  multiqc_files, stageAs: "?/*"
