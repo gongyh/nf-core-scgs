@@ -170,6 +170,8 @@ include { MERGE_CORRECTED                   } from '../modules/local/merge_corre
 include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
 include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_remap'
 include { REMAP                             } from '../modules/local/remap'
+include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
+include { PREPARE_FEATURES                  } from '../subworkflows/local/prepare_features'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -236,7 +238,12 @@ workflow MINIMETA {
     }
     REMAP(remap_input, params.allow_multi_align)
     ch_versions = ch_versions.mix(REMAP.out.versions)
-    bam_files = REMAP.out.bam
+    //PREPARE_FEATURES
+    ch_fasta = SPADES_JOINT.out.contig
+    SAMTOOLS_FAIDX ( ch_fasta )
+    ch_fai = SAMTOOLS_FAIDX.out.fai.map { [ [id:'merged'], it ] }
+    PREPARE_FEATURES ( ch_fasta, ch_fai, REMAP.out.bam )
+    ch_feature_matrix = PREPARE_FEATURES.out.feature_matrix
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
@@ -288,3 +295,4 @@ def nfcoreHeader(){
     ${c_dim}----------------------------------------------------${c_reset}
     """.stripIndent()
 }
+
