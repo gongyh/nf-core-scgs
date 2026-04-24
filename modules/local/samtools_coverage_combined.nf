@@ -67,4 +67,4 @@ process MERGE_COVERAGE {
         merge: bash \$(bash --version | head -1)
     END_VERSIONS
     """
-}   
+}
