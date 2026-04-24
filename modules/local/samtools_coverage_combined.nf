@@ -1,30 +1,54 @@
-process SAMTOOLS_COVERAGE_COMBINED {
-    tag "all_samples"
-    label 'process_medium'
+process CONTIG_COVERAGE {
+    tag "${meta.id}"
+    label 'process_low'
+
     conda "bioconda::samtools=1.17"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/8c/8c5d2818c8b9f58e1fba77ce219fdaf32087ae53e857c4a496402978af26e78c/data'
         : 'community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5'}"
+
     input:
-    path bams
+    tuple val(meta), path(bam), path(bai)
     path fasta
     path fai
+
     output:
-    path "abundance_matrix.tsv", emit: matrix
-    path "versions.yml"        , emit: versions
+    tuple val(meta), path("${meta.id}.depth"), emit: depth
+    path "versions.yml", emit: versions
 
     script:
     """
-    for bam_file in ${bams}; do
-        sample_name=\$(basename "\${bam_file}" .bam)
-        if [ ! -f "\${bam_file}.bai" ]; then
-            samtools index "\${bam_file}"
-        fi
-        samtools coverage --reference "${fasta}" -o "\${sample_name}.cov" "\${bam_file}"
-        awk '!/^#/ {print \$1"\t"\$7}' "\${sample_name}.cov" | sort -k1,1 > "\${sample_name}.depth"
-        rm "\${sample_name}.cov"
-    done
+    if [ ! -f "${bam}.bai" ]; then
+        samtools index "${bam}"
+    fi
+    samtools coverage --reference "${fasta}" -o "${meta.id}.cov" "${bam}"
+    awk '!/^#/ {print \$1"\t"\$7}' "${meta.id}.cov" | sort -k1,1 > "${meta.id}.depth"
+    rm "${meta.id}.cov"
 
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
+    END_VERSIONS
+    """
+}
+
+process MERGE_COVERAGE {
+    tag "merge_all"
+    label 'process_low'
+
+    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/8c/8c5d2818c8b9f58e1fba77ce219fdaf32087ae53e857c4a496402978af26e78c/data'
+        : 'community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5'}"
+
+    input:
+    path depth_files
+
+    output:
+    path "abundance_matrix.tsv", emit: matrix
+    path "versions.yml", emit: versions
+
+    script:
+    """
     samples=(\$(ls *.depth | sed 's/.depth//'))
     cut -f1 *.depth | sort -u > all_contigs.tmp
     for sample in \${samples[*]}; do
@@ -40,7 +64,7 @@ process SAMTOOLS_COVERAGE_COMBINED {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
+        merge: bash \$(bash --version | head -1)
     END_VERSIONS
     """
-}
+}   
