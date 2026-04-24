@@ -14,30 +14,35 @@ process SAMTOOLS_COVERAGE_COMBINED {
     path "versions.yml"        , emit: versions
 
     script:
+    def pandepth_bin = "${projectDir}/bin/pandepth"
+    def threads = task.cpus ?: 1
     """
     for bam_file in ${bams}; do
-        sample_name=\$(basename \${bam_file} .bam)
-        samtools coverage --reference ${fasta} -o \${sample_name}.cov \${bam_file}
+        sample_name=\$(basename "\${bam_file}" .bam)
+        if [ ! -f "\${bam_file}.bai" ]; then
+            samtools index "\${bam_file}"
+        fi
+        ${pandepth_bin} -i "\${bam_file}" -t ${threads} -r "${fasta}" -o "\$sample_name"
+        zcat "\$sample_name.chr.stat.gz" 2>/dev/null | awk 'NR>1 {print \$1"\\t"\$5}' | sort -k1,1 > "\$sample_name.depth"
+        rm -f "\$sample_name.chr.stat.gz"
     done
-    for cov in *.cov; do
-        sample=\${cov%.cov}
-        awk '!/^#/ {print \$1"\t"\$7}' \$cov | sort -k1,1 > \${sample}.depth
-    done
+
     samples=(\$(ls *.depth | sed 's/.depth//'))
     cut -f1 *.depth | sort -u > all_contigs.tmp
     for sample in \${samples[*]}; do
-        join -a1 -e0 -o '2.2' -t \$'\t' all_contigs.tmp \${sample}.depth > \${sample}.depth_col
+        join -a1 -e0 -o '2.2' -t \$'\t' all_contigs.tmp "\${sample}.depth" > "\${sample}.depth_col"
     done
-    paste all_contigs.tmp \$(for s in \${samples[*]}; do echo \${s}.depth_col; done) > abundance_matrix.tsv
+    paste all_contigs.tmp \$(for s in \${samples[*]}; do echo "\${s}.depth_col"; done) > abundance_matrix.tsv
     header="contig_id"
     for sample in \${samples[*]}; do
         header="\${header}\t\${sample}"
     done
     (echo -e "\${header}" && cat abundance_matrix.tsv) > abundance_matrix.tsv.tmp && mv abundance_matrix.tsv.tmp abundance_matrix.tsv
     rm -f *.depth *.depth_col all_contigs.tmp
-    cat <<EOF > versions.yml
+
+    cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        samtools: \$(samtools version | sed '1!d;s/.* //')
-    EOF
+        pandepth: \$(${pandepth_bin} -h 2>&1 | head -1)
+    END_VERSIONS
     """
 }
