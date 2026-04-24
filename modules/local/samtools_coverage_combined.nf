@@ -14,17 +14,15 @@ process SAMTOOLS_COVERAGE_COMBINED {
     path "versions.yml"        , emit: versions
 
     script:
-    def pandepth_bin = "${projectDir}/bin/pandepth"
-    def threads = task.cpus ?: 1
     """
     for bam_file in ${bams}; do
         sample_name=\$(basename "\${bam_file}" .bam)
         if [ ! -f "\${bam_file}.bai" ]; then
             samtools index "\${bam_file}"
         fi
-        ${pandepth_bin} -i "\${bam_file}" -t ${threads} -r "${fasta}" -o "\$sample_name"
-        zcat "\$sample_name.chr.stat.gz" 2>/dev/null | awk 'NR>1 {print \$1"\\t"\$5}' | sort -k1,1 > "\$sample_name.depth"
-        rm -f "\$sample_name.chr.stat.gz"
+        samtools coverage --reference "${fasta}" -o "\${sample_name}.cov" "\${bam_file}"
+        awk '!/^#/ {print \$1"\t"\$7}' "\${sample_name}.cov" | sort -k1,1 > "\${sample_name}.depth"
+        rm "\${sample_name}.cov"
     done
 
     samples=(\$(ls *.depth | sed 's/.depth//'))
@@ -42,7 +40,7 @@ process SAMTOOLS_COVERAGE_COMBINED {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        pandepth: \$(${pandepth_bin} -h 2>&1 | head -1)
+        samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
     END_VERSIONS
     """
 }
