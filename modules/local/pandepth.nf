@@ -1,6 +1,6 @@
 process CONTIG_COVERAGE {
     tag "${meta.id}"
-    label 'process_low'
+    label 'process_medium'
 
     conda "bioconda::samtools=1.17"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
@@ -17,17 +17,19 @@ process CONTIG_COVERAGE {
     path "versions.yml", emit: versions
 
     script:
+    def pandepth_bin = "${projectDir}/bin/pandepth"
+    def threads = task.cpus ?: 1
     """
     if [ ! -f "${bam}.bai" ]; then
         samtools index "${bam}"
     fi
-    samtools coverage --reference "${fasta}" -o "${meta.id}.cov" "${bam}"
-    awk '!/^#/ {print \$1"\t"\$7}' "${meta.id}.cov" | sort -k1,1 > "${meta.id}.depth"
-    rm "${meta.id}.cov"
+    ${pandepth_bin} -i "${bam}" -t ${threads} -r "${fasta}" -o "${meta.id}"
+    zcat "${meta.id}.chr.stat.gz" 2>/dev/null | awk 'NR>1 {print \$1"\\t"\$5}' | sort -k1,1 > "${meta.id}.depth"
+    rm -f "${meta.id}.chr.stat.gz"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
+        pandepth: \$(${pandepth_bin} -h 2>&1 | head -1)
     END_VERSIONS
     """
 }
@@ -36,9 +38,8 @@ process MERGE_COVERAGE {
     tag "merge_all"
     label 'process_low'
 
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/8c/8c5d2818c8b9f58e1fba77ce219fdaf32087ae53e857c4a496402978af26e78c/data'
-        : 'community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5'}"
+    conda "bioconda::samtools=1.17"
+    container "community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5"
 
     input:
     path depth_files
