@@ -27,11 +27,11 @@ workflow PREPARE_FEATURES {
     ch_bams_with_bai = ch_bams.map { meta, bam -> [meta, bam, []] }
     ch_depth = CONTIG_COVERAGE( ch_bams_with_bai, ch_fasta_file, ch_fai_file ).depth
     ch_all_depth = ch_depth.map { meta, depth -> depth }.collect()
-    
+
     MERGE_COVERAGE( ch_all_depth )
     ch_versions = ch_versions.mix(MERGE_COVERAGE.out.versions)
     */
-    //samtools 
+    //samtools
     all_bams = ch_bams.map { it[1] }.collect()
     fasta = ch_fasta.map { meta, fasta_file -> fasta_file }.first()
     fai = ch_fai
