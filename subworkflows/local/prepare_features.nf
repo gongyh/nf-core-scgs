@@ -1,5 +1,5 @@
-include { PANDEPTH_COVERAGE          } from '../../modules/local/pandepth_coverage'
-include { PANDEPTH_MERGE             } from '../../modules/local/pandepth_merge'
+//include { CONTIG_COVERAGE ;MERGE_COVERAGE } from '../../modules/local/pandepth'
+include { SAMTOOLS_COVERAGE_COMBINED } from '../../modules/local/samtools_coverage_combined'
 include { PRODIGAL                   } from '../../modules/local/prodigal'
 include { KMER_COUNT                 } from '../../modules/local/kmer_count'
 include { SUMMARIZE_FEATURE_MATRIX   } from '../../modules/local/summarize_feature_matrix'
@@ -12,7 +12,8 @@ workflow PREPARE_FEATURES {
 
     main:
     ch_versions = Channel.empty()
-
+    /*
+    //PANDEPTH_MERGE
     ch_fasta_file = ch_fasta
         .map { it -> it instanceof List ? it : [it] }
         .flatten()
@@ -24,11 +25,22 @@ workflow PREPARE_FEATURES {
         .filter { it.toString().endsWith('.fai') }
         .first()
     ch_bams_with_bai = ch_bams.map { meta, bam -> [meta, bam, []] }
-    ch_depth = PANDEPTH_COVERAGE( ch_bams_with_bai, ch_fasta_file, ch_fai_file ).depth
+    ch_depth = CONTIG_COVERAGE( ch_bams_with_bai, ch_fasta_file, ch_fai_file ).depth
     ch_all_depth = ch_depth.map { meta, depth -> depth }.collect()
-    //PANDEPTH_MERGE
-    PANDEPTH_MERGE( ch_all_depth )
-    ch_versions = ch_versions.mix(PANDEPTH_MERGE.out.versions)
+    
+    MERGE_COVERAGE( ch_all_depth )
+    ch_versions = ch_versions.mix(MERGE_COVERAGE.out.versions)
+    */
+    //samtools 
+    all_bams = ch_bams.map { it[1] }.collect()
+    fasta = ch_fasta.map { meta, fasta_file -> fasta_file }.first()
+    fai = ch_fai
+        .map { it instanceof List ? it.flatten() : [it] }
+        .flatten()
+        .filter { it.toString().endsWith('.fai') }
+        .first()
+    SAMTOOLS_COVERAGE_COMBINED( all_bams, fasta, fai )
+    ch_versions = ch_versions.mix(SAMTOOLS_COVERAGE_COMBINED.out.versions)
     // PRODIGAL
     PRODIGAL ( ch_fasta )
     ch_versions = ch_versions.mix(PRODIGAL.out.versions)
@@ -40,7 +52,7 @@ workflow PREPARE_FEATURES {
     // Coverage + Kmer + Genes
     SUMMARIZE_FEATURE_MATRIX (
         ch_fasta,
-        PANDEPTH_MERGE.out.matrix,
+        SAMTOOLS_COVERAGE_COMBINED.out.matrix,
         KMER_COUNT.out.csv,
         PRODIGAL.out.gff
     )
