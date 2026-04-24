@@ -1,32 +1,20 @@
-process SAMTOOLS_COVERAGE_COMBINED {
-    tag "all_samples"
-    label 'process_medium'
+process PANDEPTH_MERGE {
+    tag "merge_all"
+    label 'process_low'
+
     conda "bioconda::samtools=1.17"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/8c/8c5d2818c8b9f58e1fba77ce219fdaf32087ae53e857c4a496402978af26e78c/data'
         : 'community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5'}"
+
     input:
-    path bams
-    path fasta
-    path fai
+    path depth_files
     output:
     path "abundance_matrix.tsv", emit: matrix
     path "versions.yml"        , emit: versions
 
     script:
-    def pandepth_bin = "${projectDir}/bin/pandepth"
-    def threads = task.cpus ?: 1
     """
-    for bam_file in ${bams}; do
-        sample_name=\$(basename "\${bam_file}" .bam)
-        if [ ! -f "\${bam_file}.bai" ]; then
-            samtools index "\${bam_file}"
-        fi
-        ${pandepth_bin} -i "\${bam_file}" -t ${threads} -r "${fasta}" -o "\$sample_name"
-        zcat "\$sample_name.chr.stat.gz" 2>/dev/null | awk 'NR>1 {print \$1"\\t"\$5}' | sort -k1,1 > "\$sample_name.depth"
-        rm -f "\$sample_name.chr.stat.gz"
-    done
-
     samples=(\$(ls *.depth | sed 's/.depth//'))
     cut -f1 *.depth | sort -u > all_contigs.tmp
     for sample in \${samples[*]}; do
@@ -42,7 +30,7 @@ process SAMTOOLS_COVERAGE_COMBINED {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        pandepth: \$(${pandepth_bin} -h 2>&1 | head -1)
+        merge: bash \$(bash --version | head -1)
     END_VERSIONS
     """
 }
