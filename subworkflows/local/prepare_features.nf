@@ -1,5 +1,5 @@
-include { CONTIG_COVERAGE ;MERGE_COVERAGE } from '../../modules/local/pandepth'
-//include { CONTIG_COVERAGE ;MERGE_COVERAGE } from '../../modules/local/samtools_coverage_combined'
+//include { CONTIG_COVERAGE ;MERGE_COVERAGE } from '../../modules/local/pandepth'
+include { CONTIG_COVERAGE ;MERGE_COVERAGE } from '../../modules/local/samtools_coverage_combined'
 include { PRODIGAL                   } from '../../modules/local/prodigal'
 include { KMER_COUNT                 } from '../../modules/local/kmer_count'
 include { SUMMARIZE_FEATURE_MATRIX   } from '../../modules/local/summarize_feature_matrix'
@@ -12,6 +12,7 @@ workflow PREPARE_FEATURES {
 
     main:
     ch_versions = Channel.empty()
+    /*
     //PANDEPTH_MERGE
     ch_fasta_file = ch_fasta
         .map { it -> it instanceof List ? it : [it] }
@@ -29,7 +30,7 @@ workflow PREPARE_FEATURES {
 
     MERGE_COVERAGE( ch_all_depth )
     ch_versions = ch_versions.mix(MERGE_COVERAGE.out.versions)
-    /*
+    */
     //samtools
     ch_fasta_file = ch_fasta
         .map { it -> it instanceof List ? it : [it] }
@@ -50,7 +51,6 @@ workflow PREPARE_FEATURES {
 
     MERGE_COVERAGE( ch_all_depth )
     ch_versions = ch_versions.mix(MERGE_COVERAGE.out.versions)
-    */
     // PRODIGAL
     PRODIGAL ( ch_fasta )
     ch_versions = ch_versions.mix(PRODIGAL.out.versions)
