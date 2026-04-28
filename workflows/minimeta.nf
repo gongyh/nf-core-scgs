@@ -247,7 +247,7 @@ workflow MINIMETA {
     ch_fai = SAMTOOLS_FAIDX.out.fai.map { [ [id:'merged'], it ] }
     PREPARE_FEATURES ( ch_fasta, ch_fai, REMAP.out.bam )
     ch_feature_matrix = PREPARE_FEATURES.out.feature_matrix
-    ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix 
+    ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix
     /*
     // binning
     ch_coverage = PREPARE_FEATURES.out.coverage_matrix
@@ -261,8 +261,8 @@ workflow MINIMETA {
     def fasta_ch = SPADES_JOINT.out.contig.map { it[1] }
 
     MAXBIN2(
-        meta_ch.combine(fasta_ch).combine(abund_list_ch).map { triple -> 
-            [triple[0], triple[1], [], triple[2]] 
+        meta_ch.combine(fasta_ch).combine(abund_list_ch).map { triple ->
+            [triple[0], triple[1], [], triple[2]]
         }
     )
     // GET_SOFTWARE_VERSIONS
