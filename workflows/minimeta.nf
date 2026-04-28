@@ -172,6 +172,9 @@ include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_rem
 include { REMAP                             } from '../modules/local/remap'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
 include { PREPARE_FEATURES                  } from '../subworkflows/local/prepare_features'
+//include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
+include { SPLIT_ABUNDANCE                   } from '../modules/local/split_abundance'
+include { MAXBIN2                           } from '../modules/local/maxbin2'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -244,6 +247,24 @@ workflow MINIMETA {
     ch_fai = SAMTOOLS_FAIDX.out.fai.map { [ [id:'merged'], it ] }
     PREPARE_FEATURES ( ch_fasta, ch_fai, REMAP.out.bam )
     ch_feature_matrix = PREPARE_FEATURES.out.feature_matrix
+    ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix 
+    /*
+    // binning
+    ch_coverage = PREPARE_FEATURES.out.coverage_matrix
+    COOCCURRENCE_BINNING( ch_coverage )
+    ch_clusters = COOCCURRENCE_BINNING.out.clusters
+    ch_versions = ch_versions.mix(COOCCURRENCE_BINNING.out.versions)
+    */
+    SPLIT_ABUNDANCE( PREPARE_FEATURES.out.coverage_matrix )
+    def abund_list_ch = SPLIT_ABUNDANCE.out.abund_files.collect()
+    def meta_ch = SPADES_JOINT.out.contig.map { it[0] }
+    def fasta_ch = SPADES_JOINT.out.contig.map { it[1] }
+
+    MAXBIN2(
+        meta_ch.combine(fasta_ch).combine(abund_list_ch).map { triple -> 
+            [triple[0], triple[1], [], triple[2]] 
+        }
+    )
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
