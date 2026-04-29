@@ -14,10 +14,9 @@ process COOCCURRENCE_BINNING {
 
     script:
     def script_path = "${projectDir}/bin/cooccurrence_binning.py"
-    def eps = task.ext.eps ?: 0.05
-    def min_samples = task.ext.min_samples ?: 2
+    def args = task.ext.args ?: ''
     """
-    python ${script_path} ${coverage_tsv} clusters.tsv --eps ${eps} --min_samples ${min_samples}
+    python ${script_path} ${coverage_tsv} clusters.tsv ${args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
