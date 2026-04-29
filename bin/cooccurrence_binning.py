@@ -75,7 +75,8 @@ def main():
     cluster_df = pd.DataFrame(bin_map.items(), columns=['contig', 'bin'])
     cluster_df.to_csv(args.output_file, sep='\t', index=False)
 
-    n_bins = len(set(bin_map.values())) - 1 
+
+    n_bins = len(set(bin_map.values())) - 1
     print(f"Number of bins: {n_bins}", file=sys.stderr)
 
 if __name__ == "__main__":
