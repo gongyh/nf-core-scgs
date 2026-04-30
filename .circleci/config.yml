@@ -14,12 +14,11 @@ jobs:
           name: install nextflow
           command: |
             curl -s https://get.nextflow.io | bash
-            #curl -L -o nextflow https://github.com/nextflow-io/nextflow/releases/download/v22.10.8/nextflow-22.10.8-all && chmod +x nextflow
       - run:
           name: test
           command: |
             mkdir -p test && cd test
-            ../nextflow run .. -profile test_denovo,docker
+            NXF_SYNTAX_PARSER=v1 ../nextflow run .. -profile test_denovo,docker
           no_output_timeout: 30m
       - store_artifacts:
           path: test/results/pipeline_info
@@ -48,7 +47,7 @@ jobs:
           name: test minimeta workflow
           command: |
             mkdir -p test_minimeta && cd test_minimeta
-            ../nextflow run .. -profile test_minimeta,docker
+            NXF_SYNTAX_PARSER=v1 ../nextflow run .. -profile test_minimeta,docker
           no_output_timeout: 30m
       - store_artifacts:
           path: test_minimeta/results/pipeline_info
