@@ -8,5 +8,6 @@ lint:
     - custom_config
   actions_awsfulltest: false
   actions_ci: false
+  actions_lint: false
   local_component_structure: false
   included_configs: false
