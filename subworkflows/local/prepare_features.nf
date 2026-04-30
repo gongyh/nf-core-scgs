@@ -69,5 +69,6 @@ workflow PREPARE_FEATURES {
 
     emit:
     feature_matrix = SUMMARIZE_FEATURE_MATRIX.out.matrix
+    coverage_matrix   = MERGE_COVERAGE.out.matrix
     versions       = ch_versions
 }
