@@ -172,6 +172,7 @@ include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_rem
 include { REMAP                             } from '../modules/local/remap'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
 include { PREPARE_FEATURES                  } from '../subworkflows/local/prepare_features'
+include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -244,6 +245,12 @@ workflow MINIMETA {
     ch_fai = SAMTOOLS_FAIDX.out.fai.map { [ [id:'merged'], it ] }
     PREPARE_FEATURES ( ch_fasta, ch_fai, REMAP.out.bam )
     ch_feature_matrix = PREPARE_FEATURES.out.feature_matrix
+    ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix
+    // binning
+    ch_coverage = PREPARE_FEATURES.out.coverage_matrix
+    COOCCURRENCE_BINNING( ch_coverage )
+    ch_clusters = COOCCURRENCE_BINNING.out.clusters
+    ch_versions = ch_versions.mix(COOCCURRENCE_BINNING.out.versions)
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
