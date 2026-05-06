@@ -26,6 +26,7 @@ $ curl -s https://get.nextflow.io | bash
 ## Get the pipeline
 $ git clone -b v2.0.2 https://github.com/gongyh/nf-core-scgs.git
 ## Test
+$ export NXF_SYNTAX_PARSER=v1 # for Nextflow >= 26.04.0
 $ ./nextflow run nf-core-scgs -profile test_local,docker
 or $ ./nextflow run nf-core-scgs -profile test_local,podman
 or $ APPTAINER_DISABLE_CACHE=true ./nextflow run nf-core-scgs -profile test_local,apptainer
