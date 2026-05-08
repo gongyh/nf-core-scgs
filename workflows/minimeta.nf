@@ -173,6 +173,8 @@ include { REMAP                             } from '../modules/local/remap'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
 include { PREPARE_FEATURES                  } from '../subworkflows/local/prepare_features'
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
+include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
+include { CHECKM2                           } from '../modules/local/checkm2'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -183,7 +185,7 @@ workflow MINIMETA {
     main:
     display_header()
     ch_versions = Channel.empty()
-
+    ch_multiqc_files = Channel.empty()
     // FASTQC
     ch_multiqc_fastqc = Channel.empty()
     FASTQC ( read_files_fastqc )
@@ -251,6 +253,14 @@ workflow MINIMETA {
     COOCCURRENCE_BINNING( ch_coverage )
     ch_clusters = COOCCURRENCE_BINNING.out.clusters
     ch_versions = ch_versions.mix(COOCCURRENCE_BINNING.out.versions)
+    //CHECKM2
+    ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
+    EXTRACT_BINS( ch_clusters, ch_assembly )
+    ch_bins_dir = EXTRACT_BINS.out.bins
+    ch_checkm2_db = file("/mnt/scgs/share/databases/CheckM2_database/uniref100.KO.1.dmnd")
+    CHECKM2( ch_bins_dir, ch_checkm2_db )
+    ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
+    ch_versions = ch_versions.mix(CHECKM2.out.versions)
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (

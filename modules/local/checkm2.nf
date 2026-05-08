@@ -7,11 +7,10 @@ process CHECKM2 {
         'biocontainers/checkm2:1.0.1--pyh7cba7a3_0' }"
 
     input:
-    path('spades/*')
+    path bins_dir
     path db
-
     output:
-    path('spades_checkM2.txt'), emit: txt
+    path('checkm2_results.txt'), emit: txt
     path('CheckM2_mqc.tsv')   , emit: mqc_tsv
     path "versions.yml"       , emit: versions
 
@@ -20,12 +19,17 @@ process CHECKM2 {
 
     script:
     """
-    checkm2 predict --threads ${task.cpus} -x fasta --input spades --output-directory checkm2 --database_path $db
-    cp checkm2/quality_report.tsv spades_checkM2.txt
+    checkm2 predict --threads ${task.cpus} \\
+        -x fa \\
+        --input ${bins_dir} \\
+        --output-directory checkm2 \\
+        --database_path ${db}
 
-    echo \"# plot_type: 'table'\" > CheckM2_mqc.tsv
-    echo \"# section_name: 'CheckM2'\" >> CheckM2_mqc.tsv
-    cat spades_checkM2.txt >> CheckM2_mqc.tsv
+    cp checkm2/quality_report.tsv checkm2_results.txt
+
+    echo "# plot_type: 'table'" > CheckM2_mqc.tsv
+    echo "# section_name: 'CheckM2'" >> CheckM2_mqc.tsv
+    cat checkm2_results.txt >> CheckM2_mqc.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
