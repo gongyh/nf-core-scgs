@@ -41,7 +41,6 @@ def helpMessage() {
 params.single_end = false
 params.notrim = false
 params.saveTrimmed = false
-
 custom_runName = workflow.runName
 single_end = params.single_end
 
@@ -257,10 +256,15 @@ workflow MINIMETA {
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     EXTRACT_BINS( ch_clusters, ch_assembly )
     ch_bins_dir = EXTRACT_BINS.out.bins
-    ch_checkm2_db = file("/mnt/scgs/share/databases/CheckM2_database/uniref100.KO.1.dmnd")
-    CHECKM2( ch_bins_dir, ch_checkm2_db )
-    ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
-    ch_versions = ch_versions.mix(CHECKM2.out.versions)
+
+    def default_db = "/mnt/scgs/share/databases/CheckM2_database/uniref100.KO.1.dmnd"
+    def db_path = params.checkm2_db ?: default_db
+    if (file(db_path).exists()) {
+        ch_checkm2_db = file(db_path)
+        CHECKM2( ch_bins_dir, ch_checkm2_db )
+        ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
+        ch_versions = ch_versions.mix(CHECKM2.out.versions)
+    }
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (

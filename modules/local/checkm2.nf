@@ -24,7 +24,6 @@ process CHECKM2 {
         --input ${bins_dir} \\
         --output-directory checkm2 \\
         --database_path ${db}
-
     cp checkm2/quality_report.tsv checkm2_results.txt
 
     echo "# plot_type: 'table'" > CheckM2_mqc.tsv
