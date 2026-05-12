@@ -258,11 +258,13 @@ workflow MINIMETA {
     ch_bins_dir = EXTRACT_BINS.out.bins
 
     def default_db = "/mnt/scgs/share/databases/CheckM2_database/uniref100.KO.1.dmnd"
-    def db_path = (params.checkm2_db ?: default_db).toString().trim()
-    ch_checkm2_db = file(db_path, checkExists: true)
-    CHECKM2(ch_bins_dir, ch_checkm2_db)
-    ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
-    ch_versions = ch_versions.mix(CHECKM2.out.versions)
+    def db_path = params.checkm2_db ?: default_db
+    if (file(db_path).exists()) {
+        ch_checkm2_db = file(db_path)
+        CHECKM2( ch_bins_dir, ch_checkm2_db )
+        ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
+        ch_versions = ch_versions.mix(CHECKM2.out.versions)
+    }
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
