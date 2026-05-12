@@ -257,13 +257,18 @@ workflow MINIMETA {
     EXTRACT_BINS( ch_clusters, ch_assembly )
     ch_bins_dir = EXTRACT_BINS.out.bins
 
-    def default_db = "/mnt/scgs/share/databases/CheckM2_database/uniref100.KO.1.dmnd"
-    def db_path = params.checkm2_db ?: default_db
-    if (file(db_path).exists()) {
-        ch_checkm2_db = file(db_path)
-        CHECKM2( ch_bins_dir, ch_checkm2_db )
-        ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
-        ch_versions = ch_versions.mix(CHECKM2.out.versions)
+    if (params.checkm2_db) {
+        def db_file = file(params.checkm2_db)
+        if (db_file.exists()) {
+            ch_checkm2_db = db_file
+            CHECKM2(ch_bins_dir, ch_checkm2_db)
+            ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
+            ch_versions = ch_versions.mix(CHECKM2.out.versions)
+        } else {
+            error "CheckM2 database provided but file not found: ${params.checkm2_db}"
+        }
+    } else {
+        log.info "CheckM2 skipped: no database provided (use --checkm2_db to enable)"
     }
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
