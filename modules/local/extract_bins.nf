@@ -1,7 +1,6 @@
 process EXTRACT_BINS {
     tag "extract_bins"
     label 'process_low'
-    publishDir "${params.outdir}/extracted_bins", mode: 'copy'
 
     conda "bioconda::seqtk=1.3"
     container "community.wave.seqera.io/library/seqtk:r93--b54ec2a2e8839010"
