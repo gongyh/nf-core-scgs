@@ -41,7 +41,6 @@ def helpMessage() {
 params.single_end = false
 params.notrim = false
 params.saveTrimmed = false
-
 custom_runName = workflow.runName
 single_end = params.single_end
 
@@ -49,6 +48,14 @@ if(workflow.profile == 'awsbatch') {
     if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
     if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
     if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
+}
+// Configure Checkm2 database
+checkm2_db = false
+if (params.checkm2_db) {
+    checkm2_db  = file(params.checkm2_db)
+    if ( !checkm2_db.exists() ) exit 1, "CheckM2 database not found: ${params.checkm2_db}"
+} else {
+    checkm2_db = file("/dev/null")
 }
 
 // Stage config files
@@ -173,6 +180,8 @@ include { REMAP                             } from '../modules/local/remap'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
 include { PREPARE_FEATURES                  } from '../subworkflows/local/prepare_features'
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
+include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
+include { CHECKM2                           } from '../modules/local/checkm2'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -183,7 +192,7 @@ workflow MINIMETA {
     main:
     display_header()
     ch_versions = Channel.empty()
-
+    ch_multiqc_files = Channel.empty()
     // FASTQC
     ch_multiqc_fastqc = Channel.empty()
     FASTQC ( read_files_fastqc )
@@ -251,6 +260,14 @@ workflow MINIMETA {
     COOCCURRENCE_BINNING( ch_coverage )
     ch_clusters = COOCCURRENCE_BINNING.out.clusters
     ch_versions = ch_versions.mix(COOCCURRENCE_BINNING.out.versions)
+    //CHECKM2
+    ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
+    EXTRACT_BINS( ch_clusters, ch_assembly )
+    ch_bins_dir = EXTRACT_BINS.out.bins
+
+    CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
+    ch_versions = ch_versions.mix(CHECKM2.out.versions)
+    ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
