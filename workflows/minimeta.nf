@@ -50,21 +50,14 @@ if(workflow.profile == 'awsbatch') {
     if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
 }
 // Configure Checkm2 database
-checkm2_enabled = false
-ch_checkm2_db = Channel.empty()
-
+checkm2_db = false
 if (params.checkm2_db) {
-    def db_file = file(params.checkm2_db)
-    if (db_file.exists()) {
-        checkm2_enabled = true
-        ch_checkm2_db = Channel.of(db_file)
-        log.info "CheckM2 database will be used: ${db_file}"
-    } else {
-        error "CheckM2 database provided but file not found: ${params.checkm2_db}"
-    }
+    checkm2_db  = file(params.checkm2_db)
+    if ( !checkm2_db.exists() ) exit 1, "CheckM2 database not found: ${params.checkm2_db}"
 } else {
-    log.info "CheckM2 skipped: no database provided (use --checkm2_db to enable)"
+    checkm2_db = file("/dev/null")
 }
+
 // Stage config files
 ch_multiqc_config = Channel.fromPath(params.multiqc_config, checkIfExists: true)
 ch_multiqc_custom_config = Channel.empty()
@@ -272,11 +265,22 @@ workflow MINIMETA {
     EXTRACT_BINS( ch_clusters, ch_assembly )
     ch_bins_dir = EXTRACT_BINS.out.bins
 
-    if (checkm2_enabled) {
-        CHECKM2(ch_bins_dir, ch_checkm2_db)
+    ch_multiqc_checkm2 = Channel.empty()
 
+    if (params.checkm2_db) {
+        def db_file = file(params.checkm2_db)
+        if (!db_file.exists()) {
+            error "CheckM2 database not found: ${params.checkm2_db}"
+        }
+        CHECKM2(
+            EXTRACT_BINS.out.bins,
+            "fa",
+            db_file
+        )
         ch_versions = ch_versions.mix(CHECKM2.out.versions)
         ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
+    } else {
+        log.info "CheckM2 skipped: no database provided"
     }
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
