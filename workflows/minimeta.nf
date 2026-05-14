@@ -265,23 +265,9 @@ workflow MINIMETA {
     EXTRACT_BINS( ch_clusters, ch_assembly )
     ch_bins_dir = EXTRACT_BINS.out.bins
 
-    ch_multiqc_checkm2 = Channel.empty()
-
-    if (params.checkm2_db) {
-        def db_file = file(params.checkm2_db)
-        if (!db_file.exists()) {
-            error "CheckM2 database not found: ${params.checkm2_db}"
-        }
-        CHECKM2(
-            EXTRACT_BINS.out.bins,
-            "fa",
-            db_file
-        )
-        ch_versions = ch_versions.mix(CHECKM2.out.versions)
-        ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
-    } else {
-        log.info "CheckM2 skipped: no database provided"
-    }
+    CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
+    ch_versions = ch_versions.mix(CHECKM2.out.versions)
+    ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
