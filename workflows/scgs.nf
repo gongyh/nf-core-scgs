@@ -875,7 +875,7 @@ workflow SCGS {
     if (!euk && params.checkm2) {
         CHECKM2 (
             ctg.collect{it[1]},
-            "fasta"
+            "fasta",
             checkm2_db
         )
         ch_versions = ch_versions.mix(CHECKM2.out.versions)
