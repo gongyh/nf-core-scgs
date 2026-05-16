@@ -57,7 +57,30 @@ if (params.checkm2_db) {
 } else {
     checkm2_db = file("/dev/null")
 }
+//kofam database
+kofam_profile = false
+if (params.kofam_profile) {
+    kofam_profile = file(params.kofam_profile)
+    if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
+} else {
+    kofam_profile = file("/dev/null")
+}
 
+kofam_kolist = false
+if (params.kofam_kolist) {
+    kofam_kolist = file(params.kofam_kolist)
+    if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
+} else {
+    kofam_kolist = file("/dev/null")
+}
+//eggnog database
+eggnog_db = false
+if (params.eggnog_db) {
+    eggnog_db = file(params.eggnog_db)
+    if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
+} else {
+    eggnog_db = file("/dev/null")
+}
 // Stage config files
 ch_multiqc_config = Channel.fromPath(params.multiqc_config, checkIfExists: true)
 ch_multiqc_custom_config = Channel.empty()
@@ -182,6 +205,9 @@ include { PREPARE_FEATURES                  } from '../subworkflows/local/prepar
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
 include { CHECKM2                           } from '../modules/local/checkm2'
+include { PROKKA                            } from '../modules/local/prokka'
+include { KOFAMSCAN                         } from '../modules/local/kofamscan'
+include { EGGNOG                            } from '../modules/local/eggnog'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -268,6 +294,31 @@ workflow MINIMETA {
     CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
     ch_versions = ch_versions.mix(CHECKM2.out.versions)
     ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
+    //
+    ch_bins_for_prokka = ch_bins_dir.flatMap { bin_dir ->
+        def bin_files = file(bin_dir).listFiles().findAll { it.name.endsWith('.fa') }
+        if (!bin_files) {
+            log.warn "No .fa files found in ${bin_dir}, skipping PROKKA"
+            return []
+        }
+        bin_files.collect { bin_file ->
+            [ [id: bin_file.baseName], bin_file ]
+        }
+    }
+    //PROKKA
+    PROKKA(ch_bins_for_prokka, [])
+    ch_versions = ch_versions.mix(PROKKA.out.versions)
+
+    // KOFAMSCAN
+    if (params.kofam) {
+        KOFAMSCAN(PROKKA.out.faa, kofam_profile, kofam_kolist)
+        ch_versions = ch_versions.mix(KOFAMSCAN.out.versions)
+    }
+    // EGGNOG
+    if (params.eggnog) {
+        EGGNOG(PROKKA.out.faa, eggnog_db)
+        ch_versions = ch_versions.mix(EGGNOG.out.versions)
+    }
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
