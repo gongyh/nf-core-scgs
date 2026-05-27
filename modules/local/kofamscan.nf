@@ -28,7 +28,7 @@ process KOFAMSCAN {
     ln -sf ${prefix}_KOs_ko.txt ${prefix}_KOs_ko.kofamscan
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        koramscan: \$(echo \$(exec_annotation -v 2>&1) | sed 's/^.*exec_annotation //; s/Using.*\$//')
+        kofamscan: \$(echo \$(exec_annotation -v 2>&1) | sed 's/^.*exec_annotation //; s/Using.*\$//')
     END_VERSIONS
     """
 }

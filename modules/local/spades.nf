@@ -16,6 +16,7 @@ process SPADES {
     tuple val(meta), path("${prefix}.ctg200.fasta")                        , emit: ctg200
     tuple val(meta), path("${prefix}.ctgs.fasta")                          , emit: ctg
     tuple val(meta), path("${prefix}.spades_out")                          , emit: assembly
+    path "spades_joint_mqc.tsv"                                            , emit: mqc_tsv
     path "versions.yml"                                                    , emit: versions
 
     when:
@@ -47,9 +48,35 @@ process SPADES {
         cat ${prefix}.ctg200.fasta | sed 's/_length.*\$//g' > ${prefix}.ctgs.fasta
     fi
 
+    CONTIGS="${prefix}.contigs.fasta"
+    if [ -f "\$CONTIGS" ]; then
+        awk '/^>/ {if (seqlen) print seqlen; seqlen=0; next} { seqlen += length(\$0) } END {if (seqlen) print seqlen}' "\$CONTIGS" | sort -rn > lengths.txt
+        TOTAL=\$(awk '{sum+=\$1} END {print sum}' lengths.txt)
+        NUM=\$(wc -l < lengths.txt)
+        LONGEST=\$(head -1 lengths.txt)
+        half=\$((TOTAL / 2))
+        cum=0; N50=0
+        while read len; do
+            cum=\$((cum + len))
+            if [ \$cum -ge \$half ]; then
+                N50=\$len
+                break
+            fi
+        done < lengths.txt
+        rm lengths.txt
+    else
+        NUM=0; TOTAL=0; N50=0; LONGEST=0
+    fi
+
+
+    printf "Metric\tValue\n" > spades_joint_mqc.tsv
+    printf "Number of contigs (>=200bp)\t\${NUM}\n" >> spades_joint_mqc.tsv
+    printf "Total assembly size (bp)\t\${TOTAL}\n" >> spades_joint_mqc.tsv
+    printf "N50 (bp)\t\${N50}\n" >> spades_joint_mqc.tsv
+    printf "Longest contig (bp)\t\${LONGEST}\n" >> spades_joint_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
-    END_VERSIONS
+	END_VERSIONS
     """
 }

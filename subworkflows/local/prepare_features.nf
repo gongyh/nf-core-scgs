@@ -50,6 +50,7 @@ workflow PREPARE_FEATURES {
     ch_all_depth = ch_depth.map { meta, depth -> depth }.collect()
 
     MERGE_COVERAGE( ch_all_depth )
+    ch_coverage_mqc = CONTIG_COVERAGE.out.mqc_tsv
     ch_versions = ch_versions.mix(MERGE_COVERAGE.out.versions)
     // PRODIGAL
     PRODIGAL ( ch_fasta )
@@ -70,5 +71,6 @@ workflow PREPARE_FEATURES {
     emit:
     feature_matrix = SUMMARIZE_FEATURE_MATRIX.out.matrix
     coverage_matrix   = MERGE_COVERAGE.out.matrix
+    coverage_mqc      = CONTIG_COVERAGE.out.mqc_tsv
     versions       = ch_versions
 }

@@ -14,6 +14,7 @@ process CONTIG_COVERAGE {
 
     output:
     tuple val(meta), path("${meta.id}.depth"), emit: depth
+    path "coverage_mqc.tsv", emit: mqc_tsv
     path "versions.yml", emit: versions
 
     script:
@@ -25,10 +26,20 @@ process CONTIG_COVERAGE {
     awk '!/^#/ {print \$1"\t"\$7}' "${meta.id}.cov" | sort -k1,1 > "${meta.id}.depth"
     rm "${meta.id}.cov"
 
+    if [ -f "coverage_matrix.tsv" ]; then
+        N_CONTIGS=\$(tail -n +2 coverage_matrix.tsv | wc -l)
+        N_SAMPLES=\$(head -1 coverage_matrix.tsv | awk '{print NF-1}')
+    else
+        N_CONTIGS=0; N_SAMPLES=0
+    fi
+
+    printf "Metric\tValue\n" > coverage_mqc.tsv
+    printf "Number of contigs\t\${N_CONTIGS}\n" >> coverage_mqc.tsv
+    printf "Number of sub-samples\t\${N_SAMPLES}\n" >> coverage_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
-    END_VERSIONS
+	END_VERSIONS
     """
 }
 
@@ -65,6 +76,6 @@ process MERGE_COVERAGE {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         merge: bash \$(bash --version | head -1)
-    END_VERSIONS
+	END_VERSIONS
     """
 }
