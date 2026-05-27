@@ -294,6 +294,7 @@ workflow MINIMETA {
     CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
     ch_versions = ch_versions.mix(CHECKM2.out.versions)
     ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
+    ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
     //
     ch_bins_for_prokka = ch_bins_dir.flatMap { bin_dir ->
         def bin_files = file(bin_dir).listFiles().findAll { it.name.endsWith('.fa') }
@@ -313,11 +314,13 @@ workflow MINIMETA {
     if (params.kofam) {
         KOFAMSCAN(PROKKA.out.faa, kofam_profile, kofam_kolist)
         ch_versions = ch_versions.mix(KOFAMSCAN.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(KOFAMSCAN.out.kofamscan.collect().ifEmpty([]))
     }
     // EGGNOG
     if (params.eggnog) {
         EGGNOG(PROKKA.out.faa, eggnog_db)
         ch_versions = ch_versions.mix(EGGNOG.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(EGGNOG.out.annotations.collect().ifEmpty([]))
     }
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
@@ -335,6 +338,11 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(SPADES_JOINT.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(REMAP.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES.out.coverage_mqc.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
 
     MULTIQC (

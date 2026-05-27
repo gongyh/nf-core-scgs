@@ -12,7 +12,7 @@ process EXTRACT_BINS {
     output:
     path "bins", emit: bins
     path "versions.yml", emit: versions
-
+    path "extract_bins_mqc.tsv", emit: mqc_tsv
     script:
     """
     mkdir -p bins
@@ -32,6 +32,17 @@ process EXTRACT_BINS {
         rm \${bin}_list.txt
     done < bin_names.txt
 
+    if [ -d "bins" ]; then
+        N_BINS=\$(ls bins/*.fa 2>/dev/null | wc -l)
+        TOTAL_SIZE=\$(ls -l bins/*.fa 2>/dev/null | awk '{sum+=\$5} END {print sum}')
+        [ -z "\$TOTAL_SIZE" ] && TOTAL_SIZE=0
+    else
+        N_BINS=0; TOTAL_SIZE=0
+    fi
+
+    printf "Metric\tValue\n" > extract_bins_mqc.tsv
+    printf "Number of bins extracted\t\${N_BINS}\n" >> extract_bins_mqc.tsv
+    printf "Total bin size (bp)\t\${TOTAL_SIZE}\n" >> extract_bins_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         seqtk: \$(seqtk 2>&1 | grep -oP 'Version \\K[0-9.]+' || echo "unknown")
