@@ -33,6 +33,6 @@ process COOCCURRENCE_BINNING {
         scipy: \$(python -c "import scipy; print(scipy.__version__)" 2>/dev/null || echo "N/A")
         sklearn: \$(python -c "import sklearn; print(sklearn.__version__)" 2>/dev/null || echo "N/A")
         samtools: \$(samtools --version 2>&1 | head -1)
-	END_VERSIONS
+    END_VERSIONS
     """
 }

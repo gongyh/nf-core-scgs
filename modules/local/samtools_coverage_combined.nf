@@ -39,7 +39,7 @@ process CONTIG_COVERAGE {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
-	END_VERSIONS
+    END_VERSIONS
     """
 }
 
@@ -76,6 +76,6 @@ process MERGE_COVERAGE {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         merge: bash \$(bash --version | head -1)
-	END_VERSIONS
+    END_VERSIONS
     """
 }

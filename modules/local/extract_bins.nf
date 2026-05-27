@@ -46,6 +46,6 @@ process EXTRACT_BINS {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         seqtk: \$(seqtk 2>&1 | grep -oP 'Version \\K[0-9.]+' || echo "unknown")
-	END_VERSIONS
+    END_VERSIONS
     """
 }
