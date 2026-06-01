@@ -202,8 +202,9 @@ include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_rem
 include { REMAP                             } from '../modules/local/remap'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
 include { PREPARE_FEATURES                  } from '../subworkflows/local/prepare_features'
-include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
-include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
+//include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
+//include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
+include { SEMIBIN2                          } from '../modules/local/semibin2'
 include { CHECKM2                           } from '../modules/local/checkm2'
 include { PROKKA                            } from '../modules/local/prokka'
 include { KOFAMSCAN                         } from '../modules/local/kofamscan'
@@ -281,16 +282,27 @@ workflow MINIMETA {
     PREPARE_FEATURES ( ch_fasta, ch_fai, REMAP.out.bam )
     ch_feature_matrix = PREPARE_FEATURES.out.feature_matrix
     ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix
+    /*
     // binning
     ch_coverage = PREPARE_FEATURES.out.coverage_matrix
     COOCCURRENCE_BINNING( ch_coverage )
     ch_clusters = COOCCURRENCE_BINNING.out.clusters
     ch_versions = ch_versions.mix(COOCCURRENCE_BINNING.out.versions)
-    //CHECKM2
+
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     EXTRACT_BINS( ch_clusters, ch_assembly )
     ch_bins_dir = EXTRACT_BINS.out.bins
+    */
+    ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
+    ch_bams_list = REMAP.out.bam
+        .map { meta, bam -> bam }
+        .collect()
+    SEMIBIN2(ch_assembly, ch_bams_list)
+    ch_bins_dir = SEMIBIN2.out.bins
+    ch_versions_semibin = SEMIBIN2.out.versions.collect().flatten()
+    ch_versions = ch_versions.mix(ch_versions_semibin)
 
+    // CHECKM2
     CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
     ch_versions = ch_versions.mix(CHECKM2.out.versions)
     ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
@@ -341,8 +353,8 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(SPADES_JOINT.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(REMAP.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES.out.coverage_mqc.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
+    //ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
+    //ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
 
     MULTIQC (
