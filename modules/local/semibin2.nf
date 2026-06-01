@@ -14,7 +14,7 @@ process SEMIBIN2 {
     path "versions.yml", emit: versions
 
     script:
-     def bam_args = bams.collect{ "-b ${it}" }.join(' ')
+    def bam_args = bams.collect{ "-b ${it}" }.join(' ')
     """
     SemiBin2 single_easy_bin \\
         -i ${assembly} \\

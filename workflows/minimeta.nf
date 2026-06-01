@@ -293,6 +293,7 @@ workflow MINIMETA {
     EXTRACT_BINS( ch_clusters, ch_assembly )
     ch_bins_dir = EXTRACT_BINS.out.bins
     */
+    //SEMIBIN2
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_bams_list = REMAP.out.bam
         .map { meta, bam -> bam }
@@ -355,6 +356,7 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES.out.coverage_mqc.ifEmpty([]))
     //ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
     //ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
 
     MULTIQC (
