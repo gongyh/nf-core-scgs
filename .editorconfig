@@ -49,3 +49,6 @@ indent_size = unset
 [bin/BLOSUM62.mtx]
 indent_style = unset
 indent_size = unset
+
+[bin/dcvbin/**]
+ignore = true
