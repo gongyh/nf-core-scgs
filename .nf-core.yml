@@ -12,5 +12,6 @@ lint:
   included_configs: False
   files_unchanged:
     - .github/workflows/linting.yml
+    - .prettierignore
   template_strings: False
   merge_markers: False
