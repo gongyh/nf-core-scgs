@@ -356,8 +356,8 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(SPADES_JOINT.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(REMAP.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES.out.coverage_mqc.ifEmpty([]))
-    //ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
-    //ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
 
