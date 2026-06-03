@@ -6,9 +6,11 @@ lint:
     - manifest.version
     - manifest.homePage
     - custom_config
-  actions_awsfulltest: false
-  actions_ci: false
-  local_component_structure: false
-  included_configs: false
+  actions_awsfulltest: False
+  actions_ci: False
+  local_component_structure: False
+  included_configs: False
   files_unchanged:
     - .github/workflows/linting.yml
+  template_strings: False
+  merge_markers: False
