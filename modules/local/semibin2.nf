@@ -12,7 +12,7 @@ process SEMIBIN2 {
     path "bins_merged", emit: bins
     path "semibin2_mqc.tsv", emit: mqc_tsv
     path "versions.yml", emit: versions
-
+    path "scaffolds2bin.tsv", emit: scaffolds2bin
     script:
     def bam_args = bams.collect{ "-b ${it}" }.join(' ')
     """
@@ -28,7 +28,16 @@ process SEMIBIN2 {
         mv bins_merged/output_bins/* bins_merged/ 2>/dev/null || true
         rmdir bins_merged/output_bins
     fi
-
+    > scaffolds2bin.tsv
+    if [ -d bins_merged ] && [ "\$(ls bins_merged/*.fa 2>/dev/null | wc -l)" -gt 0 ]; then
+        for bin_fa in bins_merged/*.fa; do
+            bin_name=\$(basename "\$bin_fa" .fa)
+            grep "^>" "\$bin_fa" | sed 's/^>//' | awk -v bin="\$bin_name" '{print \$1"\t"bin}'
+        done >> scaffolds2bin.tsv
+    else
+        echo "WARNING: No .fa files found in bins_merged, creating empty scaffolds2bin.tsv" >&2
+        touch scaffolds2bin.tsv
+    fi
     N_BINS=\$(find bins_merged -maxdepth 1 -name '*.fa' | wc -l)
     printf "Metric\tValue\\n" > semibin2_mqc.tsv
     printf "Number of bins recovered\t\${N_BINS}\\n" >> semibin2_mqc.tsv

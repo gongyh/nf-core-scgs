@@ -202,9 +202,10 @@ include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_rem
 include { REMAP                             } from '../modules/local/remap'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
 include { PREPARE_FEATURES                  } from '../subworkflows/local/prepare_features'
-//include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
-//include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
+include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
+include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
+include { DAS_TOOL                          } from '../modules/local/das_tool'
 include { CHECKM2                           } from '../modules/local/checkm2'
 include { PROKKA                            } from '../modules/local/prokka'
 include { KOFAMSCAN                         } from '../modules/local/kofamscan'
@@ -282,27 +283,28 @@ workflow MINIMETA {
     PREPARE_FEATURES ( ch_fasta, ch_fai, REMAP.out.bam )
     ch_feature_matrix = PREPARE_FEATURES.out.feature_matrix
     ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix
-    /*
     // binning
+    ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
+    ch_all_s2b = Channel.empty()
+    //COOCCURRENCE
     ch_coverage = PREPARE_FEATURES.out.coverage_matrix
     COOCCURRENCE_BINNING( ch_coverage )
-    ch_clusters = COOCCURRENCE_BINNING.out.clusters
-    ch_versions = ch_versions.mix(COOCCURRENCE_BINNING.out.versions)
-
-    ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
-    EXTRACT_BINS( ch_clusters, ch_assembly )
-    ch_bins_dir = EXTRACT_BINS.out.bins
-    */
+    ch_versions_cooccur = ch_versions.mix(COOCCURRENCE_BINNING.out.versions)
+    EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_assembly)
+    ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
     //SEMIBIN2
-    ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_bams_list = REMAP.out.bam
         .map { meta, bam -> bam }
         .collect()
     SEMIBIN2(ch_assembly, ch_bams_list)
-    ch_bins_dir = SEMIBIN2.out.bins
-    ch_versions_semibin = SEMIBIN2.out.versions.collect().flatten()
-    ch_versions = ch_versions.mix(ch_versions_semibin)
+    ch_all_s2b = ch_all_s2b.mix( SEMIBIN2.out.scaffolds2bin.map { file -> ['SEMIBIN2', file] } )
+    ch_versions = ch_versions.mix( SEMIBIN2.out.versions.collect().flatten() )
 
+    // DAS TOOL
+    ch_s2b_list = ch_all_s2b.flatten().toList()
+    DAS_TOOL(ch_assembly, ch_s2b_list)
+    ch_bins_dir = DAS_TOOL.out.bins
+    ch_versions = ch_versions.mix(DAS_TOOL.out.versions)
     // CHECKM2
     CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
     ch_versions = ch_versions.mix(CHECKM2.out.versions)
