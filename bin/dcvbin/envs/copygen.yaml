@@ -1,0 +1,38 @@
+name: copygen
+channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+  - defaults
+  - conda-forge
+  - bioconda
+dependencies:
+  - _libgcc_mutex=0.1
+  - _openmp_mutex=4.5
+  - ca-certificates=2024.2.2
+  - certifi=2016.9.26
+  - ld_impl_linux-64=2.40
+  - libffi=3.3
+  - libgcc-ng=13.2.0
+  - libgomp=13.2.0
+  - libsqlite=3.45.2
+  - libstdcxx-ng=13.2.0
+  - libzlib=1.2.13
+  - ncurses=6.4.20240210
+  - openssl=1.1.1w
+  - pip=20.0.2
+  - python=3.6.13
+  - python_abi=3.6
+  - readline=8.2
+  - setuptools=49.6.0
+  - sqlite=3.45.2
+  - tk=8.6.13
+  - wheel=0.34.2
+  - xz=5.2.6
+  - zlib=1.2.13
+  - pip:
+      - joblib==1.1.1
+      - numpy==1.19.5
+      - scikit-learn==0.22.2.post1
+      - scipy==1.5.4
+      - send2trash==1.8.3
+prefix: /media/ubuntu/conda/anaconda3/envs/copygen
