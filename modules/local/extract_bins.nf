@@ -13,6 +13,7 @@ process EXTRACT_BINS {
     path "bins", emit: bins
     path "versions.yml", emit: versions
     path "extract_bins_mqc.tsv", emit: mqc_tsv
+    path "scaffolds2bin.tsv", emit: scaffolds2bin
     script:
     """
     mkdir -p bins
@@ -32,6 +33,13 @@ process EXTRACT_BINS {
         rm \${bin}_list.txt
     done < bin_names.txt
 
+    > scaffolds2bin.tsv
+    for bin_fa in bins/*.fa; do
+        if [ -f "\$bin_fa" ]; then
+            bin_name=\$(basename "\$bin_fa" .fa)
+            grep "^>" "\$bin_fa" | sed 's/^>//' | awk -v bin="\$bin_name" '{print \$1"\t"bin}'
+        fi
+    done >> scaffolds2bin.tsv
     if [ -d "bins" ]; then
         N_BINS=\$(ls bins/*.fa 2>/dev/null | wc -l)
         TOTAL_SIZE=\$(ls -l bins/*.fa 2>/dev/null | awk '{sum+=\$5} END {print sum}')
