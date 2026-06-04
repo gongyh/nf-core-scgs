@@ -205,6 +205,7 @@ include { PREPARE_FEATURES                  } from '../subworkflows/local/prepar
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
+include { TAXVAMB_INTEGRATION               } from '../subworkflows/local/taxvamb_integration'
 include { DAS_TOOL                          } from '../modules/local/das_tool'
 include { CHECKM2                           } from '../modules/local/checkm2'
 include { PROKKA                            } from '../modules/local/prokka'
@@ -298,8 +299,11 @@ workflow MINIMETA {
         .collect()
     SEMIBIN2(ch_assembly, ch_bams_list)
     ch_all_s2b = ch_all_s2b.mix( SEMIBIN2.out.scaffolds2bin.map { file -> ['SEMIBIN2', file] } )
-    ch_versions = ch_versions.mix( SEMIBIN2.out.versions.collect().flatten() )
-
+    ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
+    // TaxVAMB 
+    TAXVAMB_INTEGRATION( ch_assembly, ch_bams_list )
+    ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
+    ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
     // DAS TOOL
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)
@@ -359,6 +363,7 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix( TAXVAMB_INTEGRATION.out.mqc_tsv.ifEmpty([]) )
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
 
     MULTIQC (
