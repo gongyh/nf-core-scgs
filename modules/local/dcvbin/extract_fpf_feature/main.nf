@@ -1,17 +1,17 @@
 process CONTIG_EMBEDDING {
     tag "${meta.id}"
     label 'process_gpu'
-    
+
     conda "${moduleDir}/dnaberts.yaml"
     container 'community.wave.seqera.io/library/dnaberts:7a7299083f265248'
 
     input:
     tuple val(meta), path(ctgs_2k)
     path model_dir
-    
+
     output:
     path "${prefix}_fpf.npy", emit: fpf
-    
+
     script:
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${meta.id}"

@@ -7,10 +7,10 @@ process MARKER_NCLUSTERS {
     input:
     path kmer_file
     path fasta_file
-    
+
     output:
     path "cluster_value", emit: marker_cv
-    
+
     script:
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${meta.id}"

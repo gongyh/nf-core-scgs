@@ -3,15 +3,15 @@ process TNF_RPKM {
 
     conda "${moduleDir}/dcvbin.yaml"
     container 'community.wave.seqera.io/library/dcvbin:ea1d53670b689bf9'
-    
+
     input:
     path fasta_file
     path bam_file
-    
+
     output:
     path "tnf_and_rpkm/*tnf.npz",  emit: tnf
     path "tnf_and_rpkm/*rpkm.npz", emit: rpkm
-    
+
     script:
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${meta.id}"

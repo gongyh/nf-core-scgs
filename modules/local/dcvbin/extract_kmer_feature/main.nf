@@ -3,14 +3,14 @@ process CONTIG_KMER {
 
     conda "${moduleDir}/dcvbin.yaml"
     container 'community.wave.seqera.io/library/dcvbin:ea1d53670b689bf9'
-    
+
     input:
     path fasta_file
-    
+
     output:
     path "4mer.csv",  emit: kmer
     path "seqid.csv"
-    
+
     script:
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${meta.id}"
