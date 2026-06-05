@@ -300,7 +300,7 @@ workflow MINIMETA {
     SEMIBIN2(ch_assembly, ch_bams_list)
     ch_all_s2b = ch_all_s2b.mix( SEMIBIN2.out.scaffolds2bin.map { file -> ['SEMIBIN2', file] } )
     ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
-    // TaxVAMB 
+    // TaxVAMB
     TAXVAMB_INTEGRATION( ch_assembly, ch_bams_list )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
