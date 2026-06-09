@@ -10,6 +10,14 @@ workflow TAXVAMB_INTEGRATION {
     ch_abundance
 
     main:
+    if (!params.metabuli_db) {
+        emit:
+        scaffolds2bin = Channel.empty()
+        mqc_tsv = Channel.empty()
+        versions = Channel.empty()
+        return
+    }
+
     ch_assembly_single = ch_assembly.collect()
     ch_abundance_single = ch_abundance.collect()
     ch_bams_list = ch_bams_stream.collect()
