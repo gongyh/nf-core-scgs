@@ -15,10 +15,10 @@ workflow TAXVAMB_INTEGRATION {
     ch_bams_list = ch_bams_stream.collect()
     def meta = [id: 'merged']
     ch_assembly_tuple = ch_assembly.map { asm -> [meta, asm] }
-    if (params.classifier == 'metabuli') {
+    if (params.metabuli_db) {
         ch_taxonomy = METABULI_TAXA(ch_assembly_tuple, file(params.metabuli_db, type: 'dir')).taxonomy
     } else {
-        error "Only 'metabuli' classifier supported in this workflow"
+        ch_taxonomy = CLASSIFY_TAXA(ch_assembly).taxonomy
     }
 
     ch_taxonomy_path = ch_taxonomy.map { _meta, tax -> tax }
