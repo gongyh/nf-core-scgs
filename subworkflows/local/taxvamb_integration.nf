@@ -1,6 +1,5 @@
 include { METABULI_TAXA } from '../../modules/local/metabuli_taxa'
 include { VAMB_BIN } from '../../modules/local/taxvamb'
-include { CLUSTERS_TO_SCAFFOLDS2BIN } from '../../modules/local/clusters_to_scaffolds2bin'
 
 workflow TAXVAMB_INTEGRATION {
     take:
