@@ -3,9 +3,7 @@ process CLASSIFY_TAXA {
     label 'process_single'
 
     conda "conda-forge::coreutils=9.4"
-    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/alpine:3.19' :
-        'alpine:3.19' }"
+    container 'community.wave.seqera.io/library/coreutils:9.4--23c5d0df3bfafb7a'
     input:
     path fasta
 
