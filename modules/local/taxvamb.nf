@@ -26,13 +26,10 @@ process VAMB_BIN {
     task.ext.when == null || task.ext.when
 
     script:
-    if(bams && abundance_tsv) {
-        error("ERROR: Both bams and abundance TSV supplied to Vamb! Please only supply one.")
-    }
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${meta.id}"
     def mode    = taxonomy ? "taxvamb" : "default"
-    depth_input = abundance_tsv ? "--abundance_tsv ${abundance_tsv}" : "--bamdir bams/"
+    depth_input = "--bamdir bams/"
     tax_input   = taxonomy ? "--taxonomy ${taxonomy}" : ""
     """
     vamb bin \\

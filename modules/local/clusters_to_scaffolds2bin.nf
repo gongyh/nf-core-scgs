@@ -1,7 +1,9 @@
-process PROCESS_VAMB_BINS {
-    tag "process_vamb_bins"
+process CLUSTERS_TO_SCAFFOLDS2BIN {
+    tag "clusters_to_scaffolds2bin.nf"
     label 'process_medium'
 
+    conda "conda-forge::coreutils"
+    container'community.wave.seqera.io/library/coreutils:9.5--ae99c88a9b28c264'
     input:
     path cluster_file
 
@@ -22,7 +24,7 @@ process PROCESS_VAMB_BINS {
     printf "Number of bins recovered\t\${N_BINS}\\n" >> taxvamb_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        process_vamb_bins: \$(echo 1.0)
+        clusters_to_scaffolds2bin.nf: \$(echo 1.0)
     END_VERSIONS
     """
 }

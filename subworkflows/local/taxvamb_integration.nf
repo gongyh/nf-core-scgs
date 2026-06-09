@@ -1,35 +1,53 @@
-include { MAKE_DUMMY_TAXONOMY } from '../../modules/local/make_dummy_taxonomy'
+include { CLASSIFY_TAXA } from '../../modules/local/classify_taxa'
+include { METABULI_TAXA } from '../../modules/local/metabuli_taxa'
 include { VAMB_BIN } from '../../modules/local/taxvamb'
-include { PROCESS_VAMB_BINS } from '../../modules/local/process_vamb_bins'
+include { CLUSTERS_TO_SCAFFOLDS2BIN } from '../../modules/local/clusters_to_scaffolds2bin'
 
 workflow TAXVAMB_INTEGRATION {
     take:
     ch_assembly
     ch_bams_stream
+    ch_abundance
 
     main:
-    ch_bams_list = ch_bams_stream
-        .toList()
-        .map { bam_paths ->
-            return bam_paths as List
-        }
-    //DUMMY
-    ch_taxonomy = MAKE_DUMMY_TAXONOMY(ch_assembly).taxonomy
+    ch_assembly_single = ch_assembly.collect()
+    ch_abundance_single = ch_abundance.collect()
+    ch_bams_list = ch_bams_stream.collect()
+    def meta = [id: 'merged']
+    ch_assembly_tuple = ch_assembly.map { asm -> [meta, asm] }
+    if (params.classifier == 'metabuli') {
+        ch_taxonomy = METABULI_TAXA(ch_assembly_tuple, file(params.metabuli_db, type: 'dir')).taxonomy
+    } else {
+        error "Only 'metabuli' classifier supported in this workflow"
+    }
 
-    // VAMB_BIN
-    def vamb_meta = [id: 'merged']
-    ch_vamb_input = ch_assembly
+    ch_taxonomy_path = ch_taxonomy.map { _meta, tax -> tax }
+    /*
+    ch_vamb_input = ch_assembly_single
+        .combine(ch_abundance_single)
         .combine(ch_bams_list)
-        .combine(ch_taxonomy)
-        .map { assembly, bams, taxonomy ->
-            [vamb_meta, assembly, [], bams, taxonomy]
+        .combine(ch_taxonomy_path)
+        .map { row ->
+            def vamb_meta = [id: 'merged']
+            return [vamb_meta, row[0], row[1], row[2], row[3]]
+        }
+    */
+    ch_bams_safe = ch_bams_list.map { bams -> [ bams ] }
+    ch_vamb_input = ch_assembly_single
+        .combine(ch_abundance_single)
+        .combine(ch_bams_safe)
+        .combine(ch_taxonomy_path)
+        .map { row ->
+            def vamb_meta = [id: 'merged']
+            return [ vamb_meta, row[0], row[1], row[2], row[3] ]
         }
     VAMB_BIN( ch_vamb_input )
-    ch_cluster_file = VAMB_BIN.out.clusters_unsplit.map { meta, file -> file }
-    PROCESS_VAMB_BINS( ch_cluster_file )
+
+    ch_cluster_file = VAMB_BIN.out.clusters_unsplit.map { _meta, file -> file }
+    CLUSTERS_TO_SCAFFOLDS2BIN( ch_cluster_file )
 
     emit:
-    scaffolds2bin = PROCESS_VAMB_BINS.out.scaffolds2bin
-    mqc_tsv       = PROCESS_VAMB_BINS.out.mqc_tsv
-    versions      = VAMB_BIN.out.versions_vamb.mix(PROCESS_VAMB_BINS.out.versions)
+    scaffolds2bin = CLUSTERS_TO_SCAFFOLDS2BIN.out.scaffolds2bin
+    mqc_tsv       = CLUSTERS_TO_SCAFFOLDS2BIN.out.mqc_tsv
+    versions      = VAMB_BIN.out.versions_vamb.mix(CLUSTERS_TO_SCAFFOLDS2BIN.out.versions)
 }

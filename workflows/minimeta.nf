@@ -301,7 +301,12 @@ workflow MINIMETA {
     ch_all_s2b = ch_all_s2b.mix( SEMIBIN2.out.scaffolds2bin.map { file -> ['SEMIBIN2', file] } )
     ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
     // TaxVAMB
-    TAXVAMB_INTEGRATION( ch_assembly, ch_bams_list )
+    ch_abundance = PREPARE_FEATURES.out.coverage_matrix
+    TAXVAMB_INTEGRATION(
+        ch_assembly,
+        REMAP.out.bam.map { meta, bam -> bam },
+        ch_abundance
+    )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
     // DAS TOOL
