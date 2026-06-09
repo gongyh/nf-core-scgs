@@ -1,7 +1,7 @@
 process SEMIBIN2 {
     tag "coassembly_binning"
     label 'process_medium'
-
+    conda "bioconda::semibin=2.3.0"
     container 'community.wave.seqera.io/library/semibin:2.3.0--33e3e4e2b94625ad'
 
     input:

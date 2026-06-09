@@ -1,6 +1,7 @@
 process DAS_TOOL {
     tag "das_tool"
     label 'process_medium'
+    conda "bioconda::das_tool=1.1.2"
     container 'community.wave.seqera.io/library/das_tool:1.1.2--0fc15370c91e86b2'
 
     input:

@@ -11,6 +11,7 @@ process VAMB_BIN {
     tuple val(meta), path(assembly), path(abundance_tsv), path(bams, stageAs: "bams/*"), path(taxonomy)
 
     output:
+    tuple val(meta), path("${prefix}/scaffolds2bin.tsv")         , emit: scaffolds2bin
     tuple val(meta), path("${prefix}/bins/*.fna.gz")             , emit: bins             , optional: true
     tuple val(meta), path("${prefix}/vae*_clusters_metadata.tsv"), emit: clusters_metadata
     tuple val(meta), path("${prefix}/vae*_clusters_split.tsv")   , emit: clusters_split   , optional: true
@@ -41,6 +42,7 @@ process VAMB_BIN {
         ${tax_input} \\
         ${args}
 
+    awk -F'\\t' 'NR>1 {print \$2"\t"\$1}' ${prefix}/vae*_clusters_unsplit.tsv > ${prefix}/scaffolds2bin.tsv
     """
 
     stub:

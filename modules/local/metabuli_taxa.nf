@@ -2,7 +2,7 @@ process METABULI_TAXA {
     tag "metabuli_taxa"
     label 'process_medium'
 
-    conda "bioconda::metabuli"
+    conda "bioconda::metabuli=1.2.0"
     container 'community.wave.seqera.io/library/metabuli:1.2.0--aade40d1e84cdec2'
 
     input:
