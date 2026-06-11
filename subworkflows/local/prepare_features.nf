@@ -8,7 +8,7 @@ workflow PREPARE_FEATURES {
     take:
     ch_fasta
     ch_fai
-    ch_bam_for_coverage 
+    ch_bam_for_coverage
 
     main:
     ch_versions = Channel.empty()
@@ -19,7 +19,7 @@ workflow PREPARE_FEATURES {
     ch_fasta_path = ch_fasta.map { m, file -> file }
     ch_fai_path = ch_fai.map { m, file -> file }
     CONTIG_COVERAGE( ch_bam_input, ch_fasta_path, ch_fai_path )
-    ch_depth = CONTIG_COVERAGE.out.depth 
+    ch_depth = CONTIG_COVERAGE.out.depth
     ch_versions = ch_versions.mix(MERGE_COVERAGE.out.versions)
     ch_coverage_mqc = CONTIG_COVERAGE.out.mqc_tsv
     */
@@ -28,7 +28,7 @@ workflow PREPARE_FEATURES {
     ch_fai_path = ch_fai.map { m, file -> file }
     CONTIG_COVERAGE( ch_bam_for_coverage, ch_fasta_path, ch_fai_path )
 
-    ch_depth = CONTIG_COVERAGE.out.depth 
+    ch_depth = CONTIG_COVERAGE.out.depth
     ch_coverage = ch_depth.map { m, depth -> depth }
     ch_coverage_mqc = CONTIG_COVERAGE.out.mqc_tsv
     ch_versions = ch_versions.mix(CONTIG_COVERAGE.out.versions)

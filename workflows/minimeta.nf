@@ -289,7 +289,7 @@ workflow MINIMETA {
     ch_fai = SAMTOOLS_FAIDX.out.fai
     PREPARE_FEATURES( ch_fasta, ch_fai, ch_bam_for_coverage )
     ch_feature_matrix = PREPARE_FEATURES.out.feature_matrix
-    ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix 
+    ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix
     // binning
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_all_s2b = Channel.empty()
@@ -312,7 +312,7 @@ workflow MINIMETA {
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
     // DAS TOOL
-    
+
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)
     ch_bins_dir = DAS_TOOL.out.bins
