@@ -295,7 +295,7 @@ workflow MINIMETA {
     // binning
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_all_s2b = Channel.empty()
-    ch_versions = Channel.empty() 
+    ch_versions = Channel.empty()
     //COOCCURRENCE
     COOCCURRENCE_BINNING( ch_multi_coverage )
     EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_assembly)
@@ -368,7 +368,7 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(SPADES_JOINT.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(REMAP.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_MULTI.out.coverage_mqc.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_SINGLE.out.coverage_mqc.ifEmpty([]))	
+    ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_SINGLE.out.coverage_mqc.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))
