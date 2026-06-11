@@ -6,7 +6,7 @@ process SEMIBIN2 {
 
     input:
     path assembly
-    path bams
+    path merged_bam 
 
     output:
     path "bins_merged", emit: bins
@@ -14,15 +14,15 @@ process SEMIBIN2 {
     path "versions.yml", emit: versions
     path "scaffolds2bin.tsv", emit: scaffolds2bin
     script:
-    def bam_args = bams.collect{ "-b ${it}" }.join(' ')
+    def bam_args = "-b ${merged_bam}"   
+    def args = task.ext.args ?: ''
     """
     SemiBin2 single_easy_bin \\
         -i ${assembly} \\
         ${bam_args} \\
         -o bins_merged \\
         --threads ${task.cpus} \\
-        --compression none \\
-        -m 500
+        --compression none
 
     if [ -d bins_merged/output_bins ]; then
         mv bins_merged/output_bins/* bins_merged/ 2>/dev/null || true

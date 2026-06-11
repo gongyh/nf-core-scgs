@@ -4,8 +4,7 @@ include { VAMB_BIN } from '../../modules/local/taxvamb'
 workflow TAXVAMB_INTEGRATION {
     take:
     ch_assembly
-    ch_bams_stream
-    ch_abundance
+    ch_coverage
 
     main:
     if (!params.metabuli_db) {
@@ -17,8 +16,7 @@ workflow TAXVAMB_INTEGRATION {
     }
 
     ch_assembly_single = ch_assembly.collect()
-    ch_abundance_single = ch_abundance.collect()
-    ch_bams_list = ch_bams_stream.collect()
+    ch_coverage_single = ch_coverage.collect()
     def meta = [id: 'merged']
     ch_assembly_tuple = ch_assembly.map { asm -> [meta, asm] }
     if (!params.metabuli_db) {
@@ -27,19 +25,16 @@ workflow TAXVAMB_INTEGRATION {
     ch_taxonomy = METABULI_TAXA(ch_assembly_tuple, file(params.metabuli_db, type: 'dir')).taxonomy
 
     ch_taxonomy_path = ch_taxonomy.map { _meta, tax -> tax }
-    ch_bams_safe = ch_bams_list.map { bams -> [ bams ] }
     ch_vamb_input = ch_assembly_single
-        .combine(ch_abundance_single)
-        .combine(ch_bams_safe)
+        .combine(ch_coverage_single)
         .combine(ch_taxonomy_path)
         .map { row ->
             def vamb_meta = [id: 'merged']
-            return [ vamb_meta, row[0], row[1], row[2], row[3] ]
+            return [ vamb_meta, row[0], row[1], [], row[2] ]
         }
+    ch_vamb_input.view { "Input to VAMB_BIN: ${it}" }
+    ch_coverage.view { "In taxvamb, coverage path: ${it}" }
     VAMB_BIN( ch_vamb_input )
-    ch_scaffolds2bin = VAMB_BIN.out.scaffolds2bin
-    ch_cluster_file = VAMB_BIN.out.clusters_unsplit.map { _meta, file -> file }
-    CLUSTERS_TO_SCAFFOLDS2BIN( ch_cluster_file )
 
     emit:
     scaffolds2bin = VAMB_BIN.out.scaffolds2bin

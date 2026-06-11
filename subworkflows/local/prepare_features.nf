@@ -1,57 +1,37 @@
-//include { CONTIG_COVERAGE ;MERGE_COVERAGE } from '../../modules/local/pandepth'
-include { CONTIG_COVERAGE ;MERGE_COVERAGE } from '../../modules/local/samtools_coverage_combined'
+//include { CONTIG_COVERAGE          } from '../../modules/local/pandepth'
+include { CONTIG_COVERAGE            } from '../../modules/local/samtools_coverage_combined'
 include { PRODIGAL                   } from '../../modules/local/prodigal'
 include { KMER_COUNT                 } from '../../modules/local/kmer_count'
-include { SUMMARIZE_FEATURE_MATRIX   } from '../../modules/local/summarize_feature_matrix'
+
 
 workflow PREPARE_FEATURES {
     take:
     ch_fasta
     ch_fai
-    ch_bams
+    ch_bam_for_coverage 
 
     main:
     ch_versions = Channel.empty()
     /*
     //PANDEPTH_MERGE
-    ch_fasta_file = ch_fasta
-        .map { it -> it instanceof List ? it : [it] }
-        .flatten()
-        .filter { it.toString().endsWith('.fasta') || it.toString().endsWith('.fa') }
-        .first()
-    ch_fai_file = ch_fai
-        .map { it -> it instanceof List ? it : [it] }
-        .flatten()
-        .filter { it.toString().endsWith('.fai') }
-        .first()
-    ch_bams_with_bai = ch_bams.map { meta, bam -> [meta, bam, []] }
-    ch_depth = CONTIG_COVERAGE( ch_bams_with_bai, ch_fasta_file, ch_fai_file ).depth
-    ch_all_depth = ch_depth.map { meta, depth -> depth }.collect()
-
-    MERGE_COVERAGE( ch_all_depth )
+    def meta = [id:'merged']
+    ch_bam_input = Channel.of( [meta, ch_merged_bam, []] )
+    ch_fasta_path = ch_fasta.map { m, file -> file }
+    ch_fai_path = ch_fai.map { m, file -> file }
+    CONTIG_COVERAGE( ch_bam_input, ch_fasta_path, ch_fai_path )
+    ch_depth = CONTIG_COVERAGE.out.depth 
     ch_versions = ch_versions.mix(MERGE_COVERAGE.out.versions)
+    ch_coverage_mqc = CONTIG_COVERAGE.out.mqc_tsv
     */
     //samtools
-    ch_fasta_file = ch_fasta
-        .map { it -> it instanceof List ? it : [it] }
-        .flatten()
-        .filter { it.toString().endsWith('.fasta') || it.toString().endsWith('.fa') }
-        .first()
+    ch_fasta_path = ch_fasta.map { m, file -> file }
+    ch_fai_path = ch_fai.map { m, file -> file }
+    CONTIG_COVERAGE( ch_bam_for_coverage, ch_fasta_path, ch_fai_path )
 
-    ch_fai_file = ch_fai
-        .map { it -> it instanceof List ? it : [it] }
-        .flatten()
-        .filter { it.toString().endsWith('.fai') }
-        .first()
-
-    ch_bams_with_bai = ch_bams.map { meta, bam -> [meta, bam, []] }
-
-    ch_depth = CONTIG_COVERAGE( ch_bams_with_bai, ch_fasta_file, ch_fai_file ).depth
-    ch_all_depth = ch_depth.map { meta, depth -> depth }.collect()
-
-    MERGE_COVERAGE( ch_all_depth )
+    ch_depth = CONTIG_COVERAGE.out.depth 
+    ch_coverage = ch_depth.map { m, depth -> depth }
     ch_coverage_mqc = CONTIG_COVERAGE.out.mqc_tsv
-    ch_versions = ch_versions.mix(MERGE_COVERAGE.out.versions)
+    ch_versions = ch_versions.mix(CONTIG_COVERAGE.out.versions)
     // PRODIGAL
     PRODIGAL ( ch_fasta )
     ch_versions = ch_versions.mix(PRODIGAL.out.versions)
@@ -60,17 +40,9 @@ workflow PREPARE_FEATURES {
     KMER_COUNT ( ch_fasta, 4  )
     ch_versions = ch_versions.mix(KMER_COUNT.out.versions)
 
-    // Coverage + Kmer + Genes
-    SUMMARIZE_FEATURE_MATRIX (
-        ch_fasta,
-        MERGE_COVERAGE.out.matrix,
-        KMER_COUNT.out.csv,
-        PRODIGAL.out.gff
-    )
-
     emit:
-    feature_matrix = SUMMARIZE_FEATURE_MATRIX.out.matrix
-    coverage_matrix   = MERGE_COVERAGE.out.matrix
-    coverage_mqc      = CONTIG_COVERAGE.out.mqc_tsv
-    versions       = ch_versions
+    feature_matrix = Channel.empty()
+    coverage_matrix = ch_coverage
+    coverage_mqc    = CONTIG_COVERAGE.out.mqc_tsv
+    versions        = ch_versions
 }

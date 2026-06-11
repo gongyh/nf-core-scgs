@@ -30,15 +30,34 @@ process VAMB_BIN {
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${meta.id}"
     def mode    = taxonomy ? "taxvamb" : "default"
-    depth_input = "--bamdir bams/"
+    depth_input = abundance_tsv ? "--abundance_tsv ${abundance_tsv}" : (bams ? "--bamdir bams/" : error("Neither abundance_tsv nor bams provided"))
     tax_input   = taxonomy ? "--taxonomy ${taxonomy}" : ""
+    def min_len = task.ext.min_contig_len ?: 250
     """
+    awk -v min=${min_len} 'BEGIN {RS=">"; ORS=""} NR>1 {seq=\$0; gsub(/\\n/, "", seq); if(length(seq) >= min) print ">"\$0}' ${assembly} > filtered.contigs.fasta
+    
+    if [ ! -s filtered.contigs.fasta ]; then
+        echo "ERROR: No contigs with length >= ${min_len}" >&2
+        exit 1
+    fi
+    grep '^>' filtered.contigs.fasta | sed 's/^>//' > keep_ids.txt
+    awk -F'\\t' '
+        NR==FNR {
+            if (FNR==1) { print \$0; next }
+            a[\$1]=\$0; 
+            next
+        } 
+        {
+            if (\$1 in a) print a[\$1]
+        }
+    ' ${abundance_tsv} keep_ids.txt > filtered.abundance.tsv
+
     vamb bin \\
         ${mode} \\
         -p ${task.cpus} \\
         --outdir ${prefix}/ \\
-        --fasta ${assembly} \\
-        ${depth_input} \\
+        --fasta filtered.contigs.fasta \\
+        --abundance_tsv filtered.abundance.tsv \\
         ${tax_input} \\
         ${args}
 
