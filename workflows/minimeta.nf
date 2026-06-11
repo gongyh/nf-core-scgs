@@ -202,7 +202,8 @@ include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_rem
 include { REMAP                             } from '../modules/local/remap'
 include { MERGE_BAMS                        } from '../modules/local/merge_bams'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
-include { PREPARE_FEATURES                  } from '../subworkflows/local/prepare_features'
+include { PREPARE_FEATURES_SINGLE           } from '../subworkflows/local/prepare_features_single'
+include { PREPARE_FEATURES_MULTI            } from '../subworkflows/local/prepare_features_multi'
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
@@ -287,32 +288,31 @@ workflow MINIMETA {
     ch_fasta = SPADES_JOINT.out.contig
     SAMTOOLS_FAIDX( ch_fasta )
     ch_fai = SAMTOOLS_FAIDX.out.fai
-    PREPARE_FEATURES( ch_fasta, ch_fai, ch_bam_for_coverage )
-    ch_feature_matrix = PREPARE_FEATURES.out.feature_matrix
-    ch_coverage_matrix = PREPARE_FEATURES.out.coverage_matrix
+    PREPARE_FEATURES_SINGLE( ch_fasta, ch_fai, ch_bam_for_coverage )
+    ch_single_coverage = PREPARE_FEATURES_SINGLE.out.coverage_matrix
+    PREPARE_FEATURES_MULTI( ch_fasta, ch_fai, REMAP.out.bam )
+    ch_multi_coverage = PREPARE_FEATURES_MULTI.out.coverage_matrix
     // binning
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_all_s2b = Channel.empty()
+    ch_versions = Channel.empty() 
     //COOCCURRENCE
-    ch_coverage = PREPARE_FEATURES.out.coverage_matrix
-    COOCCURRENCE_BINNING( ch_coverage )
-    ch_versions_cooccur = ch_versions.mix(COOCCURRENCE_BINNING.out.versions)
+    COOCCURRENCE_BINNING( ch_multi_coverage )
     EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_assembly)
     ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
+    ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
     //SEMIBIN2
     SEMIBIN2(ch_assembly, ch_merged_bam)
     ch_semibin2_s2b = SEMIBIN2.out.scaffolds2bin
         .map { file -> ['SEMIBIN2', file] }
         .filter { it[1].size() > 0 }
     ch_all_s2b = ch_all_s2b.mix(ch_semibin2_s2b)
-    //ch_all_s2b = ch_all_s2b.mix( SEMIBIN2.out.scaffolds2bin.map { file -> ['SEMIBIN2', file] } )
     ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
     // TaxVAMB
-    TAXVAMB_INTEGRATION( ch_assembly, ch_coverage )
+    TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
     // DAS TOOL
-
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)
     ch_bins_dir = DAS_TOOL.out.bins
@@ -367,7 +367,8 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SPADES_JOINT.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(REMAP.out.mqc_tsv.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES.out.coverage_mqc.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_MULTI.out.coverage_mqc.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_SINGLE.out.coverage_mqc.ifEmpty([]))	
     ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))

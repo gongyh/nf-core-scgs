@@ -32,8 +32,6 @@ workflow TAXVAMB_INTEGRATION {
             def vamb_meta = [id: 'merged']
             return [ vamb_meta, row[0], row[1], [], row[2] ]
         }
-    ch_vamb_input.view { "Input to VAMB_BIN: ${it}" }
-    ch_coverage.view { "In taxvamb, coverage path: ${it}" }
     VAMB_BIN( ch_vamb_input )
 
     emit:

@@ -43,15 +43,16 @@ process VAMB_BIN {
     grep '^>' filtered.contigs.fasta | sed 's/^>//' > keep_ids.txt
     awk -F'\\t' '
         NR==FNR {
-            if (FNR==1) { print \$0; next }
             a[\$1]=\$0;
             next
+        }
+        FNR==1 {
+            print "contigname\\tabundance"
         }
         {
             if (\$1 in a) print a[\$1]
         }
     ' ${abundance_tsv} keep_ids.txt > filtered.abundance.tsv
-
     vamb bin \\
         ${mode} \\
         -p ${task.cpus} \\
