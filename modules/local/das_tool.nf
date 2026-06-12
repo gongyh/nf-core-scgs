@@ -1,6 +1,7 @@
 process DAS_TOOL {
     tag "das_tool"
     label 'process_medium'
+    conda "bioconda::das_tool=1.1.2"
     container 'community.wave.seqera.io/library/das_tool:1.1.2--0fc15370c91e86b2'
 
     input:
@@ -23,7 +24,9 @@ process DAS_TOOL {
         -o das_tool_result \\
         --search_engine diamond \\
         --threads ${task.cpus} \\
-        ${args}
+        ${args} \\
+        --create_plots 0 \\
+        --write_bins 1
 
     mkdir -p das_tool_bins
     if [ -d das_tool_result_DASTool_bins ]; then

@@ -4,7 +4,7 @@ include { PRODIGAL                   } from '../../modules/local/prodigal'
 include { KMER_COUNT                 } from '../../modules/local/kmer_count'
 
 
-workflow PREPARE_FEATURES {
+workflow PREPARE_FEATURES_SINGLE {
     take:
     ch_fasta
     ch_fai
