@@ -22,8 +22,8 @@ process SEMIBIN2 {
         ${bam_args} \\
         -o bins_merged \\
         --threads ${task.cpus} \\
-        --compression none
-
+        --compression none \\
+        ${args}
     if [ -d bins_merged/output_bins ]; then
         mv bins_merged/output_bins/* bins_merged/ 2>/dev/null || true
         rmdir bins_merged/output_bins
