@@ -199,6 +199,7 @@ include { SPADES as READ_CORRECTION; SPADES } from '../modules/local/spades'
 include { MERGE_CORRECTED                   } from '../modules/local/merge_corrected'
 include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
 include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_remap'
+include { BOWTIE2_REMAP as BOWTIE2_REMAP_FILTERED } from '../modules/local/bowtie2_remap'
 include { REMAP                             } from '../modules/local/remap'
 include { MERGE_BAMS                        } from '../modules/local/merge_bams'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
@@ -208,6 +209,8 @@ include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
 include { TAXVAMB_INTEGRATION               } from '../subworkflows/local/taxvamb_integration'
+include { FILTER_CONTIGS                    } from '../modules/local/filter_contigs'
+include { DCVBIN                            } from '../subworkflows/local/dcvbin'
 include { DAS_TOOL                          } from '../modules/local/das_tool'
 include { CHECKM2                           } from '../modules/local/checkm2'
 include { PROKKA                            } from '../modules/local/prokka'
@@ -312,6 +315,24 @@ workflow MINIMETA {
     TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
+    //FILTERED_SEQS
+    FILTER_CONTIGS( ch_assembly, 2000 )
+    ch_filtered_fasta_with_meta = FILTER_CONTIGS.out.filtered.map { fasta -> 
+        return [ [ id: fasta.baseName ], fasta ] 
+    }
+    ch_bowtie2_remap_filtered = BOWTIE2_REMAP_FILTERED( ch_filtered_fasta_with_meta )
+    ch_versions = ch_versions.mix(ch_bowtie2_remap_filtered.out.versions)
+    filtered_remap_input = trimmed_reads.combine(ch_bowtie2_remap_filtered.out.index).map {
+        [it[0] + [id_index: 'merged_filtered'], it[1], it[3]]
+    }
+    REMAP_FILTERED = REMAP( filtered_remap_input, params.allow_multi_align )
+    ch_versions = ch_versions.mix(REMAP_FILTERED.out.versions)
+    ch_filtered_bam = REMAP_FILTERED.out.bam.map { meta, bam -> bam }
+    ch_bam_path = ch_filtered_bam
+    //DCVBIN
+    DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
+    ch_all_s2b = ch_all_s2b.mix( DCVBIN.out.scaffolds2bin.map{ file -> ['DCVBIN', file] } )
+    ch_versions = ch_versions.mix( DCVBIN.out.versions )
     // DAS TOOL
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)
@@ -372,7 +393,8 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix( TAXVAMB_INTEGRATION.out.mqc_tsv.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix(TAXVAMB_INTEGRATION.out.mqc_tsv.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv )
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
 
     MULTIQC (

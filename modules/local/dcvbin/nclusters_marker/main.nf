@@ -1,8 +1,8 @@
 process MARKER_NCLUSTERS {
-    tag "${meta.id}"
+    tag "${fasta_file.baseName}"
 
     conda "${moduleDir}/copygen.yaml"
-    container 'community.wave.seqera.io/library/copygen:aca96b4a00a56131'
+    container 'community.wave.seqera.io/library/numpy_pandas_python-abi3:f58d0c4ace38e4d4'
 
     input:
     path kmer_file
@@ -13,7 +13,6 @@ process MARKER_NCLUSTERS {
 
     script:
     def args    = task.ext.args ?: ''
-    prefix      = task.ext.prefix ?: "${meta.id}"
     """
     python ${projectDir}/bin/dcvbin/marker_gene/src/marker_gene_utils.py \
         -kf "${kmer_file}" \

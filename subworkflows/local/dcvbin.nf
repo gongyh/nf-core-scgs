@@ -11,11 +11,12 @@ workflow DCVBIN {
     sorted_bam
 
     main:
+    pure_fasta = contigs_fasta.map { meta, fasta -> fasta }
     // contig features from DNABERT-S
     CONTIG_EMBEDDING(contigs_fasta, params.DNABERTS_dir)
 
     // TNF & RPKM
-    TNF_RPKM(contigs_fasta, sorted_bam)
+    TNF_RPKM(pure_fasta, sorted_bam)
 
     // VAE feature fusion
     FEATURE_FUSION(
@@ -25,19 +26,22 @@ workflow DCVBIN {
     )
 
     // k-mer feature
-    CONTIG_KMER(contigs_fasta)
+    CONTIG_KMER(pure_fasta)
 
     // Initial number of clusters by marker genes
-    MARKER_NCLUSTERS(CONTIG_KMER.out.kmer, contigs_fasta)
+    MARKER_NCLUSTERS(CONTIG_KMER.out.kmer, pure_fasta)
 
     // binning
     DCVBIN_BIN(
         FEATURE_FUSION.out.features,
         MARKER_NCLUSTERS.out.marker_cv,
-        contigs_fasta
+        pure_fasta
     )
 
     emit:
     bins_dir = DCVBIN_BIN.out.bins_dir
     label_file = DCVBIN_BIN.out.label_file
+    scaffolds2bin = DCVBIN_BIN.out.scaffolds2bin
+    mqc_tsv = DCVBIN_BIN.out.mqc_tsv
+    versions = DCVBIN_BIN.out.versions
 }

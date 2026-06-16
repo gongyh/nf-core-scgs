@@ -1,5 +1,5 @@
 process FEATURE_FUSION {
-    tag "${meta.id}"
+    tag "${fpf_file.baseName}"
 
     conda "${moduleDir}/dcvbin.yaml"
     container 'community.wave.seqera.io/library/dcvbin:ea1d53670b689bf9'
@@ -14,7 +14,7 @@ process FEATURE_FUSION {
 
     script:
     def args    = task.ext.args ?: ''
-    prefix      = task.ext.prefix ?: "${meta.id}"
+    prefix      = task.ext.prefix ?: "${fpf_file.baseName.replaceAll('_fpf', '')}"
     """
     python ${projectDir}/bin/dcvbin/myvae/mainfiles/vaeTest_2.py \
         -dd "${fpf_file}" \
