@@ -12,7 +12,7 @@ process CHECKM2 {
     path db
 
     output:
-    path('checkm2_results.txt'), emit: txt
+    path('Checkm2_results.txt'), emit: txt
     path('CheckM2_mqc.tsv')    , emit: mqc_tsv
     path "versions.yml"        , emit: versions
 
@@ -20,13 +20,12 @@ process CHECKM2 {
     task.ext.when == null || task.ext.when
 
     script:
-    def out_file = (ext == "fasta") ? "spades_checkM2.txt" : "checkm2_results.txt"
     """
     checkm2 predict --threads ${task.cpus} -x ${ext} --input ${input_dir} --output-directory checkm2 --database_path ${db}
-    cp checkm2/quality_report.tsv ${out_file}
+    cp checkm2/quality_report.tsv Checkm2_results.txt
     echo "# plot_type: 'table'" > CheckM2_mqc.tsv
     echo "# section_name: 'CheckM2'" >> CheckM2_mqc.tsv
-    cat ${out_file} >> CheckM2_mqc.tsv
+    cat Checkm2_results.txt >> CheckM2_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         checkm2: \$( checkm2 --version )
