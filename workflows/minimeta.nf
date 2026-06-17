@@ -12,10 +12,11 @@ def helpMessage() {
     --reads                       Path to input data (must be surrounded with quotes)
     -profile                      Configuration profile to use. Can use multiple (comma separated). Available: conda, docker, singularity, awsbatch, test and more.
 
-    Options:
+    Workflow options:
     --single_end                  Specifies that the input is single end reads
-    --notrim                      Specifying --notrim will skip the adapter trimming step.
-    --saveTrimmed                 Save the trimmed Fastq files in the the Results directory.
+    --notrim                      Specifying --notrim will skip the adapter trimming step
+    --saveTrimmed                 Save the trimmed Fastq files in the results directory
+    --allow_multi_align           Allow multi-mapping of reads during remapping
 
     Trimming options:
     --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1
@@ -23,8 +24,12 @@ def helpMessage() {
     --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1
     --three_prime_clip_r2 [int]   Instructs Trim Galore to remove bp from the 3' end of read 2
 
-    Database options:
-    --mmseqs_db                   Path to the mmseqs database
+    External databases:
+    --mmseqs_db                   Path to the MMseqs2 database for taxonomic classification
+    --checkm2_db                  Path to CheckM2 database
+    --kofam_profile               Path to KOfam profile database
+    --kofam_kolist                Path to KOfam ko_list file
+    --eggnog_db                   Path to EggNOG database for emapper
 
     Output options:
     --outdir                      The output directory where the results will be saved

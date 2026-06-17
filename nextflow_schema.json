@@ -354,6 +354,11 @@
                     "default": false,
                     "description": "Enable minimeta single-cell metagenomics analysis workflow"
                 },
+                "prepare_databases": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable database preparation workflow"
+                },
                 "genus": {
                     "type": "string",
                     "description": "Genus name of the genome."
