@@ -1,4 +1,4 @@
-process GENOMAD_DOWNLOAD {
+process GENOMAD_DBDOWNLOAD {
     tag "geNomad"
 
     conda "bioconda::genomad=1.7.4"

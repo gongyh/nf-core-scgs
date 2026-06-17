@@ -1,4 +1,4 @@
-process BLOB_DOWNLOAD {
+process BLOB_DBDOWNLOAD {
     tag "${BlobTools}"
 
     conda "bioconda::blobtools=1.1.1=py_1"

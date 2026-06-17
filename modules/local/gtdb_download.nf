@@ -1,4 +1,4 @@
-process GTDB_DOWNLOAD {
+process GTDB_DBDOWNLOAD {
     tag "${GTDB_r214}"
 
     conda "conda-forge::wget=1.25.0"

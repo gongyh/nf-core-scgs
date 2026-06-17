@@ -1,4 +1,4 @@
-process KRAKEN2_DOWNLOAD {
+process KRAKEN2_DBDOWNLOAD {
     tag "${Kraken2}"
 
     conda "conda-forge::wget=1.25.0"

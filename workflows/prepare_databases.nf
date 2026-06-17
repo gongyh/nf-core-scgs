@@ -34,17 +34,17 @@ params.db_type = "all"
 /*
  * Import modules
  */
-include { MMSEQS_DOWNLOAD         } from '../modules/local/mmseqs_download'
-include { CHECKM2_DOWNLOAD        } from '../modules/local/checkm2_download'
-include { KOFAM_DOWNLOAD          } from '../modules/local/kofam_download'
-include { EGGNOG_DOWNLOAD         } from '../modules/local/eggnog_download'
-include { KRAKEN2_DOWNLOAD        } from '../modules/local/kraken2_download'
-include { GTDB_DOWNLOAD           } from '../modules/local/gtdb_download'
-include { BLOB_DOWNLOAD           } from '../modules/local/blob_download'
-include { METABULI_DOWNLOAD       } from '../modules/local/metabuli_download'
-include { GENOMAD_DOWNLOAD        } from '../modules/local/genomad_download'
-include { NT_DOWNLOAD             } from '../modules/local/nt_download'
-include { GET_SOFTWARE_VERSIONS   } from '../modules/local/get_software_versions/main'
+include { MMSEQS_DBDOWNLOAD         } from '../modules/local/mmseqs_download'
+include { CHECKM2_DBDOWNLOAD        } from '../modules/local/checkm2_download'
+include { KOFAM_DBDOWNLOAD          } from '../modules/local/kofam_download'
+include { EGGNOG_DBDOWNLOAD         } from '../modules/local/eggnog_download'
+include { KRAKEN2_DBDOWNLOAD        } from '../modules/local/kraken2_download'
+include { GTDB_DBDOWNLOAD           } from '../modules/local/gtdb_download'
+include { BLOB_DBDOWNLOAD           } from '../modules/local/blob_download'
+include { METABULI_DBDOWNLOAD       } from '../modules/local/metabuli_download'
+include { GENOMAD_DBDOWNLOAD        } from '../modules/local/genomad_download'
+include { NT_DBDOWNLOAD             } from '../modules/local/nt_download'
+include { GET_SOFTWARE_VERSIONS     } from '../modules/local/get_software_versions/main'
 
 /*
  * Workflow
@@ -56,71 +56,71 @@ workflow PREPARE_DATABASES {
 
     // MMseqs2 database
     if (db_types.contains("all") || db_types.contains("mmseqs")) {
-        MMSEQS_DOWNLOAD()
-        ch_versions = ch_versions.mix(MMSEQS_DOWNLOAD.out.versions)
+        MMSEQS_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(MMSEQS_DBDOWNLOAD.out.versions)
         log.info "Prepared MMseqs2 database: ${params.outdir}/mmseqs_db"
     }
 
     // CheckM2 database
     if (db_types.contains("all") || db_types.contains("checkm2")) {
-        CHECKM2_DOWNLOAD()
-        ch_versions = ch_versions.mix(CHECKM2_DOWNLOAD.out.versions)
+        CHECKM2_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(CHECKM2_DBDOWNLOAD.out.versions)
         log.info "Prepared CheckM2 database: ${params.outdir}/checkm2_db"
     }
 
     // KOfam database
     if (db_types.contains("all") || db_types.contains("kofam")) {
-        KOFAM_DOWNLOAD()
-        ch_versions = ch_versions.mix(KOFAM_DOWNLOAD.out.versions)
+        KOFAM_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(KOFAM_DBDOWNLOAD.out.versions)
         log.info "Prepared KOfam database: ${params.outdir}/kofam_db"
     }
 
     // EggNOG database
     if (db_types.contains("all") || db_types.contains("eggnog")) {
-        EGGNOG_DOWNLOAD()
-        ch_versions = ch_versions.mix(EGGNOG_DOWNLOAD.out.versions)
+        EGGNOG_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(EGGNOG_DBDOWNLOAD.out.versions)
         log.info "Prepared EggNOG database: ${params.outdir}/eggnog_db"
     }
 
     // Kraken2 database
     if (db_types.contains("all") || db_types.contains("kraken2")) {
-        KRAKEN2_DOWNLOAD()
-        ch_versions = ch_versions.mix(KRAKEN2_DOWNLOAD.out.versions)
+        KRAKEN2_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(KRAKEN2_DBDOWNLOAD.out.versions)
         log.info "Prepared Kraken2 database: ${params.outdir}/kraken2_db"
     }
 
     // GTDB database
     if (db_types.contains("all") || db_types.contains("gtdb")) {
-        GTDB_DOWNLOAD()
-        ch_versions = ch_versions.mix(GTDB_DOWNLOAD.out.versions)
+        GTDB_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(GTDB_DBDOWNLOAD.out.versions)
         log.info "Prepared GTDB database: ${params.outdir}/gtdb_db"
     }
 
     // Blobtools database
     if (db_types.contains("all") || db_types.contains("blob")) {
-        BLOB_DOWNLOAD()
-        ch_versions = ch_versions.mix(BLOB_DOWNLOAD.out.versions)
+        BLOB_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(BLOB_DBDOWNLOAD.out.versions)
         log.info "Prepared Blobtools database: ${params.outdir}/blob_db"
     }
 
     // MetaBuli database
     if (db_types.contains("all") || db_types.contains("metabuli")) {
-        METABULI_DOWNLOAD()
-        ch_versions = ch_versions.mix(METABULI_DOWNLOAD.out.versions)
+        METABULI_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(METABULI_DBDOWNLOAD.out.versions)
         log.info "Prepared MetaBuli database: ${params.outdir}/metabuli_db"
     }
 
     // GENOMAD database
     if (db_types.contains("all") || db_types.contains("genomad")) {
-        GENOMAD_DOWNLOAD()
-        ch_versions = ch_versions.mix(GENOMAD_DOWNLOAD.out.versions)
+        GENOMAD_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(GENOMAD_DBDOWNLOAD.out.versions)
         log.info "Prepared GENOMAD database: ${params.outdir}/genomad_db"
     }
 
     // NCBI nt database
     if (db_types.contains("all") || db_types.contains("nt")) {
-        NT_DOWNLOAD()
-        ch_versions = ch_versions.mix(NT_DOWNLOAD.out.versions)
+        NT_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(NT_DBDOWNLOAD.out.versions)
         log.info "Prepared NCBI nt database: ${params.outdir}/nt_db"
     }
 

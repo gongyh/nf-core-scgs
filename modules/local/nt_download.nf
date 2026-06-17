@@ -1,4 +1,4 @@
-process NT_DOWNLOAD {
+process NT_DBDOWNLOAD {
     tag "NCBI_nt"
 
     conda "bioconda::blast=2.13.0"

@@ -1,4 +1,4 @@
-process MMSEQS_DOWNLOAD {
+process MMSEQS_DBDOWNLOAD {
     tag "${MMseqs2}"
 
     conda "bioconda::mmseqs2=18.8cc5c conda-forge::wget=1.25.0"

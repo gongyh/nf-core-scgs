@@ -1,4 +1,4 @@
-process CHECKM2_DOWNLOAD {
+process CHECKM2_DBDOWNLOAD {
     tag "CheckM2"
 
     conda "bioconda::checkm2=1.0.1"

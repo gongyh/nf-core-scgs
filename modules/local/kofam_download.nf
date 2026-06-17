@@ -1,4 +1,4 @@
-process KOFAM_DOWNLOAD {
+process KOFAM_DBDOWNLOAD {
     tag "${kofam}"
 
     conda "conda-forge::wget=1.25.0"

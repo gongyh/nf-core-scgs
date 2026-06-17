@@ -1,4 +1,4 @@
-process EGGNOG_DOWNLOAD {
+process EGGNOG_DBDOWNLOAD {
     tag "eggNOG"
 
     conda "bioconda::eggnog-mapper=2.1.11=pyhdfd78af_0"
