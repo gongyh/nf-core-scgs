@@ -1,10 +1,10 @@
 process MMSEQS_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/mmseqs", mode: 'copy'
+    tag "${MMseqs2}"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "bioconda::mmseqs2=18.8cc5c conda-forge::wget=1.25.0"
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ed/edfecaaca16ca7fb7b6428dce0ed9c737549b38146360c98fdabf74e6c4cac68/data'
+        : 'community.wave.seqera.io/library/mmseqs2_wget:aa683a2c5355899d'}"
 
     output:
     path 'mmseqs_db', emit: db
@@ -12,13 +12,10 @@ process MMSEQS_DOWNLOAD {
 
     script:
     """
-    mkdir -p mmseqs_db
-    cd mmseqs_db
-
-    echo "Downloading MMseqs2 database from ${db_url}..."
-
-    wget -q -r -np -nH --cut-dirs=1 -R "index.html*" "${db_url}" || \\\n    curl -L -o mmseqs_db.tar.gz "${db_url}" && tar -xzf mmseqs_db.tar.gz
-
+    mkdir -p mmseqs_db tmp
+    echo "Downloading MMseqs2 database ..."
+    mmseqs databases GTDB mmseqs_db tmp --threads ${task.cpus}
+    rm -rf tmp
     echo "MMseqs2 database downloaded successfully"
 
     cat > versions.yml << 'EOF'

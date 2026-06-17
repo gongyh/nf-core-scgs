@@ -1,10 +1,8 @@
 process GTDB_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/gtdb", mode: 'copy'
+    tag "${GTDB_r214}"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "conda-forge::wget=1.25.0"
+    container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
     path 'gtdb_db', emit: db
@@ -13,17 +11,15 @@ process GTDB_DOWNLOAD {
     script:
     """
     mkdir -p gtdb_db
-    cd gtdb_db
-
-    echo "Downloading GTDB database from ${db_url}..."
-
-    wget -q -r -np -nH --cut-dirs=3 -R "index.html*" "${db_url}/latest/" || \\\n    wget -q "${db_url}/release214/auxillary_files/gtdbtk_r214_data.tar.gz" && tar -xzf gtdbtk_r214_data.tar.gz
-
+    echo "Downloading GTDB database ..."
+    wget -q https://data.gtdb.ecogenomic.org/releases/release214/214.0/auxillary_files/gtdbtk_r214_data.tar.gz
+    tar xvzf gtdbtk_r214_data.tar.gz -C gtdb_db/
+    rm -f gtdbtk_r214_data.tar.gz
     echo "GTDB database downloaded successfully"
 
     cat > versions.yml << 'EOF'
-"gtdb_download":
-    "version": "1.0.0"
-EOF
+    "gtdb_download":
+        "version": "1.0.0"
+    EOF
     """
 }

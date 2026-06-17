@@ -1,10 +1,8 @@
 process METABULI_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/metabuli", mode: 'copy'
+    tag "${Metabuli_GTDB226}"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "conda-forge::wget=1.25.0"
+    container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
     path 'metabuli_db', emit: db
@@ -13,12 +11,9 @@ process METABULI_DOWNLOAD {
     script:
     """
     mkdir -p metabuli_db
-    cd metabuli_db
-
-    echo "Downloading MetaBuli database from ${db_url}..."
-
-    git clone --depth 1 "${db_url}" . || \\\n    wget -q "https://github.com/khyox/metabuli/releases/download/v1.0/metabuli_db.tar.gz" && tar -xzf metabuli_db.tar.gz
-
+    echo "Downloading MetaBuli database ..."
+    wget -q "https://opendata.mmseqs.org/metabuli/gtdb226.tar.gz"
+    tar -xzf gtdb226.tar.gz -C metabuli_db/ && rm -f gtdb226.tar.gz
     echo "MetaBuli database downloaded successfully"
 
     cat > versions.yml << 'EOF'

@@ -1,10 +1,10 @@
 process CHECKM2_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/checkm2", mode: 'copy'
+    tag "CheckM2"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "bioconda::checkm2=1.0.1"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/checkm2:1.0.1--pyh7cba7a3_0' :
+        'community.wave.seqera.io/library/checkm2:1.0.1--034a3a15afae63b1' }"
 
     output:
     path 'checkm2_db', emit: db
@@ -13,17 +13,13 @@ process CHECKM2_DOWNLOAD {
     script:
     """
     mkdir -p checkm2_db
-    cd checkm2_db
-
-    echo "Downloading CheckM2 database from ${db_url}..."
-
-    wget -q -r -np -nH --cut-dirs=2 -R "index.html*" "${db_url}" || \\\n    curl -L -o checkm2_db.tar.gz "${db_url}checkm2_database.tar.gz" && tar -xzf checkm2_db.tar.gz
-
+    echo "Downloading CheckM2 database ..."
+    checkm2 database --download --path checkm2_db
     echo "CheckM2 database downloaded successfully"
 
-    cat > versions.yml << 'EOF'
-"checkm2_download":
-    "version": "1.0.0"
-EOF
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        checkm2: \$( checkm2 --version )
+    END_VERSIONS
     """
 }

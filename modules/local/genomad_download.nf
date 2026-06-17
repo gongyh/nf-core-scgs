@@ -1,10 +1,10 @@
 process GENOMAD_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/genomad", mode: 'copy'
+    tag "geNomad"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "bioconda::genomad=1.7.4"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/genomad:1.7.4--pyhdfd78af_0':
+        'biocontainers/genomad:1.7.4--pyhdfd78af_0' }"
 
     output:
     path 'genomad_db', emit: db
@@ -13,17 +13,13 @@ process GENOMAD_DOWNLOAD {
     script:
     """
     mkdir -p genomad_db
-    cd genomad_db
-
-    echo "Downloading GENOMAD database from ${db_url}..."
-
-    wget -q "${db_url}/viral_db.tar.gz" && tar -xzf viral_db.tar.gz && rm viral_db.tar.gz
-
+    echo "Downloading GENOMAD database ..."
+    genomad download-database .
     echo "GENOMAD database downloaded successfully"
 
-    cat > versions.yml << 'EOF'
-"genomad_download":
-    "version": "1.0.0"
-EOF
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        genomad: \$(echo \$(genomad --version 2>&1) | sed 's/^.*geNomad, version //; s/ .*\$//')
+    END_VERSIONS
     """
 }

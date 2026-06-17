@@ -1,10 +1,8 @@
 process KRAKEN2_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/kraken2", mode: 'copy'
+    tag "${Kraken2}"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "conda-forge::wget=1.25.0"
+    container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
     path 'kraken2_db', emit: db
@@ -13,12 +11,9 @@ process KRAKEN2_DOWNLOAD {
     script:
     """
     mkdir -p kraken2_db
-    cd kraken2_db
-
-    echo "Downloading Kraken2 database from ${db_url}..."
-
-    wget -q "${db_url}/k2_standard_08gb_20231009.tar.gz" && \\\n    tar -xzf k2_standard_08gb_20231009.tar.gz && rm k2_standard_08gb_20231009.tar.gz
-
+    echo "Downloading Kraken2 database ..."
+    wget -q "https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_20260226.tar.gz"   
+    tar -xzf k2_pluspf_20260226.tar.gz -C kraken2_db/ && rm -f k2_pluspf_20260226.tar.gz
     echo "Kraken2 database downloaded successfully"
 
     cat > versions.yml << 'EOF'

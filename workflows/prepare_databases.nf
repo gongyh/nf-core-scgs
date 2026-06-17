@@ -12,18 +12,6 @@ def helpMessage() {
     --outdir                      The output directory where the databases will be saved (Default: ./databases)
     --db_type                     Comma-separated list of databases to prepare. Options: mmseqs, checkm2, kofam, eggnog, kraken2, gtdb, blob, metabuli, genomad, nt, all
 
-    Database download URLs:
-    --mmseqs_db_url               URL for MMseqs2 database (Default: https://mmseqs.com/databases)
-    --checkm2_db_url              URL for CheckM2 database (Default: https://data.ace.uq.edu.au/public/CheckM2/)
-    --kofam_db_url                URL for KOfam database (Default: https://www.genome.jp/ftp/db/kofam/)
-    --eggnog_db_url               URL for EggNOG database (Default: https://eggnog5.embl.de/download/eggnog_5.0/)
-    --kraken2_db_url              URL for Kraken2 database (Default: https://genome-idx.s3.amazonaws.com/kraken)
-    --gtdb_db_url                 URL for GTDB database (Default: https://data.gtdb.ecogenomic.org/releases/)
-    --blob_db_url                 URL for Blobtools nodesDB (Default: https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/)
-    --metabuli_db_url             URL for MetaBuli database (Default: https://github.com/khyox/metabuli)
-    --genomad_db_url              URL for GENOMAD database (Default: https://portal.nersc.gov/GENOMAD/)
-    --nt_db_url                   URL for NCBI nt database (Default: https://ftp.ncbi.nlm.nih.gov/blast/db/)
-
     Generic options:
     --help                        Display this help message
     --monochrome_logs             Do not use coloured log outputs
@@ -42,16 +30,6 @@ if (params.help){
 // Initialize parameters with default values
 params.outdir = "./databases"
 params.db_type = "all"
-params.mmseqs_db_url = "https://mmseqs.com/databases"
-params.checkm2_db_url = "https://data.ace.uq.edu.au/public/CheckM2/"
-params.kofam_db_url = "https://www.genome.jp/ftp/db/kofam/"
-params.eggnog_db_url = "https://eggnog5.embl.de/download/eggnog_5.0/"
-params.kraken2_db_url = "https://genome-idx.s3.amazonaws.com/kraken"
-params.gtdb_db_url = "https://data.gtdb.ecogenomic.org/releases/"
-params.blob_db_url = "https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/"
-params.metabuli_db_url = "https://github.com/khyox/metabuli"
-params.genomad_db_url = "https://portal.nersc.gov/GENOMAD/"
-params.nt_db_url = "https://ftp.ncbi.nlm.nih.gov/blast/db/"
 
 /*
  * Import modules
@@ -76,86 +54,74 @@ workflow PREPARE_DATABASES {
 
     def db_types = params.db_type.toLowerCase().split(',').collect { it.trim() }
 
-    // Create output directories
-    def mmseqs_out = file("${params.outdir}/mmseqs")
-    def checkm2_out = file("${params.outdir}/checkm2")
-    def kofam_out = file("${params.outdir}/kofam")
-    def eggnog_out = file("${params.outdir}/eggnog")
-    def kraken2_out = file("${params.outdir}/kraken2")
-    def gtdb_out = file("${params.outdir}/gtdb")
-    def blob_out = file("${params.outdir}/blob")
-    def metabuli_out = file("${params.outdir}/metabuli")
-    def genomad_out = file("${params.outdir}/genomad")
-    def nt_out = file("${params.outdir}/nt")
-
     // MMseqs2 database
     if (db_types.contains("all") || db_types.contains("mmseqs")) {
-        MMSEQS_DOWNLOAD(params.mmseqs_db_url, mmseqs_out)
+        MMSEQS_DOWNLOAD()
         ch_versions = ch_versions.mix(MMSEQS_DOWNLOAD.out.versions)
-        log.info "Prepared MMseqs2 database: ${mmseqs_out}"
+        log.info "Prepared MMseqs2 database: ${params.outdir}/mmseqs_db"
     }
 
     // CheckM2 database
     if (db_types.contains("all") || db_types.contains("checkm2")) {
-        CHECKM2_DOWNLOAD(params.checkm2_db_url, checkm2_out)
+        CHECKM2_DOWNLOAD()
         ch_versions = ch_versions.mix(CHECKM2_DOWNLOAD.out.versions)
-        log.info "Prepared CheckM2 database: ${checkm2_out}"
+        log.info "Prepared CheckM2 database: ${params.outdir}/checkm2_db"
     }
 
     // KOfam database
     if (db_types.contains("all") || db_types.contains("kofam")) {
-        KOFAM_DOWNLOAD(params.kofam_db_url, kofam_out)
+        KOFAM_DOWNLOAD()
         ch_versions = ch_versions.mix(KOFAM_DOWNLOAD.out.versions)
-        log.info "Prepared KOfam database: ${kofam_out}"
+        log.info "Prepared KOfam database: ${params.outdir}/kofam_db"
     }
 
     // EggNOG database
     if (db_types.contains("all") || db_types.contains("eggnog")) {
-        EGGNOG_DOWNLOAD(params.eggnog_db_url, eggnog_out)
+        EGGNOG_DOWNLOAD()
         ch_versions = ch_versions.mix(EGGNOG_DOWNLOAD.out.versions)
-        log.info "Prepared EggNOG database: ${eggnog_out}"
+        log.info "Prepared EggNOG database: ${params.outdir}/eggnog_db"
     }
 
     // Kraken2 database
     if (db_types.contains("all") || db_types.contains("kraken2")) {
-        KRAKEN2_DOWNLOAD(params.kraken2_db_url, kraken2_out)
+        KRAKEN2_DOWNLOAD()
         ch_versions = ch_versions.mix(KRAKEN2_DOWNLOAD.out.versions)
-        log.info "Prepared Kraken2 database: ${kraken2_out}"
+        log.info "Prepared Kraken2 database: ${params.outdir}/kraken2_db"
     }
 
     // GTDB database
     if (db_types.contains("all") || db_types.contains("gtdb")) {
-        GTDB_DOWNLOAD(params.gtdb_db_url, gtdb_out)
+        GTDB_DOWNLOAD()
         ch_versions = ch_versions.mix(GTDB_DOWNLOAD.out.versions)
-        log.info "Prepared GTDB database: ${gtdb_out}"
+        log.info "Prepared GTDB database: ${params.outdir}/gtdb_db"
     }
 
     // Blobtools database
     if (db_types.contains("all") || db_types.contains("blob")) {
-        BLOB_DOWNLOAD(params.blob_db_url, blob_out)
+        BLOB_DOWNLOAD()
         ch_versions = ch_versions.mix(BLOB_DOWNLOAD.out.versions)
-        log.info "Prepared Blobtools database: ${blob_out}"
+        log.info "Prepared Blobtools database: ${params.outdir}/blob_db"
     }
 
     // MetaBuli database
     if (db_types.contains("all") || db_types.contains("metabuli")) {
-        METABULI_DOWNLOAD(params.metabuli_db_url, metabuli_out)
+        METABULI_DOWNLOAD()
         ch_versions = ch_versions.mix(METABULI_DOWNLOAD.out.versions)
-        log.info "Prepared MetaBuli database: ${metabuli_out}"
+        log.info "Prepared MetaBuli database: ${params.outdir}/metabuli_db"
     }
 
     // GENOMAD database
     if (db_types.contains("all") || db_types.contains("genomad")) {
-        GENOMAD_DOWNLOAD(params.genomad_db_url, genomad_out)
+        GENOMAD_DOWNLOAD()
         ch_versions = ch_versions.mix(GENOMAD_DOWNLOAD.out.versions)
-        log.info "Prepared GENOMAD database: ${genomad_out}"
+        log.info "Prepared GENOMAD database: ${params.outdir}/genomad_db"
     }
 
     // NCBI nt database
     if (db_types.contains("all") || db_types.contains("nt")) {
-        NT_DOWNLOAD(params.nt_db_url, nt_out)
+        NT_DOWNLOAD()
         ch_versions = ch_versions.mix(NT_DOWNLOAD.out.versions)
-        log.info "Prepared NCBI nt database: ${nt_out}"
+        log.info "Prepared NCBI nt database: ${params.outdir}/nt_db"
     }
 
     // GET_SOFTWARE_VERSIONS

@@ -1,10 +1,8 @@
 process KOFAM_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/kofam", mode: 'copy'
+    tag "${kofam}"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "conda-forge::wget=1.25.0"
+    container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
     path 'kofam_db', emit: db
@@ -13,13 +11,11 @@ process KOFAM_DOWNLOAD {
     script:
     """
     mkdir -p kofam_db
-    cd kofam_db
-
-    echo "Downloading KOfam database from ${db_url}..."
-
-    wget -q "${db_url}profiles.tar.gz" && tar -xzf profiles.tar.gz && rm profiles.tar.gz
-    wget -q "${db_url}ko_list"
-
+    echo "Downloading KOfam database from https://www.genome.jp/ftp/db/kofam/ ..."
+    wget -q "https://www.genome.jp/ftp/db/kofam/profiles.tar.gz"
+    tar -xzf profiles.tar.gz -C kofam_db/ && rm -f profiles.tar.gz
+    wget -q "https://www.genome.jp/ftp/db/kofam/ko_list.gz"
+    gzip -cd ko_list.gz > kofam_db/ko_list && rm -f ko_list.gz
     echo "KOfam database downloaded successfully"
 
     cat > versions.yml << 'EOF'

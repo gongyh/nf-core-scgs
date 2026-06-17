@@ -1,10 +1,10 @@
 process NT_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/nt", mode: 'copy'
+    tag "NCBI_nt"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "bioconda::blast=2.13.0"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/blast:2.13.0--hf3cf87c_0' :
+        'biocontainers/blast:2.13.0--hf3cf87c_0' }"
 
     output:
     path 'nt_db', emit: db
@@ -14,16 +14,13 @@ process NT_DOWNLOAD {
     """
     mkdir -p nt_db
     cd nt_db
-
-    echo "Downloading NCBI nt database from ${db_url}..."
-
-    wget -q "${db_url}/nt.00.tar.gz" && tar -xzf nt.00.tar.gz && rm nt.00.tar.gz
-
+    echo "Downloading NCBI nt database ..."
+    update_blastdb.pl --decompress nt
     echo "NCBI nt database downloaded successfully"
 
-    cat > versions.yml << 'EOF'
-"nt_download":
-    "version": "1.0.0"
-EOF
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        blastn: \$(blastn -version 2>&1 | grep blastn | sed 's/^.*blastn: //; s/Using.*\$//')
+    END_VERSIONS
     """
 }

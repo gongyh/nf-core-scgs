@@ -1,10 +1,10 @@
 process EGGNOG_DOWNLOAD {
-    tag "${db_url}"
-    publishDir "${params.outdir}/eggnog", mode: 'copy'
+    tag "eggNOG"
 
-    input:
-    val(db_url)
-    val(out_dir)
+    conda "bioconda::eggnog-mapper=2.1.11=pyhdfd78af_0"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/eggnog-mapper:2.1.11--pyhdfd78af_0' :
+        'biocontainers/eggnog-mapper:2.1.11--pyhdfd78af_0' }"
 
     output:
     path 'eggnog_db', emit: db
@@ -13,19 +13,13 @@ process EGGNOG_DOWNLOAD {
     script:
     """
     mkdir -p eggnog_db
-    cd eggnog_db
-
-    echo "Downloading EggNOG database from ${db_url}..."
-
-    wget -q "${db_url}eggnog.db.gz" && gunzip eggnog.db.gz
-    wget -q "${db_url}eggnog.taxid_info.tsv.gz" && gunzip eggnog.taxid_info.tsv.gz
-    wget -q "${db_url}members.tsv.gz" && gunzip members.tsv.gz
-
+    echo "Downloading EggNOG database ..."
+    download_eggnog_data.py --data_dir eggnog_db
     echo "EggNOG database downloaded successfully"
 
-    cat > versions.yml << 'EOF'
-"eggnog_download":
-    "version": "1.0.0"
-EOF
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        eggnog: \$(echo \$(emapper.py --version | grep emapper 2>&1 ) | cut -d'/' -f1 | sed 's/^.*emapper-//; s/Using.*\$//')
+    END_VERSIONS
     """
 }
