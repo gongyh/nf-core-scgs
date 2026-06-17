@@ -199,7 +199,6 @@ include { SPADES as READ_CORRECTION; SPADES } from '../modules/local/spades'
 include { MERGE_CORRECTED                   } from '../modules/local/merge_corrected'
 include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
 include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_remap'
-include { BOWTIE2_REMAP as BOWTIE2_REMAP_FILTERED } from '../modules/local/bowtie2_remap'
 include { REMAP                             } from '../modules/local/remap'
 include { MERGE_BAMS                        } from '../modules/local/merge_bams'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
@@ -210,6 +209,7 @@ include { EXTRACT_BINS                      } from '../modules/local/extract_bin
 include { SEMIBIN2                          } from '../modules/local/semibin2'
 include { TAXVAMB_INTEGRATION               } from '../subworkflows/local/taxvamb_integration'
 include { FILTER_CONTIGS                    } from '../modules/local/filter_contigs'
+include { FILTER_BAM                        } from '../modules/local/filter_bam'
 include { DCVBIN                            } from '../subworkflows/local/dcvbin'
 include { DAS_TOOL                          } from '../modules/local/das_tool'
 include { CHECKM2                           } from '../modules/local/checkm2'
@@ -315,19 +315,16 @@ workflow MINIMETA {
     TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
-    //FILTERED_SEQS
+    //FILTERED
+    ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
     FILTER_CONTIGS( ch_assembly, 2000 )
-    ch_filtered_fasta_with_meta = FILTER_CONTIGS.out.filtered.map { fasta -> 
-        return [ [ id: fasta.baseName ], fasta ] 
+    ch_filtered_fasta_with_meta = FILTER_CONTIGS.out.filtered.map { fasta ->
+        [ [id: fasta.baseName], fasta ]
     }
-    ch_bowtie2_remap_filtered = BOWTIE2_REMAP_FILTERED( ch_filtered_fasta_with_meta )
-    ch_versions = ch_versions.mix(ch_bowtie2_remap_filtered.out.versions)
-    filtered_remap_input = trimmed_reads.combine(ch_bowtie2_remap_filtered.out.index).map {
-        [it[0] + [id_index: 'merged_filtered'], it[1], it[3]]
-    }
-    REMAP_FILTERED = REMAP( filtered_remap_input, params.allow_multi_align )
-    ch_versions = ch_versions.mix(REMAP_FILTERED.out.versions)
-    ch_filtered_bam = REMAP_FILTERED.out.bam.map { meta, bam -> bam }
+    ch_versions = ch_versions.mix( FILTER_CONTIGS.out.versions )
+    FILTER_BAM( ch_filtered_fasta_with_meta, ch_merged_bam, ch_merged_bai )
+    ch_filtered_bam = FILTER_BAM.out.filtered_bam.map { meta, bam -> bam }
+    ch_versions = ch_versions.mix( FILTER_BAM.out.versions )
     ch_bam_path = ch_filtered_bam
     //DCVBIN
     DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
