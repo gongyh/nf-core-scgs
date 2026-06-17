@@ -54,48 +54,48 @@ include { GET_SOFTWARE_VERSIONS   } from '../modules/local/get_software_versions
  */
 workflow PREPARE_DATABASES {
     ch_versions = Channel.empty()
-    
+
     def db_types = params.db_type.toLowerCase().split(',').collect { it.trim() }
-    
+
     // Create output directories
     def mmseqs_out = file("${params.outdir}/mmseqs")
     def checkm2_out = file("${params.outdir}/checkm2")
     def kofam_out = file("${params.outdir}/kofam")
     def eggnog_out = file("${params.outdir}/eggnog")
-    
+
     // MMseqs2 database
     if (db_types.contains("all") || db_types.contains("mmseqs")) {
         MMSEQS_DOWNLOAD(params.mmseqs_db_url, mmseqs_out)
         ch_versions = ch_versions.mix(MMSEQS_DOWNLOAD.out.versions)
         log.info "Prepared MMseqs2 database: ${mmseqs_out}"
     }
-    
+
     // CheckM2 database
     if (db_types.contains("all") || db_types.contains("checkm2")) {
         CHECKM2_DOWNLOAD(params.checkm2_db_url, checkm2_out)
         ch_versions = ch_versions.mix(CHECKM2_DOWNLOAD.out.versions)
         log.info "Prepared CheckM2 database: ${checkm2_out}"
     }
-    
+
     // KOfam database
     if (db_types.contains("all") || db_types.contains("kofam")) {
         KOFAM_DOWNLOAD(params.kofam_db_url, kofam_out)
         ch_versions = ch_versions.mix(KOFAM_DOWNLOAD.out.versions)
         log.info "Prepared KOfam database: ${kofam_out}"
     }
-    
+
     // EggNOG database
     if (db_types.contains("all") || db_types.contains("eggnog")) {
         EGGNOG_DOWNLOAD(params.eggnog_db_url, eggnog_out)
         ch_versions = ch_versions.mix(EGGNOG_DOWNLOAD.out.versions)
         log.info "Prepared EggNOG database: ${eggnog_out}"
     }
-    
+
     // GET_SOFTWARE_VERSIONS
     if (!ch_versions.isEmpty()) {
         GET_SOFTWARE_VERSIONS(ch_versions.unique().collectFile(name: 'collated_versions.yml'))
     }
-    
+
     log.info "Database preparation completed. All databases saved to: ${params.outdir}"
 }
 
