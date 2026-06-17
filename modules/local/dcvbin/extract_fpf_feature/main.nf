@@ -3,7 +3,8 @@ process CONTIG_EMBEDDING {
     label 'process_gpu'
 
     conda "${moduleDir}/dnaberts.yaml"
-    container 'community.wave.seqera.io/library/loguru_numpy_pandas_python-abi3_pruned:55ad9b6f2a917ff1'
+
+    container 'community.wave.seqera.io/library/pandas_python_pytorch_scikit-learn_transformers:ac41f1afd77517cf'
 
     input:
     tuple val(meta), path(ctgs_2k)

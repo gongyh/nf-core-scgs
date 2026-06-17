@@ -2,7 +2,7 @@ process MARKER_NCLUSTERS {
     tag "${fasta_file.baseName}"
 
     conda "${moduleDir}/copygen.yaml"
-    container 'community.wave.seqera.io/library/numpy_pandas_python-abi3:f58d0c4ace38e4d4'
+    container 'community.wave.seqera.io/library/numpy_pandas_scikit-learn:01b845052414782c'
 
     input:
     path kmer_file

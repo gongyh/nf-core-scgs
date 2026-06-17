@@ -2,7 +2,7 @@ process TNF_RPKM {
     tag "${fasta_file.baseName}"
 
     conda "${moduleDir}/dcvbin.yaml"
-    container 'community.wave.seqera.io/library/pycoverm_pysam_loguru_numpy_pruned:10462dcc32c4ddbf'
+    container 'community.wave.seqera.io/library/pycoverm_pysam_samtools_loguru_pruned:cc76ada59f2bd8fc'
 
     input:
     path fasta_file
@@ -16,13 +16,11 @@ process TNF_RPKM {
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${fasta_file.baseName}"
     """
+
     mkdir -p tnf_and_rpkm
-    grep ">" "${fasta_file}" | sed 's/>//g' > seq_ids.txt
-    samtools view -b -h "${bam_file}" -N seq_ids.txt > filtered_perfect.bam
-    samtools index filtered_perfect.bam
     python ${projectDir}/bin/dcvbin/myvae/mainfiles/calc_tnf_and_rpkm_2.py \
         -od tnf_and_rpkm \
         -fd "${fasta_file}" \
-        -bam "${bam_file}"
+        -bam "${bam_file}" 
     """
 }
