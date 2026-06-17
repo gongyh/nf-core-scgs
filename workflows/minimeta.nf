@@ -26,6 +26,7 @@ def helpMessage() {
 
     External databases:
     --mmseqs_db                   Path to the MMseqs2 database for taxonomic classification
+    --metabuli_db                 Path to MetaBuli database for taxonomic classification
     --checkm2_db                  Path to CheckM2 database
     --kofam_profile               Path to KOfam profile database
     --kofam_kolist                Path to KOfam ko_list file
@@ -50,6 +51,7 @@ params.single_end = false
 params.notrim = false
 params.saveTrimmed = false
 params.mmseqs_db = null
+params.metabuli_db = null
 custom_runName = workflow.runName
 single_end = params.single_end
 
