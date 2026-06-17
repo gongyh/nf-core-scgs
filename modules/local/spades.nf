@@ -30,13 +30,13 @@ process SPADES {
     def rcl = meta.single_end ? "-s ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
     """
     spades.py ${rcl} ${mode} ${args} -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+    cp ${prefix}.spades_out/corrected/*_R1.*.cor.fastq.gz ${prefix}.corrected_R1.fastq.gz
+    cp ${prefix}.spades_out/corrected/*_R2.*.cor.fastq.gz ${prefix}.corrected_R2.fastq.gz
+
     if [ "${args}" = "--only-error-correction" ]; then
-        cp ${prefix}.spades_out/corrected/*_R1.*.cor.fastq.gz ${prefix}.corrected_R1.fastq.gz
-        cp ${prefix}.spades_out/corrected/*_R2.*.cor.fastq.gz ${prefix}.corrected_R2.fastq.gz
         touch ${prefix}.contigs.fasta ${prefix}.contigs.paths ${prefix}.spades_out/${prefix}.contigs.gfa
         touch ${prefix}.ctg200.fasta ${prefix}.ctgs.fasta
     else
-        touch ${prefix}.corrected_R1.fastq.gz ${prefix}.corrected_R2.fastq.gz
         cp ${prefix}.spades_out/assembly_graph_after_simplification.gfa ${prefix}.spades_out/${prefix}.contigs.gfa
         cp ${prefix}.spades_out/contigs.paths ${prefix}.spades_out/contigs.paths_raw
         cp ${prefix}.spades_out/scaffolds.paths ${prefix}.spades_out/scaffolds.paths_raw
@@ -68,12 +68,12 @@ process SPADES {
         NUM=0; TOTAL=0; N50=0; LONGEST=0
     fi
 
-
     printf "Metric\tValue\n" > spades_joint_mqc.tsv
     printf "Number of contigs (>=200bp)\t\${NUM}\n" >> spades_joint_mqc.tsv
     printf "Total assembly size (bp)\t\${TOTAL}\n" >> spades_joint_mqc.tsv
     printf "N50 (bp)\t\${N50}\n" >> spades_joint_mqc.tsv
     printf "Longest contig (bp)\t\${LONGEST}\n" >> spades_joint_mqc.tsv
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
