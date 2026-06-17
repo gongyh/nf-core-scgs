@@ -33,12 +33,13 @@ if (params.help){
     exit 0
 }
 
-params.outdir = params.outdir ?: "./databases"
-params.db_type = params.db_type ?: "all"
-params.mmseqs_db_url = params.mmseqs_db_url ?: "https://mmseqs.com/databases"
-params.checkm2_db_url = params.checkm2_db_url ?: "https://data.ace.uq.edu.au/public/CheckM2/"
-params.kofam_db_url = params.kofam_db_url ?: "https://www.genome.jp/ftp/db/kofam/"
-params.eggnog_db_url = params.eggnog_db_url ?: "https://eggnog5.embl.de/download/eggnog_5.0/"
+// Initialize parameters with default values
+params.outdir = "./databases"
+params.db_type = "all"
+params.mmseqs_db_url = "https://mmseqs.com/databases"
+params.checkm2_db_url = "https://data.ace.uq.edu.au/public/CheckM2/"
+params.kofam_db_url = "https://www.genome.jp/ftp/db/kofam/"
+params.eggnog_db_url = "https://eggnog5.embl.de/download/eggnog_5.0/"
 
 /*
  * Import modules
