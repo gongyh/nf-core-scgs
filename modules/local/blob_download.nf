@@ -17,7 +17,7 @@ process BLOB_DOWNLOAD {
     wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz -P data/
     tar zxf data/taxdump.tar.gz -C data/ nodes.dmp names.dmp
     blobtools nodesdb --nodes data/nodes.dmp --names data/names.dmp
-    cp $(which blobtools)/data/nodesDB.txt blob_db/nodesDB.txt
+    cp \$(echo \$(which blobtools))/data/nodesDB.txt blob_db/nodesDB.txt
     echo "Blobtools database downloaded successfully"
 
     cat <<-END_VERSIONS > versions.yml
