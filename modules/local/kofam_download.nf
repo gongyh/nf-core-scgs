@@ -24,7 +24,7 @@ process KOFAM_DOWNLOAD {
 
     cat > versions.yml << 'EOF'
 "kofam_download":
-  "version": "1.0.0"
+    "version": "1.0.0"
 EOF
     """
 }

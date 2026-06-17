@@ -34,10 +34,10 @@ process REMAP {
     printf "Overall alignment rate (%%)\t\${ALIGN_RATE}\n" >> remap_mqc.tsv
 
     cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        bowtie2: \$(echo \$(bowtie2 --version 2>&1) | sed 's/^.*bowtie2-align-s version //; s/ .*\$//')
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
+"${task.process}":
+    bowtie2: \$(echo \$(bowtie2 --version 2>&1) | sed 's/^.*bowtie2-align-s version //; s/ .*\$//')
+    samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+END_VERSIONS
     """
     } else {
     """
@@ -50,10 +50,10 @@ process REMAP {
     printf "Overall alignment rate (%%)\t\${ALIGN_RATE}\n" >> remap_mqc.tsv
 
     cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        bowtie2: \$(echo \$(bowtie2 --version 2>&1) | sed 's/^.*bowtie2-align-s version //; s/ .*\$//')
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
+"${task.process}":
+    bowtie2: \$(echo \$(bowtie2 --version 2>&1) | sed 's/^.*bowtie2-align-s version //; s/ .*\$//')
+    samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+END_VERSIONS
     """
     }
 }

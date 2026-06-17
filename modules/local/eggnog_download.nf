@@ -25,7 +25,7 @@ process EGGNOG_DOWNLOAD {
 
     cat > versions.yml << 'EOF'
 "eggnog_download":
-  "version": "1.0.0"
+    "version": "1.0.0"
 EOF
     """
 }

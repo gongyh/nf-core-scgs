@@ -23,7 +23,7 @@ process CHECKM2_DOWNLOAD {
 
     cat > versions.yml << 'EOF'
 "checkm2_download":
-  "version": "1.0.0"
+    "version": "1.0.0"
 EOF
     """
 }
