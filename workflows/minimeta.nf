@@ -315,7 +315,6 @@ workflow MINIMETA {
     TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
-
     //FILTERED
     ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
     FILTER_CONTIGS( ch_assembly, 2000 )
@@ -327,7 +326,6 @@ workflow MINIMETA {
     ch_filtered_bam = FILTER_BAM.out.filtered_bam.map { meta, bam -> bam }
     ch_versions = ch_versions.mix( FILTER_BAM.out.versions )
     ch_bam_path = ch_filtered_bam
-
     //DCVBIN
     DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
     ch_all_s2b = ch_all_s2b.mix( DCVBIN.out.scaffolds2bin.map{ file -> ['DCVBIN', file] } )
