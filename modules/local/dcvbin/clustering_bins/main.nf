@@ -12,9 +12,9 @@ process DCVBIN_BIN {
     output:
     path "${prefix}_bins",        emit: bins_dir
     path "${prefix}_prinum.txt",  emit: label_file
-    path "${prefix}_scaffolds2bin.tsv", emit: scaffolds2bin 
+    path "${prefix}_scaffolds2bin.tsv", emit: scaffolds2bin
     path "${prefix}_mqc.tsv", emit: mqc_tsv
-    path "versions.yml", emit: versions 
+    path "versions.yml", emit: versions
     script:
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${meta.id}"

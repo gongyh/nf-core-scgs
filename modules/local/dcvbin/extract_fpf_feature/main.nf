@@ -4,7 +4,7 @@ process CONTIG_EMBEDDING {
 
     conda "${moduleDir}/dnaberts.yaml"
 
-    container 'community.wave.seqera.io/library/pandas_python_pytorch_scikit-learn_transformers:ac41f1afd77517cf'
+    container 'community.wave.seqera.io/library/dnaberts:7a7299083f265248'
 
     input:
     tuple val(meta), path(ctgs_2k)

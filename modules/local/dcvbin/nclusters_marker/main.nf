@@ -2,7 +2,7 @@ process MARKER_NCLUSTERS {
     tag "${fasta_file.baseName}"
 
     conda "${moduleDir}/copygen.yaml"
-    container 'community.wave.seqera.io/library/numpy_pandas_scikit-learn:01b845052414782c'
+    container 'community.wave.seqera.io/library/copygen:aca96b4a00a56131'
 
     input:
     path kmer_file
@@ -14,6 +14,8 @@ process MARKER_NCLUSTERS {
     script:
     def args    = task.ext.args ?: ''
     """
+    python -c "import sys; print('Python version:', sys.version); print('sys.path:', sys.path)"
+    python -c "import sklearn; print('sklearn version:', sklearn.__version__)"
     python ${projectDir}/bin/dcvbin/marker_gene/src/marker_gene_utils.py \
         -kf "${kmer_file}" \
         -cf "${fasta_file}" \
