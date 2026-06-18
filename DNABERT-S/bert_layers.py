@@ -28,7 +28,7 @@ try:
     from .flash_attn_triton import flash_attn_qkvpacked_func
 except ImportError as e:
     flash_attn_qkvpacked_func = None
-flash_attn_qkvpacked_func = None
+
 logger = logging.getLogger(__name__)
 
 
