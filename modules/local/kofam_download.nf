@@ -1,5 +1,5 @@
 process KOFAM_DBDOWNLOAD {
-    tag "${kofam}"
+    tag "kofam"
 
     conda "conda-forge::wget=1.25.0"
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"

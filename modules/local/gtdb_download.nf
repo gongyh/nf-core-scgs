@@ -1,5 +1,5 @@
 process GTDB_DBDOWNLOAD {
-    tag "${GTDB_r214}"
+    tag "GTDB_r214"
 
     conda "conda-forge::wget=1.25.0"
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"

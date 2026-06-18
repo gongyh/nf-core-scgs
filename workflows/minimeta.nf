@@ -114,7 +114,7 @@ params.three_prime_clip_r2 = 0
 if(params.readPaths){
     if(single_end){
         read_files_fastqc = read_files_trimming =
-        Channel.from(params.readPaths, checkIfExists: true)
+        Channel.from(params.readPaths, checkIfExists: false)
             .map { row -> def meta=[:];
                     meta.id = row[0];
                     meta.single_end = single_end;
@@ -132,7 +132,7 @@ if(params.readPaths){
 } else {
     if (single_end) {
         read_files_fastqc = read_files_trimming =
-        Channel.fromFilePairs(params.reads, size:1, checkIfExists: true)
+        Channel.fromFilePairs(params.reads, size:1, checkIfExists: false)
             .map { it ->
                 def meta = [:];
                 meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
@@ -141,7 +141,7 @@ if(params.readPaths){
 
     } else {
         read_files_fastqc = read_files_trimming =
-        Channel.fromFilePairs(params.reads, size:2, checkIfExists: true)
+        Channel.fromFilePairs(params.reads, size:2, checkIfExists: false)
             .map { it ->
                 def meta = [:];
                 meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');

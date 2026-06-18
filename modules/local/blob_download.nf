@@ -1,5 +1,5 @@
 process BLOB_DBDOWNLOAD {
-    tag "${BlobTools}"
+    tag "BlobTools"
 
     conda "bioconda::blobtools=1.1.1=py_1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

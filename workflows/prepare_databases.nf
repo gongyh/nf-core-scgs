@@ -125,9 +125,11 @@ workflow PREPARE_DATABASES {
     }
 
     // GET_SOFTWARE_VERSIONS
-    if (!ch_versions.isEmpty()) {
-        GET_SOFTWARE_VERSIONS(ch_versions.unique().collectFile(name: 'collated_versions.yml'))
-    }
+    def versions_ch = ch_versions
+        .ifEmpty { Channel.empty() }
+        .unique()
+        .collectFile(name: 'collated_versions.yml')
+    GET_SOFTWARE_VERSIONS(versions_ch)
 
     log.info "Database preparation completed. All databases saved to: ${params.outdir}"
 }

@@ -14,7 +14,7 @@ process EGGNOG_DBDOWNLOAD {
     """
     mkdir -p eggnog_db
     echo "Downloading EggNOG database ..."
-    download_eggnog_data.py --data_dir eggnog_db
+    download_eggnog_data.py --data_dir eggnog_db -y
     echo "EggNOG database downloaded successfully"
 
     cat <<-END_VERSIONS > versions.yml

@@ -1,5 +1,5 @@
 process METABULI_DBDOWNLOAD {
-    tag "${Metabuli_GTDB226}"
+    tag "Metabuli_GTDB226"
 
     conda "conda-forge::wget=1.25.0"
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"

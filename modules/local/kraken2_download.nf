@@ -1,5 +1,5 @@
 process KRAKEN2_DBDOWNLOAD {
-    tag "${Kraken2}"
+    tag "Kraken2"
 
     conda "conda-forge::wget=1.25.0"
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
