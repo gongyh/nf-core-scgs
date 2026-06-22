@@ -2,7 +2,7 @@ process FEATURE_FUSION {
     tag "${meta.id}"
 
     conda "${moduleDir}/dcvbin.yaml"
-    container 'community.wave.seqera.io/library/dcvbin:ea1d53670b689bf9'
+    container 'community.wave.seqera.io/library/dcvbin:8a301608e8a0ae3b'
 
     input:
     path fpf_file
