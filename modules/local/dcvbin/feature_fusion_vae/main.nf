@@ -17,6 +17,7 @@ process FEATURE_FUSION {
     prefix      = task.ext.prefix ?: "${fpf_file.baseName.replaceAll('_fpf', '')}"
     """
     python ${projectDir}/bin/dcvbin/myvae/mainfiles/vaeTest_2.py \
+        --cpu \
         -dd "${fpf_file}" \
         -td "${tnf_file}" \
         -rd "${rpkm_file}" \

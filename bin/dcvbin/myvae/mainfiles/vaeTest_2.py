@@ -7,9 +7,10 @@ parser.add_argument('-dd','--fpf_file',type=str,help="指定fpf特征路径")
 parser.add_argument('-td','--tnf_file',type=str,help="指定tnf特征路径")
 parser.add_argument('-rd','--rpkm_file',type=str,help="指定rpkm特征路径")
 parser.add_argument('-vd','--vaef_file',type=str,help="指定vae特征输出路径")
+parser.add_argument('--cpu', action='store_true', help='Force CPU mode')
 args = parser.parse_args()
 # 实例化 VAE 对象
-vae = VAE(nsamples=1)
+vae = VAE(nsamples=1, cuda=not args.cpu)
 
 # 创建数据加载器
 # 假设 depths、tnf 和 lengths 是你的数据，你需要定义 make_dataloader 函数来生成一个数据加载器

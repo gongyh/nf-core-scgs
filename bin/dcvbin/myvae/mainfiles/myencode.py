@@ -119,10 +119,10 @@ def make_dataloader(
     # Normalize samples to have same depth
     # 使得样本具有同样的深度，不会受到测序深度的影响
     sample_depths_sum = rpkm.sum(axis=0)
+    epsilon = 1e-8
     if _np.any(sample_depths_sum == 0):
-        raise ValueError(
-            "One or more samples have zero depth in all sequences, so cannot be depth normalized"
-        )
+        print(f"Warning: {_np.sum(sample_depths_sum == 0)} sample(s) have zero depth. Adding epsilon={epsilon} to avoid division by zero.")
+        sample_depths_sum[sample_depths_sum == 0] = epsilon
     rpkm *= 1_000_000 / sample_depths_sum
     total_abundance = rpkm.sum(axis=1)
 
@@ -279,7 +279,7 @@ class VAE(_nn.Module):
         self.softplus = _nn.Softplus()
         self.dropoutlayer = _nn.Dropout(p=self.dropout)
 
-        if cuda:
+        if self.usecuda and _torch.cuda.is_available():
             self.cuda()
 
     def _encode(self, tensor: Tensor) -> Tensor:
