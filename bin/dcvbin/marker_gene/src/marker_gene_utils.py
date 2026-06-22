@@ -120,7 +120,7 @@ def scan_for_marker_genes(contig_file, x_contigs, nthreads, bestK=0):
             t = time.time()
             for k in range(candK, maxK, stepK):
                 kmeans = KMeans(n_clusters=k, init='k-means++',
-                                random_state=9,n_jobs=-1)
+                                random_state=9, n_jobs=-1)
                 kmeans.fit(X_mat)
                 silVal = silhouette(
                     X_mat, kmeans.cluster_centers_, kmeans.labels_)
@@ -140,7 +140,7 @@ def scan_for_marker_genes(contig_file, x_contigs, nthreads, bestK=0):
             bestSilVal_2nd = 0
             for k in range(candK, maxK, stepK):
                 kmeans = KMeans(n_clusters=k, init='k-means++',
-                                random_state=9,n_jobs=-1)
+                                random_state=9, n_jobs=-1)
                 kmeans.fit(X_mat)
                 silVal_2nd = silhouette(
                     X_mat, kmeans.cluster_centers_, kmeans.labels_)
