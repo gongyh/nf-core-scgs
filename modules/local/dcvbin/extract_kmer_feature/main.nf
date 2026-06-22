@@ -2,7 +2,7 @@ process CONTIG_KMER {
     tag "${fasta_file.baseName}"
 
     conda "${moduleDir}/dcvbin.yaml"
-    container 'community.wave.seqera.io/library/dnaberts:7a7299083f265248'
+    container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
 
     input:
     path fasta_file

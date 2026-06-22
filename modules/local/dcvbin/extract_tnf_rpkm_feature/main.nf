@@ -2,7 +2,7 @@ process TNF_RPKM {
     tag "${fasta_file.baseName}"
 
     conda "${moduleDir}/dcvbin.yaml"
-    container 'community.wave.seqera.io/library/pycoverm_pysam_loguru_numpy_pruned:10462dcc32c4ddbf'
+    container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
 
     input:
     path fasta_file
