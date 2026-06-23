@@ -21,6 +21,7 @@ process TNF_RPKM {
     python ${projectDir}/bin/dcvbin/myvae/mainfiles/calc_tnf_and_rpkm_2.py \
         -od tnf_and_rpkm \
         -fd "${fasta_file}" \
-        -bam "${bam_file}"
+        -bam "${bam_file}" \
+        --merge_samples
     """
 }

@@ -17,7 +17,7 @@ process MERGE_BAMS {
 
     script:
     """
-    samtools merge -@ ${task.cpus} merged.bam ${bam_files.join(' ')}
+    samtools merge -@ ${task.cpus} -r merged.bam ${bam_files.join(' ')}
     samtools index merged.bam
 
     cat <<-END_VERSIONS > versions.yml

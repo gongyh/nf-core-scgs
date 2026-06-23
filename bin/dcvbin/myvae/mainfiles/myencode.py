@@ -119,10 +119,10 @@ def make_dataloader(
     # Normalize samples to have same depth
     # 使得样本具有同样的深度，不会受到测序深度的影响
     sample_depths_sum = rpkm.sum(axis=0)
-    epsilon = 1e-8
     if _np.any(sample_depths_sum == 0):
-        print(f"Warning: {_np.sum(sample_depths_sum == 0)} sample(s) have zero depth. Adding epsilon={epsilon} to avoid division by zero.")
-        sample_depths_sum[sample_depths_sum == 0] = epsilon
+        raise ValueError(
+            "One or more samples have zero depth in all sequences, so cannot be depth normalized"
+        )
     rpkm *= 1_000_000 / sample_depths_sum
     total_abundance = rpkm.sum(axis=1)
 
