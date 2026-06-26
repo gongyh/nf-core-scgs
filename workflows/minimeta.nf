@@ -330,7 +330,6 @@ workflow MINIMETA {
     DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
     ch_all_s2b = ch_all_s2b.mix( DCVBIN.out.scaffolds2bin.map{ file -> ['DCVBIN', file] } )
     ch_versions = ch_versions.mix( DCVBIN.out.versions )
-    ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv )
     // DAS TOOL
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)
