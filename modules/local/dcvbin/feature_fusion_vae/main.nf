@@ -1,5 +1,5 @@
 process FEATURE_FUSION {
-    tag "${task.ext.prefix ?: fpf_file.baseName.replaceAll('_fpf', '')}" 
+    tag "${task.ext.prefix ?: fpf_file.baseName.replaceAll('_fpf', '')}"
 
     conda "${moduleDir}/dcvbin.yaml"
     container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
