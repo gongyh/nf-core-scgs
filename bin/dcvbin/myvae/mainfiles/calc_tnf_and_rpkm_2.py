@@ -16,7 +16,6 @@ parser = argparse.ArgumentParser(description="提取tnf,rpkm")
 parser.add_argument('-od','--output_dir',type=str,help="输出路径")
 parser.add_argument('-fd','--fasta_file',type=str,help="fasta输入路径")
 parser.add_argument('-bam','--bam_file',type=str,help="bam输入路径")
-parser.add_argument('--merge_samples', action='store_true', help='Merge all samples into one by summing rows')
 args = parser.parse_args()
 base_name = os.path.splitext(os.path.basename(args.fasta_file))[0]
 # 计算fasta文件的tnf向量（4mer频率降维103）输出为(nx103的ndarry),n是contigs的个数
@@ -181,9 +180,6 @@ abundance = parsebam.Abundance.from_files(
             abundance_options.min_alignment_id,
             nthreads,
         )
-if args.merge_samples:
-    abundance.matrix = abundance.matrix.sum(axis=1, keepdims=True)
-    abundance.samplenames = ['merged']
 abundance.save(Path(args.output_dir).joinpath("rpkm.npz"))
 
         

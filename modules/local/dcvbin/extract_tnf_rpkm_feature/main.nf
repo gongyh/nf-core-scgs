@@ -1,5 +1,5 @@
 process TNF_RPKM {
-    tag "${fasta_file.baseName}"
+    tag "${task.ext.prefix ?: fasta_file.baseName}"
 
     conda "${moduleDir}/dcvbin.yaml"
     container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
@@ -14,14 +14,13 @@ process TNF_RPKM {
 
     script:
     def args    = task.ext.args ?: ''
-    prefix      = task.ext.prefix ?: "${fasta_file.baseName}"
+    def prefix  = task.ext.prefix ?: "${fasta_file.baseName}"
     """
 
     mkdir -p tnf_and_rpkm
     python ${projectDir}/bin/dcvbin/myvae/mainfiles/calc_tnf_and_rpkm_2.py \
         -od tnf_and_rpkm \
         -fd "${fasta_file}" \
-        -bam "${bam_file}" \
-        --merge_samples
+        -bam "${bam_file}"
     """
 }

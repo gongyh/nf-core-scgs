@@ -1,5 +1,5 @@
 process CONTIG_EMBEDDING {
-    tag "${meta.id}"
+    tag "${task.ext.prefix ?: ctgs_2k.baseName}"
     label 'process_gpu'
 
     conda "${moduleDir}/dnaberts.yaml"
@@ -11,11 +11,11 @@ process CONTIG_EMBEDDING {
     path model_dir
 
     output:
-    path "${prefix}_fpf.npy", emit: fpf
+    path "${task.ext.prefix ?: ctgs_2k.baseName}_fpf.npy", emit: fpf
 
     script:
     def args    = task.ext.args ?: ''
-    prefix      = task.ext.prefix ?: "${meta.id}"
+    def prefix  = task.ext.prefix ?: "${ctgs_2k.baseName}"
     """
     export QT_XCB_GL_INTEGRATION="none"
     python ${projectDir}/bin/dcvbin/scripts/featureExtract_gpu_2.py \

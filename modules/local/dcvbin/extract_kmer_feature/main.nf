@@ -1,5 +1,5 @@
 process CONTIG_KMER {
-    tag "${fasta_file.baseName}"
+    tag "${task.ext.prefix ?: fasta_file.baseName}"
 
     conda "${moduleDir}/dcvbin.yaml"
     container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
@@ -13,6 +13,7 @@ process CONTIG_KMER {
 
     script:
     def args    = task.ext.args ?: ''
+    def prefix  = task.ext.prefix ?: "${fasta_file.baseName}"
     """
     python ${projectDir}/bin/dcvbin/scripts/calculate_kmer_multi_thread_2.py \
         "${fasta_file}" \

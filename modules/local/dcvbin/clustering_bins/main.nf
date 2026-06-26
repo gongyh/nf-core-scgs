@@ -1,5 +1,5 @@
 process DCVBIN_BIN {
-    tag "${fasta_file.baseName}"
+    tag "${task.ext.prefix ?: fasta_file.baseName}"
 
     conda "${moduleDir}/dnaberts.yaml"
     container 'community.wave.seqera.io/library/dnaberts:7a7299083f265248'
@@ -10,10 +10,10 @@ process DCVBIN_BIN {
     path fasta_file
 
     output:
-    path "${fasta_file.baseName}_bins",        emit: bins_dir
-    path "${fasta_file.baseName}_prinum.txt",  emit: label_file
-    path "${fasta_file.baseName}_scaffolds2bin.tsv", emit: scaffolds2bin
-    path "${fasta_file.baseName}_mqc.tsv", emit: mqc_tsv
+    path "${prefix}_bins",        emit: bins_dir
+    path "${prefix}_prinum.txt",  emit: label_file
+    path "${prefix}_scaffolds2bin.tsv", emit: scaffolds2bin
+    path "${prefix}_mqc.tsv", emit: mqc_tsv
     path "versions.yml", emit: versions
     script:
     def args    = task.ext.args ?: ''
