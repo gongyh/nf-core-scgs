@@ -28,10 +28,15 @@ process SPADES {
     def mode = params.bulk ? "--cov-cutoff auto --careful" : "--sc --careful"
     mode = params.mg ? "--meta" : "--sc --careful"
     def rcl = meta.single_end ? "-s ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
+    def se_pe = meta.single_end ? "SE" : "PE"
     """
     spades.py ${rcl} ${mode} ${args} -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
-    cp ${prefix}.spades_out/corrected/*_R1.*.cor.fastq.gz ${prefix}.corrected_R1.fastq.gz
-    cp ${prefix}.spades_out/corrected/*_R2.*.cor.fastq.gz ${prefix}.corrected_R2.fastq.gz
+
+    corrected_files=( \$(ls ${prefix}.spades_out/corrected/*.cor.fastq.gz 2>/dev/null | grep -v unpaired) )
+    cp "\${corrected_files[0]}" ${prefix}.corrected_R1.fastq.gz
+    if [ "${se_pe}" = "PE" ]; then
+        cp "\${corrected_files[1]}" ${prefix}.corrected_R2.fastq.gz
+    fi
 
     if [ "${args}" = "--only-error-correction" ]; then
         touch ${prefix}.contigs.fasta ${prefix}.contigs.paths ${prefix}.spades_out/${prefix}.contigs.gfa
