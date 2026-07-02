@@ -315,24 +315,24 @@ workflow MINIMETA {
     TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
-if (params.DNABERTS_dir != null)
-    //FILTERED
-    ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
-    FILTER_CONTIGS( ch_assembly, 2000 )
-    ch_filtered_fasta_with_meta = FILTER_CONTIGS.out.filtered.map { fasta ->
-        [ [id: fasta.baseName], fasta ]
+    if (params.DNABERTS_dir != null)
+        //FILTERED
+        ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
+        FILTER_CONTIGS( ch_assembly, 2000 )
+        ch_filtered_fasta_with_meta = FILTER_CONTIGS.out.filtered.map { fasta ->
+             [ [id: fasta.baseName], fasta ]
+        }
+        ch_versions = ch_versions.mix( FILTER_CONTIGS.out.versions )
+        FILTER_BAM( ch_filtered_fasta_with_meta, ch_merged_bam, ch_merged_bai )
+        ch_filtered_bam = FILTER_BAM.out.filtered_bam.map { meta, bam -> bam }
+        ch_versions = ch_versions.mix( FILTER_BAM.out.versions )
+        ch_bam_path = ch_filtered_bam
+        //DCVBIN
+        DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
+        ch_all_s2b = ch_all_s2b.mix( DCVBIN.out.scaffolds2bin.map{ file -> ['DCVBIN', file] } )
+        ch_versions = ch_versions.mix( DCVBIN.out.versions )
+        ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv.ifEmpty([]) )
     }
-    ch_versions = ch_versions.mix( FILTER_CONTIGS.out.versions )
-    FILTER_BAM( ch_filtered_fasta_with_meta, ch_merged_bam, ch_merged_bai )
-    ch_filtered_bam = FILTER_BAM.out.filtered_bam.map { meta, bam -> bam }
-    ch_versions = ch_versions.mix( FILTER_BAM.out.versions )
-    ch_bam_path = ch_filtered_bam
-    //DCVBIN
-    DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
-    ch_all_s2b = ch_all_s2b.mix( DCVBIN.out.scaffolds2bin.map{ file -> ['DCVBIN', file] } )
-    ch_versions = ch_versions.mix( DCVBIN.out.versions )
-    ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv.ifEmpty([]) )
-}
     // DAS TOOL
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)
