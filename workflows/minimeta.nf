@@ -315,7 +315,8 @@ workflow MINIMETA {
     TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
-    if (params.DNABERTS_dir != null)
+
+    if (params.DNABERTS_dir != null){
         //FILTERED
         ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
         FILTER_CONTIGS( ch_assembly, 2000 )
