@@ -1,5 +1,5 @@
 process CONTIG_EMBEDDING {
-    tag "${task.ext.prefix ?: ctgs_2k.baseName}"
+    tag "$meta.id"
     label 'process_gpu'
 
     conda "${moduleDir}/dnaberts.yaml"
@@ -11,11 +11,15 @@ process CONTIG_EMBEDDING {
     path model_dir
 
     output:
-    path "${task.ext.prefix ?: ctgs_2k.baseName}_fpf.npy", emit: fpf
+    tuple val(meta), path("${prefix}_fpf.npy"), emit: fpf
+    path "versions.yml", emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     def args    = task.ext.args ?: ''
-    def prefix  = task.ext.prefix ?: "${ctgs_2k.baseName}"
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     export QT_XCB_GL_INTEGRATION="none"
     python ${projectDir}/bin/dcvbin/scripts/featureExtract_gpu_2.py \
@@ -23,5 +27,10 @@ process CONTIG_EMBEDDING {
         -fd "${ctgs_2k}" \
         -sd "${prefix}_over2kseq.txt" \
         -dd "${prefix}_fpf.npy"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        dcvbin: \$(python -c "import dcvbin; print(dcvbin.__version__)" 2>/dev/null || echo "unknown")
+    END_VERSIONS
     """
 }
