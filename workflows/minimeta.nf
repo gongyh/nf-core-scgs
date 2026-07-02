@@ -321,7 +321,7 @@ workflow MINIMETA {
         ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
         FILTER_CONTIGS( ch_assembly, 2000 )
         ch_filtered_fasta_with_meta = FILTER_CONTIGS.out.filtered.map { fasta ->
-             [ [id: fasta.baseName], fasta ]
+            [ [id: fasta.baseName], fasta ]
         }
         ch_versions = ch_versions.mix( FILTER_CONTIGS.out.versions )
         FILTER_BAM( ch_filtered_fasta_with_meta, ch_merged_bam, ch_merged_bai )
