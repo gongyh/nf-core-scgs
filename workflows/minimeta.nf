@@ -315,7 +315,7 @@ workflow MINIMETA {
     TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
     ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
-
+if (params.DNABERTS_dir != null)
     //FILTERED
     ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
     FILTER_CONTIGS( ch_assembly, 2000 )
@@ -331,6 +331,8 @@ workflow MINIMETA {
     DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
     ch_all_s2b = ch_all_s2b.mix( DCVBIN.out.scaffolds2bin.map{ file -> ['DCVBIN', file] } )
     ch_versions = ch_versions.mix( DCVBIN.out.versions )
+    ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv.ifEmpty([]) )
+}
     // DAS TOOL
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)
@@ -392,7 +394,6 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(TAXVAMB_INTEGRATION.out.mqc_tsv.ifEmpty([]) )
-    ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv.ifEmpty([]) )
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
 
     MULTIQC (
