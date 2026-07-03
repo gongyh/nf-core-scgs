@@ -36,8 +36,10 @@ workflow DCVBIN {
         MARKER_NCLUSTERS.out.marker_cv,
         contigs_fasta
     )
-
     emit:
     bins_dir = DCVBIN_BIN.out.bins_dir
     label_file = DCVBIN_BIN.out.label_file
+    scaffolds2bin = DCVBIN_BIN.out.scaffolds2bin
+    mqc_tsv = DCVBIN_BIN.out.mqc_tsv
+    versions = DCVBIN_BIN.out.versions
 }
