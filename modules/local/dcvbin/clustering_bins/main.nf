@@ -1,23 +1,27 @@
 process DCVBIN_BIN {
-    tag "${task.ext.prefix ?: fasta_file.baseName}"
+    tag "$meta.id"
 
     conda "${moduleDir}/dnaberts.yaml"
     container 'community.wave.seqera.io/library/dnaberts:7a7299083f265248'
 
     input:
-    path vae_features_file
-    path cluster_value_file
-    path fasta_file
+    tuple val(meta), path(vae_features_file)
+    tuple val(meta), path(cluster_value_file)
+    tuple val(meta), path(fasta_file)
 
     output:
-    path "${prefix}_bins",        emit: bins_dir
-    path "${prefix}_prinum.txt",  emit: label_file
-    path "${prefix}_scaffolds2bin.tsv", emit: scaffolds2bin
-    path "${prefix}_mqc.tsv", emit: mqc_tsv
-    path "versions.yml", emit: versions
+    tuple val(meta), path("${prefix}_bins"),            emit: bins_dir
+    tuple val(meta), path("${prefix}_prinum.txt"),      emit: label_file
+    tuple val(meta), path("${prefix}_scaffolds2bin.tsv"), emit: scaffolds2bin
+    tuple val(meta), path("${prefix}_mqc.tsv"),         emit: mqc_tsv
+    path "versions.yml",                                emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def args    = task.ext.args ?: ''
-    prefix      = task.ext.prefix ?: "${fasta_file.baseName}"
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     set +e
     export QT_XCB_GL_INTEGRATION="none"
