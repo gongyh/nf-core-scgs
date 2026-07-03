@@ -28,15 +28,20 @@ process SPADES {
     def mode = params.bulk ? "--cov-cutoff auto --careful" : "--sc --careful"
     mode = params.mg ? "--meta" : "--sc --careful"
     def rcl = meta.single_end ? "-s ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
+    def se_pe = meta.single_end ? "SE" : "PE"
     """
     spades.py ${rcl} ${mode} ${args} -t ${task.cpus} -m ${task.memory.toGiga()} -o ${prefix}.spades_out
+
+    corrected_files=( \$(ls ${prefix}.spades_out/corrected/*.cor.fastq.gz 2>/dev/null | grep -v unpaired) )
+    cp "\${corrected_files[0]}" ${prefix}.corrected_R1.fastq.gz
+    if [ "${se_pe}" = "PE" ]; then
+        cp "\${corrected_files[1]}" ${prefix}.corrected_R2.fastq.gz
+    fi
+
     if [ "${args}" = "--only-error-correction" ]; then
-        cp ${prefix}.spades_out/corrected/*_R1.*.cor.fastq.gz ${prefix}.corrected_R1.fastq.gz
-        cp ${prefix}.spades_out/corrected/*_R2.*.cor.fastq.gz ${prefix}.corrected_R2.fastq.gz
         touch ${prefix}.contigs.fasta ${prefix}.contigs.paths ${prefix}.spades_out/${prefix}.contigs.gfa
         touch ${prefix}.ctg200.fasta ${prefix}.ctgs.fasta
     else
-        touch ${prefix}.corrected_R1.fastq.gz ${prefix}.corrected_R2.fastq.gz
         cp ${prefix}.spades_out/assembly_graph_after_simplification.gfa ${prefix}.spades_out/${prefix}.contigs.gfa
         cp ${prefix}.spades_out/contigs.paths ${prefix}.spades_out/contigs.paths_raw
         cp ${prefix}.spades_out/scaffolds.paths ${prefix}.spades_out/scaffolds.paths_raw
@@ -68,15 +73,15 @@ process SPADES {
         NUM=0; TOTAL=0; N50=0; LONGEST=0
     fi
 
-
     printf "Metric\tValue\n" > spades_joint_mqc.tsv
     printf "Number of contigs (>=200bp)\t\${NUM}\n" >> spades_joint_mqc.tsv
     printf "Total assembly size (bp)\t\${TOTAL}\n" >> spades_joint_mqc.tsv
     printf "N50 (bp)\t\${N50}\n" >> spades_joint_mqc.tsv
     printf "Longest contig (bp)\t\${LONGEST}\n" >> spades_joint_mqc.tsv
+
     cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
-    END_VERSIONS
+"${task.process}":
+    spades: \$(echo \$(spades.py --version 2>&1) | sed 's/^.*SPAdes genome assembler v//; s/Using.*\$//')
+END_VERSIONS
     """
 }

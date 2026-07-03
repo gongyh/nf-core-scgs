@@ -20,12 +20,14 @@ nextflow.enable.dsl=2
 
 include { SCGS              } from './workflows/scgs'
 include { MINIMETA          } from './workflows/minimeta'
+include { PREPARE_DATABASES } from './workflows/prepare_databases'
 
 include { completionEmail   } from './subworkflows/nf-core/utils_nfcore_pipeline/main'
 include { completionSummary } from './subworkflows/nf-core/utils_nfcore_pipeline/main'
 
-include { helpMessage as helpMessageSCGS     } from './workflows/scgs'
-include { helpMessage as helpMessageMinimeta } from './workflows/minimeta'
+include { helpMessage as helpMessageSCGS           } from './workflows/scgs'
+include { helpMessage as helpMessageMinimeta       } from './workflows/minimeta'
+include { helpMessage as helpMessagePrepareDB      } from './workflows/prepare_databases'
 
 //
 // WORKFLOW: Run SCGS analysis pipeline
@@ -43,6 +45,14 @@ workflow NFCORE_MINIMETA {
     MINIMETA ()
 }
 
+//
+// WORKFLOW: Run database preparation pipeline
+//
+
+workflow NFCORE_PREPARE_DATABASES {
+    PREPARE_DATABASES ()
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN WORKFLOW BASED ON PARAMETERS
@@ -50,7 +60,14 @@ workflow NFCORE_MINIMETA {
 */
 
 workflow {
-    if (params.minimeta) {
+    if (params.prepare_databases) {
+        // Show help message
+        if (params.help){
+            helpMessagePrepareDB()
+            exit 0
+        }
+        NFCORE_PREPARE_DATABASES ()
+    } else if (params.minimeta) {
         // Show help message
         if (params.help){
             helpMessageMinimeta()

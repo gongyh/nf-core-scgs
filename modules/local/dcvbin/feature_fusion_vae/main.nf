@@ -4,6 +4,7 @@ process FEATURE_FUSION {
     conda "${moduleDir}/dcvbin.yaml"
     container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
 
+
     input:
     tuple val(meta), path(fpf_file)
     tuple val(meta), path(tnf_file)

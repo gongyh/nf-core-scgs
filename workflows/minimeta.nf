@@ -12,16 +12,25 @@ def helpMessage() {
     --reads                       Path to input data (must be surrounded with quotes)
     -profile                      Configuration profile to use. Can use multiple (comma separated). Available: conda, docker, singularity, awsbatch, test and more.
 
-    Options:
+    Workflow options:
     --single_end                  Specifies that the input is single end reads
-    --notrim                      Specifying --notrim will skip the adapter trimming step.
-    --saveTrimmed                 Save the trimmed Fastq files in the the Results directory.
+    --notrim                      Specifying --notrim will skip the adapter trimming step
+    --saveTrimmed                 Save the trimmed Fastq files in the results directory
+    --allow_multi_align           Allow multi-mapping of reads during remapping
 
     Trimming options:
     --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1
     --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2
     --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1
     --three_prime_clip_r2 [int]   Instructs Trim Galore to remove bp from the 3' end of read 2
+
+    External databases:
+    --mmseqs_db                   Path to the MMseqs2 database for taxonomic classification
+    --metabuli_db                 Path to MetaBuli database for taxonomic classification
+    --checkm2_db                  Path to CheckM2 database
+    --kofam_profile               Path to KOfam profile database
+    --kofam_kolist                Path to KOfam ko_list file
+    --eggnog_db                   Path to EggNOG database for emapper
 
     Output options:
     --outdir                      The output directory where the results will be saved
@@ -41,6 +50,8 @@ def helpMessage() {
 params.single_end = false
 params.notrim = false
 params.saveTrimmed = false
+params.mmseqs_db = null
+params.metabuli_db = null
 custom_runName = workflow.runName
 single_end = params.single_end
 
@@ -49,6 +60,7 @@ if(workflow.profile == 'awsbatch') {
     if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
     if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
 }
+
 // Configure Checkm2 database
 checkm2_db = false
 if (params.checkm2_db) {
@@ -57,6 +69,7 @@ if (params.checkm2_db) {
 } else {
     checkm2_db = file("/dev/null")
 }
+
 //kofam database
 kofam_profile = false
 if (params.kofam_profile) {
@@ -73,6 +86,7 @@ if (params.kofam_kolist) {
 } else {
     kofam_kolist = file("/dev/null")
 }
+
 //eggnog database
 eggnog_db = false
 if (params.eggnog_db) {
@@ -81,6 +95,7 @@ if (params.eggnog_db) {
 } else {
     eggnog_db = file("/dev/null")
 }
+
 // Stage config files
 ch_multiqc_config = Channel.fromPath(params.multiqc_config, checkIfExists: true)
 ch_multiqc_custom_config = Channel.empty()
@@ -99,7 +114,7 @@ params.three_prime_clip_r2 = 0
 if(params.readPaths){
     if(single_end){
         read_files_fastqc = read_files_trimming =
-        Channel.from(params.readPaths, checkIfExists: true)
+        Channel.from(params.readPaths, checkIfExists: false)
             .map { row -> def meta=[:];
                     meta.id = row[0];
                     meta.single_end = single_end;
@@ -117,7 +132,7 @@ if(params.readPaths){
 } else {
     if (single_end) {
         read_files_fastqc = read_files_trimming =
-        Channel.fromFilePairs(params.reads, size:1, checkIfExists: true)
+        Channel.fromFilePairs(params.reads, size:1, checkIfExists: false)
             .map { it ->
                 def meta = [:];
                 meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
@@ -126,7 +141,7 @@ if(params.readPaths){
 
     } else {
         read_files_fastqc = read_files_trimming =
-        Channel.fromFilePairs(params.reads, size:2, checkIfExists: true)
+        Channel.fromFilePairs(params.reads, size:2, checkIfExists: false)
             .map { it ->
                 def meta = [:];
                 meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
@@ -206,6 +221,7 @@ include { PREPARE_FEATURES_SINGLE           } from '../subworkflows/local/prepar
 include { PREPARE_FEATURES_MULTI            } from '../subworkflows/local/prepare_features_multi'
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
+include { MMSEQS_CONTIG_TAXONOMY            } from '../subworkflows/local/mmseqs_contig_taxonomy'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
 include { TAXVAMB_INTEGRATION               } from '../subworkflows/local/taxvamb_integration'
 include { FILTER_CONTIGS                    } from '../modules/local/filter_contigs'
@@ -269,6 +285,7 @@ workflow MINIMETA {
     joint_reads = MERGE_CORRECTED.out.r1
         .combine(MERGE_CORRECTED.out.r2)
         .map { r1, r2 -> [ [id:'merged', single_end:false], [r1, r2] ] }
+
     //SPADES_JOINT
     SPADES_JOINT( joint_reads )
     ch_versions = ch_versions.mix(SPADES_JOINT.out.versions)
@@ -282,11 +299,13 @@ workflow MINIMETA {
     }
     REMAP(remap_input, params.allow_multi_align)
     ch_versions = ch_versions.mix(REMAP.out.versions)
+
     //MERGE BAMS
     ch_bam_list = REMAP.out.bam.map{ meta, bam -> bam }.collect()
     MERGE_BAMS( ch_bam_list )
     ch_merged_bam = MERGE_BAMS.out.merged_bam
     ch_bam_for_coverage = ch_merged_bam.map { bam -> [ [id:'merged'], bam, [] ] }
+
     //PREPARE_FEATURES
     ch_fasta = SPADES_JOINT.out.contig
     SAMTOOLS_FAIDX( ch_fasta )
@@ -295,15 +314,18 @@ workflow MINIMETA {
     ch_single_coverage = PREPARE_FEATURES_SINGLE.out.coverage_matrix
     PREPARE_FEATURES_MULTI( ch_fasta, ch_fai, REMAP.out.bam )
     ch_multi_coverage = PREPARE_FEATURES_MULTI.out.coverage_matrix
+
     // binning
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_all_s2b = Channel.empty()
     ch_versions = Channel.empty()
+
     //COOCCURRENCE
     COOCCURRENCE_BINNING( ch_multi_coverage )
     EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_assembly)
     ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
     ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
+
     //SEMIBIN2
     SEMIBIN2(ch_assembly, ch_merged_bam)
     ch_semibin2_s2b = SEMIBIN2.out.scaffolds2bin
@@ -311,6 +333,14 @@ workflow MINIMETA {
         .filter { it[1].size() > 0 }
     ch_all_s2b = ch_all_s2b.mix(ch_semibin2_s2b)
     ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
+
+    if (params.mmseqs_db ) {
+        //MMseqs_TAXA
+        ch_mmseqs_db = channel.fromPath( params.mmseqs_db )
+        MMSEQS_CONTIG_TAXONOMY( ch_assembly, ch_mmseqs_db )
+        //SEMIBIN2_Semi
+    }
+
     // TaxVAMB
     TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
     ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
@@ -339,6 +369,7 @@ workflow MINIMETA {
     DAS_TOOL(ch_assembly, ch_s2b_list)
     ch_bins_dir = DAS_TOOL.out.bins
     ch_versions = ch_versions.mix(DAS_TOOL.out.versions)
+
     // CHECKM2
     CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
     ch_versions = ch_versions.mix(CHECKM2.out.versions)
@@ -355,6 +386,7 @@ workflow MINIMETA {
             [ [id: bin_file.baseName], bin_file ]
         }
     }
+
     //PROKKA
     PROKKA(ch_bins_for_prokka, [])
     ch_versions = ch_versions.mix(PROKKA.out.versions)
@@ -365,12 +397,14 @@ workflow MINIMETA {
         ch_versions = ch_versions.mix(KOFAMSCAN.out.versions)
         ch_multiqc_files = ch_multiqc_files.mix(KOFAMSCAN.out.kofamscan.collect().ifEmpty([]))
     }
+
     // EGGNOG
     if (params.eggnog) {
         EGGNOG(PROKKA.out.faa, eggnog_db)
         ch_versions = ch_versions.mix(EGGNOG.out.versions)
         ch_multiqc_files = ch_multiqc_files.mix(EGGNOG.out.annotations.collect().ifEmpty([]))
     }
+
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = Channel.empty()
     GET_SOFTWARE_VERSIONS (
