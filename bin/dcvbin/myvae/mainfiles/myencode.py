@@ -279,7 +279,7 @@ class VAE(_nn.Module):
         self.softplus = _nn.Softplus()
         self.dropoutlayer = _nn.Dropout(p=self.dropout)
 
-        if self.usecuda and _torch.cuda.is_available():
+        if cuda:
             self.cuda()
 
     def _encode(self, tensor: Tensor) -> Tensor:
