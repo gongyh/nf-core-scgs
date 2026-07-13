@@ -15,10 +15,10 @@ workflow MMSEQS_CONTIG_TAXONOMY {
     ch_taxonomy_tsv           = channel.empty()
 
     // MMSEQS_DATABASE
-    if ( !mmseqs_databases.empty ) {
-        ch_mmseqs_db = channel
-            .fromPath( mmseqs_databases )
-            .first()
+    if ( mmseqs_databases != null ) {
+        ch_mmseqs_db = mmseqs_databases
+    } else {
+        ch_mmseqs_db = Channel.empty()
     }
 
     // Create db for query contigs, assign taxonomy and convert to table format

@@ -12,12 +12,13 @@ process MMSEQS_CREATEDB {
 
     output:
     tuple val(meta), path("${prefix}/"), emit: db
-    tuple val("${task.process}"), val('mmseqs'), eval('mmseqs version'), topic: versions, emit: versions_mmseqs
+    tuple val("${task.process}"), val('mmseqs'), eval("${task.ext.mmseqs_cmd ?: 'mmseqs'} version"), topic: versions, emit: versions_mmseqs
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
+    def mmseqs_cmd = task.ext.mmseqs_cmd ?: 'mmseqs'
     def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
     def is_compressed = sequence.getExtension() == "gz" ? true : false
@@ -29,7 +30,7 @@ process MMSEQS_CREATEDB {
 
     mkdir -p ${prefix}
 
-    mmseqs \\
+    $mmseqs_cmd \\
         createdb \\
         ${sequence_name} \\
         ${prefix}/${prefix} \\
