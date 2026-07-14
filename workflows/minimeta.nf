@@ -373,6 +373,7 @@ workflow MINIMETA {
         ch_versions = ch_versions.mix( DCVBIN.out.versions )
         ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv.ifEmpty([]) )
     }
+
     // DAS TOOL
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)
