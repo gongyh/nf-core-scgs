@@ -327,9 +327,14 @@ workflow MINIMETA {
     ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
 
     //SEMIBIN2
-    ch_semibin_tax = Channel.empty()
-    semibin_tax_ch = params.mmseqs_db ? ch_semibin_tax.map { meta, tsv -> tsv } : Channel.value(null)
-    SEMIBIN2(ch_assembly, ch_merged_bam, semibin_tax_ch)
+    ch_semibin2_s2b = Channel.empty()
+    if ( params.mmseqs_db ) {
+        MMSEQS2SEMIBIN(ch_mmseqs_taxonomy)
+        ch_semibin_tax = MMSEQS2SEMIBIN.out.tax
+        SEMIBIN2(ch_assembly, ch_merged_bam, ch_semibin_tax)
+    } else {
+        SEMIBIN2(ch_assembly, ch_merged_bam)
+    }
     ch_semibin2_s2b = SEMIBIN2.out.scaffolds2bin
         .map { file -> ['SEMIBIN2', file] }
         .filter { it[1].size() > 0 }
