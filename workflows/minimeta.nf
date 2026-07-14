@@ -344,7 +344,7 @@ workflow MINIMETA {
     } else {
         SEMIBIN2( ch_assembly, ch_merged_bam, [] )
     }
-    
+
     //SEMIBIN2
     ch_semibin2_s2b = SEMIBIN2.out.scaffolds2bin
         .map { file -> ['SEMIBIN2', file] }
