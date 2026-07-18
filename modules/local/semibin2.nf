@@ -7,7 +7,7 @@ process SEMIBIN2 {
     input:
     path assembly
     path merged_bam
-    val taxonomy
+    path taxonomy
     output:
     path "bins_merged", emit: bins
     path "semibin2_mqc.tsv", emit: mqc_tsv

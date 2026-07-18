@@ -337,7 +337,7 @@ workflow MINIMETA {
         ch_multiqc_files = ch_multiqc_files.mix(ch_mmseqs_taxonomy.collect().ifEmpty([]))
 
         MMSEQS2SEMIBIN( ch_mmseqs_taxonomy )
-        ch_semibin_tax = MMSEQS2SEMIBIN.out.tax
+        ch_semibin_tax = MMSEQS2SEMIBIN.out.tax.map { meta, file -> file }
         ch_versions = ch_versions.mix( MMSEQS2SEMIBIN.out.versions )
         //SEMIBIN2_Semi
         SEMIBIN2( ch_assembly, ch_merged_bam, ch_semibin_tax )
