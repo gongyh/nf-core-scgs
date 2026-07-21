@@ -221,8 +221,9 @@ include { PREPARE_FEATURES_SINGLE           } from '../subworkflows/local/prepar
 include { PREPARE_FEATURES_MULTI            } from '../subworkflows/local/prepare_features_multi'
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
-include { MMSEQS_CONTIG_TAXONOMY            } from '../subworkflows/local/mmseqs_contig_taxonomy'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
+include { MMSEQS_CONTIG_TAXONOMY            } from '../subworkflows/local/mmseqs_contig_taxonomy'
+include { MMSEQS2SEMIBIN                    } from '../modules/local/mmseqs2semibin'
 include { TAXVAMB_INTEGRATION               } from '../subworkflows/local/taxvamb_integration'
 include { FILTER_CONTIGS                    } from '../modules/local/filter_contigs'
 include { FILTER_BAM                        } from '../modules/local/filter_bam'
@@ -318,7 +319,6 @@ workflow MINIMETA {
     // binning
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_all_s2b = Channel.empty()
-    ch_versions = Channel.empty()
 
     //COOCCURRENCE
     COOCCURRENCE_BINNING( ch_multi_coverage )
@@ -326,20 +326,31 @@ workflow MINIMETA {
     ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
     ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
 
+    //MMseqs2
+    if (params.mmseqs_db ) {
+        //MMseqs_TAXA
+        ch_mmseqs_input = ch_assembly.map { fasta -> [ [id: fasta.baseName], fasta ] }
+        ch_mmseqs_db = channel.fromPath( params.mmseqs_db )
+
+        MMSEQS_CONTIG_TAXONOMY( ch_mmseqs_input, ch_mmseqs_db )
+        ch_mmseqs_taxonomy = MMSEQS_CONTIG_TAXONOMY.out.taxonomy
+        ch_multiqc_files = ch_multiqc_files.mix(ch_mmseqs_taxonomy.collect().ifEmpty([]))
+
+        MMSEQS2SEMIBIN( ch_mmseqs_taxonomy )
+        ch_semibin_tax = MMSEQS2SEMIBIN.out.tax.map { meta, file -> file }
+        ch_versions = ch_versions.mix( MMSEQS2SEMIBIN.out.versions )
+        //SEMIBIN2_Semi
+        SEMIBIN2( ch_assembly, ch_merged_bam, ch_semibin_tax )
+    } else {
+        SEMIBIN2( ch_assembly, ch_merged_bam, [] )
+    }
+
     //SEMIBIN2
-    SEMIBIN2(ch_assembly, ch_merged_bam)
     ch_semibin2_s2b = SEMIBIN2.out.scaffolds2bin
         .map { file -> ['SEMIBIN2', file] }
         .filter { it[1].size() > 0 }
     ch_all_s2b = ch_all_s2b.mix(ch_semibin2_s2b)
     ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
-
-    if (params.mmseqs_db ) {
-        //MMseqs_TAXA
-        ch_mmseqs_db = channel.fromPath( params.mmseqs_db )
-        MMSEQS_CONTIG_TAXONOMY( ch_assembly, ch_mmseqs_db )
-        //SEMIBIN2_Semi
-    }
 
     // TaxVAMB
     TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
@@ -364,6 +375,7 @@ workflow MINIMETA {
         ch_versions = ch_versions.mix( DCVBIN.out.versions )
         ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv.ifEmpty([]) )
     }
+
     // DAS TOOL
     ch_s2b_list = ch_all_s2b.flatten().toList()
     DAS_TOOL(ch_assembly, ch_s2b_list)

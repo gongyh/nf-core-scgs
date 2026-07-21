@@ -7,7 +7,7 @@ process SEMIBIN2 {
     input:
     path assembly
     path merged_bam
-
+    path taxonomy
     output:
     path "bins_merged", emit: bins
     path "semibin2_mqc.tsv", emit: mqc_tsv
@@ -15,11 +15,13 @@ process SEMIBIN2 {
     path "scaffolds2bin.tsv", emit: scaffolds2bin
     script:
     def bam_args = "-b ${merged_bam}"
+    def tax_args = taxonomy ? "--taxonomy ${taxonomy}" : ""
     def args = task.ext.args ?: ''
     """
     SemiBin2 single_easy_bin \\
         -i ${assembly} \\
         ${bam_args} \\
+        ${tax_args} \\
         -o bins_merged \\
         --threads ${task.cpus} \\
         --compression none \\
