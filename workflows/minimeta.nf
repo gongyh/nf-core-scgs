@@ -220,6 +220,7 @@ include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_fa
 include { PREPARE_FEATURES_SINGLE           } from '../subworkflows/local/prepare_features_single'
 include { PREPARE_FEATURES_MULTI            } from '../subworkflows/local/prepare_features_multi'
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
+include { CHECKM2 as CHECKM2_COOCCURRENCE   } from '../modules/local/checkm2'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
 include { MMSEQS_CONTIG_TAXONOMY            } from '../subworkflows/local/mmseqs_contig_taxonomy'
@@ -326,6 +327,16 @@ workflow MINIMETA {
     ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
     ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
 
+    //
+    if ( params.run_cooccurrence_checkm ) {
+        if ( params.checkm2_db ) {
+            CHECKM2_COOCCURRENCE( EXTRACT_BINS.out.bins, 'fa', file(params.checkm2_db) )
+            ch_multiqc_files = ch_multiqc_files.mix( CHECKM2_COOCCURRENCE.out.mqc_tsv.collect().ifEmpty([]) )
+            ch_versions = ch_versions.mix( CHECKM2_COOCCURRENCE.out.versions )
+        } else {
+            log.info "INFO: --run_cooccurrence_checkm is set, but --checkm2_db is not provided. Skipping CheckM2 for COOCCURRENCE."
+        }
+    }
     //MMseqs2
     if (params.mmseqs_db ) {
         //MMseqs_TAXA
