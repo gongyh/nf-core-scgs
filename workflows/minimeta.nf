@@ -322,7 +322,7 @@ workflow MINIMETA {
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_all_s2b = Channel.empty()
 
-    
+
     def min_len = params.min_length ?: 10000
     FILTER_ASSEMBLY( ch_assembly, min_len )
     ch_filtered_assembly = FILTER_ASSEMBLY.out.filtered

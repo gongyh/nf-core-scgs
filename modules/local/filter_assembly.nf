@@ -16,7 +16,7 @@ process FILTER_ASSEMBLY {
     script:
     """
     seqkit seq -m ${min_len} ${fasta} > filtered.fasta
-    
+
     cat <<-END_VERSIONS > versions.yml
     "NFCORE_MINIMETA:MINIMETA:FILTER_ASSEMBLY":
         seqkit: \$(seqkit version 2>&1 | sed 's/^.*version //; s/ .*\$//')
