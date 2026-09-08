@@ -219,6 +219,7 @@ include { MERGE_BAMS                        } from '../modules/local/merge_bams'
 include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
 include { PREPARE_FEATURES_SINGLE           } from '../subworkflows/local/prepare_features_single'
 include { PREPARE_FEATURES_MULTI            } from '../subworkflows/local/prepare_features_multi'
+include { FILTER_ASSEMBLY                   } from '../modules/local/filter_assembly'
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { CHECKM2 as CHECKM2_COOCCURRENCE   } from '../modules/local/checkm2'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
@@ -321,9 +322,14 @@ workflow MINIMETA {
     ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
     ch_all_s2b = Channel.empty()
 
+    
+    def min_len = params.min_length ?: 10000
+    FILTER_ASSEMBLY( ch_assembly, min_len )
+    ch_filtered_assembly = FILTER_ASSEMBLY.out.filtered
+    ch_versions = ch_versions.mix( FILTER_ASSEMBLY.out.versions )
     //COOCCURRENCE
-    COOCCURRENCE_BINNING( ch_multi_coverage )
-    EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_assembly)
+    COOCCURRENCE_BINNING( ch_multi_coverage, ch_filtered_assembly )
+    EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_filtered_assembly)
     ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
     ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
 
