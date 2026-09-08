@@ -7,7 +7,7 @@ process COOCCURRENCE_BINNING {
 
     input:
     path coverage_tsv
-
+    path filtered_fasta
     output:
     path "clusters.tsv", emit: clusters
     path "versions.yml", emit: versions
@@ -15,8 +15,11 @@ process COOCCURRENCE_BINNING {
     script:
     def script_path = "${projectDir}/bin/cooccurrence_binning.py"
     def args = task.ext.args ?: ''
+    def eps = params.cooccurrence_eps ?: 0.05
     """
-    python ${script_path} ${coverage_tsv} clusters.tsv ${args}
+    python ${script_path} \\
+        abundance_matrix.tsv filtered.fasta clusters.tsv \\
+        --eps ${eps} ${args}
 
     if [ -f "clusters.tsv" ]; then
         N_BINS=\$(tail -n +2 clusters.tsv | cut -f2 | sort -u | wc -l)
