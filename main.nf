@@ -34,7 +34,12 @@ include { helpMessage as helpMessagePrepareDB      } from './workflows/prepare_d
 //
 
 workflow NFCORE_SCGS {
+    main:
     SCGS ()
+
+    emit:
+    summary_params = SCGS.out.summary_params
+    multiqc_report = SCGS.out.multiqc_report
 }
 
 //
@@ -42,7 +47,12 @@ workflow NFCORE_SCGS {
 //
 
 workflow NFCORE_MINIMETA {
+    main:
     MINIMETA ()
+
+    emit:
+    summary_params = MINIMETA.out.summary_params
+    multiqc_report = MINIMETA.out.multiqc_report
 }
 
 //
@@ -50,6 +60,7 @@ workflow NFCORE_MINIMETA {
 //
 
 workflow NFCORE_PREPARE_DATABASES {
+    main:
     PREPARE_DATABASES ()
 }
 
@@ -67,6 +78,9 @@ workflow {
             exit 0
         }
         NFCORE_PREPARE_DATABASES ()
+        workflow.onComplete = {
+            completionSummary()
+        }
     } else if (params.minimeta) {
         // Show help message
         if (params.help){
@@ -74,6 +88,20 @@ workflow {
             exit 0
         }
         NFCORE_MINIMETA ()
+        workflow.onComplete = {
+            if (params.email) {
+                completionEmail(
+                    NFCORE_MINIMETA.out.summary_params.getVal(),
+                    params.email,
+                    null,
+                    false,
+                    params.outdir,
+                    log,
+                    NFCORE_MINIMETA.out.multiqc_report.getVal()
+                )
+            }
+            completionSummary()
+        }
     } else {
         // Show help message
         if (params.help){
@@ -81,24 +109,21 @@ workflow {
             exit 0
         }
         NFCORE_SCGS ()
+        workflow.onComplete = {
+            if (params.email) {
+                completionEmail(
+                    NFCORE_SCGS.out.summary_params.getVal(),
+                    params.email,
+                    null,
+                    false,
+                    params.outdir,
+                    log,
+                    NFCORE_SCGS.out.multiqc_report.getVal()
+                )
+            }
+            completionSummary()
+        }
     }
-}
-
-/*
- * Completion e-mail notification
- */
-workflow.onComplete {
-    if (params.email){
-        completionEmail(summary_params,
-            params.email,
-            null,
-            false,
-            params.outdir,
-            log,
-            multiqc_report.getVal()
-        )
-    }
-    completionSummary()
 }
 
 /*

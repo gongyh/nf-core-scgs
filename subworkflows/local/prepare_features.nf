@@ -11,11 +11,11 @@ workflow PREPARE_FEATURES {
     ch_bam_for_coverage
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
     /*
     //PANDEPTH_MERGE
     def meta = [id:'merged']
-    ch_bam_input = Channel.of( [meta, ch_merged_bam, []] )
+    ch_bam_input = channel.of( [meta, ch_merged_bam, []] )
     ch_fasta_path = ch_fasta.map { m, file -> file }
     ch_fai_path = ch_fai.map { m, file -> file }
     CONTIG_COVERAGE( ch_bam_input, ch_fasta_path, ch_fai_path )
@@ -41,7 +41,7 @@ workflow PREPARE_FEATURES {
     ch_versions = ch_versions.mix(KMER_COUNT.out.versions)
 
     emit:
-    feature_matrix = Channel.empty()
+    feature_matrix = channel.empty()
     coverage_matrix = ch_coverage
     coverage_mqc    = CONTIG_COVERAGE.out.mqc_tsv
     versions        = ch_versions

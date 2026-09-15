@@ -43,116 +43,7 @@ def helpMessage() {
     """.stripIndent()
 }
 
-/*
- * SET UP CONFIGURATION VARIABLES
- */
-// default values
-params.single_end = false
-params.notrim = false
-params.saveTrimmed = false
-params.mmseqs_db = null
-params.metabuli_db = null
-custom_runName = workflow.runName
-single_end = params.single_end
-
-if(workflow.profile == 'awsbatch') {
-    if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
-    if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
-    if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
-}
-
-// Configure Checkm2 database
-checkm2_db = false
-if (params.checkm2_db) {
-    checkm2_db  = file(params.checkm2_db)
-    if ( !checkm2_db.exists() ) exit 1, "CheckM2 database not found: ${params.checkm2_db}"
-} else {
-    checkm2_db = file("/dev/null")
-}
-
-//kofam database
-kofam_profile = false
-if (params.kofam_profile) {
-    kofam_profile = file(params.kofam_profile)
-    if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
-} else {
-    kofam_profile = file("/dev/null")
-}
-
-kofam_kolist = false
-if (params.kofam_kolist) {
-    kofam_kolist = file(params.kofam_kolist)
-    if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
-} else {
-    kofam_kolist = file("/dev/null")
-}
-
-//eggnog database
-eggnog_db = false
-if (params.eggnog_db) {
-    eggnog_db = file(params.eggnog_db)
-    if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
-} else {
-    eggnog_db = file("/dev/null")
-}
-
-// Stage config files
-ch_multiqc_config = Channel.fromPath(params.multiqc_config, checkIfExists: true)
-ch_multiqc_custom_config = Channel.empty()
-ch_multiqc_logo = Channel.empty()
-ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
-
-// Custom trimming options
-params.clip_r1 = 0
-params.clip_r2 = 0
-params.three_prime_clip_r1 = 0
-params.three_prime_clip_r2 = 0
-
-/*
- * Create a channel for input read files
- */
-if(params.readPaths){
-    if(single_end){
-        read_files_fastqc = read_files_trimming =
-        Channel.from(params.readPaths, checkIfExists: false)
-            .map { row -> def meta=[:];
-                    meta.id = row[0];
-                    meta.single_end = single_end;
-                    [meta, [file(row[1][0]), file(row[1][1])]]}
-            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
-    } else {
-        read_files_fastqc = read_files_trimming =
-        Channel.from(params.readPaths)
-            .map { row -> def meta=[:];
-                    meta.id = row[0];
-                    meta.single_end = single_end;
-                    [meta, [file(row[1][0]), file(row[1][1])]]}
-            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
-    }
-} else {
-    if (single_end) {
-        read_files_fastqc = read_files_trimming =
-        Channel.fromFilePairs(params.reads, size:1, checkIfExists: false)
-            .map { it ->
-                def meta = [:];
-                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
-                meta.single_end = single_end;
-                [meta, [file(it[1][0])]]}
-
-    } else {
-        read_files_fastqc = read_files_trimming =
-        Channel.fromFilePairs(params.reads, size:2, checkIfExists: false)
-            .map { it ->
-                def meta = [:];
-                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
-                meta.single_end = single_end;
-                [meta, [file(it[1][0]), file(it[1][1])]]}
-    }
-}
-
-summary = [:]
-
-def display_header() {
+def display_header(summary, custom_runName, single_end) {
     // Header log info
     log.info nfcoreHeader()
     //def summary = [:]
@@ -237,24 +128,131 @@ include { EGGNOG                            } from '../modules/local/eggnog'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
-// MULTIQC
-def multiqc_report = []
-
 workflow MINIMETA {
     main:
-    display_header()
-    ch_versions = Channel.empty()
-    ch_multiqc_files = Channel.empty()
+    /*
+ * SET UP CONFIGURATION VARIABLES
+ */
+// default values
+params.single_end = false
+params.notrim = false
+params.saveTrimmed = false
+params.mmseqs_db = null
+params.metabuli_db = null
+custom_runName = workflow.runName
+single_end = params.single_end
+
+if(workflow.profile == 'awsbatch') {
+    if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
+    if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
+    if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
+}
+
+// Configure Checkm2 database
+checkm2_db = false
+if (params.checkm2_db) {
+    checkm2_db  = file(params.checkm2_db)
+    if ( !checkm2_db.exists() ) exit 1, "CheckM2 database not found: ${params.checkm2_db}"
+} else {
+    checkm2_db = file("/dev/null")
+}
+
+//kofam database
+kofam_profile = false
+if (params.kofam_profile) {
+    kofam_profile = file(params.kofam_profile)
+    if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
+} else {
+    kofam_profile = file("/dev/null")
+}
+
+kofam_kolist = false
+if (params.kofam_kolist) {
+    kofam_kolist = file(params.kofam_kolist)
+    if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
+} else {
+    kofam_kolist = file("/dev/null")
+}
+
+//eggnog database
+eggnog_db = false
+if (params.eggnog_db) {
+    eggnog_db = file(params.eggnog_db)
+    if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
+} else {
+    eggnog_db = file("/dev/null")
+}
+
+// Stage config files
+ch_multiqc_config = channel.fromPath(params.multiqc_config, checkIfExists: true)
+ch_multiqc_custom_config = channel.empty()
+ch_multiqc_logo = channel.empty()
+ch_output_docs = channel.fromPath("$baseDir/docs/output.md")
+
+// Custom trimming options
+params.clip_r1 = 0
+params.clip_r2 = 0
+params.three_prime_clip_r1 = 0
+params.three_prime_clip_r2 = 0
+
+/*
+ * Create a channel for input read files
+ */
+if(params.readPaths){
+    if(single_end){
+        read_files_fastqc = channel.from(params.readPaths, checkIfExists: false)
+            .map { row -> def meta=[:];
+                    meta.id = row[0];
+                    meta.single_end = single_end;
+                    [meta, [file(row[1][0]), file(row[1][1])]]}
+            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
+        read_files_trimming = read_files_fastqc
+    } else {
+        read_files_fastqc = channel.from(params.readPaths)
+            .map { row -> def meta=[:];
+                    meta.id = row[0];
+                    meta.single_end = single_end;
+                    [meta, [file(row[1][0]), file(row[1][1])]]}
+            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
+        read_files_trimming = read_files_fastqc
+    }
+} else {
+    if (single_end) {
+        read_files_fastqc = channel.fromFilePairs(params.reads, size:1, checkIfExists: false)
+            .map { it ->
+                def meta = [:];
+                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                meta.single_end = single_end;
+                [meta, [file(it[1][0])]]}
+        read_files_trimming = read_files_fastqc
+
+    } else {
+        read_files_fastqc = channel.fromFilePairs(params.reads, size:2, checkIfExists: false)
+            .map { it ->
+                def meta = [:];
+                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                meta.single_end = single_end;
+                [meta, [file(it[1][0]), file(it[1][1])]]}
+        read_files_trimming = read_files_fastqc
+    }
+}
+
+summary = [:]
+
+
+    display_header(summary, custom_runName, single_end)
+    ch_versions = channel.empty()
+    ch_multiqc_files = channel.empty()
     // FASTQC
-    ch_multiqc_fastqc = Channel.empty()
+    ch_multiqc_fastqc = channel.empty()
     FASTQC ( read_files_fastqc )
     ch_versions       = ch_versions.mix(FASTQC.out.versions)
     ch_multiqc_fastqc = FASTQC.out.zip
 
     // TRIM_GALORE
-    trimmed_reads = Channel.empty()
-    ch_multiqc_trim_log = Channel.empty()
-    ch_multiqc_trim_zip = Channel.empty()
+    trimmed_reads = channel.empty()
+    ch_multiqc_trim_log = channel.empty()
+    ch_multiqc_trim_zip = channel.empty()
     if (params.notrim) {
         trimmed_reads = read_files_trimming.map{name, reads -> reads}
     } else {
@@ -296,8 +294,8 @@ workflow MINIMETA {
     BOWTIE2_REMAP( SPADES_JOINT.out.contig )
     ch_versions = ch_versions.mix(BOWTIE2_REMAP.out.versions)
     //REMAP
-    remap_input = trimmed_reads.combine(BOWTIE2_REMAP.out.index).map {
-        [it[0] + [id_index: 'merged'], it[1], it[3]]
+    remap_input = trimmed_reads.combine(BOWTIE2_REMAP.out.index).map { entry ->
+        [entry[0] + [id_index: 'merged'], entry[1], entry[3]]
     }
     REMAP(remap_input, params.allow_multi_align)
     ch_versions = ch_versions.mix(REMAP.out.versions)
@@ -318,8 +316,8 @@ workflow MINIMETA {
     ch_multi_coverage = PREPARE_FEATURES_MULTI.out.coverage_matrix
 
     // binning
-    ch_assembly = SPADES_JOINT.out.contig.map { it[1] }
-    ch_all_s2b = Channel.empty()
+    ch_assembly = SPADES_JOINT.out.contig.map { entry -> entry[1] }
+    ch_all_s2b = channel.empty()
 
     //COOCCURRENCE
     COOCCURRENCE_BINNING( ch_multi_coverage )
@@ -359,7 +357,7 @@ workflow MINIMETA {
     //SEMIBIN2
     ch_semibin2_s2b = SEMIBIN2.out.scaffolds2bin
         .map { file -> ['SEMIBIN2', file] }
-        .filter { it[1].size() > 0 }
+        .filter { entry -> entry[1].size() > 0 }
     ch_all_s2b = ch_all_s2b.mix(ch_semibin2_s2b)
     ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
 
@@ -400,7 +398,7 @@ workflow MINIMETA {
     ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
     //
     ch_bins_for_prokka = ch_bins_dir.flatMap { bin_dir ->
-        def bin_files = file(bin_dir).listFiles().findAll { it.name.endsWith('.fa') }
+        def bin_files = file(bin_dir).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
         if (!bin_files) {
             log.warn "No .fa files found in ${bin_dir}, skipping PROKKA"
             return []
@@ -429,7 +427,7 @@ workflow MINIMETA {
     }
 
     // GET_SOFTWARE_VERSIONS
-    ch_multiqc_versions = Channel.empty()
+    ch_multiqc_versions = channel.empty()
     GET_SOFTWARE_VERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
@@ -437,13 +435,13 @@ workflow MINIMETA {
 
     // MODULE: MULTIQC
     workflow_summary = create_workflow_summary(summary)
-    ch_workflow_summary = Channel.value(workflow_summary)
+    ch_workflow_summary = channel.value(workflow_summary)
 
-    ch_multiqc_files = Channel.empty()
+    ch_multiqc_files = channel.empty()
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect { entry -> entry[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect { entry -> entry[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SPADES_JOINT.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(REMAP.out.mqc_tsv.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_MULTI.out.coverage_mqc.ifEmpty([]))
@@ -460,22 +458,24 @@ workflow MINIMETA {
         ch_multiqc_custom_config.toList(),
         ch_multiqc_logo.toList()
     )
-    multiqc_report = MULTIQC.out.report.toList()
-
     OUTPUT_DOCUMENTATION(ch_output_docs)
+
+    emit:
+    summary_params = channel.value(summary)
+    multiqc_report = MULTIQC.out.report.toList()
 }
 
 def nfcoreHeader(){
     // Log colors ANSI codes
-    c_reset = params.monochrome_logs ? '' : "\033[0m";
-    c_dim = params.monochrome_logs ? '' : "\033[2m";
-    c_black = params.monochrome_logs ? '' : "\033[0;30m";
-    c_green = params.monochrome_logs ? '' : "\033[0;32m";
-    c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
-    c_blue = params.monochrome_logs ? '' : "\033[0;34m";
-    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
-    c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
-    c_white = params.monochrome_logs ? '' : "\033[0;37m";
+    def c_reset = params.monochrome_logs ? '' : "\033[0m";
+    def c_dim = params.monochrome_logs ? '' : "\033[2m";
+    def c_black = params.monochrome_logs ? '' : "\033[0;30m";
+    def c_green = params.monochrome_logs ? '' : "\033[0;32m";
+    def c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
+    def c_blue = params.monochrome_logs ? '' : "\033[0;34m";
+    def c_purple = params.monochrome_logs ? '' : "\033[0;35m";
+    def c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
+    def c_white = params.monochrome_logs ? '' : "\033[0;37m";
 
     return """    ${c_dim}----------------------------------------------------${c_reset}
                                             ${c_green},--.${c_black}/${c_green},-.${c_reset}
@@ -487,4 +487,3 @@ def nfcoreHeader(){
     ${c_dim}----------------------------------------------------${c_reset}
     """.stripIndent()
 }
-
