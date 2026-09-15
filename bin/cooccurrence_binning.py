@@ -20,7 +20,7 @@ from itertools import combinations
 def main():
     parser = argparse.ArgumentParser(description='Co-occurrence binning')
     parser.add_argument('coverage_file', help='coverage matrix TSV')
-    parser.add_argument('filtered_fasta', help='filtered contigs FASTA file')
+    parser.add_argument('filtered_ids', help='filtered contigs ID list')
     parser.add_argument('output_file', help='output clusters TSV')
     parser.add_argument('--eps', type=float, default=0.05,
                         help='DBSCAN eps (default: 0.05)')
@@ -34,10 +34,10 @@ def main():
                         help='t-SNE perplexity (default: 30)')
     args = parser.parse_args()
     contig_ids = []
-    with open(args.filtered_fasta) as f:
+    with open(args.filtered_ids) as f:
         for line in f:
-            if line.startswith('>'):
-                contig_id = line[1:].split()[0]
+            contig_id = line.strip()
+            if contig_id:
                 contig_ids.append(contig_id)
     print(f"Filtered contigs from fasta: {len(contig_ids)}", file=sys.stderr)
     df = pd.read_csv(args.coverage_file, sep='\t', index_col=0)
@@ -86,15 +86,15 @@ def main():
     if args.tsne:
         print("Computing Spearman correlation and transforming distance matrix (aligning with original code)...", file=sys.stderr)
 
-        # 1. 计算 Spearman 相关系数矩阵 (occ 是 contigs × samples)
+        # 1. Compute Spearman correlation matrix (occ is contigs x samples)
         corr_matrix, _ = spearmanr(occ.T)
 
-        # 2. 根据相关系数调整距离矩阵：如果 r(i,j) < 0，则 dist_transformed(i,j) = -dist(i,j)
+        # 2. Adjust distance matrix based on correlation: if r(i,j) < 0, then dist_transformed(i,j) = -dist(i,j)
         dist_transformed = dist.copy()
         neg_mask = corr_matrix < 0
         dist_transformed[neg_mask] = -dist_transformed[neg_mask]
 
-        # 3. 计算 Spearman 距离矩阵
+        # 3. Compute Spearman distance matrix
         D = squareform(pdist(dist_transformed, 'correlation'))
         np.fill_diagonal(D, 0)
 
@@ -106,7 +106,7 @@ def main():
             metric='precomputed',
             init='random'
         )
-        X_tsne = tsne.fit_transform(D)  # 使用变换后的距离矩阵 D
+        X_tsne = tsne.fit_transform(D)  # use transformed distance matrix D
         print("t-SNE completed. Clustering with DBSCAN on t-SNE space...", file=sys.stderr)
         clustering = DBSCAN(eps=args.eps, min_samples=args.min_samples)
         labels = clustering.fit_predict(X_tsne)
@@ -122,7 +122,7 @@ def main():
         if label == -1:
             bin_map[contigs[idx]] = "unbinned"
         else:
-            bin_map[contigs[idx]] = f"bin_{label}"
+             bin_map[contigs[idx]] = f"bin_{label}"
 
     cluster_df = pd.DataFrame(bin_map.items(), columns=['contig', 'bin'])
     cluster_df.to_csv(args.output_file, sep='\t', index=False)

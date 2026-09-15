@@ -328,8 +328,9 @@ workflow MINIMETA {
     ch_filtered_assembly = FILTER_ASSEMBLY.out.filtered
     ch_versions = ch_versions.mix( FILTER_ASSEMBLY.out.versions )
     //COOCCURRENCE
-    COOCCURRENCE_BINNING( ch_multi_coverage, ch_filtered_assembly )
-    EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_filtered_assembly)
+    ch_filtered_ids = FILTER_ASSEMBLY.out.filtered_ids
+    COOCCURRENCE_BINNING( ch_multi_coverage, ch_filtered_ids )
+    EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_assembly)
     ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
     ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
 

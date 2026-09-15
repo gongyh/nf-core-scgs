@@ -7,7 +7,7 @@ process COOCCURRENCE_BINNING {
 
     input:
     path coverage_tsv
-    path filtered_fasta
+    path filtered_ids
     output:
     path "clusters.tsv", emit: clusters
     path "versions.yml", emit: versions
@@ -18,7 +18,7 @@ process COOCCURRENCE_BINNING {
     def eps = params.cooccurrence_eps ?: 0.05
     """
     python ${script_path} \\
-        abundance_matrix.tsv filtered.fasta clusters.tsv \\
+        abundance_matrix.tsv ${filtered_ids} clusters.tsv \\
         --eps ${eps} ${args}
 
     if [ -f "clusters.tsv" ]; then
