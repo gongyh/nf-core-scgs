@@ -1,0 +1,26 @@
+process OUTPUT_DOCUMENTATION {
+    label 'process_low'
+
+    conda "conda-forge::markdown=3.4.3 conda-forge::pymdown-extensions=10.0.1"
+    container "scgs/mulled-v2-9d4085f2843801e3a749ddf5aafb2163e650905b:957aa01b06e937103f54e0d7f72e2ab0c8be9b6f-0"
+
+    input:
+    path output_docs
+
+    output:
+    path("results_description.html"), emit: html
+    path "versions.yml"             , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
+    """
+    markdown_to_html.py -o results_description.html $output_docs
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        markdown: '3.4.3'
+    END_VERSIONS
+    """
+}

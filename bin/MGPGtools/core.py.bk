@@ -1,0 +1,192 @@
+import logging
+import os
+import multiprocessing
+import pandas as pd
+from pathlib import Path
+from functools import partial
+from utils.meta import *
+from utils.processDF import *
+from utils.common import *
+from utils.odgi import *
+from utils.gfa import *
+
+
+class Core(object):
+    def __init__(self, options):
+        self.logger = logging.getLogger("timestamp")
+        self.database = options.db
+        self.name = options.name
+        self.outdir = options.outdir
+        self.threads = 1 if options.threads is not None else options.threads
+        self.meta = os.path.join(self.database, "metadata", "Metadata.tsv")
+        self.gfa = os.path.join(
+            self.database,
+            "databases",
+            "gfa",
+            get_info(self.meta, self.name)["class"],
+            self.name + ".gfa",
+        )
+        self.gff = os.path.join(
+            self.database,
+            "databases",
+            "gff",
+            get_info(self.meta, self.name)["class"],
+            get_info(self.meta, self.name)["ref"] + ".gff",
+        )
+        self.genomesNum = int(get_info(self.meta, self.name)["genomesNum"])
+        self.ref = get_info(self.meta, self.name)["ref"]
+        self.process = 12
+
+    # 提取gff文件中的基因起始和终止位置写入bed文件中，并将每个基因长度存入字典
+    def extract_gff(self, bedPath):
+        geneTag = {}
+        geneLength = {}
+        with open(self.gff, "r") as f:
+            new_file = open(os.path.join(bedPath, "genes.bed"), "w")
+            lines = f.read().strip().split("\n")
+            # line_count = 1
+            for line in lines:
+                if line[0] == "#":
+                    continue
+                row = line.strip().split("\t")
+                if row[2] == "gene":
+                    # line_count += 1
+                    # if line_count > 200:
+                    #     break
+                    gene = row[8].split(";")[0].replace("ID=gene-", "")
+                    tag = self.ref.replace(".", "#") + "#" + row[0]
+                    k = tag + ":" + row[3] + "-" + row[4]
+                    geneTag[k] = gene
+                    l = int(row[4]) - int(row[3])
+                    geneLength[gene] = l
+                    new_file.write(tag + "\t" + row[3] + "\t" + row[4] + "\n")
+            new_file.close()
+        return geneTag, geneLength
+
+    # 更换tsv文件第一列的名称
+    def changeGeneTag(self, geneTag, dir, tsv):
+        filepath = os.path.join(dir, tsv)
+        newFilePath = os.path.join(dir, tsv.replace(".tsv", ".New.tsv"))
+        with open(filepath, "r") as file:
+            lines = file.readlines()
+        new_lines = []
+        for line in lines:
+            columns = line.strip().split("\t")
+            if columns[0] in geneTag:
+                columns[0] = geneTag[columns[0]]
+            new_line = "\t".join(columns) + "\n"
+            new_lines.append(new_line)
+        with open(newFilePath, "w") as file:
+            file.writelines(new_lines)
+
+    def staticCoreGene(self):
+        # 检查临时文件存放目录，没有则创建
+        check_directory(os.path.join(self.outdir, "tmp"))
+        # 定义核心基因的字典
+        coreGene = {"0-15%": [], "15-95%": [], "95-99%": [], "99-100%": [], "100%": []}
+        # 包含所有基因组的列表
+        genomeList = getPanTxt(self.database, self.name)
+        # 包含除参考外的所有基因组的列表
+        genomeList_except_ref = [x for x in genomeList if x != self.ref]
+        # 利用odgi构建og格式文件，排序，根据bed文件提取子图，显示子图的paths信息，将子图转化为gfa格式文件
+        ogFile = os.path.join(self.outdir, "tmp", self.name + ".sorted.og")
+        geneTag, genel = self.extract_gff(os.path.join(self.outdir, "tmp"))
+        geneList = list(genel.keys())
+        ogBuild(self.gfa, ogFile, self.threads)
+        extractOGFile = os.path.join(self.outdir, "tmp", "genes.og")
+        extractOgSortedFile = os.path.join(self.outdir, "tmp", "genes.sorted.og")
+        bedFile = os.path.join(self.outdir, "tmp", "genes.bed")
+        tsvFile = os.path.join(self.outdir, "tmp", "genes.tsv")
+        newTsvFile = os.path.join(self.outdir, "tmp", "genes.New.tsv")
+        gfaFile = os.path.join(self.outdir, "tmp", "genes.gfa")
+        ogExtractBed(ogFile, extractOGFile, bedFile, self.threads)
+        ogSort(extractOGFile, extractOgSortedFile, self.threads)
+        ogPathTsv(extractOgSortedFile, tsvFile, self.threads)
+        ogView(extractOgSortedFile, gfaFile, self.threads)
+        # 根据子图的gfa文件(包含所有基因序列的gfa)，提取每个节点的长度
+        nodel = nodeLength(gfaFile)
+        self.changeGeneTag(geneTag, os.path.join(self.outdir, "tmp"), "genes.tsv")
+        df = pd.read_csv(newTsvFile, delimiter="\t")
+        genome_df = df[df["path.name"].str.contains("GCA|GCF") == True]
+        gene_df = df[df["path.name"].str.contains("GCA|GCF") == False]
+        # results字典中的键是基因的ID，值是一个字典，这个字典保存每个基因组中该基因与参考不一致的node
+        # 不在results字典键中的基因是与参考100%相同的基因
+        ref = self.ref.split(".")[0] + self.ref.split(".")[1]
+        # 缺失基因字典
+        absenceGene = {}
+        results = {}
+        result = []
+        # 多个进程处理gene_df, 合并结果
+        pool = multiprocessing.Pool(processes=self.process)
+        partial_processRow = partial(processRow, genome_df=genome_df, ref=ref)
+        result = pool.map(partial_processRow, gene_df.iterrows())
+        for j in result:
+            results.update(j)
+        pool.close()
+        pool.join()
+        for g, v in results.items():
+            if len(v) == 0:
+                # 只有参考基因组上有该基因
+                rate = 1 / self.genomesNum
+                if 0 <= rate < 0.15:
+                    coreGene["0-15%"].append(g)
+                else:
+                    coreGene["15-95%"].append(g)
+                absenceGene[g] = genomeList_except_ref
+                continue
+            geneGenomes = []
+            currentGeneLength = genel[g]
+            uniqueNum = 0
+            # 遍历每个基因对应的基因组path
+            for i, z in v.items():
+                # 当前基因组名
+                i = i.split("#")[0] + "." + i.split("#")[1]
+                if i in geneGenomes:
+                    continue
+                else:
+                    geneGenomes.append(i)
+                length = 0
+                # 当前path对应节点
+                for q in z:
+                    length = length + nodel[q[5:]]
+                # 相同序列长度小于基因长度的80%则认为该基因在基因组中缺失
+                if length / currentGeneLength < 0.8:
+                    # 缺失的基因组数目
+                    uniqueNum = uniqueNum + 1
+                    if g in absenceGene:
+                        absenceGene[g].append(i)
+                    else:
+                        absenceGene[g] = [i]
+            # 存在基因的基因组数目占总数的比值
+            rate = (self.genomesNum - uniqueNum) / self.genomesNum
+            if rate == 1:
+                coreGene["100%"].append(g)
+            if 0.99 <= rate < 1:
+                coreGene["99-100%"].append(g)
+            if 0.95 <= rate < 0.99:
+                coreGene["95-99%"].append(g)
+            if 0.15 <= rate < 0.95:
+                coreGene["15-95%"].append(g)
+            if 0 <= rate < 0.15:
+                coreGene["0-15%"].append(g)
+        total_genes = len(genel)
+        gene_99_100 = len(coreGene["100%"]) + len(coreGene["99-100%"])
+        # 基因矩阵
+        geneMatrix = pd.DataFrame(index=geneList, columns=genomeList)
+        # 默认全部是1
+        geneMatrix[:] = 1
+        geneMatrix = geneMatrix.astype(int)
+        # 根据缺失基因字典将对应值改为0
+        for a, b in absenceGene.items():
+            for i in b:
+                geneMatrix.at[a, i] = 0
+        # 基因矩阵输出到gene_presence_absence.tsv
+        geneMatrix.to_csv(os.path.join(self.outdir, "gene_presence_absence.tsv"), sep="\t", index=True)
+        # 写入summary_statistics.txt
+        with open(os.path.join(self.outdir, "summary_statistics.txt"), "w") as f:
+            f.write("Core genes(99% <= strains <= 100%): {}\n".format(gene_99_100))
+            f.write("Soft core genes(95% <= strains < 99%): {}\n".format(len(coreGene["95-99%"])))
+            f.write("Shell genes(15% <= strains < 95%): {}\n".format(len(coreGene["15-95%"])))
+            f.write("Cloud genes(0% <= strains < 15%): {}\n".format(len(coreGene["0-15%"])))
+            f.write("Total genes: {}".format(total_genes))
+        delete_temp_dir(os.path.join(self.outdir, "tmp"))

@@ -1,0 +1,17 @@
+repository_type: pipeline
+nf_core_version: 3.2.1
+lint:
+  nextflow_config:
+    - manifest.name
+    - manifest.version
+    - manifest.homePage
+    - custom_config
+  actions_awsfulltest: False
+  actions_ci: False
+  local_component_structure: False
+  included_configs: False
+  files_unchanged:
+    - .github/workflows/linting.yml
+    - .prettierignore
+  template_strings: False
+  merge_markers: False

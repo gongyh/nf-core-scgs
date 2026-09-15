@@ -1,0 +1,531 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/nf-core/scgs/master/nextflow_schema.json",
+    "title": "nf-core/scgs pipeline parameters",
+    "description": "Single Cell Genome Sequencing data analysis pipeline",
+    "type": "object",
+    "$defs": {
+        "input_output_options": {
+            "title": "Input/output options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data and save output data.",
+            "properties": {
+                "input": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/csv",
+                    "pattern": "^\\S+\\.csv$",
+                    "schema": "assets/schema_input.json",
+                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://nf-co.re/rnaseq/usage#samplesheet-input).",
+                    "default": null,
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "outdir": {
+                    "type": "string",
+                    "description": "The output directory where the results will be saved.",
+                    "default": "./results",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Email address for completion summary.",
+                    "fa_icon": "fas fa-envelope",
+                    "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
+                    "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
+                }
+            }
+        },
+        "reference_genome_options": {
+            "title": "Reference genome options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Options for the reference genome indices used to align reads.",
+            "properties": {
+                "genome": {
+                    "type": "string",
+                    "description": "Name of iGenomes reference.",
+                    "fa_icon": "fas fa-book",
+                    "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`.\n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
+                },
+                "fasta": {
+                    "type": "string",
+                    "fa_icon": "fas fa-font",
+                    "description": "Path to FASTA genome file.",
+                    "help_text": "If you have no genome reference available, the pipeline can build one using a FASTA file. This requires additional time and resources, so it's better to use a pre-build index if possible."
+                },
+                "igenomes_base": {
+                    "type": "string",
+                    "description": "Directory / URL base for iGenomes references.",
+                    "default": "s3://ngi-igenomes/igenomes/",
+                    "fa_icon": "fas fa-cloud-download-alt",
+                    "hidden": true
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "help_text": "These options are common to all nf-core pipelines and allow you to customise some of the core preferences for how the pipeline runs.\n\nTypically these options would be set in a Nextflow config file loaded for all pipeline runs, such as `~/.nextflow/config`.",
+            "properties": {
+                "help": {
+                    "type": "boolean",
+                    "description": "Display help text.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-question-circle"
+                },
+                "plaintext_email": {
+                    "type": "boolean",
+                    "description": "Send plain-text email instead of HTML.",
+                    "fa_icon": "fas fa-remove-format",
+                    "hidden": true,
+                    "help_text": "Set to receive plain-text e-mails instead of HTML formatted."
+                },
+                "monochrome_logs": {
+                    "type": "boolean",
+                    "description": "Do not use coloured log outputs.",
+                    "fa_icon": "fas fa-palette",
+                    "hidden": true,
+                    "help_text": "Set to disable colourful command line output and live life in monochrome."
+                },
+                "multiqc_config": {
+                    "type": "string",
+                    "description": "Custom config file to supply to MultiQC.",
+                    "fa_icon": "fas fa-cog",
+                    "hidden": true
+                },
+                "tracedir": {
+                    "type": "string",
+                    "description": "Directory to keep pipeline Nextflow logs and reports.",
+                    "default": "./results/pipeline_info",
+                    "fa_icon": "fas fa-cogs",
+                    "hidden": true
+                }
+            }
+        },
+        "institutional_config_options": {
+            "title": "Institutional config options",
+            "type": "object",
+            "fa_icon": "fas fa-university",
+            "description": "Parameters used to describe centralised config profiles. These should not be edited.",
+            "help_text": "The centralised nf-core configuration profiles use a handful of pipeline parameters to describe themselves. This information is then printed to the Nextflow log when you run a pipeline. You should not need to change these values when you run a pipeline.",
+            "properties": {
+                "config_profile_description": {
+                    "type": "string",
+                    "description": "Institutional config description.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                },
+                "config_profile_contact": {
+                    "type": "string",
+                    "description": "Institutional config contact information.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                },
+                "config_profile_url": {
+                    "type": "string",
+                    "description": "Institutional config URL link.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                }
+            }
+        },
+        "other_options": {
+            "title": "Other options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Pipeline specific parameters",
+            "help_text": "These options are specific to the nf-core-scgs pipeline.",
+            "properties": {
+                "reads": {
+                    "type": "string",
+                    "default": "data/*{1,2}.fastq.gz",
+                    "description": "Raw sequencing reads."
+                },
+                "single_end": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether single_end sequencing?"
+                },
+                "igenomes_ignore": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Ignore igenomes references?"
+                },
+                "maxMultiqcEmailFileSize": {
+                    "type": "integer",
+                    "default": 26214400,
+                    "description": "Maximum email size."
+                },
+                "clusterOptions": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Options for the cluster."
+                },
+                "awsqueue": {
+                    "type": "string",
+                    "default": "default",
+                    "description": "Name of your AWS queue."
+                },
+                "awsregion": {
+                    "type": "string",
+                    "default": "eu-west-1",
+                    "description": "Region of your AWS instance."
+                },
+                "gff": {
+                    "type": "string",
+                    "pattern": "^\\S+\\.gff$",
+                    "description": "GFF annotation file."
+                },
+                "pasa": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to perform scaffolding using PASA?"
+                },
+                "refs_fna": {
+                    "type": "string",
+                    "description": "Genomes for scaffolding (*.fna *.fna.gz) or PanTA database (dir)."
+                },
+                "notrim": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Do not trim low quality regions."
+                },
+                "saveTrimmed": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save clean reads."
+                },
+                "allow_multi_align": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allow multi-mapping of reads."
+                },
+                "saveAlignedIntermediates": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save tmp files."
+                },
+                "nanopore": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Nanopore sequencing data."
+                },
+                "vcf": {
+                    "type": "string",
+                    "default": null,
+                    "description": "VCF file for graph pan genome construction."
+                },
+                "no_normalize": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Not normalize reads before genome assembly."
+                },
+                "remap": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Remap and reblob."
+                },
+                "acdc": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable acdc."
+                },
+                "acquired": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Call acquired ARG?"
+                },
+                "kofam": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable KEGG Ortholog annotation?"
+                },
+                "point": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Call mutation derived ARG?"
+                },
+                "blastn": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable NCBI Nt database annotation."
+                },
+                "kraken": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable Kraken2 annotation."
+                },
+                "blob": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable Blobtools analysis."
+                },
+                "eggnog": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable EggNOG database annotation."
+                },
+                "checkm2": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable CheckM2 analysis."
+                },
+                "gtdbtk": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable gtdbtk analysis."
+                },
+                "split": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Split according to contig taxa annotation(Bacteria)."
+                },
+                "split_euk": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Split according to contig taxa annotation(Eukaryota)."
+                },
+                "graphbin": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable graphbin to bin."
+                },
+                "euk": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Eukaryotic genome."
+                },
+                "fungus": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Fungus genome."
+                },
+                "snv": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Call SNV using MonoVar?"
+                },
+                "cnv": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Call CNV?"
+                },
+                "saturation": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Perform saturation analysis?"
+                },
+                "doubletd": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Detect doublet?"
+                },
+                "bbmap": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable bbmap align?"
+                },
+                "bulk": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Bulk sequencing data?"
+                },
+                "mg": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Metagenomic sequencing data?"
+                },
+                "ass": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Assemble draft genomes?"
+                },
+                "genomad": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable genomad analysis?"
+                },
+                "minimeta": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable minimeta single-cell metagenomics analysis workflow"
+                },
+                "prepare_databases": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable database preparation workflow"
+                },
+                "genus": {
+                    "type": "string",
+                    "description": "Genus name of the genome."
+                },
+                "split_bac_level": {
+                    "type": "string",
+                    "description": "Which level to split prokarytic contigs?"
+                },
+                "split_euk_level": {
+                    "type": "string",
+                    "description": "Which level to split eukarytic contigs?"
+                },
+                "genomad_db": {
+                    "type": "string",
+                    "description": "Path of genomad database."
+                },
+                "mgpg_db": {
+                    "type": "string",
+                    "description": "Path of MGPG database."
+                },
+                "prokka_proteins": {
+                    "type": "string",
+                    "description": "Path of protein fasta file for Prokka."
+                },
+                "nt_db": {
+                    "type": "string",
+                    "description": "Path of NCBI/NT database."
+                },
+                "checkm2_db": {
+                    "type": "string",
+                    "description": "Path of CheckM2 database."
+                },
+                "blob_db": {
+                    "type": "string",
+                    "description": "Path of Blobtools nodesDB.txt."
+                },
+                "krona_db": {
+                    "type": "string",
+                    "description": "Path of Krona taxonomy.tab."
+                },
+                "kraken1_db": {
+                    "type": "string",
+                    "description": "Path of KRAKEN1 database (for ACDC)."
+                },
+                "kraken2_db": {
+                    "type": "string",
+                    "description": "Path of KRAKEN2 database."
+                },
+                "readPaths": {
+                    "type": "string",
+                    "description": "Path of reads."
+                },
+                "uniprot_db": {
+                    "type": "string",
+                    "description": "Path of uniprot database."
+                },
+                "uniprot_taxids": {
+                    "type": "string",
+                    "description": "Path of uniprot taxids file."
+                },
+                "eggnog_db": {
+                    "type": "string",
+                    "description": "Path of Eggnog database."
+                },
+                "eukcc_db": {
+                    "type": "string",
+                    "description": "Path of EukCC database."
+                },
+                "gtdb": {
+                    "type": "string",
+                    "description": "Path of gtdb database."
+                },
+                "bakta_db": {
+                    "type": "string",
+                    "description": "Path of bakta database."
+                },
+                "host_ref": {
+                    "type": "string",
+                    "description": "Path of reference sequence for host removal using bbmap."
+                },
+                "evalue": {
+                    "type": "string",
+                    "description": "E-value for diamond blastp."
+                },
+                "blockSize": {
+                    "type": "string",
+                    "description": "blockSize for diamond."
+                },
+                "pointfinder_species": {
+                    "type": "string",
+                    "description": "The species name for pointfinder."
+                },
+                "kofam_profile": {
+                    "type": "string",
+                    "description": "kofam_profile file"
+                },
+                "kofam_kolist": {
+                    "type": "string",
+                    "description": "kofam_kolist file"
+                },
+                "augustus_species": {
+                    "type": "string",
+                    "description": "Species name for Augustus"
+                },
+                "clip_r1": {
+                    "type": "string",
+                    "description": "Clip some bases from R1"
+                },
+                "clip_r2": {
+                    "type": "string",
+                    "description": "Clip some bases from R2"
+                },
+                "three_prime_clip_r1": {
+                    "type": "string",
+                    "description": "Clip some bases from R1 from 3'end"
+                },
+                "three_prime_clip_r2": {
+                    "type": "string",
+                    "description": "Clip some bases from R2 from 3'end"
+                },
+                "show_hidden_params": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show hidden params?"
+                },
+                "schema_ignore_params": {
+                    "type": "string",
+                    "description": "schema_ignore_params"
+                },
+                "validationShowHiddenParams": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "validation show hidden params"
+                },
+                "validationSchemaIgnoreParams": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "validation schema ignore params"
+                },
+                "custom_config_version": {
+                    "type": "string",
+                    "default": "master",
+                    "description": "custom_config_version"
+                },
+                "custom_config_base": {
+                    "type": "string",
+                    "default": "https://raw.githubusercontent.com/nf-core/configs/master",
+                    "description": "custom_config_base"
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/reference_genome_options"
+        },
+        {
+            "$ref": "#/$defs/generic_options"
+        },
+        {
+            "$ref": "#/$defs/institutional_config_options"
+        },
+        {
+            "$ref": "#/$defs/other_options"
+        }
+    ]
+}

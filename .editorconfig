@@ -1,0 +1,59 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_size = 4
+indent_style = space
+
+[*.{md,yml,yaml,html,css,scss,js,config,R,sh}]
+indent_size = 2
+
+[*.{yml,yaml,json}]
+insert_final_newline = unset
+
+[*.{py,py.bk}]
+end_of_line = unset
+insert_final_newline = unset
+
+# These files are edited and tested upstream in nf-core/modules
+[/modules/nf-core/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
+
+[/assets/email*]
+indent_size = unset
+
+[*rnammer-1.2.src.tar.Z]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
+
+[*bin/fasta_tool]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
+
+[bin/BLOSUM62.mtx]
+indent_style = unset
+indent_size = unset
+
+[bin/dcvbin/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset

@@ -1,0 +1,44 @@
+process QUAST_REF {
+    tag "$outdir"
+    label 'process_medium'
+
+    conda "bioconda::quast=5.2.0"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/quast:5.2.0--py39pl5321h2add14b_1' :
+        'biocontainers/quast:5.2.0--py39pl5321h2add14b_1' }"
+
+    input:
+    path(fasta)
+    path(gff)
+    path(contigs)
+    path(bam)
+    path(bai)
+    val(euk)
+    val(fungus)
+    val(quast_outdir)
+
+    output:
+    path "${outdir}"         , emit: results
+    path "${outdir}/*.tsv"   , emit: tsv
+    path "versions.yml"      , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
+    def euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
+    def ref = fasta.exists() ? "-r $fasta" : ""
+    def gene = gff.exists() ? "--features gene:$gff" : ""
+    outdir = "${quast_outdir}".replaceAll(/[\\/:*?"<>|]/, '_').replaceAll(/[\s_]+/, '_').trim()
+    """
+    bams=($bam)
+    bams_param=\$(echo \${bams[*]} | sed 's/ /,/g')
+    labels=\$(echo \${bams[*]} | sed 's/.markdup.bam//g' | sed 's/ /,/g')
+    quast.py -o $outdir $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams_param -l \$labels --no-sv --no-read-stats $contigs
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        quast: \$(quast.py --version 2>&1 | sed 's/^.*QUAST v//; s/ .*\$//')
+    END_VERSIONS
+    """
+}
