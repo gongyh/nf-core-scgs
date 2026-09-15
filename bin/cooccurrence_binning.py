@@ -122,7 +122,7 @@ def main():
         if label == -1:
             bin_map[contigs[idx]] = "unbinned"
         else:
-             bin_map[contigs[idx]] = f"bin_{label}"
+            bin_map[contigs[idx]] = f"bin_{label}"
 
     cluster_df = pd.DataFrame(bin_map.items(), columns=['contig', 'bin'])
     cluster_df.to_csv(args.output_file, sep='\t', index=False)
