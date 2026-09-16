@@ -12,6 +12,8 @@ process COOCCURRENCE_BINNING {
     filtered_ids: Path
     output:
     record(clusters: file('clusters.tsv'), versions: file('versions.yml'), mqc_tsv: file('cooccurrence_mqc.tsv'))
+    topic:
+    file('versions.yml') >> 'local_versions'
     script:
     def script_path = "${projectDir}/bin/cooccurrence_binning.py"
     def args = task.ext.args ?: ''

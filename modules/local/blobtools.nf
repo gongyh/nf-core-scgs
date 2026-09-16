@@ -15,6 +15,8 @@ process BLOBTOOLS {
 
     output:
     record(meta: meta, tax: file("*/*.blobDB*table.txt"), contigs: file("*.fasta"), tax_split: file("*", type: "dir"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

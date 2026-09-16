@@ -10,6 +10,8 @@ process BLOB_DBDOWNLOAD {
 
     output:
     record(db: file('blob_db'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

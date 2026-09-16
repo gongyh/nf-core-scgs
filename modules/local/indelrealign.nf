@@ -12,6 +12,8 @@ process INDELREALIGN {
 
     output:
     record(meta: meta, bam: file('*.realign.bam'), bai: file('*.realign.bam.bai'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix   = task.ext.prefix ?: "${meta.id}"

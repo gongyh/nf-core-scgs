@@ -11,6 +11,8 @@ process DOUBLETD {
 
     output:
     record(prediction: file('prediction.tsv'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

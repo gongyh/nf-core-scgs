@@ -8,6 +8,8 @@ process KOFAM_DBDOWNLOAD {
 
     output:
     record(db: file('kofam_db'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

@@ -12,6 +12,8 @@ process FEATURE_FUSION {
 
     output:
     record(meta: meta, features: file("${prefix}_vae_features.npy"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def args    = task.ext.args ?: ''

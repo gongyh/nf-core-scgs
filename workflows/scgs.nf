@@ -612,13 +612,15 @@ if (params.refs_fna) {
 summary = [:]
 
     display_header(summary, custom_runName, single_end)
-    ch_versions = channel.empty()
+    ch_published = channel.empty()
 
     // FASTQC
     ch_multiqc_fastqc = channel.empty()
     FASTQC ( read_files_fastqc )
-    ch_versions       = ch_versions.mix(FASTQC.out.versions)
+    ch_vendor_versions = FASTQC.out.versions
     ch_multiqc_fastqc = FASTQC.out.zip
+    ch_published = ch_published.mix(FASTQC.out.html.map { result -> [destination: 'fastqc', files: result] })
+    ch_published = ch_published.mix(FASTQC.out.zip.map { result -> [destination: 'fastqc/zips', files: result] })
 
     // SAVE_REFERENCE
     if ( params.fasta ) {
@@ -626,6 +628,9 @@ summary = [:]
             save_reference = SAVE_REFERENCE(fasta, gff)
         } else {
             save_reference = SAVE_REFERENCE(fasta, file("/dev/null"))
+        }
+        if (params.gff) {
+            ch_published = ch_published.mix(save_reference.map { result -> [destination: 'reference', files: [result.fa, result.gff, result.bed, result.gc_bed, result.gc_skew_bed, result.genes_bed]] })
         }
     }
 
@@ -645,22 +650,34 @@ summary = [:]
     if (params.notrim) {
         if (params.bbmap) {
             bbmap_align = BBMAP_ALIGN(read_files_trimming, host_ref)
-            ch_versions = ch_versions.mix(bbmap_align.map { result -> result.versions })
             trimmed_reads = bbmap_align.map { result -> tuple(result.meta, result.clean_fastq) }
+            if (params.saveTrimmed) {
+                ch_published = ch_published.mix(bbmap_align.map { result -> [destination: 'remove_hostReads', files: result] })
+            }
         } else {
             trimmed_reads = read_files_trimming
         }
     } else {
         trimgalore = TRIMGALORE(read_files_trimming)
-        ch_multiqc_trim_log = trimgalore.map { result -> tuple(result.meta, result.log) }
-        ch_multiqc_trim_zip = trimgalore.map { result -> tuple(result.meta, result.zip) }
-        ch_versions = ch_versions.mix(trimgalore.map { result -> result.versions })
+        ch_multiqc_trim_log = trimgalore.map { result -> tuple(result.meta, result.logs) }
+        ch_multiqc_trim_zip = trimgalore.map { result -> tuple(result.meta, result.fastqc) }
+        trimgalore_reads = trimgalore.map { result ->
+            def reads = result.meta.single_end ? [result.single_read] : [result.read1, result.read2]
+            tuple(result.meta, reads)
+        }
+        ch_published = ch_published.mix(trimgalore.map { result -> [destination: "trim_galore/${result.meta.id}", files: result.fastqc] })
+        ch_published = ch_published.mix(trimgalore.map { result -> [destination: "trim_galore/${result.meta.id}", files: result.logs] })
+        if (params.saveTrimmed) {
+            ch_published = ch_published.mix(trimgalore_reads.map { _meta, reads -> [destination: 'trim_galore', files: reads] })
+        }
         if (params.bbmap) {
-            bbmap_align = BBMAP_ALIGN(trimgalore.map { result -> tuple(result.meta, result.reads) }, host_ref)
-            ch_versions = ch_versions.mix(bbmap_align.map { result -> result.versions })
+            bbmap_align = BBMAP_ALIGN(trimgalore_reads, host_ref)
             trimmed_reads = bbmap_align.map { result -> tuple(result.meta, result.clean_fastq) }
+            if (params.saveTrimmed) {
+                ch_published = ch_published.mix(bbmap_align.map { result -> [destination: 'remove_hostReads', files: result] })
+            }
         } else {
-            trimmed_reads = trimgalore.map { result -> tuple(result.meta, result.reads) }
+            trimmed_reads = trimgalore_reads
         }
     }
 
@@ -676,14 +693,16 @@ summary = [:]
             kraken2_db,
             krona_db
         )
-        UMAP(kraken.map { result -> result.tda }.collect().filter { it -> it.size() >= 4 })
+        umap = UMAP(kraken.map { result -> result.tda }.collect().filter { it -> it.size() >= 4 })
         ch_multiqc_kraken = kraken.map { result -> tuple(result.meta, result.report) }
-        ch_versions = ch_versions.mix(kraken.map { result -> result.versions })
+        ch_published = ch_published.mix(kraken.map { result -> [destination: 'kraken2', files: result] })
+        ch_published = ch_published.mix(umap.map { result -> [destination: 'umap', files: result] })
     }
 
     // SATURATION
     if (params.saturation) {
-        SATURATION ( trimmed_reads )
+        saturation = SATURATION(trimmed_reads)
+        ch_published = ch_published.mix(saturation.map { result -> [destination: 'saturation', files: result] })
     }
 
     // ALIGN
@@ -695,7 +714,9 @@ summary = [:]
             true
         )
         bb_bam = bowtie2_align.map { result -> tuple(result.meta, result.bam) }
-        ch_versions = ch_versions.mix(bowtie2_align.map { result -> result.versions })
+        if (params.saveAlignedIntermediates) {
+            ch_published = ch_published.mix(bowtie2_align.map { result -> [destination: 'bowtie2', files: result] })
+        }
     }
 
     // VG
@@ -705,7 +726,7 @@ summary = [:]
             trimmed_reads,
             graph_vcf
         )
-        ch_versions = ch_versions.mix(vg.ch_versions)
+        ch_published = ch_published.mix(vg.published)
     }
 
     ch_multiqc_samtools = channel.empty()
@@ -719,27 +740,33 @@ summary = [:]
         quast_bam = samtools.map { result -> tuple(result.meta, result.bam) }
         quast_bai = samtools.map { result -> tuple(result.meta, result.bai) }
         ch_samtools_bed = samtools.map { result -> tuple(result.meta, result.bed) }
-        ch_versions = ch_versions.mix(samtools.map { result -> result.versions })
         ch_multiqc_samtools = samtools.map { result -> tuple(result.meta, result.stats) }
+        ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2/stats', files: result.stats] })
+        ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.txt, result.pdf]] })
+        if (params.saveAlignedIntermediates) {
+            ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.bam, result.bai, result.bed, result.versions]] })
+        }
 
         preseq = PRESEQ(ch_samtools_bed)
-        ch_versions = ch_versions.mix(preseq.map { result -> result.versions })
-        ch_multiqc_preseq = preseq.map { result -> tuple(result.meta, result.txt) }
+        ch_multiqc_preseq = preseq.map { result -> tuple(result.meta, result.results) }
+        ch_published = ch_published.mix(preseq.map { result -> [destination: '.', files: result.results] })
 
         if ( params.gff ) {
             QUALIMAP_BAMQC (
                 quast_bam,
                 gff
             )
-            ch_versions = ch_versions.mix(QUALIMAP_BAMQC.out.versions)
+            ch_vendor_versions = ch_vendor_versions.mix(QUALIMAP_BAMQC.out.versions)
             ch_multiqc_qualimap = QUALIMAP_BAMQC.out.results
+            ch_published = ch_published.mix(QUALIMAP_BAMQC.out.results.map { result -> [destination: 'qualimap_bamqc', files: result] })
+            ch_published = ch_published.mix(QUALIMAP_BAMQC.out.versions.map { result -> [destination: 'qualimap_bamqc', files: result] })
         }
         if (params.snv) {
             ch_indelrealign_input = quast_bam.combine(fasta)
             indelrealign = INDELREALIGN(ch_indelrealign_input)
             ch_indelrealign_bam = indelrealign.map { result -> tuple(result.meta, result.bam) }
             ch_indelrealign_bai = indelrealign.map { result -> tuple(result.meta, result.bai) }
-            ch_versions = ch_versions.mix(indelrealign.map { result -> result.versions })
+            ch_published = ch_published.mix(indelrealign.map { result -> [destination: 'gatk', files: result] })
         }
         if (!params.bulk && params.snv) {
             monovar = MONOVAR(
@@ -747,10 +774,10 @@ summary = [:]
                 ch_indelrealign_bai.collect { entry -> entry[1] },
                 fasta
             )
-            ch_versions = ch_versions.mix(monovar.map { result -> result.versions })
+            ch_published = ch_published.mix(monovar.map { result -> [destination: 'monovar', files: result.vcf] })
             if ( params.doubletd ) {
                 doubletd = DOUBLETD(monovar.map { result -> result.vcf })
-                ch_versions = ch_versions.mix(doubletd.map { result -> result.versions })
+                ch_published = ch_published.mix(doubletd.map { result -> [destination: 'doubletd', files: result] })
             }
         }
         if (!params.bulk && params.cnv && !single_end) {
@@ -758,11 +785,11 @@ summary = [:]
                 quast_bam.collect { entry -> entry[1] },
                 quast_bai.collect { entry -> entry[1] }
             )
-            ch_versions = ch_versions.mix(aneufinder.map { result -> result.versions })
+            ch_published = ch_published.mix(aneufinder.map { result -> [destination: 'aneufinder', files: result] })
         }
         ch_circlize_input = ch_samtools_bed.combine(save_reference.map { result -> result.bed })
         circlize = CIRCLIZE(ch_circlize_input)
-        ch_versions = ch_versions.mix(circlize.map { result -> result.versions })
+        ch_published = ch_published.mix(circlize.map { result -> [destination: 'circlize', files: result.bed] })
     }
 
     // ASSEMBLY
@@ -778,26 +805,28 @@ summary = [:]
             normalized_reads = NORMALIZE.out.reads
             */
             bbnorm = BBNORM(trimmed_reads)
-            normalized_reads = bbnorm.map { result -> tuple(result.meta, result.fastq) }
-            ch_versions = ch_versions.mix(bbnorm.map { result -> result.versions })
+            normalized_reads = bbnorm.map { result ->
+                def reads = result.meta.single_end ? [result.single_fastq] : [result.fastq1, result.fastq2]
+                tuple(result.meta, reads)
+            }
         }
 
         spades = SPADES(normalized_reads)
+        ch_published = ch_published.mix(spades.map { result -> [destination: 'spades', files: result] })
         contig = spades.map { result -> tuple(result.meta, result.contig) }
         contig_path = spades.map { result -> tuple(result.meta, result.contig_path) }
         contig_graph = spades.map { result -> tuple(result.meta, result.contig_graph) }
         ctg200_denovo = spades.map { result -> tuple(result.meta, result.ctg200) }
         ctg_denovo = spades.map { result -> tuple(result.meta, result.ctg) }
-        ch_versions = ch_versions.mix(spades.map { result -> result.versions })
 
         if (params.refs_fna) {
             if (refs_fna.size()>1) {
                 panta = PANTA(refs_fna.collect())
-                ch_versions = ch_versions.mix(panta.map { result -> result.versions })
                 panta_db = panta.map { result -> result.db }
+                ch_published = ch_published.mix(panta.map { result -> [destination: 'pasa', files: result] })
             }
             pasa = PASA(spades.map { result -> tuple(result.meta, result.assembly) }, panta_db)
-            ch_versions = ch_versions.mix(pasa.map { result -> result.versions })
+            ch_published = ch_published.mix(pasa.map { result -> [destination: 'pasa', files: result] })
             ctg200 = pasa.map { result -> tuple(result.meta, result.ctg200) }
             ctg = pasa.map { result -> tuple(result.meta, result.ctg) }
         } else {
@@ -812,7 +841,21 @@ summary = [:]
             ctg,
             genomad_db
         )
-        ch_versions = ch_versions.mix(GENOMAD_ENDTOEND.out.versions)
+        ch_vendor_versions = ch_vendor_versions.mix(GENOMAD_ENDTOEND.out.versions)
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.aggregated_classification.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.taxonomy.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.provirus.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.compositions.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.calibrated_classification.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.plasmid_fasta.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.plasmid_genes.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.plasmid_proteins.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.plasmid_summary.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.virus_fasta.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.virus_genes.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.virus_proteins.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.virus_summary.map { result -> [destination: 'genomad', files: result] })
+        ch_published = ch_published.mix(GENOMAD_ENDTOEND.out.versions.map { result -> [destination: 'genomad', files: result] })
     }
 
     // QUAST
@@ -820,7 +863,7 @@ summary = [:]
     if (denovo == false) {
         if (params.refs_fna) { // hybrid assembly, add quast for spades
             ch_ctgd_bam_bai = ctg_denovo.join(quast_bam).join(quast_bai).collect(flat: false)
-            QUAST_REF0(
+            quast_ref0 = QUAST_REF0(
                 fasta,
                 gff,
                 ch_ctgd_bam_bai.flatMap { entry -> entry }.map { entry -> entry[1] }.collect(),
@@ -830,6 +873,7 @@ summary = [:]
                 params.fungus,
                 "quast_spades"
             )
+            ch_published = ch_published.mix(quast_ref0.map { result -> [destination: 'quast', files: result] })
         }
         ch_ctg_bam_bai = ctg.join(quast_bam).join(quast_bai).collect(flat: false)
         quast_ref = QUAST_REF(
@@ -843,15 +887,16 @@ summary = [:]
             "quast_ref"
         )
         ch_multiqc_quast = quast_ref.map { result -> result.tsv }
-        ch_versions = ch_versions.mix(quast_ref.map { result -> result.versions })
+        ch_published = ch_published.mix(quast_ref.map { result -> [destination: 'quast', files: result] })
     } else {
         if (params.refs_fna) { // hybrid assembly, add quast for spades
-            QUAST_DENOVO0(
+            quast_denovo0 = QUAST_DENOVO0(
                 ctg_denovo.collect { entry -> entry[1] },
                 euk,
                 params.fungus,
                 "quast_spades"
             )
+            ch_published = ch_published.mix(quast_denovo0.map { result -> [destination: 'quast', files: result] })
         }
         quast_denovo = QUAST_DENOVO(
             ctg.collect { entry -> entry[1] },
@@ -860,7 +905,7 @@ summary = [:]
             "quast_denovo"
         )
         ch_multiqc_quast = quast_denovo.map { result -> result.tsv }
-        ch_versions = ch_versions.mix(quast_denovo.map { result -> result.versions })
+        ch_published = ch_published.mix(quast_denovo.map { result -> [destination: 'quast', files: result] })
     }
 
     // CHECKM_LINEAGEWF
@@ -870,8 +915,8 @@ summary = [:]
             ctg.collect { entry -> entry[1] },
             params.genus ? true : false
         )
-        ch_versions = ch_versions.mix(checkm_lineagewf.map { result -> result.versions })
         ch_multiqc_checkm = checkm_lineagewf.map { result -> result.mqc_tsv }
+        ch_published = ch_published.mix(checkm_lineagewf.map { result -> [destination: 'CheckM', files: result] })
     }
 
     // CHECKM2
@@ -882,8 +927,8 @@ summary = [:]
             'fasta',
             checkm2_db
         )
-        ch_versions = ch_versions.mix(checkm2.map { result -> result.versions })
         ch_multiqc_checkm2 = checkm2.map { result -> result.mqc_tsv }
+        ch_published = ch_published.mix(checkm2.map { result -> [destination: 'CheckM2', files: result] })
     }
 
     tax_split = channel.empty()
@@ -894,7 +939,7 @@ summary = [:]
             nt_db,
             params.evalue
         )
-        ch_versions = ch_versions.mix(blastn.map { result -> result.versions })
+        ch_published = ch_published.mix(blastn.map { result -> [destination: 'blob', files: result] })
 
         // DIAMOND_BLASTS
         diamond_blastx = DIAMOND_BLASTX(
@@ -904,7 +949,7 @@ summary = [:]
             uniprot_taxids,
             params.uniprot_db != null
         )
-        ch_versions = ch_versions.mix(diamond_blastx.map { result -> result.versions })
+        ch_published = ch_published.mix(diamond_blastx.map { result -> [destination: 'blob', files: result] })
         acdc_contigs = channel.empty()
         acdc_tax = channel.empty()
 
@@ -915,24 +960,23 @@ summary = [:]
                     tuple(result.meta, result.contigs, result.nt, result.uniprot, result.has_uniprot)
                 }
                 blobtools = BLOBTOOLS(ch_blob_input, blob_db)
-                ch_versions = ch_versions.mix(blobtools.map { result -> result.versions })
                 acdc_contigs = blobtools.map { result -> tuple(result.meta, result.contigs) }
                 acdc_tax = blobtools.map { result -> tuple(result.meta, result.tax) }
                 tax_split = blobtools.map { result -> tuple(result.meta, result.tax_split) }
+                ch_published = ch_published.mix(blobtools.map { result -> [destination: 'blob', files: result] })
             } else {
                 bowtie2_remap = BOWTIE2_REMAP(ctg200)
                 remap_input = trimmed_reads.join(bowtie2_remap.map { result -> tuple(result.meta, result.index) })
                 remap = REMAP(remap_input, params.allow_multi_align)
-                ch_versions = ch_versions.mix(bowtie2_remap.map { result -> result.versions })
-                ch_versions = ch_versions.mix(remap.map { result -> result.versions })
+                ch_published = ch_published.mix(remap.map { result -> [destination: 'remap', files: result] })
                 ch_reblob_input = diamond_blastx
                     .map { result -> tuple(result.meta, result.contigs, result.nt, result.uniprot, result.has_uniprot) }
                     .join(remap.map { result -> tuple(result.meta, result.bam, result.bai) })
                 reblobtools = REBLOBTOOLS(ch_reblob_input, blob_db)
-                ch_versions = ch_versions.mix(reblobtools.map { result -> result.versions })
                 acdc_contigs = reblobtools.map { result -> tuple(result.meta, result.contigs) }
                 acdc_tax = reblobtools.map { result -> tuple(result.meta, result.tax) }
                 tax_split = reblobtools.map { result -> tuple(result.meta, result.tax_split) }
+                ch_published = ch_published.mix(reblobtools.map { result -> [destination: 'reblob', files: result] })
             }
 
             if (params.acdc && params.kraken1_db) {
@@ -941,11 +985,12 @@ summary = [:]
                     acdc_tax,
                     kraken1_db
                 )
-                ch_versions = ch_versions.mix(acdc.map { result -> result.versions })
+                ch_published = ch_published.mix(acdc.map { result -> [destination: 'acdc', files: result] })
             }
         }
     }
-    TSNE(ctg)
+    tsne = TSNE(ctg)
+    ch_published = ch_published.mix(tsne.map { result -> [destination: 'tsne', files: result] })
 
     // PANGENOME ANALYSIS
     if (params.pangenome) {
@@ -954,10 +999,12 @@ summary = [:]
                 tuple(meta, contigs, params.genusName, mgpg_db, coreGenesFile)
             }
             if (params.completeness) {
-                COMPLETENESS(ch_pangenome_input)
+                completeness = COMPLETENESS(ch_pangenome_input)
+                ch_published = ch_published.mix(completeness.map { result -> [destination: 'mgpg', files: result] })
             }
             if (params.tree) {
-                TREE(ch_pangenome_input)
+                tree = TREE(ch_pangenome_input)
+                ch_published = ch_published.mix(tree.map { result -> [destination: 'mgpg', files: result] })
             }
         }
     }
@@ -967,7 +1014,7 @@ summary = [:]
     ch_multiqc_prokka = channel.empty()
     if (!euk) {
         prokka = PROKKA(ctg, prokka_proteins)
-        ch_versions = ch_versions.mix(prokka.map { result -> result.versions })
+        ch_published = ch_published.mix(prokka.map { result -> [destination: 'prokka', files: result] })
         if (params.bakta_db) {
             bakta = BAKTA(
                 ctg,
@@ -975,26 +1022,26 @@ summary = [:]
                 prokka_proteins,
                 [] as List<Path>
             )
-            ch_versions = ch_versions.mix(bakta.map { result -> result.versions })
+            ch_published = ch_published.mix(bakta.map { result -> [destination: 'bakta', files: result] })
         }
         uniop = UNIOP(ctg)
-        ch_versions = ch_versions.mix(uniop.map { result -> result.versions })
         prompredict = PROMPREDICT(ctg)
-        ch_versions = ch_versions.mix(prompredict.map { result -> result.versions })
         phispy = PHISPY(prokka.map { result -> tuple(result.meta, result.gbk) })
-        ch_versions = ch_versions.mix(phispy.map { result -> result.versions })
+        ch_published = ch_published.mix(uniop.map { result -> [destination: 'operons', files: result] })
+        ch_published = ch_published.mix(prompredict.map { result -> [destination: 'promoters', files: result] })
+        ch_published = ch_published.mix(phispy.map { result -> [destination: 'prophages', files: result] })
         faa = prokka.map { result -> tuple(result.meta, result.faa) }
         prokka_for_split = prokka.map { result -> tuple(result.meta, result.prokka_for_split) }
         ch_multiqc_prokka = prokka_for_split
     } else {
         augustus = AUGUSTUS(ctg)
+        ch_published = ch_published.mix(augustus.map { result -> [destination: 'augustus', files: result] })
         faa = augustus.map { result -> tuple(result.meta, result.faa) }
-        ch_versions = ch_versions.mix(augustus.map { result -> result.versions })
         eukcc = EUKCC(
             ctg,
             eukcc_db
         )
-        ch_versions = ch_versions.mix(eukcc.map { result -> result.versions })
+        ch_published = ch_published.mix(eukcc.map { result -> [destination: 'eukcc', files: result] })
     }
 
     if (params.eggnog && params.eggnog_db) {
@@ -1002,7 +1049,7 @@ summary = [:]
             faa,
             eggnog_db
         )
-        ch_versions = ch_versions.mix(eggnog.map { result -> result.versions })
+        ch_published = ch_published.mix(eggnog.map { result -> [destination: 'eggnog', files: result] })
     }
 
     // KOFAMSCAN
@@ -1014,7 +1061,7 @@ summary = [:]
             kofam_kolist
         )
         kofam_scan = kofamscan.map { result -> tuple(result.meta, result.txt) }
-        ch_versions = ch_versions.mix(kofamscan.map { result -> result.versions })
+        ch_published = ch_published.mix(kofamscan.map { result -> [destination: 'kofam', files: result] })
     }
 
     // STARAMR
@@ -1024,7 +1071,7 @@ summary = [:]
                 tuple(meta, contigs, params.acquired, params.point, params.pointfinder_species ?: '')
             }
             staramr = STARAMR(ch_staramr_input)
-            ch_versions = ch_versions.mix(staramr.map { result -> result.versions })
+            ch_published = ch_published.mix(staramr.map { result -> [destination: 'ARG', files: result] })
         }
     }
 
@@ -1044,7 +1091,7 @@ summary = [:]
             )
             split_fa = split_checkm_eukcc.map { result -> result.fa }
             bin_csv = split_checkm_eukcc.map { result -> result.csv }
-            ch_versions = ch_versions.mix(split_checkm_eukcc.map { result -> result.versions })
+            ch_published = ch_published.mix(split_checkm_eukcc.map { result -> [destination: '.', files: result] })
         } else if (!params.split_euk) {
             split_checkm = SPLIT_CHECKM(
                 ctg200.collect { entry -> entry[1] },
@@ -1056,7 +1103,7 @@ summary = [:]
             )
             split_fa = split_checkm.map { result -> result.fa }
             bin_csv = split_checkm.map { result -> result.csv }
-            ch_versions = ch_versions.mix(split_checkm.map { result -> result.versions })
+            ch_published = ch_published.mix(split_checkm.map { result -> [destination: '.', files: result] })
         }
 
         if (params.graphbin && !params.refs_fna) {
@@ -1066,7 +1113,7 @@ summary = [:]
                 contig_graph.collect { entry -> entry[1] },
                 bin_csv
             )
-            ch_versions = ch_versions.mix(graphbin.map { result -> result.versions })
+            ch_published = ch_published.mix(graphbin.map { result -> [destination: 'graphbin', files: result] })
         }
 
         if (params.gtdbtk && params.gtdb) {
@@ -1074,16 +1121,20 @@ summary = [:]
                 split_fa,
                 gtdb
             )
-            ch_versions = ch_versions.mix(gtdbtk.map { result -> result.versions })
             ch_multiqc_gtdb = gtdbtk.map { result -> result.mqc_tsv }
+            ch_published = ch_published.mix(gtdbtk.map { result -> [destination: 'gtdb', files: result] })
         }
     }
 
     ch_multiqc_versions = channel.empty()
     software_versions = GET_SOFTWARE_VERSIONS(
-        ch_versions.unique().collectFile(name: 'collated_versions.yml')
+        channel.topic('local_versions')
+            .mix(ch_vendor_versions)
+            .unique()
+            .collectFile(name: 'collated_versions.yml')
     )
     ch_multiqc_versions = software_versions.map { result -> result.mqc_yml }
+    ch_published = ch_published.mix(software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
 
     // MODULE: MULTIQC
     workflow_summary = create_workflow_summary(summary)
@@ -1111,11 +1162,16 @@ summary = [:]
         ch_multiqc_custom_config.toList(),
         ch_multiqc_logo.toList()
     )
+    ch_published = ch_published.mix(MULTIQC.out.report.map { result -> [destination: 'MultiQC', files: result] })
+    ch_published = ch_published.mix(MULTIQC.out.data.map { result -> [destination: 'MultiQC', files: result] })
+    ch_published = ch_published.mix(MULTIQC.out.plots.map { result -> [destination: 'MultiQC', files: result] })
+    ch_published = ch_published.mix(MULTIQC.out.versions.map { result -> [destination: 'MultiQC', files: result] })
     OUTPUT_DOCUMENTATION(ch_output_docs)
 
     emit:
     summary_params = channel.value(summary)
     multiqc_report = MULTIQC.out.report.toList()
+    published = ch_published
 }
 
 def nfcoreHeader(){

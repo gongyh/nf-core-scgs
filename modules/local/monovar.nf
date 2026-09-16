@@ -15,6 +15,8 @@ process MONOVAR {
 
     output:
     record(vcf: file('monovar.vcf'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

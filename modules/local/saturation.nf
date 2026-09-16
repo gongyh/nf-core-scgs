@@ -12,6 +12,8 @@ process SATURATION {
 
     output:
     record(meta: meta, pdf: file("${prefix}_kmer.pdf"), csv: file("${prefix}_cov31_*.csv"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

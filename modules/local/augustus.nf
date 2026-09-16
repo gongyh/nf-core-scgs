@@ -12,6 +12,8 @@ process AUGUSTUS {
 
     output:
     record(meta: meta, faa: file("${prefix}.aa"), out_put: file("${prefix}*"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

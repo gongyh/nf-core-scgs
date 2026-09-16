@@ -10,6 +10,8 @@ process GENOMAD_DBDOWNLOAD {
 
     output:
     record(db: file('db'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

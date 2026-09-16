@@ -14,6 +14,8 @@ process FILTER_BAM {
 
     output:
     record(meta: meta, filtered_bam: file("${meta.id}_filtered.bam"), filtered_bai: file("${meta.id}_filtered.bam.bai"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = "${meta.id}_filtered"

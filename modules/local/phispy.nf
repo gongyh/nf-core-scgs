@@ -12,13 +12,23 @@ process PHISPY {
 
     output:
     record(meta: meta, out_operon: file("${prefix}", type: 'dir'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}
     # prophages identification
+    set +e
     PhiSpy.py ${gbk} -o ${prefix} --threads ${task.cpus} --color
+    phispy_status=\$?
+    set -e
+    if [ "\$phispy_status" -eq 41 ]; then
+        touch ${prefix}/NO_PROPHAGES_FOUND
+    elif [ "\$phispy_status" -ne 0 ]; then
+        exit "\$phispy_status"
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

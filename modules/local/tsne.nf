@@ -12,6 +12,8 @@ process TSNE {
 
     output:
     record(meta: meta, tsv: file("${prefix}_tsne.tsv"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

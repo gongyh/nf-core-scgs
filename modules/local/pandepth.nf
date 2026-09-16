@@ -14,6 +14,8 @@ process CONTIG_COVERAGE {
 
     output:
     record(meta: meta, depth: file("${meta.id}.depth"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def pandepth_bin = "${projectDir}/bin/pandepth"
@@ -45,6 +47,8 @@ process MERGE_COVERAGE {
 
     output:
     record(matrix: file("abundance_matrix.tsv"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

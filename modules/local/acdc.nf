@@ -16,6 +16,8 @@ process ACDC {
 
     output:
     record(meta: meta, out_put: file("*", type: "dir"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

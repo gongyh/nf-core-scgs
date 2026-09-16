@@ -14,12 +14,16 @@ process CHECKM_LINEAGEWF {
 
     output:
     record(txt: file('spades_checkM.txt'), mqc_tsv: file('CheckM_mqc.tsv'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def checkm_wf = genus ? "taxonomy_wf" : "lineage_wf"
     """
     mkdir spades
-    ln -s *.fasta spades/
+    for fasta in *.fasta; do
+        ln -s "\$(readlink -f "\$fasta")" "spades/\$fasta"
+    done
     if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
         checkm taxonomy_wf -t ${task.cpus} --tab_table -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
     else

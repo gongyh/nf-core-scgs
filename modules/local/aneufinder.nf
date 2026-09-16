@@ -14,6 +14,8 @@ process ANEUFINDER {
 
     output:
     record(cnv: file('CNV_output', type: 'dir'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

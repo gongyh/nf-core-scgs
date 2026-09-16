@@ -14,6 +14,8 @@ process CIRCLIZE {
 
     output:
     record(meta: meta, bed: file("${prefix}-cov200.bed"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

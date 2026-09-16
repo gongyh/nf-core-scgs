@@ -16,6 +16,8 @@ process SPLIT_CHECKM {
 
     output:
     record(output: file("split/*"), fa: file("split/fa/*"), csv: file("split/*.csv"), versions: file("split/versions.yml"))
+    topic:
+    file('split/versions.yml') >> 'local_versions'
 
     script:
     """

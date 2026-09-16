@@ -11,6 +11,8 @@ process TNF_RPKM {
 
     output:
     record(meta: meta, tnf: file('tnf_and_rpkm/*tnf.npz'), rpkm: file('tnf_and_rpkm/*rpkm.npz'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def args    = task.ext.args ?: ''

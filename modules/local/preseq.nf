@@ -11,7 +11,9 @@ process PRESEQ {
     tuple(meta: Map, sbed: Path)
 
     output:
-    record(meta: meta, txt: file('*.txt'), pdf: file('*.pdf'), versions: file('versions.yml'))
+    record(meta: meta, results: file('preseq', type: 'dir'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     pp_outdir = "${params.outdir}/preseq"
@@ -22,6 +24,11 @@ process PRESEQ {
     preseq c_curve ${mode} -s 1e+5 -o ${prefix}_c.txt $sbed
     preseq lc_extrap ${mode} -s 1e+5 -D -o ${prefix}_lc.txt $sbed
     plotPreSeq.R ${prefix}_lc.txt ${prefix}_lc
+
+    mkdir -p preseq
+    for result in *.txt *.pdf; do
+        [ -e "\$result" ] && mv "\$result" preseq/
+    done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -35,6 +42,11 @@ process PRESEQ {
     plotPreSeq.R ${prefix}_lc.txt ${prefix}_lc
     preseq gc_extrap -w 1000 -s 1e+7 -B -D -o ${prefix}_gc.txt $sbed
     plotPreSeq.R ${prefix}_gc.txt ${prefix}_gc
+
+    mkdir -p preseq
+    for result in *.txt *.pdf; do
+        [ -e "\$result" ] && mv "\$result" preseq/
+    done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

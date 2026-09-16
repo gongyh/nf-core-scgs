@@ -8,6 +8,8 @@ process KRAKEN2_DBDOWNLOAD {
 
     output:
     record(db: file('kraken2_db'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

@@ -8,6 +8,8 @@ process METABULI_DBDOWNLOAD {
 
     output:
     record(db: file('metabuli_db'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

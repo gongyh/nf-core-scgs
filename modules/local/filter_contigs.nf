@@ -13,6 +13,8 @@ process FILTER_CONTIGS {
 
     output:
     record(filtered: file('filtered.fasta'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
     script:
     """
     seqkit seq -m ${min_len} ${fasta} > filtered.fasta

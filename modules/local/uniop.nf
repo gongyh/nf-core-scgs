@@ -12,6 +12,8 @@ process UNIOP {
 
     output:
     record(meta: meta, out_operon: file("${prefix}", type: 'dir'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

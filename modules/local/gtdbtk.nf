@@ -14,6 +14,8 @@ process GTDBTK {
 
     output:
     record(out: file('out/*'), scaffolds: file('genome/*'), taxa: file('taxa.txt'), mqc_tsv: file('GTDBtk_mqc.tsv'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

@@ -17,6 +17,8 @@ process BAKTA {
 
     output:
     record(meta: meta, embl: file("*/*.embl"), faa: file("*/*.faa"), ffn: file("*/*.ffn"), fna: file("*/*.fna"), gbff: file("*/*.gbff"), gff: file("*/*.gff3"), hypotheticals_tsv: file("*/*.hypotheticals.tsv"), hypotheticals_faa: file("*/*.hypotheticals.faa"), tsv: file("*/*.tsv"), txt: file("*/*.txt"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def args = task.ext.args   ?: ''

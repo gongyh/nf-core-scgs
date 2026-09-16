@@ -12,6 +12,8 @@ process KMER_COUNT {
 
     output:
     record(meta: meta, kmer: kmer, csv: file("${meta.id}_k${kmer}.csv"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
@@ -54,7 +56,7 @@ process KMER_COUNT {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python3 --version | sed 's/Python //')
-        kpal: \$(kpal --version 2>&1 | sed 's/kpal //')
+        kpal: \$(kpal -v 2>&1 | head -n1 | sed 's/^.*kpal //')
     END_VERSIONS
     """
 }

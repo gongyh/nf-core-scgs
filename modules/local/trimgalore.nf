@@ -13,7 +13,9 @@ process TRIMGALORE {
     tuple(meta: Map, reads: List<Path>)
 
     output:
-    record(meta: meta, reads: file('*{3prime,5prime,trimmed,val}{,_1,_2}.fq.gz'), log: file('*trimming_report.txt', optional: true), zip: file('*.zip', optional: true), versions: file('versions.yml'))
+    record(meta: meta, single_read: file('*_trimmed.fq.gz', optional: true), read1: file('*_val_1.fq.gz', optional: true), read2: file('*_val_2.fq.gz', optional: true), logs: file('logs', type: 'dir'), fastqc: file('FastQC', type: 'dir'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def c_r1 = params.clip_r1 > 0 ? "--clip_r1 ${params.clip_r1}" : ''
@@ -22,7 +24,15 @@ process TRIMGALORE {
     def tpc_r2 = params.three_prime_clip_r2 > 0 ? "--three_prime_clip_r2 ${params.three_prime_clip_r2}" : ''
     if (meta.single_end) {
         """
-        trim_galore --trim-n --max_n 0 --fastqc --gzip --fastqc_args \"--threads ${task.cpus}\" --cores 4 ${c_r1} ${tpc_r1} ${reads}
+        trim_galore --trim-n --max_n 0 --fastqc --gzip --fastqc_args \"--threads ${task.cpus}\" --cores 4 ${c_r1} ${tpc_r1} ${reads[0]}
+
+        mkdir -p logs FastQC
+        for report in *_trimming_report.txt; do
+            [ -e "\$report" ] && mv "\$report" logs/
+        done
+        for zip in *.zip; do
+            [ -e "\$zip" ] && mv "\$zip" FastQC/
+        done
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -32,7 +42,15 @@ process TRIMGALORE {
         """
     } else {
         """
-        trim_galore --paired --trim-n --max_n 0 --fastqc --gzip --fastqc_args \"--threads ${task.cpus}\" --cores 4 ${c_r1} ${c_r2} ${tpc_r1} ${tpc_r2} ${reads}
+        trim_galore --paired --trim-n --max_n 0 --fastqc --gzip --fastqc_args \"--threads ${task.cpus}\" --cores 4 ${c_r1} ${c_r2} ${tpc_r1} ${tpc_r2} ${reads[0]} ${reads[1]}
+
+        mkdir -p logs FastQC
+        for report in *_trimming_report.txt; do
+            [ -e "\$report" ] && mv "\$report" logs/
+        done
+        for zip in *.zip; do
+            [ -e "\$zip" ] && mv "\$zip" FastQC/
+        done
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

@@ -12,16 +12,18 @@ workflow VG {
     vcf: Path
 
     main:
-    ch_versions = channel.empty()
+    ch_published = channel.empty()
     vg_construct = VG_CONSTRUCT(fasta, vcf)
+    ch_published = ch_published.mix(vg_construct.map { result -> [destination: 'vg/construct', files: result] })
     ch_index_input = trimmed_reads.combine(vg_construct.map { result -> result.vg })
     vg_index = VG_INDEX(ch_index_input)
+    ch_published = ch_published.mix(vg_index.map { result -> [destination: 'vg/index', files: result] })
     ch_call_input = vg_index
         .map { result -> tuple(result.meta, result.gam) }
         .combine(vg_construct.map { result -> result.vg })
     vg_call = VG_CALL(ch_call_input)
-    ch_versions = ch_versions.mix(vg_call.map { result -> result.versions })
+    ch_published = ch_published.mix(vg_call.map { result -> [destination: 'vg/vcf', files: result] })
 
     emit:
-    ch_versions: Channel<Path>
+    published: Channel<Map> = ch_published
 }

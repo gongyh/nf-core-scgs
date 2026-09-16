@@ -16,6 +16,8 @@ process BLASTN {
 
     output:
     record(meta: meta, contigs: file("*.fasta"), nt: file("*_nt.out"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

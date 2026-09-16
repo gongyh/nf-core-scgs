@@ -11,6 +11,8 @@ process OUTPUT_DOCUMENTATION {
 
     output:
     record(html: file('results_description.html'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

@@ -10,6 +10,8 @@ process CHECKM2_DBDOWNLOAD {
 
     output:
     record(db: file('checkm2_db'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """
