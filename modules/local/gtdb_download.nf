@@ -12,9 +12,9 @@ process GTDB_DBDOWNLOAD {
     """
     mkdir -p gtdb_db
     echo "Downloading GTDB database ..."
-    wget -q https://data.gtdb.ecogenomic.org/releases/release214/214.0/auxillary_files/gtdbtk_r214_data.tar.gz
-    tar xvzf gtdbtk_r214_data.tar.gz -C gtdb_db/
-    rm -f gtdbtk_r214_data.tar.gz
+    wget -q https://data.gtdb.ecogenomic.org/releases/release232/232.0/auxillary_files/gtdbtk_package/full_package/gtdbtk_r232_data.tar.gz
+    tar xvzf gtdbtk_r232_data.tar.gz -C gtdb_db/
+    rm -f gtdbtk_r232_data.tar
     echo "GTDB database downloaded successfully"
 
     cat > versions.yml << 'EOF'
