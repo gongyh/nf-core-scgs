@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 \title{HMMER User's Guide}
 
 \subtitle{Biological sequence analysis using profile hidden Markov models}
@@ -9,3 +10,16 @@
 \pkgversion{@HMMER_VERSION@}   % ./configure replaces HMMER_VERSION
 \pkgdate{@HMMER_DATE@}         %    ... and HMMER_DATE
 
+=======
+\title{HMMER User's Guide}
+
+\subtitle{Biological sequence analysis using profile hidden Markov models}
+
+\author{Sean R. Eddy}
+\subauthor{and the HMMER development team}
+
+\pkgurl{http://hmmer.org}
+\pkgversion{@HMMER_VERSION@}   % ./configure replaces HMMER_VERSION
+\pkgdate{@HMMER_DATE@}         %    ... and HMMER_DATE
+
+>>>>>>> origin/v2

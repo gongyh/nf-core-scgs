@@ -11,6 +11,7 @@ workflow PREPARE_FEATURES_MULTI {
     ch_bams
 
     main:
+<<<<<<< HEAD
     ch_versions = Channel.empty()
     /*
     //PANDEPTH_MERGE
@@ -23,6 +24,20 @@ workflow PREPARE_FEATURES_MULTI {
         .map { it -> it instanceof List ? it : [it] }
         .flatten()
         .filter { it.toString().endsWith('.fai') }
+=======
+    ch_versions = channel.empty()
+    /*
+    //PANDEPTH_MERGE
+    ch_fasta_file = ch_fasta
+        .map { item -> item instanceof List ? item : [item] }
+        .flatten()
+        .filter { path -> path.toString().endsWith('.fasta') || path.toString().endsWith('.fa') }
+        .first()
+    ch_fai_file = ch_fai
+        .map { item -> item instanceof List ? item : [item] }
+        .flatten()
+        .filter { path -> path.toString().endsWith('.fai') }
+>>>>>>> origin/v2
         .first()
     ch_bams_with_bai = ch_bams.map { meta, bam -> [meta, bam, []] }
     ch_depth = CONTIG_COVERAGE( ch_bams_with_bai, ch_fasta_file, ch_fai_file ).depth
@@ -33,6 +48,7 @@ workflow PREPARE_FEATURES_MULTI {
     */
     //samtools
     ch_fasta_file = ch_fasta
+<<<<<<< HEAD
         .map { it -> it instanceof List ? it : [it] }
         .flatten()
         .filter { it.toString().endsWith('.fasta') || it.toString().endsWith('.fa') }
@@ -42,6 +58,15 @@ workflow PREPARE_FEATURES_MULTI {
         .map { it -> it instanceof List ? it : [it] }
         .flatten()
         .filter { it.toString().endsWith('.fai') }
+=======
+        .flatten()
+        .filter { path -> path.toString().endsWith('.fasta') || path.toString().endsWith('.fa') }
+        .first()
+
+    ch_fai_file = ch_fai
+        .flatten()
+        .filter { path -> path.toString().endsWith('.fai') }
+>>>>>>> origin/v2
         .first()
 
     ch_bams_with_bai = ch_bams.map { meta, bam -> [meta, bam, []] }

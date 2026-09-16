@@ -1,4 +1,8 @@
 .nextflow*
+<<<<<<< HEAD
+=======
+.tools/
+>>>>>>> origin/v2
 work/
 data/
 results/

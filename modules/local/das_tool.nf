@@ -14,8 +14,13 @@ process DAS_TOOL {
     path "versions.yml", emit: versions
 
     script:
+<<<<<<< HEAD
     def my_labels = raw_info.findAll { it instanceof String }.join(',')
     def my_files  = raw_info.findAll { it instanceof nextflow.processor.TaskPath || it instanceof java.nio.file.Path }.join(',')
+=======
+    def my_labels = raw_info.findAll { entry -> entry instanceof String }.join(',')
+    def my_files  = raw_info.findAll { entry -> entry instanceof nextflow.processor.TaskPath || entry instanceof java.nio.file.Path }.join(',')
+>>>>>>> origin/v2
     def args = task.ext.args ?: ''
     """
     DAS_Tool -i ${my_files} \\
@@ -41,4 +46,7 @@ process DAS_TOOL {
     END_VERSIONS
     """
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/v2

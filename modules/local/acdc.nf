@@ -9,7 +9,11 @@ process ACDC {
 
     input:
     tuple val(meta), path(contigs)
+<<<<<<< HEAD
     tuple val(meta), path(tax)
+=======
+    tuple val(tax_meta), path(tax)
+>>>>>>> origin/v2
     path db
 
     output:

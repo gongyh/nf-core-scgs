@@ -6,7 +6,11 @@ process MARKER_NCLUSTERS {
 
     input:
     tuple val(meta), path(kmer_file)
+<<<<<<< HEAD
     tuple val(meta), path(fasta_file)
+=======
+    tuple val(fasta_meta), path(fasta_file)
+>>>>>>> origin/v2
 
     output:
     tuple val(meta), path("cluster_value"), emit: marker_cv

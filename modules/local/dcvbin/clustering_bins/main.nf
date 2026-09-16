@@ -6,8 +6,13 @@ process DCVBIN_BIN {
 
     input:
     tuple val(meta), path(vae_features_file)
+<<<<<<< HEAD
     tuple val(meta), path(cluster_value_file)
     tuple val(meta), path(fasta_file)
+=======
+    tuple val(cluster_meta), path(cluster_value_file)
+    tuple val(fasta_meta), path(fasta_file)
+>>>>>>> origin/v2
 
     output:
     tuple val(meta), path("${prefix}_bins"),            emit: bins_dir

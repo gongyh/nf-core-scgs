@@ -18,7 +18,11 @@ workflow MMSEQS_CONTIG_TAXONOMY {
     if ( mmseqs_databases != null ) {
         ch_mmseqs_db = mmseqs_databases
     } else {
+<<<<<<< HEAD
         ch_mmseqs_db = Channel.empty()
+=======
+        ch_mmseqs_db = channel.empty()
+>>>>>>> origin/v2
     }
 
     // Create db for query contigs, assign taxonomy and convert to table format

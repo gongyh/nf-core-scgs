@@ -9,7 +9,11 @@ process DIAMOND_BLASTX {
 
     input:
     tuple val(meta), path(contigs)
+<<<<<<< HEAD
     tuple val(meta), path(nt_out)
+=======
+    tuple val(nt_meta), path(nt_out)
+>>>>>>> origin/v2
     path uniprot
     path("uniprot.taxids")
 

@@ -34,7 +34,16 @@ include { helpMessage as helpMessagePrepareDB      } from './workflows/prepare_d
 //
 
 workflow NFCORE_SCGS {
+<<<<<<< HEAD
     SCGS ()
+=======
+    main:
+    SCGS ()
+
+    emit:
+    summary_params = SCGS.out.summary_params
+    multiqc_report = SCGS.out.multiqc_report
+>>>>>>> origin/v2
 }
 
 //
@@ -42,7 +51,16 @@ workflow NFCORE_SCGS {
 //
 
 workflow NFCORE_MINIMETA {
+<<<<<<< HEAD
     MINIMETA ()
+=======
+    main:
+    MINIMETA ()
+
+    emit:
+    summary_params = MINIMETA.out.summary_params
+    multiqc_report = MINIMETA.out.multiqc_report
+>>>>>>> origin/v2
 }
 
 //
@@ -50,6 +68,10 @@ workflow NFCORE_MINIMETA {
 //
 
 workflow NFCORE_PREPARE_DATABASES {
+<<<<<<< HEAD
+=======
+    main:
+>>>>>>> origin/v2
     PREPARE_DATABASES ()
 }
 
@@ -67,6 +89,12 @@ workflow {
             exit 0
         }
         NFCORE_PREPARE_DATABASES ()
+<<<<<<< HEAD
+=======
+        workflow.onComplete = {
+            completionSummary()
+        }
+>>>>>>> origin/v2
     } else if (params.minimeta) {
         // Show help message
         if (params.help){
@@ -74,6 +102,23 @@ workflow {
             exit 0
         }
         NFCORE_MINIMETA ()
+<<<<<<< HEAD
+=======
+        workflow.onComplete = {
+            if (params.email) {
+                completionEmail(
+                    NFCORE_MINIMETA.out.summary_params.getVal(),
+                    params.email,
+                    null,
+                    false,
+                    params.outdir,
+                    log,
+                    NFCORE_MINIMETA.out.multiqc_report.getVal()
+                )
+            }
+            completionSummary()
+        }
+>>>>>>> origin/v2
     } else {
         // Show help message
         if (params.help){
@@ -81,10 +126,28 @@ workflow {
             exit 0
         }
         NFCORE_SCGS ()
+<<<<<<< HEAD
+=======
+        workflow.onComplete = {
+            if (params.email) {
+                completionEmail(
+                    NFCORE_SCGS.out.summary_params.getVal(),
+                    params.email,
+                    null,
+                    false,
+                    params.outdir,
+                    log,
+                    NFCORE_SCGS.out.multiqc_report.getVal()
+                )
+            }
+            completionSummary()
+        }
+>>>>>>> origin/v2
     }
 }
 
 /*
+<<<<<<< HEAD
  * Completion e-mail notification
  */
 workflow.onComplete {
@@ -102,6 +165,8 @@ workflow.onComplete {
 }
 
 /*
+=======
+>>>>>>> origin/v2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     THE END
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

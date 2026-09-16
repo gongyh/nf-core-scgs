@@ -7,8 +7,13 @@ process FEATURE_FUSION {
 
     input:
     tuple val(meta), path(fpf_file)
+<<<<<<< HEAD
     tuple val(meta), path(tnf_file)
     tuple val(meta), path(rpkm_file)
+=======
+    tuple val(tnf_meta), path(tnf_file)
+    tuple val(rpkm_meta), path(rpkm_file)
+>>>>>>> origin/v2
 
     output:
     tuple val(meta), path("${prefix}_vae_features.npy"), emit: features

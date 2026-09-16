@@ -38,7 +38,11 @@ process TRIMGALORE {
     def prefix = task.ext.prefix ?: "${meta.id}"
     if (meta.single_end) {
         def args_list = args.split("\\s(?=--)").toList()
+<<<<<<< HEAD
         args_list.removeAll { it.toLowerCase().contains('_r2 ') }
+=======
+        args_list.removeAll { arg -> arg.toLowerCase().contains('_r2 ') }
+>>>>>>> origin/v2
         """
         [ ! -f  ${prefix}.fastq.gz ] && ln -s $reads ${prefix}.fastq.gz
         trim_galore \\
