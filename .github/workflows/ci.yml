@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        NXF_VER: ["24.04.0", "25.10.4"]
+        NXF_VER: ["24.04.0", "25.10.4", "latest-stable"]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        NXF_VER: ["24.04.0", "25.10.4"]
+        NXF_VER: ["24.04.0", "25.10.4", "latest-stable"]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v4
