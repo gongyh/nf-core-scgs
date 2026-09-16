@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process EGGNOG_DBDOWNLOAD {
     tag "eggNOG"
 
@@ -7,8 +9,7 @@ process EGGNOG_DBDOWNLOAD {
         'biocontainers/eggnog-mapper:2.1.11--pyhdfd78af_0' }"
 
     output:
-    path 'eggnog_db', emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('eggnog_db'), versions: file('versions.yml'))
 
     script:
     """

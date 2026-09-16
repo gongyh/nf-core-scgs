@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process BLOB_DBDOWNLOAD {
     tag "BlobTools"
 
@@ -7,8 +9,7 @@ process BLOB_DBDOWNLOAD {
         'biocontainers/blobtools:1.1.1--py_1' }"
 
     output:
-    path 'blob_db', emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('blob_db'), versions: file('versions.yml'))
 
     script:
     """

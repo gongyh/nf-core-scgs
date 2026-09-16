@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process GTDB_DBDOWNLOAD {
     tag "GTDB_r214"
 
@@ -5,8 +7,7 @@ process GTDB_DBDOWNLOAD {
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
-    path 'gtdb_db', emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('gtdb_db'), versions: file('versions.yml'))
 
     script:
     """

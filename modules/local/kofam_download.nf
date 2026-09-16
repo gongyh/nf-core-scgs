@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process KOFAM_DBDOWNLOAD {
     tag "kofam"
 
@@ -5,8 +7,7 @@ process KOFAM_DBDOWNLOAD {
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
-    path 'kofam_db', emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('kofam_db'), versions: file('versions.yml'))
 
     script:
     """

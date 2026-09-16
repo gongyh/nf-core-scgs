@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process GENOMAD_DBDOWNLOAD {
     tag "geNomad"
 
@@ -7,8 +9,7 @@ process GENOMAD_DBDOWNLOAD {
         'community.wave.seqera.io/library/genomad:1.7.4--605ab516f999b1b4' }"
 
     output:
-    path 'db'          , emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('db'), versions: file('versions.yml'))
 
     script:
     """

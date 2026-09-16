@@ -15,7 +15,7 @@ process DAS_TOOL {
 
     script:
     def my_labels = raw_info.findAll { entry -> entry instanceof String }.join(',')
-    def my_files  = raw_info.findAll { entry -> entry instanceof nextflow.processor.TaskPath || entry instanceof java.nio.file.Path }.join(',')
+    def my_files  = raw_info.findAll { entry -> entry instanceof java.nio.file.Path }.join(',')
     def args = task.ext.args ?: ''
     """
     DAS_Tool -i ${my_files} \\

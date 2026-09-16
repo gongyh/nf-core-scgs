@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process METABULI_DBDOWNLOAD {
     tag "Metabuli_GTDB226"
 
@@ -5,8 +7,7 @@ process METABULI_DBDOWNLOAD {
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
-    path 'metabuli_db', emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('metabuli_db'), versions: file('versions.yml'))
 
     script:
     """

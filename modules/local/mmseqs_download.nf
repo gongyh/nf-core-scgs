@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process MMSEQS_DBDOWNLOAD {
     tag "MMseqs2"
 
@@ -7,8 +9,7 @@ process MMSEQS_DBDOWNLOAD {
         : 'community.wave.seqera.io/library/mmseqs2_wget:aa683a2c5355899d'}"
 
     output:
-    path 'mmseqs_db', emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('mmseqs_db'), versions: file('versions.yml'))
 
     script:
     """

@@ -46,71 +46,71 @@ workflow PREPARE_DATABASES {
 
     // MMseqs2 database
     if (db_types.contains("all") || db_types.contains("mmseqs")) {
-        MMSEQS_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(MMSEQS_DBDOWNLOAD.out.versions)
+        mmseqs_download = MMSEQS_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(mmseqs_download.map { result -> result.versions })
         log.info "Prepared MMseqs2 database: ${params.outdir}/mmseqs_db"
     }
 
     // CheckM2 database
     if (db_types.contains("all") || db_types.contains("checkm2")) {
-        CHECKM2_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(CHECKM2_DBDOWNLOAD.out.versions)
+        checkm2_download = CHECKM2_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(checkm2_download.map { result -> result.versions })
         log.info "Prepared CheckM2 database: ${params.outdir}/checkm2_db"
     }
 
     // KOfam database
     if (db_types.contains("all") || db_types.contains("kofam")) {
-        KOFAM_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(KOFAM_DBDOWNLOAD.out.versions)
+        kofam_download = KOFAM_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(kofam_download.map { result -> result.versions })
         log.info "Prepared KOfam database: ${params.outdir}/kofam_db"
     }
 
     // EggNOG database
     if (db_types.contains("all") || db_types.contains("eggnog")) {
-        EGGNOG_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(EGGNOG_DBDOWNLOAD.out.versions)
+        eggnog_download = EGGNOG_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(eggnog_download.map { result -> result.versions })
         log.info "Prepared EggNOG database: ${params.outdir}/eggnog_db"
     }
 
     // Kraken2 database
     if (db_types.contains("all") || db_types.contains("kraken2")) {
-        KRAKEN2_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(KRAKEN2_DBDOWNLOAD.out.versions)
+        kraken2_download = KRAKEN2_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(kraken2_download.map { result -> result.versions })
         log.info "Prepared Kraken2 database: ${params.outdir}/kraken2_db"
     }
 
     // GTDB database
     if (db_types.contains("all") || db_types.contains("gtdb")) {
-        GTDB_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(GTDB_DBDOWNLOAD.out.versions)
+        gtdb_download = GTDB_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(gtdb_download.map { result -> result.versions })
         log.info "Prepared GTDB database: ${params.outdir}/gtdb_db"
     }
 
     // Blobtools database
     if (db_types.contains("all") || db_types.contains("blob")) {
-        BLOB_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(BLOB_DBDOWNLOAD.out.versions)
+        blob_download = BLOB_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(blob_download.map { result -> result.versions })
         log.info "Prepared Blobtools database: ${params.outdir}/blob_db"
     }
 
     // MetaBuli database
     if (db_types.contains("all") || db_types.contains("metabuli")) {
-        METABULI_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(METABULI_DBDOWNLOAD.out.versions)
+        metabuli_download = METABULI_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(metabuli_download.map { result -> result.versions })
         log.info "Prepared MetaBuli database: ${params.outdir}/metabuli_db"
     }
 
     // GENOMAD database
     if (db_types.contains("all") || db_types.contains("genomad")) {
-        GENOMAD_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(GENOMAD_DBDOWNLOAD.out.versions)
+        genomad_download = GENOMAD_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(genomad_download.map { result -> result.versions })
         log.info "Prepared GENOMAD database: ${params.outdir}/genomad_db"
     }
 
     // NCBI nt database
     if (db_types.contains("all") || db_types.contains("nt")) {
-        NT_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(NT_DBDOWNLOAD.out.versions)
+        nt_download = NT_DBDOWNLOAD()
+        ch_versions = ch_versions.mix(nt_download.map { result -> result.versions })
         log.info "Prepared NCBI nt database: ${params.outdir}/nt_db"
     }
 
