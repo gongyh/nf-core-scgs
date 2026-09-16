@@ -19,19 +19,6 @@ def helpMessage() {
 }
 
 /*
- * SET UP CONFIGURATION VARIABLES
- */
-
-if (params.help){
-    helpMessage()
-    exit 0
-}
-
-// Initialize parameters with default values
-params.outdir = "./databases"
-params.db_type = "all"
-
-/*
  * Import modules
  */
 include { MMSEQS_DBDOWNLOAD         } from '../modules/local/mmseqs_download'
@@ -50,9 +37,12 @@ include { GET_SOFTWARE_VERSIONS     } from '../modules/local/get_software_versio
  * Workflow
  */
 workflow PREPARE_DATABASES {
-    ch_versions = Channel.empty()
+    main:
+    params.outdir = "./databases"
+    params.db_type = "all"
+    ch_versions = channel.empty()
 
-    def db_types = params.db_type.toLowerCase().split(',').collect { it.trim() }
+    def db_types = params.db_type.toLowerCase().split(',').collect { db_type -> db_type.trim() }
 
     // MMseqs2 database
     if (db_types.contains("all") || db_types.contains("mmseqs")) {
@@ -133,15 +123,15 @@ workflow PREPARE_DATABASES {
 }
 
 def nfcoreHeader(){
-    c_reset = params.monochrome_logs ? '' : "\033[0m";
-    c_dim = params.monochrome_logs ? '' : "\033[2m";
-    c_black = params.monochrome_logs ? '' : "\033[0;30m";
-    c_green = params.monochrome_logs ? '' : "\033[0;32m";
-    c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
-    c_blue = params.monochrome_logs ? '' : "\033[0;34m";
-    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
-    c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
-    c_white = params.monochrome_logs ? '' : "\033[0;37m";
+    def c_reset = params.monochrome_logs ? '' : "\033[0m";
+    def c_dim = params.monochrome_logs ? '' : "\033[2m";
+    def c_black = params.monochrome_logs ? '' : "\033[0;30m";
+    def c_green = params.monochrome_logs ? '' : "\033[0;32m";
+    def c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
+    def c_blue = params.monochrome_logs ? '' : "\033[0;34m";
+    def c_purple = params.monochrome_logs ? '' : "\033[0;35m";
+    def c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
+    def c_white = params.monochrome_logs ? '' : "\033[0;37m";
 
     return """    ${c_dim}----------------------------------------------------${c_reset}
                                             ${c_green},--.${c_black}/${c_green},-.${c_reset}

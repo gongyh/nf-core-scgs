@@ -22,7 +22,6 @@ process STARAMR {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def species = species
     if (acquired && !point) {
     """
     staramr search -o $prefix $contigs
