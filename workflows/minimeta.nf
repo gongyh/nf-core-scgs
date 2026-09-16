@@ -135,11 +135,40 @@ workflow MINIMETA {
  * SET UP CONFIGURATION VARIABLES
  */
 // default values
-params.single_end = false
+params.reads = "data/*{1,2}.fastq.gz"
+params.outdir = "./results"
 params.notrim = false
+params.awsregion = "eu-west-1"
+params.awsqueue = "default"
+params.config_profile_description = null
+params.config_profile_contact = null
+params.config_profile_url = null
+params.email = null
+params.maxMultiqcEmailFileSize = 25 * 1024 * 1024
+params.single_end = false
+params.checkm2_db = null
+params.kofam_profile = null
+params.kofam_kolist = null
+params.eggnog_db = null
+params.multiqc_config = "$baseDir/assets/multiqc_config.yml"
+params.clip_r1 = 0
+params.clip_r2 = 0
+params.three_prime_clip_r1 = 0
+params.three_prime_clip_r2 = 0
+params.readPaths = null
 params.saveTrimmed = false
+params.bulk = false
+params.mg = false
+params.allow_multi_align = false
+params.min_length = 10000
+params.run_cooccurrence_checkm = false
+params.cooccurrence_eps = 0.05
 params.mmseqs_db = null
 params.metabuli_db = null
+params.DNABERTS_dir = null
+params.kofam = true
+params.eggnog = true
+params.monochrome_logs = false
 custom_runName = workflow.runName
 single_end = params.single_end
 
@@ -190,11 +219,6 @@ ch_multiqc_custom_config = channel.empty()
 ch_multiqc_logo = channel.empty()
 ch_output_docs = channel.fromPath("$baseDir/docs/output.md")
 
-// Custom trimming options
-params.clip_r1 = 0
-params.clip_r2 = 0
-params.three_prime_clip_r1 = 0
-params.three_prime_clip_r2 = 0
 
 /*
  * Create a channel for input read files
