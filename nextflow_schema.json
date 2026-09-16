@@ -439,6 +439,27 @@
                     "type": "string",
                     "description": "Path of reference sequence for host removal using bbmap."
                 },
+                "ref": {
+                    "type": "string",
+                    "description": "Reference sequence for BBMap host-read removal."
+                },
+                "mmseqs_db": {
+                    "type": "string",
+                    "description": "Path to the MMseqs2 database for contig taxonomy."
+                },
+                "metabuli_db": {
+                    "type": "string",
+                    "description": "Path to the MetaBuli database for contig taxonomy."
+                },
+                "DNABERTS_dir": {
+                    "type": "string",
+                    "description": "Path to the DNABERT-S model directory used by DCVBIN."
+                },
+                "cooccurrence_eps": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "Distance threshold for cooccurrence binning."
+                },
                 "evalue": {
                     "type": "string",
                     "description": "E-value for diamond blastp."
