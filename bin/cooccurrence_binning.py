@@ -11,28 +11,21 @@ import argparse
 import pandas as pd
 import numpy as np
 from scipy.stats import fisher_exact
-<<<<<<< HEAD
 from scipy.stats import spearmanr
 from scipy.spatial.distance import pdist, squareform
 from sklearn.manifold import TSNE
-=======
->>>>>>> origin/v2
 from sklearn.cluster import DBSCAN
 from itertools import combinations
 
 def main():
     parser = argparse.ArgumentParser(description='Co-occurrence binning')
     parser.add_argument('coverage_file', help='coverage matrix TSV')
-<<<<<<< HEAD
     parser.add_argument('filtered_ids', help='filtered contigs ID list')
-=======
->>>>>>> origin/v2
     parser.add_argument('output_file', help='output clusters TSV')
     parser.add_argument('--eps', type=float, default=0.05,
                         help='DBSCAN eps (default: 0.05)')
     parser.add_argument('--min_samples', type=int, default=2,
                         help='DBSCAN min_samples (default: 2)')
-<<<<<<< HEAD
     parser.add_argument('--tsne', action='store_true',
                         help='Apply t-SNE before DBSCAN')
     parser.add_argument('--tsne_dim', type=int, default=3,
@@ -58,13 +51,6 @@ def main():
         return
     df = df.loc[valid_ids]
     occ = (df > 2048).astype(int)
-=======
-    args = parser.parse_args()
-
-    df = pd.read_csv(args.coverage_file, sep='\t', index_col=0)
-    df = df.apply(pd.to_numeric, errors='coerce').fillna(0)
-    occ = (df > 0).astype(int)
->>>>>>> origin/v2
 
     n = occ.shape[0]
     if n == 0:
@@ -97,7 +83,6 @@ def main():
         if processed % 10000 == 0:
             print(f"Processed {processed}/{total_pairs} pairs", file=sys.stderr)
 
-<<<<<<< HEAD
     if args.tsne:
         print("Computing Spearman correlation and transforming distance matrix (aligning with original code)...", file=sys.stderr)
 
@@ -130,12 +115,6 @@ def main():
         clustering = DBSCAN(eps=args.eps, min_samples=args.min_samples,
                             metric='precomputed')
         labels = clustering.fit_predict(dist)
-=======
-    print("Clustering with DBSCAN...", file=sys.stderr)
-    clustering = DBSCAN(eps=args.eps, min_samples=args.min_samples,
-                        metric='precomputed')
-    labels = clustering.fit_predict(dist)
->>>>>>> origin/v2
 
     contigs = occ.index.tolist()
     bin_map = {}

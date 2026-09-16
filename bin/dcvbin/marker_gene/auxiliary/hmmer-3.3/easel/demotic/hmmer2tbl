@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #! /usr/bin/perl
 
 use demotic_hmmer;
@@ -9,15 +8,3 @@ while (&demotic_hmmer::parse(\*STDIN))
 }
 
 
-=======
-#! /usr/bin/perl
-
-use demotic_hmmer;
-
-while (&demotic_hmmer::parse(\*STDIN))
-{
-    &demotic_hmmer::tblout(\*STDOUT);
-}
-
-
->>>>>>> origin/v2

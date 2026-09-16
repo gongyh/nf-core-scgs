@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Standard speed benchmarking
 
 
@@ -9,15 +8,3 @@ Standard speed benchmarking
    ln -s ~/src/hmmer/trunk/test-speed/component-benchmark.pl .
    qlogin
    ./component-benchmark.pl ~/src/hmmer/trunk/build-icc-mpi  ~/src/hmmer/trunk > component-benchmark.out
-=======
-Standard speed benchmarking
-
-
-#================================================================
-# Component timings
-#================================================================
-
-   ln -s ~/src/hmmer/trunk/test-speed/component-benchmark.pl .
-   qlogin
-   ./component-benchmark.pl ~/src/hmmer/trunk/build-icc-mpi  ~/src/hmmer/trunk > component-benchmark.out
->>>>>>> origin/v2
