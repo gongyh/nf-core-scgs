@@ -1,0 +1,495 @@
+def helpMessage() {
+    log.info nfcoreHeader()
+    log.info"""
+
+    Usage:
+
+    The typical command for running the minimeta pipeline is as follows:
+
+    nextflow run gongyh/nf-core-scgs --reads '*_R{1,2}.fastq.gz' --minimeta -profile docker
+
+    Mandatory arguments:
+    --reads                       Path to input data (must be surrounded with quotes)
+    -profile                      Configuration profile to use. Can use multiple (comma separated). Available: conda, docker, singularity, awsbatch, test and more.
+
+    Workflow options:
+    --single_end                  Specifies that the input is single end reads
+    --notrim                      Specifying --notrim will skip the adapter trimming step
+    --saveTrimmed                 Save the trimmed Fastq files in the results directory
+    --allow_multi_align           Allow multi-mapping of reads during remapping
+
+    Trimming options:
+    --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1
+    --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2
+    --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1
+    --three_prime_clip_r2 [int]   Instructs Trim Galore to remove bp from the 3' end of read 2
+
+    External databases:
+    --mmseqs_db                   Path to the MMseqs2 database for taxonomic classification
+    --metabuli_db                 Path to MetaBuli database for taxonomic classification
+    --checkm2_db                  Path to CheckM2 database
+    --kofam_profile               Path to KOfam profile database
+    --kofam_kolist                Path to KOfam ko_list file
+    --eggnog_db                   Path to EggNOG database for emapper
+
+    Output options:
+    --outdir                      The output directory where the results will be saved
+    --email                       Set this parameter to your e-mail address to get a summary e-mail
+    --maxMultiqcEmailFileSize     Threshold size for MultiQC report to be attached in notification email (Default: 25MB)
+
+    AWSBatch options:
+    --awsqueue                    The AWSBatch JobQueue
+    --awsregion                   The AWS Region
+    """.stripIndent()
+}
+
+def display_header(summary, custom_runName, single_end) {
+    // Header log info
+    log.info nfcoreHeader()
+    //def summary = [:]
+    summary['Run Name']         = custom_runName ?: workflow.runName
+    summary['Reads']            = params.reads
+    summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
+    summary['Workflow']         = 'minimeta'
+    if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
+    summary['Output dir']       = params.outdir
+    summary['Launch dir']       = workflow.launchDir
+    summary['Working dir']      = workflow.workDir
+    summary['Script dir']       = workflow.projectDir
+    summary['User']             = workflow.userName
+    if( params.notrim ){
+        summary['Trimming Step'] = 'Skipped'
+    } else {
+        summary["Trimming Step"] = 'Trim Glore'
+    }
+    if(workflow.profile == 'awsbatch'){
+        summary['AWS Region']    = params.awsregion
+        summary['AWS Queue']     = params.awsqueue
+    }
+    summary['Config Profile'] = workflow.profile
+    if(params.config_profile_description) summary['Config Description'] = params.config_profile_description
+    if(params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
+    if(params.config_profile_url)         summary['Config URL']         = params.config_profile_url
+    if(params.email) {
+        summary['E-mail Address']  = params.email
+        summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
+    }
+    log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
+    log.info "\033[2m----------------------------------------------------\033[0m"
+}
+
+def create_workflow_summary(summary) {
+    def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
+    yaml_file.text  = """
+    id: 'nf-core-scgs-minimeta-summary'
+    description: " - this information is collected when the pipeline is started."
+    section_name: 'gongyh/nf-core-scgs MINIMETA Workflow Summary'
+    section_href: 'https://github.com/gongyh/nf-core-scgs'
+    plot_type: 'html'
+    data: |
+        <dl class=\"dl-horizontal\">
+${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v != null ? v : '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
+        </dl>
+    """.stripIndent()
+
+    return yaml_file
+}
+
+// Import modules
+include { FASTQC                            } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                           } from '../modules/nf-core/multiqc/main'
+
+include { TRIMGALORE                        } from '../modules/local/trimgalore'
+include { BBNORM                            } from '../modules/local/bbnorm'
+include { SPADES as READ_CORRECTION; SPADES } from '../modules/local/spades'
+include { MERGE_CORRECTED                   } from '../modules/local/merge_corrected'
+include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
+include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_remap'
+include { REMAP                             } from '../modules/local/remap'
+include { MERGE_BAMS                        } from '../modules/local/merge_bams'
+include { SAMTOOLS_FAIDX                    } from '../modules/local/samtools_faidx'
+include { PREPARE_FEATURES_SINGLE           } from '../subworkflows/local/prepare_features_single'
+include { PREPARE_FEATURES_MULTI            } from '../subworkflows/local/prepare_features_multi'
+include { FILTER_ASSEMBLY                   } from '../modules/local/filter_assembly'
+include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
+include { CHECKM2 as CHECKM2_COOCCURRENCE   } from '../modules/local/checkm2'
+include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
+include { SEMIBIN2                          } from '../modules/local/semibin2'
+include { MMSEQS_CONTIG_TAXONOMY            } from '../subworkflows/local/mmseqs_contig_taxonomy'
+include { MMSEQS2SEMIBIN                    } from '../modules/local/mmseqs2semibin'
+include { TAXVAMB_INTEGRATION               } from '../subworkflows/local/taxvamb_integration'
+include { FILTER_CONTIGS                    } from '../modules/local/filter_contigs'
+include { FILTER_BAM                        } from '../modules/local/filter_bam'
+include { DCVBIN                            } from '../subworkflows/local/dcvbin'
+include { DAS_TOOL                          } from '../modules/local/das_tool'
+include { CHECKM2                           } from '../modules/local/checkm2'
+include { PROKKA                            } from '../modules/local/prokka'
+include { KOFAMSCAN                         } from '../modules/local/kofamscan'
+include { EGGNOG                            } from '../modules/local/eggnog'
+include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
+include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
+
+workflow MINIMETA {
+    main:
+    /*
+ * SET UP CONFIGURATION VARIABLES
+ */
+// default values
+params.single_end = false
+params.notrim = false
+params.saveTrimmed = false
+params.mmseqs_db = null
+params.metabuli_db = null
+custom_runName = workflow.runName
+single_end = params.single_end
+
+if(workflow.profile == 'awsbatch') {
+    if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
+    if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
+    if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
+}
+
+// Configure Checkm2 database
+checkm2_db = false
+if (params.checkm2_db) {
+    checkm2_db  = file(params.checkm2_db)
+    if ( !checkm2_db.exists() ) exit 1, "CheckM2 database not found: ${params.checkm2_db}"
+} else {
+    checkm2_db = file("/dev/null")
+}
+
+//kofam database
+kofam_profile = false
+if (params.kofam_profile) {
+    kofam_profile = file(params.kofam_profile)
+    if( !kofam_profile.exists() ) exit 1, "KOfam profile database not found: ${params.kofam_profile}"
+} else {
+    kofam_profile = file("/dev/null")
+}
+
+kofam_kolist = false
+if (params.kofam_kolist) {
+    kofam_kolist = file(params.kofam_kolist)
+    if( !kofam_kolist.exists() ) exit 1, "KOfam ko_list file not found: ${params.kofam_kolist}"
+} else {
+    kofam_kolist = file("/dev/null")
+}
+
+//eggnog database
+eggnog_db = false
+if (params.eggnog_db) {
+    eggnog_db = file(params.eggnog_db)
+    if( !eggnog_db.exists() ) exit 1, "EggNOG database not found: ${params.eggnog_db}"
+} else {
+    eggnog_db = file("/dev/null")
+}
+
+// Stage config files
+ch_multiqc_config = channel.fromPath(params.multiqc_config, checkIfExists: true)
+ch_multiqc_custom_config = channel.empty()
+ch_multiqc_logo = channel.empty()
+ch_output_docs = channel.fromPath("$baseDir/docs/output.md")
+
+// Custom trimming options
+params.clip_r1 = 0
+params.clip_r2 = 0
+params.three_prime_clip_r1 = 0
+params.three_prime_clip_r2 = 0
+
+/*
+ * Create a channel for input read files
+ */
+if(params.readPaths){
+    if(single_end){
+        read_files_fastqc = channel.from(params.readPaths, checkIfExists: false)
+            .map { row -> def meta=[:];
+                    meta.id = row[0];
+                    meta.single_end = single_end;
+                    [meta, [file(row[1][0]), file(row[1][1])]]}
+            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
+        read_files_trimming = read_files_fastqc
+    } else {
+        read_files_fastqc = channel.from(params.readPaths)
+            .map { row -> def meta=[:];
+                    meta.id = row[0];
+                    meta.single_end = single_end;
+                    [meta, [file(row[1][0]), file(row[1][1])]]}
+            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
+        read_files_trimming = read_files_fastqc
+    }
+} else {
+    if (single_end) {
+        read_files_fastqc = channel.fromFilePairs(params.reads, size:1, checkIfExists: false)
+            .map { it ->
+                def meta = [:];
+                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                meta.single_end = single_end;
+                [meta, [file(it[1][0])]]}
+        read_files_trimming = read_files_fastqc
+
+    } else {
+        read_files_fastqc = channel.fromFilePairs(params.reads, size:2, checkIfExists: false)
+            .map { it ->
+                def meta = [:];
+                meta.id = it[0].replaceFirst(~/\.[^\.]+$/, '');
+                meta.single_end = single_end;
+                [meta, [file(it[1][0]), file(it[1][1])]]}
+        read_files_trimming = read_files_fastqc
+    }
+}
+
+summary = [:]
+
+
+    display_header(summary, custom_runName, single_end)
+    ch_versions = channel.empty()
+    ch_multiqc_files = channel.empty()
+    // FASTQC
+    ch_multiqc_fastqc = channel.empty()
+    FASTQC ( read_files_fastqc )
+    ch_versions       = ch_versions.mix(FASTQC.out.versions)
+    ch_multiqc_fastqc = FASTQC.out.zip
+
+    // TRIM_GALORE
+    trimmed_reads = channel.empty()
+    ch_multiqc_trim_log = channel.empty()
+    ch_multiqc_trim_zip = channel.empty()
+    if (params.notrim) {
+        trimmed_reads = read_files_trimming.map{name, reads -> reads}
+    } else {
+        TRIMGALORE ( read_files_trimming )
+        ch_multiqc_trim_log = TRIMGALORE.out.log
+        ch_multiqc_trim_zip = TRIMGALORE.out.zip
+        ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
+        trimmed_reads = TRIMGALORE.out.reads
+    }
+
+    // BBNORM
+    BBNORM(trimmed_reads)
+    normalized_reads = BBNORM.out.fastq
+    ch_versions = ch_versions.mix(BBNORM.out.versions)
+
+    // Performs read error correction for each minimeta sample
+    READ_CORRECTION(normalized_reads.map { meta, reads ->
+        def meta_clone = meta.clone()
+        meta_clone.only_error_correction = true;
+        [meta_clone, reads]
+    })
+    corrected_reads = READ_CORRECTION.out.reads
+    ch_versions = ch_versions.mix(READ_CORRECTION.out.versions)
+    // Sort
+    p1_list = corrected_reads.map { meta, reads -> reads[0] }.collect()
+    p2_list = corrected_reads.map { meta, reads -> reads[1] }.collect()
+
+    //Merge_corrected
+    MERGE_CORRECTED( p1_list, p2_list )
+    joint_reads = MERGE_CORRECTED.out.r1
+        .combine(MERGE_CORRECTED.out.r2)
+        .map { r1, r2 -> [ [id:'merged', single_end:false], [r1, r2] ] }
+
+    //SPADES_JOINT
+    SPADES_JOINT( joint_reads )
+    ch_versions = ch_versions.mix(SPADES_JOINT.out.versions)
+
+    //BOWTIE2_REMAP
+    BOWTIE2_REMAP( SPADES_JOINT.out.contig )
+    ch_versions = ch_versions.mix(BOWTIE2_REMAP.out.versions)
+    //REMAP
+    remap_input = trimmed_reads.combine(BOWTIE2_REMAP.out.index).map { entry ->
+        [entry[0] + [id_index: 'merged'], entry[1], entry[3]]
+    }
+    REMAP(remap_input, params.allow_multi_align)
+    ch_versions = ch_versions.mix(REMAP.out.versions)
+
+    //MERGE BAMS
+    ch_bam_list = REMAP.out.bam.map{ meta, bam -> bam }.collect()
+    MERGE_BAMS( ch_bam_list )
+    ch_merged_bam = MERGE_BAMS.out.merged_bam
+    ch_bam_for_coverage = ch_merged_bam.map { bam -> [ [id:'merged'], bam, [] ] }
+
+    //PREPARE_FEATURES
+    ch_fasta = SPADES_JOINT.out.contig
+    SAMTOOLS_FAIDX( ch_fasta )
+    ch_fai = SAMTOOLS_FAIDX.out.fai
+    PREPARE_FEATURES_SINGLE( ch_fasta, ch_fai, ch_bam_for_coverage )
+    ch_single_coverage = PREPARE_FEATURES_SINGLE.out.coverage_matrix
+    PREPARE_FEATURES_MULTI( ch_fasta, ch_fai, REMAP.out.bam )
+    ch_multi_coverage = PREPARE_FEATURES_MULTI.out.coverage_matrix
+
+    // binning
+    ch_assembly = SPADES_JOINT.out.contig.map { entry -> entry[1] }
+    ch_all_s2b = channel.empty()
+
+    def min_len = params.min_length ?: 10000
+    FILTER_ASSEMBLY( ch_assembly, min_len )
+    ch_filtered_assembly = FILTER_ASSEMBLY.out.filtered
+    ch_versions = ch_versions.mix( FILTER_ASSEMBLY.out.versions )
+    //COOCCURRENCE
+    ch_filtered_ids = FILTER_ASSEMBLY.out.filtered_ids
+    COOCCURRENCE_BINNING( ch_multi_coverage, ch_filtered_ids )
+    EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_assembly)
+    ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
+    ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
+
+    //
+    if ( params.run_cooccurrence_checkm ) {
+        if ( params.checkm2_db ) {
+            CHECKM2_COOCCURRENCE( EXTRACT_BINS.out.bins, 'fa', file(params.checkm2_db) )
+            ch_multiqc_files = ch_multiqc_files.mix( CHECKM2_COOCCURRENCE.out.mqc_tsv.collect().ifEmpty([]) )
+            ch_versions = ch_versions.mix( CHECKM2_COOCCURRENCE.out.versions )
+        } else {
+            log.info "INFO: --run_cooccurrence_checkm is set, but --checkm2_db is not provided. Skipping CheckM2 for COOCCURRENCE."
+        }
+    }
+    //MMseqs2
+    if (params.mmseqs_db ) {
+        //MMseqs_TAXA
+        ch_mmseqs_input = ch_assembly.map { fasta -> [ [id: fasta.baseName], fasta ] }
+        ch_mmseqs_db = channel.fromPath( params.mmseqs_db )
+
+        MMSEQS_CONTIG_TAXONOMY( ch_mmseqs_input, ch_mmseqs_db )
+        ch_mmseqs_taxonomy = MMSEQS_CONTIG_TAXONOMY.out.taxonomy
+        ch_multiqc_files = ch_multiqc_files.mix(ch_mmseqs_taxonomy.collect().ifEmpty([]))
+
+        MMSEQS2SEMIBIN( ch_mmseqs_taxonomy )
+        ch_semibin_tax = MMSEQS2SEMIBIN.out.tax.map { meta, file -> file }
+        ch_versions = ch_versions.mix( MMSEQS2SEMIBIN.out.versions )
+        //SEMIBIN2_Semi
+        SEMIBIN2( ch_assembly, ch_merged_bam, ch_semibin_tax )
+    } else {
+        SEMIBIN2( ch_assembly, ch_merged_bam, [] )
+    }
+
+    //SEMIBIN2
+    ch_semibin2_s2b = SEMIBIN2.out.scaffolds2bin
+        .map { file -> ['SEMIBIN2', file] }
+        .filter { entry -> entry[1].size() > 0 }
+    ch_all_s2b = ch_all_s2b.mix(ch_semibin2_s2b)
+    ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
+
+    // TaxVAMB
+    TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
+    ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
+    ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
+
+    if (params.DNABERTS_dir != null){
+        //FILTERED
+        ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
+        FILTER_CONTIGS( ch_assembly, 2000 )
+        ch_filtered_fasta_with_meta = FILTER_CONTIGS.out.filtered.map { fasta ->
+            [ [id: fasta.baseName], fasta ]
+        }
+        ch_versions = ch_versions.mix( FILTER_CONTIGS.out.versions )
+        FILTER_BAM( ch_filtered_fasta_with_meta, ch_merged_bam, ch_merged_bai )
+        ch_filtered_bam = FILTER_BAM.out.filtered_bam.map { meta, bam -> bam }
+        ch_versions = ch_versions.mix( FILTER_BAM.out.versions )
+        ch_bam_path = ch_filtered_bam
+        //DCVBIN
+        DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
+        ch_all_s2b = ch_all_s2b.mix( DCVBIN.out.scaffolds2bin.map{ file -> ['DCVBIN', file] } )
+        ch_versions = ch_versions.mix( DCVBIN.out.versions )
+        ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv.ifEmpty([]) )
+    }
+
+    // DAS TOOL
+    ch_s2b_list = ch_all_s2b.flatten().toList()
+    DAS_TOOL(ch_assembly, ch_s2b_list)
+    ch_bins_dir = DAS_TOOL.out.bins
+    ch_versions = ch_versions.mix(DAS_TOOL.out.versions)
+
+    // CHECKM2
+    CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
+    ch_versions = ch_versions.mix(CHECKM2.out.versions)
+    ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
+    ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
+    //
+    ch_bins_for_prokka = ch_bins_dir.flatMap { bin_dir ->
+        def bin_files = file(bin_dir).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
+        if (!bin_files) {
+            log.warn "No .fa files found in ${bin_dir}, skipping PROKKA"
+            return []
+        }
+        bin_files.collect { bin_file ->
+            [ [id: bin_file.baseName], bin_file ]
+        }
+    }
+
+    //PROKKA
+    PROKKA(ch_bins_for_prokka, [])
+    ch_versions = ch_versions.mix(PROKKA.out.versions)
+
+    // KOFAMSCAN
+    if (params.kofam) {
+        KOFAMSCAN(PROKKA.out.faa, kofam_profile, kofam_kolist)
+        ch_versions = ch_versions.mix(KOFAMSCAN.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(KOFAMSCAN.out.kofamscan.collect().ifEmpty([]))
+    }
+
+    // EGGNOG
+    if (params.eggnog) {
+        EGGNOG(PROKKA.out.faa, eggnog_db)
+        ch_versions = ch_versions.mix(EGGNOG.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(EGGNOG.out.annotations.collect().ifEmpty([]))
+    }
+
+    // GET_SOFTWARE_VERSIONS
+    ch_multiqc_versions = channel.empty()
+    GET_SOFTWARE_VERSIONS (
+        ch_versions.unique().collectFile(name: 'collated_versions.yml')
+    )
+    ch_multiqc_versions = GET_SOFTWARE_VERSIONS.out.mqc_yml
+
+    // MODULE: MULTIQC
+    workflow_summary = create_workflow_summary(summary)
+    ch_workflow_summary = channel.value(workflow_summary)
+
+    ch_multiqc_files = channel.empty()
+    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect { entry -> entry[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect { entry -> entry[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect { entry -> entry[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(SPADES_JOINT.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(REMAP.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_MULTI.out.coverage_mqc.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_SINGLE.out.coverage_mqc.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(TAXVAMB_INTEGRATION.out.mqc_tsv.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
+
+    MULTIQC (
+        ch_multiqc_files.collect(),
+        ch_multiqc_config.toList(),
+        ch_multiqc_custom_config.toList(),
+        ch_multiqc_logo.toList()
+    )
+    OUTPUT_DOCUMENTATION(ch_output_docs)
+
+    emit:
+    summary_params = channel.value(summary)
+    multiqc_report = MULTIQC.out.report.toList()
+}
+
+def nfcoreHeader(){
+    // Log colors ANSI codes
+    def c_reset = params.monochrome_logs ? '' : "\033[0m";
+    def c_dim = params.monochrome_logs ? '' : "\033[2m";
+    def c_black = params.monochrome_logs ? '' : "\033[0;30m";
+    def c_green = params.monochrome_logs ? '' : "\033[0;32m";
+    def c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
+    def c_blue = params.monochrome_logs ? '' : "\033[0;34m";
+    def c_purple = params.monochrome_logs ? '' : "\033[0;35m";
+    def c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
+    def c_white = params.monochrome_logs ? '' : "\033[0;37m";
+
+    return """    ${c_dim}----------------------------------------------------${c_reset}
+                                            ${c_green},--.${c_black}/${c_green},-.${c_reset}
+    ${c_blue}        ___     __   __   __   ___     ${c_green}/,-._.--~\'${c_reset}
+    ${c_blue}  |\\ | |__  __ /  ` /  \\ |__) |__         ${c_yellow}}  {${c_reset}
+    ${c_blue}  | \\| |       \\__, \\__/ |  \\ |___     ${c_green}\\`-._,-`-,${c_reset}
+                                            ${c_green}`._,._,'${c_reset}
+    ${c_purple}  gongyh/nf-core-scgs MINIMETA v${workflow.manifest.version}${c_reset}
+    ${c_dim}----------------------------------------------------${c_reset}
+    """.stripIndent()
+}

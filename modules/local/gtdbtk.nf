@@ -1,10 +1,10 @@
 process GTDBTK {
     label 'process_medium'
 
-    conda "bioconda::gtdbtk=2.1.1"
+    conda "bioconda::gtdbtk=2.7.2"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/gtdbtk:2.1.1--pyhdfd78af_1' :
-        'biocontainers/gtdbtk:2.1.1--pyhdfd78af_1' }"
+        'https://depot.galaxyproject.org/singularity/gtdbtk:2.7.2--pyhdfd78af_1' :
+        'biocontainers/gtdbtk:2.7.2--pyhdfd78af_1' }"
 
     input:
     path(fa)

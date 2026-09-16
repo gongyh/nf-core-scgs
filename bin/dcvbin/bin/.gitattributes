@@ -1,0 +1,2 @@
+test_10.18/test_1.fastq.gz filter=lfs diff=lfs merge=lfs -text
+test_10.18/test_2.fastq.gz filter=lfs diff=lfs merge=lfs -text

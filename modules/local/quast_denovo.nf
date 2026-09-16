@@ -1,4 +1,5 @@
 process QUAST_DENOVO {
+    tag "$outdir"
     label 'process_medium'
 
     conda "bioconda::quast=5.2.0"
@@ -10,21 +11,23 @@ process QUAST_DENOVO {
     path(contig)
     val(euk)
     val(fungus)
+    val(quast_outdir)
 
     output:
-    path "quast"       , emit: results
-    path 'quast/*.tsv' , emit: tsv
-    path "versions.yml", emit: versions
+    path "${outdir}"             , emit: results
+    path "${outdir}/*.tsv"       , emit: tsv
+    path "versions.yml"          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
+    outdir = "${quast_outdir}".replaceAll(/[\\/:*?"<>|]/, '_').replaceAll(/[\s_]+/, '_').trim()
     """
     contigs=\$(ls *.fasta | paste -sd " " -)
     labels=\$(ls *.fasta | paste -sd "," - | sed 's/.fasta//g')
-    quast.py -o quast -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
+    quast.py -o $outdir -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

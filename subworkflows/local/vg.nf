@@ -10,7 +10,7 @@ workflow VG {
     vcf
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
     VG_CONSTRUCT (
         fasta,
         vcf

@@ -195,11 +195,9 @@ def tools_split(
 
     genome_dir = spades_dir
     fna_suffix = ".ctg200.fasta"
-    if results_dir.joinpath("hybrid").is_dir():
-        genome_dir = results_dir.joinpath("hybrid")
+    if len(list(genome_dir.glob(f"**/*.hybrid200.fasta"))) > 0:
         fna_suffix = ".hybrid200.fasta"
-    elif results_dir.joinpath("pasa").is_dir():
-        genome_dir = results_dir.joinpath("pasa")
+    elif len(list(genome_dir.glob(f"**/*.pasa200.fasta"))) > 0:
         fna_suffix = ".pasa200.fasta"
 
     prokka_dir = results_dir.joinpath("prokka")
@@ -534,9 +532,9 @@ def tools_roary(
         help="Directory with gff files.",
     ),
     threads: int = typer.Option(8, "--threads", "-t", show_default=True, help="Number of threads."),
-    kraken_db: Path = typer.Option(
+    kraken1_db: Path = typer.Option(
         None,
-        "--kraken_db",
+        "--kraken1_db",
         "-k",
         exists=True,
         file_okay=False,
@@ -545,7 +543,7 @@ def tools_roary(
         readable=True,
         resolve_path=True,
         show_default=False,
-        help="Path to Kraken database for QC.",
+        help="Path to Kraken1 database for QC.",
     ),
     output_dir: Path = typer.Option(
         ".",
@@ -577,8 +575,8 @@ def tools_roary(
         raise typer.Abort()
 
     params_str = "-r -e --mafft"
-    if kraken_db is not None:
-        params_str += " -qc -k " + str(kraken_db)
+    if kraken1_db is not None:
+        params_str += " -qc -k " + str(kraken1_db)
 
     typer.echo(f"Run roary.")
     subprocess.check_call(

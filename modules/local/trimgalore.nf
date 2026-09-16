@@ -11,7 +11,7 @@ process TRIMGALORE {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("*.fq.gz")                    , emit: reads
+    tuple val(meta), path("*{3prime,5prime,trimmed,val}{,_1,_2}.fq.gz") , emit: reads
     tuple val(meta), path("*trimming_report.txt")       , emit: log     , optional: true
     tuple val(meta), path("*.zip")                      , emit: zip     , optional: true
     path "versions.yml"                                 , emit: versions

@@ -187,12 +187,7 @@
                 },
                 "refs_fna": {
                     "type": "string",
-                    "pattern": "^\\S+\\.fna\\.gz$",
-                    "description": "Genomes for scaffolding."
-                },
-                "close_ref": {
-                    "type": "string",
-                    "description": "A close reference for genome-guided assembly."
+                    "description": "Genomes for scaffolding (*.fna *.fna.gz) or PanTA database (dir)."
                 },
                 "notrim": {
                     "type": "boolean",
@@ -339,6 +334,11 @@
                     "default": false,
                     "description": "Bulk sequencing data?"
                 },
+                "mg": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Metagenomic sequencing data?"
+                },
                 "ass": {
                     "type": "boolean",
                     "default": false,
@@ -348,6 +348,16 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enable genomad analysis?"
+                },
+                "minimeta": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable minimeta single-cell metagenomics analysis workflow"
+                },
+                "prepare_databases": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable database preparation workflow"
                 },
                 "genus": {
                     "type": "string",
@@ -389,9 +399,13 @@
                     "type": "string",
                     "description": "Path of Krona taxonomy.tab."
                 },
-                "kraken_db": {
+                "kraken1_db": {
                     "type": "string",
-                    "description": "Path of KRAKEN1 database."
+                    "description": "Path of KRAKEN1 database (for ACDC)."
+                },
+                "kraken2_db": {
+                    "type": "string",
+                    "description": "Path of KRAKEN2 database."
                 },
                 "readPaths": {
                     "type": "string",
@@ -416,6 +430,10 @@
                 "gtdb": {
                     "type": "string",
                     "description": "Path of gtdb database."
+                },
+                "bakta_db": {
+                    "type": "string",
+                    "description": "Path of bakta database."
                 },
                 "host_ref": {
                     "type": "string",
@@ -487,7 +505,7 @@
                 },
                 "custom_config_base": {
                     "type": "string",
-                    "default": "https://raw.githubusercontent.com/nf-core/configs/${params.custom_config_version}",
+                    "default": "https://raw.githubusercontent.com/nf-core/configs/master",
                     "description": "custom_config_base"
                 }
             }
