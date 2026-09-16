@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process INDELREALIGN {
     tag "${meta.id}"
     label 'process_single'
@@ -6,16 +8,10 @@ process INDELREALIGN {
     container "scgs/mulled-v2-1078cca9be35f4e979036df5cc474bba6aa9e104:a682d8c0dfb0582e13b281ab918a1de0b7a7778d-0"
 
     input:
-    tuple val(meta), path(bam)
-    path fa
+    tuple(meta: Map, bam: Path, fa: Path)
 
     output:
-    tuple val(meta), path("*.realign.bam")    , emit: bam
-    tuple val(meta), path("*.realign.bam.bai"), emit: bai
-    path "versions.yml"                       , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, bam: file('*.realign.bam'), bai: file('*.realign.bam.bai'), versions: file('versions.yml'))
 
     script:
     def prefix   = task.ext.prefix ?: "${meta.id}"

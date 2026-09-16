@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process METABULI_TAXA {
     tag "metabuli_taxa"
     label 'process_medium'
@@ -6,12 +8,11 @@ process METABULI_TAXA {
     container 'community.wave.seqera.io/library/metabuli:1.2.0--aade40d1e84cdec2'
 
     input:
-    tuple val(meta), path(assembly)
-    path  db_dir
+    tuple(meta: Map, assembly: Path)
+    db_dir: Path
 
     output:
-    tuple val(meta), path("taxonomy.tsv"), emit: taxonomy
-    path "versions.yml"                  , emit: versions
+    record(meta: meta, taxonomy: file('taxonomy.tsv'), versions: file('versions.yml'))
 
     script:
     def args = task.ext.args ?: ''

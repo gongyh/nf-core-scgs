@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process FEATURE_FUSION {
     tag "$meta.id"
 
@@ -6,16 +8,10 @@ process FEATURE_FUSION {
 
 
     input:
-    tuple val(meta), path(fpf_file)
-    tuple val(tnf_meta), path(tnf_file)
-    tuple val(rpkm_meta), path(rpkm_file)
+    tuple(meta: Map, fpf_file: Path, tnf_file: Path, rpkm_file: Path)
 
     output:
-    tuple val(meta), path("${prefix}_vae_features.npy"), emit: features
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, features: file("${prefix}_vae_features.npy"), versions: file('versions.yml'))
 
     script:
     def args    = task.ext.args ?: ''

@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process TSNE {
     tag "$meta.id"
     label 'process_medium'
@@ -6,14 +8,10 @@ process TSNE {
     container "scgs/mulled-v2-8905087433117c98a93e379c07447431e85bdd71:5402918794aa21f8f7e4b46973655d86142c9ffb-0"
 
     input:
-    tuple val(meta), path(contigs)
+    tuple(meta: Map, contigs: Path)
 
     output:
-    tuple val(meta), path("${prefix}_tsne.tsv"), emit: tsv
-    path  "versions.yml"                       , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, tsv: file("${prefix}_tsne.tsv"), versions: file('versions.yml'))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

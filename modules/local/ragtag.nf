@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process RAGTAG {
     tag "${meta.id}"
     label 'process_medium'
@@ -6,16 +8,10 @@ process RAGTAG {
     container "scgs/mulled-v2-561a2673ebd796b3ddd2822d3f38440d215223c5:6b65b2e5d7cc53084c2dc5fec2260d8adbee49f1-0"
 
     input:
-    tuple val(meta), path(refass_contigs), path(denovo_contigs) // ref and denovo assemblies
-    path(refs_fna)
+    tuple(meta: Map, refass_contigs: Path, denovo_contigs: Path, refs_fna: List<Path>) // ref and denovo assemblies
 
     output:
-    tuple val(meta), path("${prefix}_scaffolds.fasta"),    emit: scaffolded_assembly
-    tuple val(meta), path("${prefix}.denovo.clean.fasta"), emit: denovo_assembly
-    path "versions.yml",                                   emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, scaffolded_assembly: file("${prefix}_scaffolds.fasta"), denovo_assembly: file("${prefix}.denovo.clean.fasta"), versions: file('versions.yml'))
 
     script:
     def args = task.ext.args ?: ''

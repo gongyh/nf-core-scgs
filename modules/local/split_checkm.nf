@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process SPLIT_CHECKM {
     label 'process_medium'
 
@@ -5,24 +7,23 @@ process SPLIT_CHECKM {
     container "scgs/mulled-v2-28c5d03d1ac8475499ba2a43715feecc3e991223:c795f73b9d282e25900663d2b634c26711c5b8a4-0"
 
     input:
-    path("results/spades/*")
-    path("results/blob/*")
-    path("results/prokka/*")
-    path("results/kofam/*")
-    val split_bac_level
-    val split_euk_level
+    spades: Bag<Path>
+    blob: Bag<Path>
+    prokka: Bag<Path>
+    kofam: Bag<Path>
+    split_bac_level: String
+    split_euk_level: String
 
     output:
-    path("split/*")            , emit: output
-    path("split/fa/*")         , emit: fa
-    path("split/*.csv")        , emit: csv
-    path("split/versions.yml") , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(output: file("split/*"), fa: file("split/fa/*"), csv: file("split/*.csv"), versions: file("split/versions.yml"))
 
     script:
     """
+    mkdir -p results/spades results/blob results/prokka results/kofam
+    ln -s ${spades} results/spades/
+    ln -s ${blob} results/blob/
+    if [ -n "${prokka}" ]; then ln -s ${prokka} results/prokka/; fi
+    if [ -n "${kofam}" ]; then ln -s ${kofam} results/kofam/; fi
     cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
     if [ ! -d fa ];then

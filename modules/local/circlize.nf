@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process CIRCLIZE {
     tag "$meta.id"
     label 'process_medium'
@@ -8,15 +10,10 @@ process CIRCLIZE {
         'biocontainers/bedtools:2.31.0--h468198e_0' }"
 
     input:
-    tuple val(meta), path(sbed)
-    path(refbed)
+    tuple(meta: Map, sbed: Path, refbed: Path)
 
     output:
-    tuple val(meta), path("${prefix}-cov200.bed"), emit: bed
-    path "versions.yml"                          , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, bed: file("${prefix}-cov200.bed"), versions: file('versions.yml'))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

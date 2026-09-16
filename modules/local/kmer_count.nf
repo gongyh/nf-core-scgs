@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process KMER_COUNT {
     tag "$meta.id - k$kmer"
     label 'process_low'
@@ -5,12 +7,11 @@ process KMER_COUNT {
     container "scgs/mulled-v2-8905087433117c98a93e379c07447431e85bdd71:5402918794aa21f8f7e4b46973655d86142c9ffb-0"
 
     input:
-    tuple val(meta), path(fasta)
-    val kmer
+    tuple(meta: Map, fasta: Path)
+    kmer: Integer
 
     output:
-    tuple val(meta), val(kmer), path("${meta.id}_k${kmer}.csv"), emit: csv
-    path "versions.yml"                                         , emit: versions
+    record(meta: meta, kmer: kmer, csv: file("${meta.id}_k${kmer}.csv"), versions: file("versions.yml"))
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

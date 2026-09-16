@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process UNIOP {
     tag "$meta.id"
     label 'process_single'
@@ -6,19 +8,15 @@ process UNIOP {
     container "scgs/mulled-v2-429a3460971b0153ab4b5691b696eab3d551813d:54e9422a549b5e87e5486d5c5b9b5fcdfcca1bd7-0"
 
     input:
-    tuple val(meta), path("genome.fasta")
+    tuple(meta: Map, genome_fasta: Path)
 
     output:
-    tuple val(meta), path("$prefix"), emit: out_operon
-    path "versions.yml"             , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, out_operon: file("${prefix}", type: 'dir'), versions: file('versions.yml'))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cp genome.fasta ${prefix}.fna
+    cp ${genome_fasta} ${prefix}.fna
     mkdir -p ${prefix}
     # operon prediction
     UniOP.py -i ${prefix}.fna -t ${prefix}/

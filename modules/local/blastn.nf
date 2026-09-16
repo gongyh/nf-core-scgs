@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process BLASTN {
     tag "$meta.id"
     label 'process_medium'
@@ -8,20 +10,15 @@ process BLASTN {
         'biocontainers/blast:2.13.0--hf3cf87c_0' }"
 
     input:
-    tuple val(meta), path(contigs)
-    path db
-    val(evalue)
+    tuple(meta: Map, contigs: Path)
+    db: Path
+    evalue: Float
 
     output:
-    tuple val(meta), path("${contigs}" )     , emit: contigs
-    tuple val(meta), path("${prefix}_nt.out"), emit: nt
-    path "versions.yml"                      , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, contigs: file("*.fasta"), nt: file("*_nt.out"), versions: file("versions.yml"))
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     export BLASTDB=$db
     blastn -query $contigs -db $db/nt -outfmt '6 qseqid staxids bitscore std' \

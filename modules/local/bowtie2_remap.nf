@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process BOWTIE2_REMAP {
     tag "$meta.id"
     label 'process_medium'
@@ -8,17 +10,13 @@ process BOWTIE2_REMAP {
         'biocontainers/bowtie2:2.4.4--py39hbb4e92a_0' }"
 
     input:
-    tuple val(meta), path(contigs)
+    tuple(meta: Map, contigs: Path)
 
     output:
-    tuple val(meta), path("${prefix}Bowtie2Index"), emit: index
-    path("${prefix}Bowtie2Index/versions.yml")    , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, index: file("*Bowtie2Index"), versions: file("*Bowtie2Index/versions.yml"))
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}Bowtie2Index; cd ${prefix}Bowtie2Index
     ln -s ../${contigs} ${prefix}.fa

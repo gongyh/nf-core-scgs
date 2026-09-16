@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process CHECKM2 {
     label 'process_medium'
 
@@ -7,17 +9,12 @@ process CHECKM2 {
         'community.wave.seqera.io/library/checkm2:1.0.1--034a3a15afae63b1' }"
 
     input:
-    path input_dir
-    val ext
-    path db
+    input_dir: Path
+    ext: String
+    db: Path
 
     output:
-    path('Checkm2_results.txt'), emit: txt
-    path('CheckM2_mqc.tsv')    , emit: mqc_tsv
-    path "versions.yml"        , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(txt: file('Checkm2_results.txt'), mqc_tsv: file('CheckM2_mqc.tsv'), versions: file('versions.yml'))
 
     script:
     """

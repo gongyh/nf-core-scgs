@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process VAMB_BIN {
     tag "$meta.id"
     label 'process_high'
@@ -8,31 +10,17 @@ process VAMB_BIN {
         'quay.io/biocontainers/vamb:5.0.4--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(assembly), path(abundance_tsv), path(bams, stageAs: "bams/*"), path(taxonomy)
+    tuple(meta: Map, assembly: Path, abundance_tsv: Path, taxonomy: Path)
 
     output:
-    tuple val(meta), path("${prefix}/scaffolds2bin.tsv")         , emit: scaffolds2bin
-    tuple val(meta), path("${prefix}/bins/*.fna.gz")             , emit: bins             , optional: true
-    tuple val(meta), path("${prefix}/vae*_clusters_metadata.tsv"), emit: clusters_metadata
-    tuple val(meta), path("${prefix}/vae*_clusters_split.tsv")   , emit: clusters_split   , optional: true
-    tuple val(meta), path("${prefix}/vae*_clusters_unsplit.tsv") , emit: clusters_unsplit
-    tuple val(meta), path("${prefix}/results_taxometer.tsv")     , emit: taxometer_results, optional: true
-    tuple val(meta), path("${prefix}/latent.npz")                , emit: latent_encoding  , optional: true
-    tuple val(meta), path("${prefix}/abundance.npz")             , emit: abundance
-    tuple val(meta), path("${prefix}/composition.npz")           , emit: composition
-    tuple val(meta), path("${prefix}/log.txt")                   , emit: log
-    tuple val("${task.process}"), val('vamb'), eval("vamb --version | sed 's/Vamb //'"), emit: versions_vamb, topic: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, scaffolds2bin: file("${prefix}/scaffolds2bin.tsv"), bins: file("${prefix}/bins/*.fna.gz", optional: true), clusters_metadata: file("${prefix}/vae*_clusters_metadata.tsv"), clusters_split: file("${prefix}/vae*_clusters_split.tsv", optional: true), clusters_unsplit: file("${prefix}/vae*_clusters_unsplit.tsv"), taxometer_results: file("${prefix}/results_taxometer.tsv", optional: true), latent_encoding: file("${prefix}/latent.npz", optional: true), abundance: file("${prefix}/abundance.npz"), composition: file("${prefix}/composition.npz"), log: file("${prefix}/log.txt"), versions: file('versions.yml'))
 
     script:
     def args    = task.ext.args ?: ''
     prefix      = task.ext.prefix ?: "${meta.id}"
-    def mode    = taxonomy ? "taxvamb" : "default"
-    depth_input = abundance_tsv ? "--abundance_tsv ${abundance_tsv}" : (bams ? "--bamdir bams/" : error("Neither abundance_tsv nor bams provided"))
-    tax_input   = taxonomy ? "--taxonomy ${taxonomy}" : ""
-    def min_len = task.ext.min_contig_len ?: 250
+    def mode    = "taxvamb"
+    tax_input   = "--taxonomy ${taxonomy}"
+    def min_len = task.ext.min_contig_len ?: '250'
     """
     awk -v min=${min_len} 'BEGIN {RS=">"; ORS=""} NR>1 {seq=\$0; gsub(/\\n/, "", seq); if(length(seq) >= min) print ">"\$0}' ${assembly} > filtered.contigs.fasta
 
@@ -63,12 +51,14 @@ process VAMB_BIN {
         ${args}
 
     awk -F'\\t' 'NR>1 {print \$2"\t"\$1}' ${prefix}/vae*_clusters_unsplit.tsv > ${prefix}/scaffolds2bin.tsv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        vamb: \$(vamb --version | sed 's/Vamb //')
+    END_VERSIONS
     """
 
     stub:
-    if(bams && abundance_tsv) {
-        error("ERROR: Both bams and abundance TSV supplied to Vamb! Please only supply one.")
-    }
     prefix   = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}/bins
@@ -86,5 +76,9 @@ process VAMB_BIN {
     touch ${prefix}/abundance.npz
     touch ${prefix}/composition.npz
     touch ${prefix}/log.txt
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        vamb: stub
+    END_VERSIONS
     """
 }

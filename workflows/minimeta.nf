@@ -279,88 +279,88 @@ summary = [:]
     ch_multiqc_trim_log = channel.empty()
     ch_multiqc_trim_zip = channel.empty()
     if (params.notrim) {
-        trimmed_reads = read_files_trimming.map{name, reads -> reads}
+        trimmed_reads = read_files_trimming
     } else {
-        TRIMGALORE ( read_files_trimming )
-        ch_multiqc_trim_log = TRIMGALORE.out.log
-        ch_multiqc_trim_zip = TRIMGALORE.out.zip
-        ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
-        trimmed_reads = TRIMGALORE.out.reads
+        trimgalore = TRIMGALORE(read_files_trimming)
+        ch_multiqc_trim_log = trimgalore.map { result -> tuple(result.meta, result.log) }
+        ch_multiqc_trim_zip = trimgalore.map { result -> tuple(result.meta, result.zip) }
+        ch_versions = ch_versions.mix(trimgalore.map { result -> result.versions })
+        trimmed_reads = trimgalore.map { result -> tuple(result.meta, result.reads) }
     }
 
     // BBNORM
-    BBNORM(trimmed_reads)
-    normalized_reads = BBNORM.out.fastq
-    ch_versions = ch_versions.mix(BBNORM.out.versions)
+    bbnorm = BBNORM(trimmed_reads)
+    normalized_reads = bbnorm.map { result -> tuple(result.meta, result.fastq) }
+    ch_versions = ch_versions.mix(bbnorm.map { result -> result.versions })
 
     // Performs read error correction for each minimeta sample
-    READ_CORRECTION(normalized_reads.map { meta, reads ->
+    read_correction = READ_CORRECTION(normalized_reads.map { meta, reads ->
         def meta_clone = meta.clone()
         meta_clone.only_error_correction = true;
-        [meta_clone, reads]
+        tuple(meta_clone, reads)
     })
-    corrected_reads = READ_CORRECTION.out.reads
-    ch_versions = ch_versions.mix(READ_CORRECTION.out.versions)
+    corrected_reads = read_correction.map { result -> tuple(result.meta, result.reads) }
+    ch_versions = ch_versions.mix(read_correction.map { result -> result.versions })
     // Sort
     p1_list = corrected_reads.map { meta, reads -> reads[0] }.collect()
     p2_list = corrected_reads.map { meta, reads -> reads[1] }.collect()
 
     //Merge_corrected
-    MERGE_CORRECTED( p1_list, p2_list )
-    joint_reads = MERGE_CORRECTED.out.r1
-        .combine(MERGE_CORRECTED.out.r2)
-        .map { r1, r2 -> [ [id:'merged', single_end:false], [r1, r2] ] }
+    merge_corrected = MERGE_CORRECTED(p1_list, p2_list)
+    joint_reads = merge_corrected.map { result -> [ [id:'merged', single_end:false], [result.r1, result.r2] ] }
 
     //SPADES_JOINT
-    SPADES_JOINT( joint_reads )
-    ch_versions = ch_versions.mix(SPADES_JOINT.out.versions)
+    spades_joint = SPADES_JOINT(joint_reads)
+    ch_versions = ch_versions.mix(spades_joint.map { result -> result.versions })
 
     //BOWTIE2_REMAP
-    BOWTIE2_REMAP( SPADES_JOINT.out.contig )
-    ch_versions = ch_versions.mix(BOWTIE2_REMAP.out.versions)
+    ch_spades_contig = spades_joint.map { result -> tuple(result.meta, result.contig) }
+    bowtie2_remap = BOWTIE2_REMAP(ch_spades_contig)
+    ch_versions = ch_versions.mix(bowtie2_remap.map { result -> result.versions })
     //REMAP
-    remap_input = trimmed_reads.combine(BOWTIE2_REMAP.out.index).map { entry ->
-        [entry[0] + [id_index: 'merged'], entry[1], entry[3]]
+    remap_input = trimmed_reads.combine(bowtie2_remap.map { result -> tuple(result.meta, result.index) }).map { entry ->
+        tuple(entry[0] + [id_index: 'merged'], entry[1], entry[3])
     }
-    REMAP(remap_input, params.allow_multi_align)
-    ch_versions = ch_versions.mix(REMAP.out.versions)
+    remap = REMAP(remap_input, params.allow_multi_align)
+    ch_versions = ch_versions.mix(remap.map { result -> result.versions })
 
     //MERGE BAMS
-    ch_bam_list = REMAP.out.bam.map{ meta, bam -> bam }.collect()
-    MERGE_BAMS( ch_bam_list )
-    ch_merged_bam = MERGE_BAMS.out.merged_bam
+    ch_remap_bam = remap.map { result -> tuple(result.meta, result.bam) }
+    ch_bam_list = ch_remap_bam.map { _meta, bam -> bam }.collect()
+    merge_bams = MERGE_BAMS(ch_bam_list)
+    ch_merged_bam = merge_bams.map { result -> result.merged_bam }
     ch_bam_for_coverage = ch_merged_bam.map { bam -> [ [id:'merged'], bam, [] ] }
 
     //PREPARE_FEATURES
-    ch_fasta = SPADES_JOINT.out.contig
-    SAMTOOLS_FAIDX( ch_fasta )
-    ch_fai = SAMTOOLS_FAIDX.out.fai
+    ch_fasta = ch_spades_contig
+    samtools_faidx = SAMTOOLS_FAIDX(ch_fasta)
+    ch_fai = samtools_faidx.map { result -> [result.meta, result.fai] }
     PREPARE_FEATURES_SINGLE( ch_fasta, ch_fai, ch_bam_for_coverage )
     ch_single_coverage = PREPARE_FEATURES_SINGLE.out.coverage_matrix
-    PREPARE_FEATURES_MULTI( ch_fasta, ch_fai, REMAP.out.bam )
+    PREPARE_FEATURES_MULTI( ch_fasta, ch_fai, ch_remap_bam )
     ch_multi_coverage = PREPARE_FEATURES_MULTI.out.coverage_matrix
 
     // binning
-    ch_assembly = SPADES_JOINT.out.contig.map { entry -> entry[1] }
+    ch_assembly = spades_joint.map { result -> result.contig }
     ch_all_s2b = channel.empty()
 
     def min_len = params.min_length ?: 10000
-    FILTER_ASSEMBLY( ch_assembly, min_len )
-    ch_filtered_assembly = FILTER_ASSEMBLY.out.filtered
-    ch_versions = ch_versions.mix( FILTER_ASSEMBLY.out.versions )
+    filter_assembly = FILTER_ASSEMBLY(ch_assembly, min_len)
+    ch_filtered_assembly = filter_assembly.map { result -> result.filtered }
+    ch_versions = ch_versions.mix(filter_assembly.map { result -> result.versions })
     //COOCCURRENCE
-    ch_filtered_ids = FILTER_ASSEMBLY.out.filtered_ids
-    COOCCURRENCE_BINNING( ch_multi_coverage, ch_filtered_ids )
-    EXTRACT_BINS(COOCCURRENCE_BINNING.out.clusters, ch_assembly)
-    ch_all_s2b = ch_all_s2b.mix( EXTRACT_BINS.out.scaffolds2bin.map { file -> ['COOCCURRENCE', file] } )
-    ch_versions = ch_versions.mix( COOCCURRENCE_BINNING.out.versions )
+    ch_filtered_ids = filter_assembly.map { result -> result.filtered_ids }
+    cooccurrence_binning = COOCCURRENCE_BINNING(ch_multi_coverage, ch_filtered_ids)
+    extract_bins = EXTRACT_BINS(cooccurrence_binning.map { result -> result.clusters }, ch_assembly)
+    ch_all_s2b = ch_all_s2b.mix(extract_bins.map { result -> ['COOCCURRENCE', result.scaffolds2bin] })
+    ch_versions = ch_versions.mix(cooccurrence_binning.map { result -> result.versions })
 
     //
     if ( params.run_cooccurrence_checkm ) {
         if ( params.checkm2_db ) {
-            CHECKM2_COOCCURRENCE( EXTRACT_BINS.out.bins, 'fa', file(params.checkm2_db) )
-            ch_multiqc_files = ch_multiqc_files.mix( CHECKM2_COOCCURRENCE.out.mqc_tsv.collect().ifEmpty([]) )
-            ch_versions = ch_versions.mix( CHECKM2_COOCCURRENCE.out.versions )
+            checkm2_cooccurrence = CHECKM2_COOCCURRENCE(extract_bins.map { result -> result.bins }, 'fa', file(params.checkm2_db))
+            ch_multiqc_files = ch_multiqc_files.mix(checkm2_cooccurrence.map { result -> result.mqc_tsv }.collect().ifEmpty([]))
+            ch_versions = ch_versions.mix(checkm2_cooccurrence.map { result -> result.versions })
         } else {
             log.info "INFO: --run_cooccurrence_checkm is set, but --checkm2_db is not provided. Skipping CheckM2 for COOCCURRENCE."
         }
@@ -375,57 +375,62 @@ summary = [:]
         ch_mmseqs_taxonomy = MMSEQS_CONTIG_TAXONOMY.out.taxonomy
         ch_multiqc_files = ch_multiqc_files.mix(ch_mmseqs_taxonomy.collect().ifEmpty([]))
 
-        MMSEQS2SEMIBIN( ch_mmseqs_taxonomy )
-        ch_semibin_tax = MMSEQS2SEMIBIN.out.tax.map { meta, file -> file }
-        ch_versions = ch_versions.mix( MMSEQS2SEMIBIN.out.versions )
+        mmseqs2semibin = MMSEQS2SEMIBIN(ch_mmseqs_taxonomy)
+        ch_semibin_tax = mmseqs2semibin.map { result -> result.tax }
+        ch_versions = ch_versions.mix(mmseqs2semibin.map { result -> result.versions })
         //SEMIBIN2_Semi
-        SEMIBIN2( ch_assembly, ch_merged_bam, ch_semibin_tax )
+        semibin2 = SEMIBIN2(ch_assembly, ch_merged_bam, ch_semibin_tax)
     } else {
-        SEMIBIN2( ch_assembly, ch_merged_bam, [] )
+        semibin2 = SEMIBIN2(ch_assembly, ch_merged_bam, null)
     }
 
     //SEMIBIN2
-    ch_semibin2_s2b = SEMIBIN2.out.scaffolds2bin
-        .map { file -> ['SEMIBIN2', file] }
+    ch_semibin2_s2b = semibin2
+        .map { result -> ['SEMIBIN2', result.scaffolds2bin] }
         .filter { entry -> entry[1].size() > 0 }
     ch_all_s2b = ch_all_s2b.mix(ch_semibin2_s2b)
-    ch_versions = ch_versions.mix( SEMIBIN2.out.versions )
+    ch_versions = ch_versions.mix(semibin2.map { result -> result.versions })
 
     // TaxVAMB
-    TAXVAMB_INTEGRATION( ch_assembly, ch_single_coverage )
-    ch_all_s2b = ch_all_s2b.mix( TAXVAMB_INTEGRATION.out.scaffolds2bin.map { file -> ['TAXVAMB', file] } )
-    ch_versions = ch_versions.mix( TAXVAMB_INTEGRATION.out.versions )
+    taxvamb = TAXVAMB_INTEGRATION(ch_assembly, ch_single_coverage)
+    ch_all_s2b = ch_all_s2b.mix(taxvamb.scaffolds2bin.map { _meta, file -> ['TAXVAMB', file] })
+    ch_versions = ch_versions.mix(taxvamb.versions)
 
     if (params.DNABERTS_dir != null){
         //FILTERED
         ch_merged_bai = ch_merged_bam.map { bam -> file("${bam}.bai") }
-        FILTER_CONTIGS( ch_assembly, 2000 )
-        ch_filtered_fasta_with_meta = FILTER_CONTIGS.out.filtered.map { fasta ->
+        filter_contigs = FILTER_CONTIGS(ch_assembly, 2000)
+        ch_filtered_fasta_with_meta = filter_contigs.map { result ->
+            def fasta = result.filtered
             [ [id: fasta.baseName], fasta ]
         }
-        ch_versions = ch_versions.mix( FILTER_CONTIGS.out.versions )
-        FILTER_BAM( ch_filtered_fasta_with_meta, ch_merged_bam, ch_merged_bai )
-        ch_filtered_bam = FILTER_BAM.out.filtered_bam.map { meta, bam -> bam }
-        ch_versions = ch_versions.mix( FILTER_BAM.out.versions )
+        ch_versions = ch_versions.mix(filter_contigs.map { result -> result.versions })
+        filter_bam = FILTER_BAM(ch_filtered_fasta_with_meta, ch_merged_bam, ch_merged_bai)
+        ch_filtered_bam = filter_bam.map { result -> result.filtered_bam }
+        ch_versions = ch_versions.mix(filter_bam.map { result -> result.versions })
         ch_bam_path = ch_filtered_bam
         //DCVBIN
-        DCVBIN( ch_filtered_fasta_with_meta, ch_bam_path )
-        ch_all_s2b = ch_all_s2b.mix( DCVBIN.out.scaffolds2bin.map{ file -> ['DCVBIN', file] } )
-        ch_versions = ch_versions.mix( DCVBIN.out.versions )
-        ch_multiqc_files = ch_multiqc_files.mix( DCVBIN.out.mqc_tsv.ifEmpty([]) )
+        dcvbin = DCVBIN(ch_filtered_fasta_with_meta, ch_bam_path)
+        ch_all_s2b = ch_all_s2b.mix(dcvbin.scaffolds2bin.map { _meta, file -> ['DCVBIN', file] })
+        ch_versions = ch_versions.mix(dcvbin.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(dcvbin.mqc_tsv.ifEmpty([]))
     }
 
     // DAS TOOL
     ch_s2b_list = ch_all_s2b.flatten().toList()
-    DAS_TOOL(ch_assembly, ch_s2b_list)
-    ch_bins_dir = DAS_TOOL.out.bins
-    ch_versions = ch_versions.mix(DAS_TOOL.out.versions)
+    das_tool = DAS_TOOL(ch_assembly, ch_s2b_list)
+    ch_bins_dir = das_tool.map { result -> result.bins }
+    ch_versions = ch_versions.mix(das_tool.map { result -> result.versions })
 
     // CHECKM2
-    CHECKM2(ch_bins_dir, "fa", file(params.checkm2_db ?: "/dev/null"))
-    ch_versions = ch_versions.mix(CHECKM2.out.versions)
-    ch_multiqc_checkm2 = CHECKM2.out.mqc_tsv
-    ch_multiqc_files = ch_multiqc_files.mix(CHECKM2.out.mqc_tsv)
+    if (params.checkm2_db) {
+        checkm2 = CHECKM2(ch_bins_dir, 'fa', checkm2_db)
+        ch_versions = ch_versions.mix(checkm2.map { result -> result.versions })
+        ch_multiqc_checkm2 = checkm2.map { result -> result.mqc_tsv }
+        ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2)
+    } else {
+        ch_multiqc_checkm2 = channel.empty()
+    }
     //
     ch_bins_for_prokka = ch_bins_dir.flatMap { bin_dir ->
         def bin_files = file(bin_dir).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
@@ -439,29 +444,29 @@ summary = [:]
     }
 
     //PROKKA
-    PROKKA(ch_bins_for_prokka, [])
-    ch_versions = ch_versions.mix(PROKKA.out.versions)
+    prokka = PROKKA(ch_bins_for_prokka, [] as List<Path>)
+    ch_versions = ch_versions.mix(prokka.map { result -> result.versions })
 
     // KOFAMSCAN
-    if (params.kofam) {
-        KOFAMSCAN(PROKKA.out.faa, kofam_profile, kofam_kolist)
-        ch_versions = ch_versions.mix(KOFAMSCAN.out.versions)
-        ch_multiqc_files = ch_multiqc_files.mix(KOFAMSCAN.out.kofamscan.collect().ifEmpty([]))
+    if (params.kofam && params.kofam_profile && params.kofam_kolist) {
+        kofamscan = KOFAMSCAN(prokka.map { result -> tuple(result.meta, result.faa) }, kofam_profile, kofam_kolist)
+        ch_versions = ch_versions.mix(kofamscan.map { result -> result.versions })
+        ch_multiqc_files = ch_multiqc_files.mix(kofamscan.map { result -> result.kofamscan }.collect().ifEmpty([]))
     }
 
     // EGGNOG
-    if (params.eggnog) {
-        EGGNOG(PROKKA.out.faa, eggnog_db)
-        ch_versions = ch_versions.mix(EGGNOG.out.versions)
-        ch_multiqc_files = ch_multiqc_files.mix(EGGNOG.out.annotations.collect().ifEmpty([]))
+    if (params.eggnog && params.eggnog_db) {
+        eggnog = EGGNOG(prokka.map { result -> tuple(result.meta, result.faa) }, eggnog_db)
+        ch_versions = ch_versions.mix(eggnog.map { result -> result.versions })
+        ch_multiqc_files = ch_multiqc_files.mix(eggnog.map { result -> result.annotations }.collect().ifEmpty([]))
     }
 
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = channel.empty()
-    GET_SOFTWARE_VERSIONS (
+    software_versions = GET_SOFTWARE_VERSIONS(
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
-    ch_multiqc_versions = GET_SOFTWARE_VERSIONS.out.mqc_yml
+    ch_multiqc_versions = software_versions.map { result -> result.mqc_yml }
 
     // MODULE: MULTIQC
     workflow_summary = create_workflow_summary(summary)
@@ -472,14 +477,14 @@ summary = [:]
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect { entry -> entry[1] }.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(SPADES_JOINT.out.mqc_tsv.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(REMAP.out.mqc_tsv.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(spades_joint.map { result -> result.mqc_tsv }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(remap.map { result -> result.mqc_tsv }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_MULTI.out.coverage_mqc.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_SINGLE.out.coverage_mqc.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(COOCCURRENCE_BINNING.out.mqc_tsv.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(EXTRACT_BINS.out.mqc_tsv.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(SEMIBIN2.out.mqc_tsv.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(TAXVAMB_INTEGRATION.out.mqc_tsv.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix(cooccurrence_binning.map { result -> result.mqc_tsv }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(extract_bins.map { result -> result.mqc_tsv }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(semibin2.map { result -> result.mqc_tsv }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(taxvamb.mqc_tsv.ifEmpty([]) )
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
 
     MULTIQC (

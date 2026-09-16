@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process MERGE_BAMS {
     tag "merge_bams"
     label 'process_medium'
@@ -8,12 +10,10 @@ process MERGE_BAMS {
         'quay.io/biocontainers/samtools:1.19.2--h50ea8bc_0' }"
 
     input:
-    path bam_files
+    bam_files: List<Path>
 
     output:
-    path "merged.bam", emit: merged_bam
-    path "merged.bam.bai", emit: merged_bai
-    path "versions.yml", emit: versions
+    record(merged_bam: file('merged.bam'), merged_bai: file('merged.bam.bai'), versions: file('versions.yml'))
 
     script:
     """

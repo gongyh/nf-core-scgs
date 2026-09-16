@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process CHECKM_LINEAGEWF {
     label 'process_medium'
 
@@ -7,20 +9,17 @@ process CHECKM_LINEAGEWF {
         'biocontainers/checkm-genome:1.2.1--pyhdfd78af_0' }"
 
     input:
-    path('spades/*')
-    val(genus)
+    contigs: Bag<Path>
+    genus: Boolean
 
     output:
-    path('spades_checkM.txt'), emit: txt
-    path('CheckM_mqc.tsv')   , emit: mqc_tsv
-    path "versions.yml"      , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(txt: file('spades_checkM.txt'), mqc_tsv: file('CheckM_mqc.tsv'), versions: file('versions.yml'))
 
     script:
     def checkm_wf = genus ? "taxonomy_wf" : "lineage_wf"
     """
+    mkdir spades
+    ln -s *.fasta spades/
     if [ \"${checkm_wf}\" == \"taxonomy_wf\" ]; then
         checkm taxonomy_wf -t ${task.cpus} --tab_table -f spades_checkM.txt -x fasta genus ${params.genus} spades spades_checkM
     else

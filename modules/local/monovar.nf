@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process MONOVAR {
     label 'process_medium'
 
@@ -7,16 +9,12 @@ process MONOVAR {
         'biocontainers/python-monovar:0.1--hdfd78af_0' }"
 
     input:
-    path("*")
-    path("*")
-    path fa
+    bams: Bag<Path>
+    bais: Bag<Path>
+    fa: Path
 
     output:
-    path('monovar.vcf'), emit: vcf
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(vcf: file('monovar.vcf'), versions: file('versions.yml'))
 
     script:
     """

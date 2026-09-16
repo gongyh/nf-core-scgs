@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process FILTER_CONTIGS {
     tag "filter_contigs"
     label 'process_low'
@@ -6,12 +8,11 @@ process FILTER_CONTIGS {
     container "quay.io/biocontainers/seqkit:2.3.1--h9ee0642_0"
 
     input:
-    path fasta
-    val min_len
+    fasta: Path
+    min_len: Integer
 
     output:
-    path "filtered.fasta", emit: filtered
-    path "versions.yml", emit: versions
+    record(filtered: file('filtered.fasta'), versions: file('versions.yml'))
     script:
     """
     seqkit seq -m ${min_len} ${fasta} > filtered.fasta

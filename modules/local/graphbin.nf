@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process GRAPHBIN {
     label 'process_medium'
 
@@ -7,20 +9,21 @@ process GRAPHBIN {
         'biocontainers/graphbin:1.7.1--pyh7cba7a3_0' }"
 
     input:
-    path("contigs/*")
-    path("paths/*")
-    path("gfa/*")
-    path("csv/*")
+    contigs: Bag<Path>
+    paths: Bag<Path>
+    gfa: Bag<Path>
+    csv: Bag<Path>
 
     output:
-    path("binning/*")      , emit: out_put
-    path "versions.yml"    , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(out_put: file("binning/*"), versions: file("versions.yml"))
 
     script:
     """
+    mkdir -p contigs paths gfa csv
+    ln -s ${contigs} contigs/
+    ln -s ${paths} paths/
+    ln -s ${gfa} gfa/
+    ln -s ${csv} csv/
     mkdir binning
     samples=(`ls contigs/*.contigs.fasta | sed 's~contigs/~~g;s~.contigs.fasta~~g'`)
     for sample in \${samples[*]}; do

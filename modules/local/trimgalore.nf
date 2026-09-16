@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process TRIMGALORE {
     tag "$meta.id"
     label 'process_high'
@@ -8,16 +10,10 @@ process TRIMGALORE {
         'biocontainers/trim-galore:0.6.7--hdfd78af_0' }"
 
     input:
-    tuple val(meta), path(reads)
+    tuple(meta: Map, reads: List<Path>)
 
     output:
-    tuple val(meta), path("*{3prime,5prime,trimmed,val}{,_1,_2}.fq.gz") , emit: reads
-    tuple val(meta), path("*trimming_report.txt")       , emit: log     , optional: true
-    tuple val(meta), path("*.zip")                      , emit: zip     , optional: true
-    path "versions.yml"                                 , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, reads: file('*{3prime,5prime,trimmed,val}{,_1,_2}.fq.gz'), log: file('*trimming_report.txt', optional: true), zip: file('*.zip', optional: true), versions: file('versions.yml'))
 
     script:
     def c_r1 = params.clip_r1 > 0 ? "--clip_r1 ${params.clip_r1}" : ''

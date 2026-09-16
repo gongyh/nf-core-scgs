@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process DOUBLETD {
     label 'process_medium'
 
@@ -5,14 +7,10 @@ process DOUBLETD {
     container "scgs/mulled-v2-b7b08ecbb8cbfa2e328c1c68384966d9ba24b2c8:35b29e00884f8c94506f5174a2a2eb3ea2f07a20-0"
 
     input:
-    path("monovar.vcf")
+    vcf: Path
 
     output:
-    path("prediction.tsv"), emit: prediction
-    path "versions.yml"   , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(prediction: file('prediction.tsv'), versions: file('versions.yml'))
 
     script:
     """

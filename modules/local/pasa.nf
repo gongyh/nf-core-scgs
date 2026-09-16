@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process PANTA {
     tag "panta"
     label 'process_high'
@@ -6,14 +8,10 @@ process PANTA {
     container "scgs/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:2dbb37a53c6b2b0022680b85f721d8d95f888d99-0"
 
     input:
-    path(refs_fna)
+    refs_fna: Bag<Path>
 
     output:
-    path("panta_refs")                , emit: db
-    path "versions.yml"               , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(db: file("panta_refs", type: "dir"), versions: file("versions.yml"))
 
     script:
     """
@@ -52,20 +50,14 @@ process PASA {
         'scgs/mulled-v2-073b771ca2dadccea705dbf1ddd01a7cf8acbd16:2dbb37a53c6b2b0022680b85f721d8d95f888d99-0' }"
 
     input:
-    tuple val(meta), path(spades_out)
-    path(panta_refs)
+    tuple(meta: Map, spades_out: Path)
+    panta_refs: Path
 
     output:
-    tuple val(meta), path("${prefix}.scaffolds.fasta")          , emit: scaffolds
-    tuple val(meta), path("${prefix}.pasa200.fasta")            , emit: ctg200
-    tuple val(meta), path("${prefix}.pasa.fasta")               , emit: ctg
-    path "versions.yml"                                         , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, scaffolds: file("*.scaffolds.fasta"), ctg200: file("*.pasa200.fasta"), ctg: file("*.pasa.fasta"), versions: file("versions.yml"))
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     cp -arL ${panta_refs} panta_${prefix}
     cp -arL $spades_out spades_for_pasa

@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process SAVE_REFERENCE {
     label 'process_low'
 
@@ -5,18 +7,11 @@ process SAVE_REFERENCE {
     container "scgs/mulled-v2-03f569b0930bbc8a26531ce48223cd6880134686:eeee3d8bada9c650a6eab38b1eecb7d20fe49a3a-0"
 
     input:
-    path fasta
-    path gff
+    fasta: Path
+    gff: Path
 
     output:
-    path("genome.fa")   , emit: fa
-    path("genome.gff")  , optional: true
-    path("*.bed")       , emit: out_bed
-    path("genome.bed")  , emit: bed
-    path  "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(fa: file('genome.fa'), gff: file('genome.gff'), out_bed: file('*.bed'), bed: file('genome.bed'), versions: file('versions.yml'))
 
     script:
     """

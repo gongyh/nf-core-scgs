@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 def helpMessage() {
     log.info nfcoreHeader()
     log.info"""

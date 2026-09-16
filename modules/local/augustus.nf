@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process AUGUSTUS {
     tag "$meta.id"
     label 'process_medium'
@@ -6,15 +8,10 @@ process AUGUSTUS {
     container "scgs/mulled-v2-25b0c981ecfd8d3b08ff5d0fe770fa0aed57e827:2f3083f6f040a1f2ba35c3999b612686446fc7f3-0"
 
     input:
-    tuple val(meta), path(contigs)
+    tuple(meta: Map, contigs: Path)
 
     output:
-    tuple val(meta), path("${prefix}.aa"), emit: faa
-    path("${prefix}*")                   , emit: out_put
-    path "versions.yml"                  , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, faa: file("${prefix}.aa"), out_put: file("${prefix}*"), versions: file('versions.yml'))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

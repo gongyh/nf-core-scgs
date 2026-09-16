@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process BBNORM {
     tag "$meta.id"
     label 'process_medium'
@@ -6,21 +8,16 @@ process BBNORM {
     container "scgs/mulled-v2-0f45a2e9949b9309cc37635f57bff7a66baf8095:86172d512030702a6bdb7b2cd7e301c3e1a14e56-1"
 
     input:
-    tuple val(meta), path(reads)
+    tuple(meta: Map, reads: List<Path>)
 
     output:
-    tuple val(meta), path("*.fastq.gz"), emit: fastq
-    tuple val(meta), path("*.log")     , emit: log
-    path "versions.yml"                , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, fastq: file('*.fastq.gz'), log: file('*.log'), versions: file('versions.yml'))
 
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def mode = params.bulk ? "bulk" : "mda"
-    def memory = (task.memory.giga*0.8).intValue() + 'g'
+    def memory = ((task.memory.toGiga() * 0.8) as Integer) + 'g'
     if (meta.single_end) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then

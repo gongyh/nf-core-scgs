@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process BOWTIE2_ALIGN {
     tag "$meta.id"
     label "process_high"
@@ -6,19 +8,13 @@ process BOWTIE2_ALIGN {
     container "scgs/mulled-v2-ac74a7f02cebcfcc07d8e8d1d750af9c83b4d45a:a0ffedb52808e102887f6ce600d092675bf3528a-0"
 
     input:
-    tuple val(meta) , path(reads)
-    tuple val(meta2), path(index)
-    val   save_unaligned
-    val   sort_bam
+    tuple(meta: Map, reads: List<Path>)
+    tuple(_index_meta: Object, index: List<Path>)
+    save_unaligned: Boolean
+    sort_bam: Boolean
 
     output:
-    tuple val(meta), path("*.bam")    , emit: bam
-    tuple val(meta), path("*.log")    , emit: log
-    tuple val(meta), path("*fastq.gz"), emit: fastq, optional:true
-    path  "versions.yml"              , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, bam: file("*.bam"), log: file("*.log"), fastq: file("*fastq.gz", optional: true), versions: file("versions.yml"))
 
     script:
     def args = task.ext.args ?: ""

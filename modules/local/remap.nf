@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process REMAP {
     tag "$meta.id"
     label 'process_medium'
@@ -6,26 +8,19 @@ process REMAP {
     container "scgs/mulled-v2-c742dccc9d8fabfcff2af0d8d6799dbc711366cf:7a723346025146e191fdbf519b8131c258b9eeab-0"
 
     input:
-    tuple val(meta), path(reads), path(index)
-    val(allow_multi_align)
+    tuple(meta: Map, reads: List<Path>, index: Path)
+    allow_multi_align: Boolean
 
     output:
-    tuple val(meta), path("${prefix}_ass.sort.bam")    , emit: bam
-    tuple val(meta), path("${prefix}_ass.sort.bam.bai"), emit: bai
-    tuple val(meta), path("${prefix}_ass.sort.bam"), path("${prefix}_ass.sort.bam.bai"), emit: bam_bai
-    path "remap_mqc.tsv"                               , emit: mqc_tsv
-    path "versions.yml"                                , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, bam: file("*_ass.sort.bam"), bai: file("*_ass.sort.bam.bai"), mqc_tsv: file("remap_mqc.tsv"), versions: file("versions.yml"))
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
-    index = meta.id_index ? "${meta.id_index}" : prefix
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def index_name = meta.id_index ? "${meta.id_index}" : prefix
     def filtering = allow_multi_align ? '' : "| samtools view -b -q 40 -F 4 -F 256 -"
     if (meta.single_end) {
     """
-    bowtie2 -x ${index}Bowtie2Index/${index} -p ${task.cpus} -U ${reads} 2> bowtie2.log | samtools view -bT ${index}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    bowtie2 -x ${index_name}Bowtie2Index/${index_name} -p ${task.cpus} -U ${reads} 2> bowtie2.log | samtools view -bT ${index_name}Bowtie2Index - $filtering > ${prefix}_ass.bam
     samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
     samtools index ${prefix}_ass.sort.bam
 
@@ -41,7 +36,7 @@ END_VERSIONS
     """
     } else {
     """
-    bowtie2 --no-mixed --no-discordant -X 1000 -x ${index}Bowtie2Index/${index} -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} 2> bowtie2.log | samtools view -bT ${index}Bowtie2Index - $filtering > ${prefix}_ass.bam
+    bowtie2 --no-mixed --no-discordant -X 1000 -x ${index_name}Bowtie2Index/${index_name} -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} 2> bowtie2.log | samtools view -bT ${index_name}Bowtie2Index - $filtering > ${prefix}_ass.bam
     samtools sort -o ${prefix}_ass.sort.bam ${prefix}_ass.bam
     samtools index ${prefix}_ass.sort.bam
 

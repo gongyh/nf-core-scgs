@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process BAKTA {
     tag "$meta.id"
     label 'process_medium'
@@ -8,30 +10,17 @@ process BAKTA {
         'biocontainers/bakta:1.11.4--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(fasta)
-    path db
-    path proteins
-    path prodigal_tf
+    tuple(meta: Map, fasta: Path)
+    db: Path
+    proteins: List<Path>
+    prodigal_tf: List<Path>
 
     output:
-    tuple val(meta), path("${prefix}/${prefix}.embl")             , emit: embl
-    tuple val(meta), path("${prefix}/${prefix}.faa")              , emit: faa
-    tuple val(meta), path("${prefix}/${prefix}.ffn")              , emit: ffn
-    tuple val(meta), path("${prefix}/${prefix}.fna")              , emit: fna
-    tuple val(meta), path("${prefix}/${prefix}.gbff")             , emit: gbff
-    tuple val(meta), path("${prefix}/${prefix}.gff3")             , emit: gff
-    tuple val(meta), path("${prefix}/${prefix}.hypotheticals.tsv"), emit: hypotheticals_tsv
-    tuple val(meta), path("${prefix}/${prefix}.hypotheticals.faa"), emit: hypotheticals_faa
-    tuple val(meta), path("${prefix}/${prefix}.tsv")              , emit: tsv
-    tuple val(meta), path("${prefix}/${prefix}.txt")              , emit: txt
-    path "versions.yml"                                           , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, embl: file("*/*.embl"), faa: file("*/*.faa"), ffn: file("*/*.ffn"), fna: file("*/*.fna"), gbff: file("*/*.gbff"), gff: file("*/*.gff3"), hypotheticals_tsv: file("*/*.hypotheticals.tsv"), hypotheticals_faa: file("*/*.hypotheticals.faa"), tsv: file("*/*.tsv"), txt: file("*/*.txt"), versions: file("versions.yml"))
 
     script:
     def args = task.ext.args   ?: ''
-    prefix   = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
     def prodigal_tf_opt = prodigal_tf ? "--prodigal-tf ${prodigal_tf[0]}" : ""
     """
@@ -52,7 +41,7 @@ process BAKTA {
     """
 
     stub:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}/${prefix}.embl
     touch ${prefix}/${prefix}.faa

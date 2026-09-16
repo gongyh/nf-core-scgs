@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 //include { CONTIG_COVERAGE          } from '../../modules/local/pandepth'
 include { CONTIG_COVERAGE            } from '../../modules/local/samtools_coverage_combined'
 include { PRODIGAL                   } from '../../modules/local/prodigal'
@@ -6,9 +8,9 @@ include { KMER_COUNT                 } from '../../modules/local/kmer_count'
 
 workflow PREPARE_FEATURES {
     take:
-    ch_fasta
-    ch_fai
-    ch_bam_for_coverage
+    ch_fasta: Channel<Tuple<Map,Path>>
+    ch_fai: Channel<Tuple<Map,Path>>
+    ch_bam_for_coverage: Channel<Tuple<Map,Path,List<Path>>>
 
     main:
     ch_versions = channel.empty()
@@ -26,23 +28,24 @@ workflow PREPARE_FEATURES {
     //samtools
     ch_fasta_path = ch_fasta.map { m, file -> file }
     ch_fai_path = ch_fai.map { m, file -> file }
-    CONTIG_COVERAGE( ch_bam_for_coverage, ch_fasta_path, ch_fai_path )
-
-    ch_depth = CONTIG_COVERAGE.out.depth
-    ch_coverage = ch_depth.map { m, depth -> depth }
-    ch_coverage_mqc = CONTIG_COVERAGE.out.mqc_tsv
-    ch_versions = ch_versions.mix(CONTIG_COVERAGE.out.versions)
+    ch_coverage_input = ch_bam_for_coverage
+        .combine(ch_fasta_path)
+        .combine(ch_fai_path)
+    contig_coverage = CONTIG_COVERAGE(ch_coverage_input)
+    ch_coverage = contig_coverage.map { result -> result.depth }
+    ch_coverage_mqc = contig_coverage.map { result -> result.mqc_tsv }
+    ch_versions = ch_versions.mix(contig_coverage.map { result -> result.versions })
     // PRODIGAL
-    PRODIGAL ( ch_fasta )
-    ch_versions = ch_versions.mix(PRODIGAL.out.versions)
+    prodigal = PRODIGAL(ch_fasta)
+    ch_versions = ch_versions.mix(prodigal.map { result -> result.versions })
 
     // K-mer
-    KMER_COUNT ( ch_fasta, 4  )
-    ch_versions = ch_versions.mix(KMER_COUNT.out.versions)
+    kmer_count = KMER_COUNT(ch_fasta, 4)
+    ch_versions = ch_versions.mix(kmer_count.map { result -> result.versions })
 
     emit:
-    feature_matrix = channel.empty()
-    coverage_matrix = ch_coverage
-    coverage_mqc    = CONTIG_COVERAGE.out.mqc_tsv
-    versions        = ch_versions
+    feature_matrix: Channel<Path> = channel.empty()
+    coverage_matrix: Channel<Path> = ch_coverage
+    coverage_mqc: Channel<Path> = ch_coverage_mqc
+    versions: Channel<Path> = ch_versions
 }

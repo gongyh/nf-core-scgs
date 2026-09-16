@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process CONTIG_KMER {
     tag "$meta.id"
 
@@ -5,15 +7,10 @@ process CONTIG_KMER {
     container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
 
     input:
-    tuple val(meta), path(fasta_file)
+    tuple(meta: Map, fasta_file: Path)
 
     output:
-    tuple val(meta), path("*4mer.csv"), emit: kmer
-    tuple val(meta), path("*seqid.csv"), emit: seqid
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, kmer: file('*4mer.csv'), seqid: file('*seqid.csv'), versions: file('versions.yml'))
 
     script:
     def args    = task.ext.args ?: ''

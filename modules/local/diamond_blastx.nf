@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process DIAMOND_BLASTX {
     tag "$meta.id"
     label 'process_medium'
@@ -8,27 +10,18 @@ process DIAMOND_BLASTX {
         'biocontainers/diamond:2.0.15--hb97b32f_0' }"
 
     input:
-    tuple val(meta), path(contigs)
-    tuple val(nt_meta), path(nt_out)
-    path uniprot
-    path("uniprot.taxids")
+    tuple(meta: Map, contigs: Path)
+    tuple(_nt_meta: Object, nt_out: Path)
+    uniprot: Path
+    uniprot_taxids: Path
+    has_uniprot: Boolean
 
     output:
-    tuple val(meta), path("${prefix}_uniprot.taxified.out"), emit: uniprot
-    tuple val(meta), path("${contigs}")                    , emit: contigs
-    tuple val(meta), path("${nt_out}")                     , emit: nt
-    val used                                               , emit: real
-    tuple val(meta), path("${contigs}"), path("${nt_out}"), path("${prefix}_uniprot.taxified.out"), val(used), emit: ctg_taxa
-    path "versions.yml"                                    , emit: versions
-    path("${prefix}_uniprot.*")                            , emit: out_put
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, uniprot: file("*_uniprot.taxified.out"), contigs: file("*.fasta"), nt: file("*.out"), has_uniprot: has_uniprot, versions: file("versions.yml"), out_put: file("*_uniprot.*"))
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
-    if ( uniprot.toString().equals("/dev/null") || uniprot.toString().equals("null") ) {
-    used = false
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    if (!has_uniprot) {
     """
     touch ${prefix}_uniprot.out
     touch ${prefix}_uniprot.taxified.out
@@ -39,11 +32,10 @@ process DIAMOND_BLASTX {
     END_VERSIONS
     """
     } else {
-    used = true
     """
     diamond blastx --query $contigs --db $uniprot -p ${task.cpus} -o ${prefix}_uniprot.out \
         --outfmt 6 --sensitive --max-target-seqs 1 --evalue ${params.evalue} -b ${params.blockSize}
-    blobtools taxify -f ${prefix}_uniprot.out -m uniprot.taxids -s 0 -t 2
+    blobtools taxify -f ${prefix}_uniprot.out -m ${uniprot_taxids} -s 0 -t 2
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

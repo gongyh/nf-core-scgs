@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process DAS_TOOL {
     tag "das_tool"
     label 'process_medium'
@@ -5,13 +7,12 @@ process DAS_TOOL {
     container 'community.wave.seqera.io/library/das_tool:1.1.2--0fc15370c91e86b2'
 
     input:
-    path assembly
-    val  raw_info
+    assembly: Path
+    raw_info: List<Object>
 
 
     output:
-    path "das_tool_bins", emit: bins
-    path "versions.yml", emit: versions
+    record(bins: file('das_tool_bins'), versions: file('versions.yml'))
 
     script:
     def my_labels = raw_info.findAll { entry -> entry instanceof String }.join(',')

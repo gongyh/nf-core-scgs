@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process CONTIG_COVERAGE {
     tag "${meta.id}"
     label 'process_low'
@@ -8,14 +10,10 @@ process CONTIG_COVERAGE {
         : 'community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5'}"
 
     input:
-    tuple val(meta), path(bam), path(bai)
-    path fasta
-    path fai
+    tuple(meta: Map, bam: Path, bai: List<Path>, fasta: Path, fai: Path)
 
     output:
-    tuple val(meta), path("${meta.id}.depth"), emit: depth
-    path "coverage_mqc.tsv", emit: mqc_tsv
-    path "versions.yml", emit: versions
+    record(meta: meta, depth: file("${meta.id}.depth"), mqc_tsv: file('coverage_mqc.tsv'), versions: file('versions.yml'))
 
     script:
     """
@@ -52,11 +50,10 @@ process MERGE_COVERAGE {
         : 'community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5'}"
 
     input:
-    path depth_files
+    depth_files: Bag<Path>
 
     output:
-    path "abundance_matrix.tsv", emit: matrix
-    path "versions.yml", emit: versions
+    record(matrix: file('abundance_matrix.tsv'), versions: file('versions.yml'))
 
     script:
     """

@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process MERGE_CORRECTED {
     tag "merge"
     label 'process_low'
@@ -7,14 +9,11 @@ process MERGE_CORRECTED {
         'https://depot.galaxyproject.org/singularity/multiqc:1.14--pyhdfd78af_0' :
         'biocontainers/multiqc:1.14--pyhdfd78af_0' }"
     input:
-    path p1_files
-    path p2_files
+    p1_files: List<Path>
+    p2_files: List<Path>
 
     output:
-    path "all_R1.fastq.gz", emit: r1
-    path "all_R2.fastq.gz", emit: r2
-    path "manifest.txt", emit: manifest
-    path "manifest_mqc.tsv", emit: manifest_mqc
+    record(r1: file('all_R1.fastq.gz'), r2: file('all_R2.fastq.gz'), manifest: file('manifest.txt'), manifest_mqc: file('manifest_mqc.tsv'))
 
     script:
     """

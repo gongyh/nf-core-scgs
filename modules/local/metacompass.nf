@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process METACOMPASS {
     tag "${meta.id}"
     label 'process_high'
@@ -6,16 +8,10 @@ process METACOMPASS {
     container "scgs/mulled-v2-0e7fe6bd3265990ffcdf96496fe08dc5aa55fd24:62c3137bd1d05677122f8069cb3981ac4e60651e-6"
 
     input:
-    tuple val(meta), path(reads)
-    path(refs_fna)
+    tuple(meta: Map, reads: List<Path>, refs_fna: List<Path>)
 
     output:
-    tuple val(meta), path("${prefix}_*.metacompass.ctg.fa")                , emit: contig
-    tuple val(meta), path("${prefix}_*.metacompass_out")                   , emit: assembly
-    path "versions.yml"                                                    , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, contig: file("${prefix}_*.metacompass.ctg.fa"), assembly: file("${prefix}_*.metacompass_out", type: 'dir'), versions: file('versions.yml'))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

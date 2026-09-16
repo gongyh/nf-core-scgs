@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process PRODIGAL {
     tag "$meta.id"
     label 'process_single'
@@ -7,16 +9,10 @@ process PRODIGAL {
         'biocontainers/mulled-v2-2e442ba7b07bfa102b9cf8fac6221263cd746ab8:57f05cfa73f769d6ed6d54144cb3aa2a6a6b17e0-0' }"
 
     input:
-    tuple val(meta), path(contigs)
+    tuple(meta: Map, contigs: Path)
 
     output:
-    tuple val(meta), path("$prefix")                 , emit: out_put
-    tuple val(meta), path("${prefix}/${prefix}.gff") , emit: gff
-    tuple val(meta), path("${prefix}/${prefix}.faa") , emit: faa
-    path "versions.yml"                              , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, out_put: file('*', type: 'dir'), gff: file('*/*.gff'), faa: file('*/*.faa'), versions: file('versions.yml'))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

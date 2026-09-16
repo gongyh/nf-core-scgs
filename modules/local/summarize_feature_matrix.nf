@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process SUMMARIZE_FEATURE_MATRIX {
     tag "summarize_all"
     label 'process_low'
@@ -8,14 +10,10 @@ process SUMMARIZE_FEATURE_MATRIX {
 
 
     input:
-    tuple val(meta), path(fasta)
-    path depth
-    tuple val(meta2), val(kmer_size), path(k4_csv)
-    tuple val(meta3), path(gff)
+    tuple(meta: Map, fasta: Path, depth: Path, kmer_size: Integer, k4_csv: Path, gff: Path)
 
     output:
-    path "final_feature_matrix.csv", emit: matrix
-    path "versions.yml"            , emit: versions
+    record(matrix: file('final_feature_matrix.csv'), versions: file('versions.yml'))
 
     script:
     """

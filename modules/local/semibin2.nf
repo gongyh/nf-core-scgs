@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process SEMIBIN2 {
     tag "coassembly_binning"
     label 'process_medium'
@@ -5,14 +7,11 @@ process SEMIBIN2 {
     container 'community.wave.seqera.io/library/semibin:2.3.0--33e3e4e2b94625ad'
 
     input:
-    path assembly
-    path merged_bam
-    path taxonomy
+    assembly: Path
+    merged_bam: Path
+    taxonomy: Path?
     output:
-    path "bins_merged", emit: bins
-    path "semibin2_mqc.tsv", emit: mqc_tsv
-    path "versions.yml", emit: versions
-    path "scaffolds2bin.tsv", emit: scaffolds2bin
+    record(bins: file('bins_merged'), mqc_tsv: file('semibin2_mqc.tsv'), versions: file('versions.yml'), scaffolds2bin: file('scaffolds2bin.tsv'))
     script:
     def bam_args = "-b ${merged_bam}"
     def tax_args = taxonomy ? "--taxonomy ${taxonomy}" : ""

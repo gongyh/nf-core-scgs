@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process SAMTOOLS {
     tag "${meta.id}"
     label 'process_medium'
@@ -6,20 +8,10 @@ process SAMTOOLS {
     container "scgs/mulled-v2-a055626708da8b97b79d76d03667dba1cb4bb107:3785590b864aff1747a8d3237666cee5030d4c3e-0"
 
     input:
-    tuple val(meta), path(bam)
-    path genome
+    tuple(meta: Map, bam: Path, genome: Path)
 
     output:
-    tuple val(meta), path("*.markdup.bam")    , emit: bam
-    tuple val(meta), path("*.markdup.bam.bai"), emit: bai
-    tuple val(meta), path("*.markdup.bed")    , emit: bed
-    tuple val(meta), path("*.stats.txt")      , optional:true, emit: stats
-    path  "versions.yml"                      , emit: versions
-    path("${prefix}_1k_bins.txt")             , emit: txt
-    path("${prefix}_pdrc.pdf")                , emit: pdf
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, bam: file('*.markdup.bam'), bai: file('*.markdup.bam.bai'), bed: file('*.markdup.bed'), stats: file('*.stats.txt', optional: true), versions: file('versions.yml'), txt: file("${prefix}_1k_bins.txt"), pdf: file("${prefix}_pdrc.pdf"))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
