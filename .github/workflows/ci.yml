@@ -13,7 +13,7 @@ jobs:
     name: Run scgs workflow tests
     runs-on: ubuntu-latest
     env:
-      NXF_VER: ${{ matrix.nxf_ver }}
+      NXF_VER: ${{ matrix.NXF_VER }}
       NXF_ANSI_LOG: false
     strategy:
       matrix:
@@ -43,7 +43,7 @@ jobs:
     name: Run minimeta workflow tests
     runs-on: ubuntu-latest
     env:
-      NXF_VER: ${{ matrix.nxf_ver }}
+      NXF_VER: ${{ matrix.NXF_VER }}
       NXF_ANSI_LOG: false
     strategy:
       matrix:
