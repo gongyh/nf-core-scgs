@@ -120,7 +120,7 @@ workflow PREPARE_DATABASES {
     software_versions = GET_SOFTWARE_VERSIONS (
         channel.topic('local_versions')
             .unique()
-            .collectFile(name: 'collated_versions.yml')
+            .collectFile(name: 'collated_versions.yml', newLine: true)
     )
     ch_published = ch_published.mix(software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
 

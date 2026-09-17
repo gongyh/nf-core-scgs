@@ -14,8 +14,6 @@ process CONTIG_COVERAGE {
 
     output:
     record(meta: meta, depth: file("${meta.id}.depth"), mqc_tsv: file('coverage_mqc.tsv'), versions: file('versions.yml'))
-    topic:
-    file('versions.yml') >> 'local_versions'
 
     script:
     """
@@ -56,8 +54,6 @@ process MERGE_COVERAGE {
 
     output:
     record(matrix: file('abundance_matrix.tsv'), versions: file('versions.yml'))
-    topic:
-    file('versions.yml') >> 'local_versions'
 
     script:
     """

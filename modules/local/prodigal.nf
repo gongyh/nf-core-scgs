@@ -13,8 +13,6 @@ process PRODIGAL {
 
     output:
     record(meta: meta, out_put: file('*', type: 'dir'), gff: file('*/*.gff'), faa: file('*/*.faa'), versions: file('versions.yml'))
-    topic:
-    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

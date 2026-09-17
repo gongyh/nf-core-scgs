@@ -1130,8 +1130,17 @@ summary = [:]
     software_versions = GET_SOFTWARE_VERSIONS(
         channel.topic('local_versions')
             .mix(ch_vendor_versions)
+            .map { version ->
+                def lines = version.text.readLines()
+                def first_content = lines.find { line -> line.trim() && line.trim() != 'END_VERSIONS' }
+                def indentation = first_content ? first_content.length() - first_content.stripLeading().length() : 0
+                lines
+                    .findAll { line -> line.trim() != 'END_VERSIONS' }
+                    .collect { line -> indentation > 0 && line.length() >= indentation ? line.substring(indentation) : line }
+                    .join('\n') + '\n'
+            }
             .unique()
-            .collectFile(name: 'collated_versions.yml')
+            .collectFile(name: 'collated_versions.yml', newLine: true)
     )
     ch_multiqc_versions = software_versions.map { result -> result.mqc_yml }
     ch_published = ch_published.mix(software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })

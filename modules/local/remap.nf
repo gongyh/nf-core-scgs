@@ -13,8 +13,6 @@ process REMAP {
 
     output:
     record(meta: meta, bam: file("*_ass.sort.bam"), bai: file("*_ass.sort.bam.bai"), mqc_tsv: file("remap_mqc.tsv"), versions: file("versions.yml"))
-    topic:
-    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
