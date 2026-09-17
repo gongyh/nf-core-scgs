@@ -60,14 +60,11 @@ Launch with the config file using `-c samples.config`.
 
 1. Runs FastQC and, unless `--notrim` is set, Trim Galore.
 2. Normalizes reads with BBNorm and performs per-sample SPAdes read correction.
-3. Merges corrected reads, performs a joint SPAdes assembly, then remaps the
-   trimmed reads to that assembly.
+3. Merges corrected reads, performs a joint SPAdes assembly, then remaps the trimmed reads to that assembly.
 4. Builds single-sample and multi-sample coverage features.
-5. Produces bins with co-occurrence binning and SemiBin2. TaxVAMB and DCVBIN
-   are enabled when their respective resources are provided.
+5. Produces bins with co-occurrence binning and SemiBin2. TaxVAMB and DCVBIN are enabled when their respective resources are provided.
 6. Consolidates available bin sets with DAS Tool.
-7. Runs CheckM2, Prokka, and optional KOfam and EggNOG annotation when their
-   databases are configured.
+7. Runs CheckM2, Prokka, and optional KOfam and EggNOG annotation when their databases are configured.
 8. Generates a MultiQC report and software-version report.
 
 ## MINIMETA Parameters
