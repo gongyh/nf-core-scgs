@@ -13,11 +13,12 @@ jobs:
     name: Run scgs workflow tests
     runs-on: ubuntu-latest
     env:
+      NXF_SYNTAX_PARSER: v2
       NXF_ANSI_LOG: false
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        NXF_VER: ["26.04.0", "latest-stable"]
+        NXF_VER: ["25.04.0", "latest-stable"]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v4
@@ -42,11 +43,12 @@ jobs:
     name: Run minimeta workflow tests
     runs-on: ubuntu-latest
     env:
+      NXF_SYNTAX_PARSER: v2
       NXF_ANSI_LOG: false
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        NXF_VER: ["26.04.0", "latest-stable"]
+        NXF_VER: ["25.04.0", "latest-stable"]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v4
