@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process SAMTOOLS_FAIDX {
     tag "$meta.id"
     label 'process_low'
@@ -7,14 +9,10 @@ process SAMTOOLS_FAIDX {
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/8c/8c5d2818c8b9f58e1fba77ce219fdaf32087ae53e857c4a496402978af26e78c/data'
         : 'community.wave.seqera.io/library/htslib_samtools:1.23.1--5b6bb4ede7e612e5'}"
     input:
-    tuple val(meta), path(fasta)
+    tuple(meta: Map, fasta: Path)
 
     output:
-    tuple val(meta), path("*.fai"), emit: fai
-    path "versions.yml"           , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, fai: file('*.fai'), versions: file('versions.yml'))
 
     script:
     """

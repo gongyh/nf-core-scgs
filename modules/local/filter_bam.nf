@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process FILTER_BAM {
     tag "${meta.id}"
     label 'process_medium'
@@ -6,14 +8,14 @@ process FILTER_BAM {
     container 'community.wave.seqera.io/library/dcvbin:ea1d53670b689bf9'
 
     input:
-    tuple val(meta), path(fasta)
-    path(bam)
-    path(bai)
+    tuple(meta: Map, fasta: Path)
+    bam: Path
+    bai: Path
 
     output:
-    tuple val(meta), path("${meta.id}_filtered.bam"), emit: filtered_bam
-    path "${meta.id}_filtered.bam.bai", emit: filtered_bai
-    path "versions.yml", emit: versions
+    record(meta: meta, filtered_bam: file("${meta.id}_filtered.bam"), filtered_bai: file("${meta.id}_filtered.bam.bai"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = "${meta.id}_filtered"

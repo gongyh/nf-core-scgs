@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process COMPLETENESS {
     tag "$meta.id"
     label 'process_medium'
@@ -6,20 +8,14 @@ process COMPLETENESS {
     container "scgs/mulled-v2-089d7a065ba2c540b6ac7fe9ae1819e5e40ec7b4:23979f6d41a67b9e859697c2a8a32a23894041ee-0"
 
     input:
-    tuple val(meta), path(contigs)
-    val(genusName)
-    path(pangenomeDB)
-    path(coreGenesFile)
+    tuple(meta: Map, contigs: Path, genus_name: String, pangenome_db: Path, core_genes_file: Path)
 
     output:
-    path("${prefix}/completeness.txt")  , emit: txt
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, txt: file("${prefix}/completeness.txt"))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mgpgtools.py core -db $pangenomeDB -name $genusName -fasta $contigs -coreGenes $coreGenesFile -outdir ${prefix}
+    mgpgtools.py core -db $pangenome_db -name $genus_name -fasta $contigs -coreGenes $core_genes_file -outdir ${prefix}
     """
 }

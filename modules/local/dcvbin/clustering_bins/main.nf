@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process DCVBIN_BIN {
     tag "$meta.id"
 
@@ -5,19 +7,12 @@ process DCVBIN_BIN {
     container 'community.wave.seqera.io/library/dnaberts:7a7299083f265248'
 
     input:
-    tuple val(meta), path(vae_features_file)
-    tuple val(cluster_meta), path(cluster_value_file)
-    tuple val(fasta_meta), path(fasta_file)
+    tuple(meta: Map, vae_features_file: Path, cluster_value_file: Path, fasta_file: Path)
 
     output:
-    tuple val(meta), path("${prefix}_bins"),            emit: bins_dir
-    tuple val(meta), path("${prefix}_prinum.txt"),      emit: label_file
-    tuple val(meta), path("${prefix}_scaffolds2bin.tsv"), emit: scaffolds2bin
-    tuple val(meta), path("${prefix}_mqc.tsv"),         emit: mqc_tsv
-    path "versions.yml",                                emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, bins_dir: file("${prefix}_bins", type: 'dir'), label_file: file("${prefix}_prinum.txt"), scaffolds2bin: file("${prefix}_scaffolds2bin.tsv"), mqc_tsv: file("${prefix}_mqc.tsv"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def args    = task.ext.args ?: ''

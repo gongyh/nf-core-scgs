@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process TREE {
     tag "$meta.id"
     label 'process_medium'
@@ -6,20 +8,14 @@ process TREE {
     container "scgs/mulled-v2-089d7a065ba2c540b6ac7fe9ae1819e5e40ec7b4:23979f6d41a67b9e859697c2a8a32a23894041ee-0"
 
     input:
-    tuple val(meta), path(contigs)
-    val(genusName)
-    path(pangenomeDB)
-    path(coreGenesFile)
+    tuple(meta: Map, contigs: Path, genus_name: String, pangenome_db: Path, core_genes_file: Path)
 
     output:
-    path("${prefix}/speciesTree.svg")  , emit: tree
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, tree: file("${prefix}/speciesTree.svg"))
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mgpgtools.py tree -db $pangenomeDB -name $genusName -fasta $contigs -genesFile $coreGenesFile -outdir ${prefix}
+    mgpgtools.py tree -db $pangenome_db -name $genus_name -fasta $contigs -genesFile $core_genes_file -outdir ${prefix}
     """
 }

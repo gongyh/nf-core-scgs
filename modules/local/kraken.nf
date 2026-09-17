@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process KRAKEN {
     tag "$meta.id"
     label 'process_medium'
@@ -6,22 +8,18 @@ process KRAKEN {
     container "scgs/mulled-v2-2e2a18ac791581ea95fced5830f3fe8013145898:c5d1b87c47ed8c1dcf991ed390fb3bf63b5342f8-0"
 
     input:
-    tuple val(meta), path(reads)
-    path db
-    path taxonomy, stageAs: 'taxonomy.tab'
+    tuple(meta: Map, reads: List<Path>)
+    db: Path
+    taxonomy: Path
 
     output:
-    tuple val(meta), path("*.krk")   , emit: report
-    tuple val(meta), path("*.html")  , emit: html
-    path("${prefix}.TDA_genus.txt")  , emit: tda
-    path "versions.yml"              , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, report: file("*.krk"), html: file("*.html"), tda: file("*.TDA_genus.txt"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def mode = meta.single_end ? "" : "--paired"
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     TAXONOMY=\$(find -L . -name '*.tab' -exec dirname {} \\;)
     kraken2 --db $db --threads ${task.cpus} --report ${prefix}.krk --output ${prefix}.k2 --gzip-compressed ${mode} $reads

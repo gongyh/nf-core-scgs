@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process GET_SOFTWARE_VERSIONS {
     label 'process_single'
 
@@ -8,15 +10,10 @@ process GET_SOFTWARE_VERSIONS {
         'biocontainers/multiqc:1.14--pyhdfd78af_0' }"
 
     input:
-    path versions
+    versions: Path
 
     output:
-    path "software_versions.yml"    , emit: yml
-    path "software_versions_mqc.yml", emit: mqc_yml
-    path "versions.yml"             , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(yml: file('software_versions.yml'), mqc_yml: file('software_versions_mqc.yml'), versions: file('versions.yml'))
 
     script:
     def args = task.ext.args ?: ''

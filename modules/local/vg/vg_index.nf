@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process VG_INDEX {
     tag "$meta.id"
     label 'process_low'
@@ -8,13 +10,12 @@ process VG_INDEX {
         'biocontainers/vg:1.45.0--h9ee0642_0' }"
 
     input:
-    path(vg)
-    tuple val(meta), path(reads)
+    tuple(meta: Map, reads: List<Path>, vg: Path)
 
     output:
-    tuple val(meta), path("${prefix}.gam"), emit: gam
-    path("*.stats.txt")                   , emit: txt
-    path "versions.yml"                   , emit: versions
+    record(meta: meta, gam: file("${prefix}.gam"), txt: file('*.stats.txt'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

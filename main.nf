@@ -40,6 +40,7 @@ workflow NFCORE_SCGS {
     emit:
     summary_params = SCGS.out.summary_params
     multiqc_report = SCGS.out.multiqc_report
+    published = SCGS.out.published
 }
 
 //
@@ -53,6 +54,7 @@ workflow NFCORE_MINIMETA {
     emit:
     summary_params = MINIMETA.out.summary_params
     multiqc_report = MINIMETA.out.multiqc_report
+    published = MINIMETA.out.published
 }
 
 //
@@ -62,6 +64,9 @@ workflow NFCORE_MINIMETA {
 workflow NFCORE_PREPARE_DATABASES {
     main:
     PREPARE_DATABASES ()
+
+    emit:
+    published = PREPARE_DATABASES.out.published
 }
 
 /*
@@ -71,6 +76,9 @@ workflow NFCORE_PREPARE_DATABASES {
 */
 
 workflow {
+    main:
+    ch_published = channel.empty()
+
     if (params.prepare_databases) {
         // Show help message
         if (params.help){
@@ -78,6 +86,7 @@ workflow {
             exit 0
         }
         NFCORE_PREPARE_DATABASES ()
+        ch_published = NFCORE_PREPARE_DATABASES.out.published
         workflow.onComplete = {
             completionSummary()
         }
@@ -88,6 +97,7 @@ workflow {
             exit 0
         }
         NFCORE_MINIMETA ()
+        ch_published = NFCORE_MINIMETA.out.published
         workflow.onComplete = {
             if (params.email) {
                 completionEmail(
@@ -109,6 +119,7 @@ workflow {
             exit 0
         }
         NFCORE_SCGS ()
+        ch_published = NFCORE_SCGS.out.published
         workflow.onComplete = {
             if (params.email) {
                 completionEmail(
@@ -123,6 +134,15 @@ workflow {
             }
             completionSummary()
         }
+    }
+
+    publish:
+    pipeline_results = ch_published
+}
+
+output {
+    pipeline_results {
+        path { result -> "${result.destination}/" }
     }
 }
 

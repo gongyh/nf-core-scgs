@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process UMAP {
     label 'process_medium'
 
@@ -5,17 +7,12 @@ process UMAP {
     container "scgs/mulled-v2-bebad6fb9c0a642cb203291e2b9969552cec05d6:955d7191e655a067018f09dfc80d57c23afb23c9-0"
 
     input:
-    path("tda/*")
+    tda: Bag<Path>
 
     output:
-    path "umap.h5ad"
-    path "umap.pkl"
-    path "umap.pdf"
-    path "umap.html"
-    path "versions.yml"    , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(h5ad: file('umap.h5ad'), pkl: file('umap.pkl'), pdf: file('umap.pdf'), html: file('umap.html'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     template('umap.py')

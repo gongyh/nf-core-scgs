@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process COOCCURRENCE_BINNING {
     tag "cooccurrence"
     label 'process_low'
@@ -6,12 +8,10 @@ process COOCCURRENCE_BINNING {
     container "community.wave.seqera.io/library/samtools_pandas_scikit-learn_scipy:01d109078e7b563b"
 
     input:
-    path coverage_tsv
-    path filtered_ids
+    coverage_tsv: Path
+    filtered_ids: Path
     output:
-    path "clusters.tsv", emit: clusters
-    path "versions.yml", emit: versions
-    path "cooccurrence_mqc.tsv", emit: mqc_tsv
+    record(clusters: file('clusters.tsv'), versions: file('versions.yml'), mqc_tsv: file('cooccurrence_mqc.tsv'))
     script:
     def script_path = "${projectDir}/bin/cooccurrence_binning.py"
     def args = task.ext.args ?: ''

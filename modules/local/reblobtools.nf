@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process REBLOBTOOLS {
     tag "$meta.id"
     label 'process_medium'
@@ -8,20 +10,16 @@ process REBLOBTOOLS {
         'biocontainers/blobtools:1.1.1--py_1' }"
 
     input:
-    tuple val(meta), path(contigs), path(anno), path(uniprot_anno), val(has_uniprot), path(bam), path(bai)
-    path db
+    tuple(meta: Map, contigs: Path, anno: Path, uniprot_anno: Path, has_uniprot: Boolean, bam: Path, bai: Path)
+    db: Path
 
     output:
-    tuple val(meta), path("${prefix}/${prefix}.blobDB*table.txt"), emit: tax
-    tuple val(meta), path("${contigs}")                          , emit: contigs
-    tuple val(meta), path("${prefix}")                           , emit: tax_split
-    path "versions.yml"                                          , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, tax: file("*/*.blobDB*table.txt"), contigs: file("*.fasta"), tax_split: file("*", type: "dir"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def uniprot_anno_cmd = has_uniprot ? "-t $uniprot_anno" : ""
     """
     mkdir -p ${prefix}

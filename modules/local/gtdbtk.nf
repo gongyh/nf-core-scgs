@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process GTDBTK {
     label 'process_medium'
 
@@ -7,18 +9,13 @@ process GTDBTK {
         'biocontainers/gtdbtk:2.7.2--pyhdfd78af_1' }"
 
     input:
-    path(fa)
-    path(gtdb)
+    fa: Path
+    gtdb: Path
 
     output:
-    path("out/*")
-    path("genome/*")       , emit: scaffolds
-    path('taxa.txt')       , emit: taxa
-    path('GTDBtk_mqc.tsv') , emit: mqc_tsv
-    path "versions.yml"    , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(out: file('out/*'), scaffolds: file('genome/*'), taxa: file('taxa.txt'), mqc_tsv: file('GTDBtk_mqc.tsv'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

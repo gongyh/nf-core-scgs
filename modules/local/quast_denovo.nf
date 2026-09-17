@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process QUAST_DENOVO {
-    tag "$outdir"
+    tag "$quast_outdir"
     label 'process_medium'
 
     conda "bioconda::quast=5.2.0"
@@ -8,22 +10,19 @@ process QUAST_DENOVO {
         'biocontainers/quast:5.2.0--py39pl5321h2add14b_1' }"
 
     input:
-    path(contig)
-    val(euk)
-    val(fungus)
-    val(quast_outdir)
+    contig: Bag<Path>
+    euk: Boolean
+    fungus: Boolean
+    quast_outdir: String
 
     output:
-    path "${outdir}"             , emit: results
-    path "${outdir}/*.tsv"       , emit: tsv
-    path "versions.yml"          , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(results: file("quast_*"), tsv: file("quast_*/report.tsv"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
-    def euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
-    outdir = "${quast_outdir}".replaceAll(/[\\/:*?"<>|]/, '_').replaceAll(/[\s_]+/, '_').trim()
+    def euk_cmd = euk ? (fungus ? "--fungus" : "-e") : ""
+    def outdir = quast_outdir.replaceAll(/[\\/:*?"<>|]/, '_').replaceAll(/[\s_]+/, '_').trim()
     """
     contigs=\$(ls *.fasta | paste -sd " " -)
     labels=\$(ls *.fasta | paste -sd "," - | sed 's/.fasta//g')

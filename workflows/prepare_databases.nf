@@ -1,20 +1,26 @@
+nextflow.enable.types = true
+
 def helpMessage() {
     log.info nfcoreHeader()
     log.info"""
 
     Usage:
 
-    The typical command for running the database preparation pipeline is as follows:
-
     nextflow run gongyh/nf-core-scgs --prepare_databases -profile docker
 
-    Options:
-    --outdir                      The output directory where the databases will be saved (Default: ./databases)
-    --db_type                     Comma-separated list of databases to prepare. Options: mmseqs, checkm2, kofam, eggnog, kraken2, gtdb, blob, metabuli, genomad, nt, all
+    Workflow selection:
+    --prepare_databases           Run the database preparation workflow
 
-    Generic options:
+    Database options:
+    --db_type <list>              Comma-separated databases to prepare (default: all)
+                                    Available: mmseqs, checkm2, kofam, eggnog, kraken2,
+                                    gtdb, blob, metabuli, genomad, nt, all
+
+    Output and execution:
+    --outdir <path>               Output directory for prepared databases (default: ./databases)
+    --monochrome_logs             Disable coloured log output
     --help                        Display this help message
-    --monochrome_logs             Do not use coloured log outputs
+    -profile                      Configuration profile(s), for example: docker, singularity, conda
     """.stripIndent()
 }
 
@@ -40,86 +46,92 @@ workflow PREPARE_DATABASES {
     main:
     params.outdir = "./databases"
     params.db_type = "all"
-    ch_versions = channel.empty()
+    ch_published = channel.empty()
 
     def db_types = params.db_type.toLowerCase().split(',').collect { db_type -> db_type.trim() }
 
     // MMseqs2 database
     if (db_types.contains("all") || db_types.contains("mmseqs")) {
-        MMSEQS_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(MMSEQS_DBDOWNLOAD.out.versions)
+        mmseqs_download = MMSEQS_DBDOWNLOAD()
+        ch_published = ch_published.mix(mmseqs_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared MMseqs2 database: ${params.outdir}/mmseqs_db"
     }
 
     // CheckM2 database
     if (db_types.contains("all") || db_types.contains("checkm2")) {
-        CHECKM2_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(CHECKM2_DBDOWNLOAD.out.versions)
+        checkm2_download = CHECKM2_DBDOWNLOAD()
+        ch_published = ch_published.mix(checkm2_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared CheckM2 database: ${params.outdir}/checkm2_db"
     }
 
     // KOfam database
     if (db_types.contains("all") || db_types.contains("kofam")) {
-        KOFAM_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(KOFAM_DBDOWNLOAD.out.versions)
+        kofam_download = KOFAM_DBDOWNLOAD()
+        ch_published = ch_published.mix(kofam_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared KOfam database: ${params.outdir}/kofam_db"
     }
 
     // EggNOG database
     if (db_types.contains("all") || db_types.contains("eggnog")) {
-        EGGNOG_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(EGGNOG_DBDOWNLOAD.out.versions)
+        eggnog_download = EGGNOG_DBDOWNLOAD()
+        ch_published = ch_published.mix(eggnog_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared EggNOG database: ${params.outdir}/eggnog_db"
     }
 
     // Kraken2 database
     if (db_types.contains("all") || db_types.contains("kraken2")) {
-        KRAKEN2_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(KRAKEN2_DBDOWNLOAD.out.versions)
+        kraken2_download = KRAKEN2_DBDOWNLOAD()
+        ch_published = ch_published.mix(kraken2_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared Kraken2 database: ${params.outdir}/kraken2_db"
     }
 
     // GTDB database
     if (db_types.contains("all") || db_types.contains("gtdb")) {
-        GTDB_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(GTDB_DBDOWNLOAD.out.versions)
+        gtdb_download = GTDB_DBDOWNLOAD()
+        ch_published = ch_published.mix(gtdb_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared GTDB database: ${params.outdir}/gtdb_db"
     }
 
     // Blobtools database
     if (db_types.contains("all") || db_types.contains("blob")) {
-        BLOB_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(BLOB_DBDOWNLOAD.out.versions)
+        blob_download = BLOB_DBDOWNLOAD()
+        ch_published = ch_published.mix(blob_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared Blobtools database: ${params.outdir}/blob_db"
     }
 
     // MetaBuli database
     if (db_types.contains("all") || db_types.contains("metabuli")) {
-        METABULI_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(METABULI_DBDOWNLOAD.out.versions)
+        metabuli_download = METABULI_DBDOWNLOAD()
+        ch_published = ch_published.mix(metabuli_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared MetaBuli database: ${params.outdir}/metabuli_db"
     }
 
     // GENOMAD database
     if (db_types.contains("all") || db_types.contains("genomad")) {
-        GENOMAD_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(GENOMAD_DBDOWNLOAD.out.versions)
+        genomad_download = GENOMAD_DBDOWNLOAD()
+        ch_published = ch_published.mix(genomad_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared GENOMAD database: ${params.outdir}/genomad_db"
     }
 
     // NCBI nt database
     if (db_types.contains("all") || db_types.contains("nt")) {
-        NT_DBDOWNLOAD()
-        ch_versions = ch_versions.mix(NT_DBDOWNLOAD.out.versions)
+        nt_download = NT_DBDOWNLOAD()
+        ch_published = ch_published.mix(nt_download.map { result -> [destination: '.', files: result.db] })
         log.info "Prepared NCBI nt database: ${params.outdir}/nt_db"
     }
 
     // GET_SOFTWARE_VERSIONS
-    GET_SOFTWARE_VERSIONS (
-        ch_versions.unique().collectFile(name: 'collated_versions.yml')
+    software_versions = GET_SOFTWARE_VERSIONS (
+        channel.topic('local_versions')
+            .unique()
+            .collectFile(name: 'collated_versions.yml', newLine: true)
     )
+    ch_published = ch_published.mix(software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
 
     log.info "Database preparation completed. All databases saved to: ${params.outdir}"
+
+    emit:
+    published = ch_published
 }
 
 def nfcoreHeader(){

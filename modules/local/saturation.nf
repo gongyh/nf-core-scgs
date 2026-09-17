@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process SATURATION {
     tag "${meta.id}"
     label 'process_medium'
@@ -6,15 +8,12 @@ process SATURATION {
     container "scgs/mulled-v2-78a3de80258f15f00d10eb0e6b53b053cda0fdaf:a53e36beaf3f3c66855542ea44bf07fdb3309689-0"
 
     input:
-    tuple val(meta), path(reads)
+    tuple(meta: Map, reads: List<Path>)
 
     output:
-    tuple val(meta), path("${prefix}_kmer.pdf")   , emit: pdf
-    tuple val(meta), path("${prefix}_cov31_*.csv"), emit: csv
-    path "versions.yml"                           , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, pdf: file("${prefix}_kmer.pdf"), csv: file("${prefix}_cov31_*.csv"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

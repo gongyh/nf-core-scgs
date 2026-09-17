@@ -219,6 +219,11 @@
                     "default": null,
                     "description": "VCF file for graph pan genome construction."
                 },
+                "graph_vcf": {
+                    "type": "string",
+                    "default": null,
+                    "description": "VCF file used for variation graph construction."
+                },
                 "no_normalize": {
                     "type": "boolean",
                     "default": false,
@@ -359,6 +364,11 @@
                     "default": false,
                     "description": "Enable database preparation workflow"
                 },
+                "db_type": {
+                    "type": "string",
+                    "default": "all",
+                    "description": "Comma-separated databases to prepare: mmseqs, checkm2, kofam, eggnog, kraken2, gtdb, blob, metabuli, genomad, nt, or all."
+                },
                 "genus": {
                     "type": "string",
                     "description": "Genus name of the genome."
@@ -378,6 +388,31 @@
                 "mgpg_db": {
                     "type": "string",
                     "description": "Path of MGPG database."
+                },
+                "pangenome": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable pangenome analysis."
+                },
+                "genusName": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Genus name for pangenome analysis."
+                },
+                "coreGenesFile": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Path to the core-genes list for pangenome analysis."
+                },
+                "completeness": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Calculate pangenome completeness."
+                },
+                "tree": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Build a pangenome phylogenetic tree."
                 },
                 "prokka_proteins": {
                     "type": "string",
@@ -438,6 +473,37 @@
                 "host_ref": {
                     "type": "string",
                     "description": "Path of reference sequence for host removal using bbmap."
+                },
+                "ref": {
+                    "type": "string",
+                    "description": "Reference sequence for BBMap host-read removal."
+                },
+                "mmseqs_db": {
+                    "type": "string",
+                    "description": "Path to the MMseqs2 database for contig taxonomy."
+                },
+                "metabuli_db": {
+                    "type": "string",
+                    "description": "Path to the MetaBuli database for contig taxonomy."
+                },
+                "DNABERTS_dir": {
+                    "type": "string",
+                    "description": "Path to the DNABERT-S model directory used by DCVBIN."
+                },
+                "min_length": {
+                    "type": "integer",
+                    "default": 10000,
+                    "description": "Minimum contig length for co-occurrence binning."
+                },
+                "run_cooccurrence_checkm": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run CheckM2 on co-occurrence bins when a CheckM2 database is available."
+                },
+                "cooccurrence_eps": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "Distance threshold for cooccurrence binning."
                 },
                 "evalue": {
                     "type": "string",

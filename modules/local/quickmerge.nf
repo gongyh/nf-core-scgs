@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process QUICKMERGE {
     tag "${meta.id}"
     label 'process_medium'
@@ -6,15 +8,12 @@ process QUICKMERGE {
     container "scgs/mulled-v2-3c99dbe67a0d01cc10a223e8f82778c618460187:2d2622edca5a7d6580a2ba583efd2d06d593b784-0"
 
     input:
-    tuple val(meta), path(denovo_contigs), path(refass_contigs) // denovo and ref-guided assembled assemblies
+    tuple(meta: Map, denovo_contigs: Path, refass_contigs: List<Path>) // denovo and ref-guided assembled assemblies
 
     output:
-    tuple val(meta), path("${prefix}.hybrid200.fasta"),   emit: merged_assembly
-    tuple val(meta), path("${prefix}.hybrid.fasta"),      emit: merged_clean
-    path "versions.yml",                                  emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, merged_assembly: file("${prefix}.hybrid200.fasta"), merged_clean: file("${prefix}.hybrid.fasta"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def args = task.ext.args ?: ''

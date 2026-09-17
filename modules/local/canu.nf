@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process CANU {
     tag "${meta.id}"
     label 'process_high'
@@ -6,15 +8,12 @@ process CANU {
     container "scgs/mulled-v2-ef18b85941472064953d94d6112dc05e36194472:90a061fb09200847c4637e3480aa75a467fb2786-0"
 
     input:
-    tuple val(meta), path(reads)
+    tuple(meta: Map, reads: List<Path>)
 
     output:
-    tuple val(meta), path("${prefix}.ctg200.fasta"), emit: ctg200
-    tuple val(meta), path("${prefix}.ctgs.fasta")  , emit: ctg
-    path "versions.yml"                            , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, ctg200: file("${prefix}.ctg200.fasta"), ctg: file("${prefix}.ctgs.fasta"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

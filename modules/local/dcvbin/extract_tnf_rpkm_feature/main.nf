@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process TNF_RPKM {
     tag "$meta.id"
 
@@ -5,16 +7,12 @@ process TNF_RPKM {
     container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
 
     input:
-    tuple val(meta), path(fasta_file)
-    path bam_file
+    tuple(meta: Map, fasta_file: Path, bam_file: Path)
 
     output:
-    tuple val(meta), path("tnf_and_rpkm/*tnf.npz"), emit: tnf
-    tuple val(meta), path("tnf_and_rpkm/*rpkm.npz"), emit: rpkm
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, tnf: file('tnf_and_rpkm/*tnf.npz'), rpkm: file('tnf_and_rpkm/*rpkm.npz'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def args    = task.ext.args ?: ''

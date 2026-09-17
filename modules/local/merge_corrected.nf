@@ -1,25 +1,25 @@
+nextflow.enable.types = true
+
 process MERGE_CORRECTED {
     tag "merge"
     label 'process_low'
-    publishDir "${params.outdir}/merged", mode: 'copy'
     conda "bioconda::multiqc=1.14"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/multiqc:1.14--pyhdfd78af_0' :
         'biocontainers/multiqc:1.14--pyhdfd78af_0' }"
     input:
-    path p1_files
-    path p2_files
+    p1_files: List<Path>
+    p2_files: List<Path>
 
     output:
-    path "all_R1.fastq.gz", emit: r1
-    path "all_R2.fastq.gz", emit: r2
-    path "manifest.txt", emit: manifest
-    path "manifest_mqc.tsv", emit: manifest_mqc
+    record(r1: file('all_R1.fastq.gz'), r2: file('all_R2.fastq.gz'), manifest: file('manifest.txt'), manifest_mqc: file('manifest_mqc.tsv'))
 
     script:
+    def p1_args = p1_files.join(' ')
+    def p2_args = p2_files.join(' ')
     """
-    p1_sorted=\$(printf '%s\\n' ${p1_files} | sort -V)
-    p2_sorted=\$(printf '%s\\n' ${p2_files} | sort -V)
+    p1_sorted=\$(printf '%s\\n' $p1_args | sort -V)
+    p2_sorted=\$(printf '%s\\n' $p2_args | sort -V)
     cat \$p1_sorted > all_R1.fastq.gz
     cat \$p2_sorted > all_R2.fastq.gz
 

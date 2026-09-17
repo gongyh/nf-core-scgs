@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process OUTPUT_DOCUMENTATION {
     label 'process_low'
 
@@ -5,14 +7,10 @@ process OUTPUT_DOCUMENTATION {
     container "scgs/mulled-v2-9d4085f2843801e3a749ddf5aafb2163e650905b:957aa01b06e937103f54e0d7f72e2ab0c8be9b6f-0"
 
     input:
-    path output_docs
+    output_docs: Path
 
     output:
-    path("results_description.html"), emit: html
-    path "versions.yml"             , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(html: file('results_description.html'), versions: file('versions.yml'))
 
     script:
     """

@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process QUAST_REF {
-    tag "$outdir"
+    tag "$quast_outdir"
     label 'process_medium'
 
     conda "bioconda::quast=5.2.0"
@@ -8,33 +10,30 @@ process QUAST_REF {
         'biocontainers/quast:5.2.0--py39pl5321h2add14b_1' }"
 
     input:
-    path(fasta)
-    path(gff)
-    path(contigs)
-    path(bam)
-    path(bai)
-    val(euk)
-    val(fungus)
-    val(quast_outdir)
+    fasta: Path
+    gff: Path
+    contigs: Bag<Path>
+    bam: Bag<Path>
+    bai: Bag<Path>
+    euk: Boolean
+    fungus: Boolean
+    quast_outdir: String
 
     output:
-    path "${outdir}"         , emit: results
-    path "${outdir}/*.tsv"   , emit: tsv
-    path "versions.yml"      , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(results: file("quast_*"), tsv: file("quast_*/report.tsv"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
-    def euk_cmd = euk ? ( params.fungus ? "--fungus" : "-e") : ""
+    def euk_cmd = euk ? (fungus ? "--fungus" : "-e") : ""
     def ref = fasta.exists() ? "-r $fasta" : ""
     def gene = gff.exists() ? "--features gene:$gff" : ""
-    outdir = "${quast_outdir}".replaceAll(/[\\/:*?"<>|]/, '_').replaceAll(/[\s_]+/, '_').trim()
+    def outdir = quast_outdir.replaceAll(/[\\/:*?"<>|]/, '_').replaceAll(/[\s_]+/, '_').trim()
+    def bam_param = bam.join(',')
+    def labels = bam.collect { Path bam_file -> "$bam_file".replaceFirst(/\.markdup\.bam$/, '') }.join(',')
+    def contig_files = contigs.join(' ')
     """
-    bams=($bam)
-    bams_param=\$(echo \${bams[*]} | sed 's/ /,/g')
-    labels=\$(echo \${bams[*]} | sed 's/.markdup.bam//g' | sed 's/ /,/g')
-    quast.py -o $outdir $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam \$bams_param -l \$labels --no-sv --no-read-stats $contigs
+    quast.py -o $outdir $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam $bam_param -l $labels --no-sv --no-read-stats $contig_files
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

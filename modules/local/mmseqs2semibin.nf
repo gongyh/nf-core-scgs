@@ -1,16 +1,16 @@
+nextflow.enable.types = true
+
 process MMSEQS2SEMIBIN {
     tag "$meta.id"
     label 'process_single'
 
     input:
-    tuple val(meta), path(tsv)
+    tuple(meta: Map, tsv: Path)
 
     output:
-    tuple val(meta), path("${prefix}_semibin_tax.tsv"), emit: tax
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, tax: file("*_semibin_tax.tsv"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process NORMALIZE {
     tag "${meta.id}"
     label 'process_medium'
@@ -6,14 +8,12 @@ process NORMALIZE {
     container "scgs/mulled-v2-afeccb6637ecc3e429a8f7f6e6713be70eff3d40:ee0ebbe2f959481c603cf90cda1c2026613505ef-0"
 
     input:
-    tuple val(meta), path(reads)
+    tuple(meta: Map, reads: List<Path>)
 
     output:
-    tuple val(meta), path("*_norm*.fastq.gz"), emit: reads
-    path "versions.yml"                      , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, reads: file('*_norm*.fastq.gz'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

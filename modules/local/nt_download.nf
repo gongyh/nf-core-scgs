@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process NT_DBDOWNLOAD {
     tag "NCBI_nt"
 
@@ -7,8 +9,9 @@ process NT_DBDOWNLOAD {
         'biocontainers/blast:2.13.0--hf3cf87c_0' }"
 
     output:
-    path 'nt_db', emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('nt_db'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

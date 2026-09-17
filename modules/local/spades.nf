@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process SPADES {
     tag "${meta.id}"
     label 'process_high'
@@ -6,24 +8,13 @@ process SPADES {
     container "scgs/mulled-v2-5524a20c8f39de906b127a66052c67b51c9a9ce1:c8e22953d04dee6a4da05f7a131bbd081ad78651-0"
 
     input:
-    tuple val(meta), path(reads)
+    tuple(meta: Map, reads: List<Path>)
 
     output:
-    tuple val(meta), path("${prefix}.corrected_R*.fastq.gz")               , emit: reads
-    tuple val(meta), path("${prefix}.contigs.fasta")                       , emit: contig
-    tuple val(meta), path("${prefix}.contigs.paths")                       , emit: contig_path
-    tuple val(meta), path("${prefix}.spades_out/${prefix}.contigs.gfa")    , emit: contig_graph
-    tuple val(meta), path("${prefix}.ctg200.fasta")                        , emit: ctg200
-    tuple val(meta), path("${prefix}.ctgs.fasta")                          , emit: ctg
-    tuple val(meta), path("${prefix}.spades_out")                          , emit: assembly
-    path "spades_joint_mqc.tsv"                                            , emit: mqc_tsv
-    path "versions.yml"                                                    , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, corrected_read: file("*.corrected_R1.fastq.gz", optional: true), corrected_read2: file("*.corrected_R2.fastq.gz", optional: true), contig: file("*.contigs.fasta"), contig_path: file("*.contigs.paths"), contig_graph: file("*.spades_out/*.contigs.gfa"), ctg200: file("*.ctg200.fasta"), ctg: file("*.ctgs.fasta"), assembly: file("*.spades_out", type: "dir"), mqc_tsv: file("spades_joint_mqc.tsv"), versions: file("versions.yml"))
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ''
     def mode = params.bulk ? "--cov-cutoff auto --careful" : "--sc --careful"
     mode = params.mg ? "--meta" : "--sc --careful"

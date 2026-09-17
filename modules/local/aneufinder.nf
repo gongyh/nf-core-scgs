@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process ANEUFINDER {
     label 'process_medium'
 
@@ -7,18 +9,18 @@ process ANEUFINDER {
         'biocontainers/bioconductor-aneufinder:1.26.0--r42hf17093f_1' }"
 
     input:
-    path("bams/*")
-    path("bams/*")
+    bams: Bag<Path>
+    bais: Bag<Path>
 
     output:
-    path('CNV_output') , emit: cnv
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(cnv: file('CNV_output', type: 'dir'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """
+    mkdir bams
+    ln -s *.bam *.bai bams/
     aneuf.R ./bams CNV_output ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml

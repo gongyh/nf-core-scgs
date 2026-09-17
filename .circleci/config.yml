@@ -47,7 +47,7 @@ jobs:
           name: test minimeta workflow
           command: |
             mkdir -p test_minimeta && cd test_minimeta
-            NXF_SYNTAX_PARSER=v1 ../nextflow run .. -profile test_minimeta,docker
+            ../nextflow run .. -profile test_minimeta,docker
           no_output_timeout: 30m
       - store_artifacts:
           path: test_minimeta/results/pipeline_info

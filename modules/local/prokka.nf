@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process PROKKA {
     tag "$meta.id"
     label 'process_low'
@@ -6,20 +8,14 @@ process PROKKA {
     container "scgs/mulled-v2-1e40df84b5b2d0a934c357a759500c269d2eb793:81460e1910925aa1427c823417f44d2739507564-0"
 
     input:
-    tuple val(meta), path(contigs)
-    path proteins
+    tuple(meta: Map, contigs: Path)
+    proteins: List<Path>
 
     output:
-    tuple val(meta), path("$prefix")                , emit: prokka_for_split
-    tuple val(meta), path("${prefix}/${prefix}.faa"), emit: faa
-    tuple val(meta), path("${prefix}/${prefix}.gbk"), emit: gbk
-    path "versions.yml"                             , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, prokka_for_split: file("*", type: "dir"), faa: file("*/*.faa"), gbk: file("*/*.gbk"), versions: file("versions.yml"))
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
     """
     prokka --outdir $prefix --prefix $prefix --strain $prefix --addgenes --addmrna --cpus ${task.cpus} $proteins_opt $contigs

@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process METARON {
     tag "$meta.id"
     label 'process_single'
@@ -8,14 +10,12 @@ process METARON {
         'biocontainers/multiqc:1.14--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(contigs), path(gene_model)
+    tuple(meta: Map, contigs: Path, gene_model: Path)
 
     output:
-    tuple val(meta), path("$prefix"), emit: out_operon
-    path "versions.yml"             , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, out_operon: file("${prefix}", type: 'dir'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

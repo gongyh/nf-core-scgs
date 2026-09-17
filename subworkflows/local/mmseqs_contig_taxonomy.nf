@@ -13,6 +13,7 @@ workflow MMSEQS_CONTIG_TAXONOMY {
     ch_taxonomy_querydb       = channel.empty()
     ch_taxonomy_querydb_taxdb = channel.empty()
     ch_taxonomy_tsv           = channel.empty()
+    ch_published              = channel.empty()
 
     // MMSEQS_DATABASE
     if ( mmseqs_databases != null ) {
@@ -25,18 +26,22 @@ workflow MMSEQS_CONTIG_TAXONOMY {
     // MMSEQS_CREATEDB
     MMSEQS_CREATEDB ( contigs )
     ch_taxonomy_querydb = MMSEQS_CREATEDB.out.db
+    ch_published = ch_published.mix(ch_taxonomy_querydb.map { result -> [destination: 'binning/mmseqs2_taxa', files: result] })
 
     // MMSEQS_TAXONOMY
     MMSEQS_TAXONOMY ( ch_taxonomy_querydb, ch_mmseqs_db )
     ch_taxonomy_querydb_taxdb = MMSEQS_TAXONOMY.out.db_taxonomy
+    ch_published = ch_published.mix(ch_taxonomy_querydb_taxdb.map { result -> [destination: 'binning/mmseqs2_taxa', files: result] })
 
     // MMSEQS_CREATETSV
     MMSEQS_CREATETSV ( ch_taxonomy_querydb_taxdb, [[:],[]], ch_taxonomy_querydb )
     ch_taxonomy_tsv = MMSEQS_CREATETSV.out.tsv
+    ch_published = ch_published.mix(ch_taxonomy_tsv.map { result -> [destination: 'binning/mmseqs2_taxa', files: result] })
 
     emit:
     taxonomy    = ch_taxonomy_tsv           // channel: [ val(meta), tsv ]
     db_mmseqs   = ch_mmseqs_db              // channel: [ val(meta), mmseqs_database ]
     db_taxonomy = ch_taxonomy_querydb_taxdb // channel: [ val(meta), db_taxonomy ]
     db_contig   = ch_taxonomy_querydb       // channel: [ val(meta), db ]
+    published   = ch_published
 }

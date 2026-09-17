@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process KRAKEN2_DBDOWNLOAD {
     tag "Kraken2"
 
@@ -5,8 +7,9 @@ process KRAKEN2_DBDOWNLOAD {
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
-    path 'kraken2_db', emit: db
-    path 'versions.yml', emit: versions
+    record(db: file('kraken2_db'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

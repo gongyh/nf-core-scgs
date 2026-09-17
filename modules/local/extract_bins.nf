@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process EXTRACT_BINS {
     tag "extract_bins"
     label 'process_low'
@@ -6,14 +8,11 @@ process EXTRACT_BINS {
     container "community.wave.seqera.io/library/seqtk:r93--b54ec2a2e8839010"
 
     input:
-    path clusters
-    path assembly
+    clusters: Path
+    assembly: Path
 
     output:
-    path "bins", emit: bins
-    path "versions.yml", emit: versions
-    path "extract_bins_mqc.tsv", emit: mqc_tsv
-    path "scaffolds2bin.tsv", emit: scaffolds2bin
+    record(bins: file('bins'), versions: file('versions.yml'), mqc_tsv: file('extract_bins_mqc.tsv'), scaffolds2bin: file('scaffolds2bin.tsv'))
     script:
     """
     mkdir -p bins

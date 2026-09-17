@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process PHISPY {
     tag "$meta.id"
     label 'process_single'
@@ -6,21 +8,27 @@ process PHISPY {
     container "scgs/mulled-v2-429a3460971b0153ab4b5691b696eab3d551813d:54e9422a549b5e87e5486d5c5b9b5fcdfcca1bd7-0"
 
     input:
-    tuple val(meta), path(gbk)
+    tuple(meta: Map, gbk: Path)
 
     output:
-    tuple val(meta), path("$prefix"), emit: out_operon
-    path "versions.yml"             , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, out_operon: file("${prefix}", type: 'dir'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}
     # prophages identification
+    set +e
     PhiSpy.py ${gbk} -o ${prefix} --threads ${task.cpus} --color
+    phispy_status=\$?
+    set -e
+    if [ "\$phispy_status" -eq 41 ]; then
+        touch ${prefix}/NO_PROPHAGES_FOUND
+    elif [ "\$phispy_status" -ne 0 ]; then
+        exit "\$phispy_status"
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

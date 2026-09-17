@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process MARKER_NCLUSTERS {
     tag "$meta.id"
 
@@ -5,15 +7,12 @@ process MARKER_NCLUSTERS {
     container 'community.wave.seqera.io/library/copygen:aca96b4a00a56131'
 
     input:
-    tuple val(meta), path(kmer_file)
-    tuple val(fasta_meta), path(fasta_file)
+    tuple(meta: Map, kmer_file: Path, fasta_file: Path)
 
     output:
-    tuple val(meta), path("cluster_value"), emit: marker_cv
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, marker_cv: file('cluster_value'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def args    = task.ext.args ?: ''

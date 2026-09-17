@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process EUKCC {
     tag "$meta.id"
     label 'process_medium'
@@ -8,18 +10,16 @@ process EUKCC {
         'biocontainers/eukcc:2.1.0--pypyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(contig)
-    path db
+    tuple(meta: Map, contig: Path)
+    db: Path
 
     output:
-    tuple val(meta), path("${prefix}"), emit: out_put
-    path "versions.yml"               , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, out_put: file("*", type: "dir"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
-    prefix   = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     cat $contig | sed 's/_length.*\$//g' > ${prefix}_clean.fasta
     eukcc single --out $prefix --db $db --threads ${task.cpus} ${prefix}_clean.fasta || echo "Ignore minor errors of eukcc!"

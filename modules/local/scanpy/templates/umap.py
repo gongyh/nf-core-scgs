@@ -1391,7 +1391,7 @@ threadpool_limits(int("${task.cpus}"))
 sc.settings.n_jobs = int("${task.cpus}")
 
 # Define the path pattern for sample files
-file_paths = glob.glob("tda/*.TDA_genus.txt")
+file_paths = glob.glob("*.TDA_genus.txt")
 
 # List to store individual sample DataFrames
 sample_dfs = []

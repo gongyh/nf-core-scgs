@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process VG_CONSTRUCT {
     tag "VG_CONSTRUCT"
     label 'process_medium'
@@ -8,12 +10,13 @@ process VG_CONSTRUCT {
         'biocontainers/vg:1.45.0--h9ee0642_0' }"
 
     input:
-    path(fasta)
-    path(vcf)
+    fasta: Path
+    vcf: Path
 
     output:
-    path("graph.vg")   , emit: vg
-    path "versions.yml", emit: versions
+    record(vg: file('graph.vg'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

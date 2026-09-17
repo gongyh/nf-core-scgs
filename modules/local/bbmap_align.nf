@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process BBMAP_ALIGN {
     tag "$meta.id"
     label 'process_medium'
@@ -8,29 +10,27 @@ process BBMAP_ALIGN {
         'biocontainers/mulled-v2-008daec56b7aaf3f162d7866758142b9f889d690:e8a286b2e789c091bac0a57302cdc78aa0112353-0' }"
 
     input:
-    tuple val(meta), path(fastq)
-    path ref
+    tuple(meta: Map, fastq: List<Path>)
+    ref: Path
 
     output:
-    tuple val(meta), path("*_removehost*.fq.gz"), emit: clean_fastq
-    tuple val(meta), path("*.log"), emit: log
-    path "versions.yml"           , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, clean_fastq: file("*_removehost*.fq.gz"), log: file("*.log"), versions: file("versions.yml"))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    input = meta.single_end ? "in=${fastq}" : "in=${fastq[0]} in2=${fastq[1]}"
-    outu = meta.single_end ? "outu=${prefix}_removehost.fq.gz" : "outu=${prefix}_removehost_R1.fq.gz outu2=${prefix}_removehost_R2.fq.gz"
+    def input = meta.single_end ? "in=${fastq}" : "in=${fastq[0]} in2=${fastq[1]}"
+    def outu = meta.single_end ? "outu=${prefix}_removehost.fq.gz" : "outu=${prefix}_removehost_R1.fq.gz outu2=${prefix}_removehost_R2.fq.gz"
 
     // Set the db variable to reflect the three possible types of reference input: 1) directory
     // named 'ref', 2) directory named something else (containg a 'ref' subdir) or 3) a sequence
     // file in fasta format
     if ( ref.isDirectory() ) {
-        if ( ref ==~ /(.\/)?ref\/?/ ) {
+        def ref_path = "${ref}"
+        if (ref_path ==~ /(.\/)?ref\/?/) {
             db = ''
         } else {
             db = "path=${ref}"

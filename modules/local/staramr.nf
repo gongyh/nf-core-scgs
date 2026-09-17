@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process STARAMR {
     tag "$meta.id"
     label 'process_low'
@@ -8,17 +10,12 @@ process STARAMR {
         'biocontainers/staramr:0.8.0--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(contigs)
-    val(acquired)
-    val(point)
-    val(species)
+    tuple(meta: Map, contigs: Path, acquired: Boolean, point: Boolean, species: String)
 
     output:
-    tuple val(meta), path("${prefix}/*"), emit: out_put
-    path "versions.yml"                 , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    record(meta: meta, out_put: file("${prefix}/*"), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

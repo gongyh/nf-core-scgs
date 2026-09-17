@@ -1,3 +1,5 @@
+nextflow.enable.types = true
+
 process VG_CALL {
     tag "$meta.id"
     label 'process_low'
@@ -8,12 +10,12 @@ process VG_CALL {
         'biocontainers/vg:1.45.0--h9ee0642_0' }"
 
     input:
-    path(vg)
-    tuple val(meta), path(gam)
+    tuple(meta: Map, gam: Path, vg: Path)
 
     output:
-    path("*.calls.vcf"), emit: call
-    path "versions.yml", emit: versions
+    record(call: file('*.calls.vcf'), versions: file('versions.yml'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
