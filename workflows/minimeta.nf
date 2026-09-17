@@ -277,6 +277,18 @@ summary = [:]
     display_header(summary, custom_runName, single_end)
     ch_published = channel.empty()
     ch_multiqc_files = channel.empty()
+    ch_optional_topic_versions = channel.empty()
+    if (
+        params.checkm2_db ||
+        params.mmseqs_db ||
+        params.metabuli_db ||
+        params.DNABERTS_dir ||
+        (params.kofam && params.kofam_profile && params.kofam_kolist) ||
+        (params.eggnog && params.eggnog_db)
+    ) {
+        ch_optional_topic_versions = channel.topic('local_versions')
+    }
+
     // FASTQC
     ch_multiqc_fastqc = channel.empty()
     FASTQC ( read_files_fastqc )
@@ -511,6 +523,7 @@ summary = [:]
         .mix(prokka.map { result -> result.versions })
     software_versions = GET_SOFTWARE_VERSIONS(
         ch_local_versions
+            .mix(ch_optional_topic_versions)
             .mix(ch_vendor_versions)
             .map { version ->
                 def lines = version.text.readLines()

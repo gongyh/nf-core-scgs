@@ -13,8 +13,8 @@ def helpMessage() {
 
     Database options:
     --db_type <list>              Comma-separated databases to prepare (default: all)
-                                  Available: mmseqs, checkm2, kofam, eggnog, kraken2,
-                                  gtdb, blob, metabuli, genomad, nt, all
+                                    Available: mmseqs, checkm2, kofam, eggnog, kraken2,
+                                    gtdb, blob, metabuli, genomad, nt, all
 
     Output and execution:
     --outdir <path>               Output directory for prepared databases (default: ./databases)

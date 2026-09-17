@@ -751,7 +751,7 @@ summary = [:]
             ch_published = ch_published.mix(QUALIMAP_BAMQC.out.versions.map { result -> [destination: 'qualimap_bamqc', files: result] })
         }
         if (params.snv) {
-            ch_indelrealign_input = quast_bam.combine(fasta)
+            ch_indelrealign_input = quast_bam.map { meta, bam -> tuple(meta, bam, fasta) }
             indelrealign = INDELREALIGN(ch_indelrealign_input)
             ch_indelrealign_bam = indelrealign.map { result -> tuple(result.meta, result.bam) }
             ch_indelrealign_bai = indelrealign.map { result -> tuple(result.meta, result.bai) }
