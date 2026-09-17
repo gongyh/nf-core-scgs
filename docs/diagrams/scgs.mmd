@@ -59,7 +59,7 @@ graph LR
 
         reference_input -->|reference| bowtie2_build
     end
-    
+
     subgraph reference_analyses [Reference-guided analyses]
         bowtie2_align([BOWTIE2_ALIGN])
         preseq([PRESEQ])
@@ -79,9 +79,9 @@ graph LR
         bbnorm([BBNORM])
         spades([SPADES])
         contigs([Contigs])
+
         bbnorm -->|assembly| spades
         spades -->|assembly| contigs
-        
     end
 
     subgraph contig_analysis [Contig QC]
@@ -123,7 +123,7 @@ graph LR
     subgraph reporting_stage [Reporting and docs]
         multiqc([MULTIQC])
         output_documentation([DOCUMENTATION])
-        
+
         multiqc -->|reporting| output_documentation
     end
 
