@@ -1,0 +1,118 @@
+%%metro mode: dark
+%%metro style: nfcore
+%%metro animate: true
+%%metro line_order: definition
+%%metro fold_threshold: 99
+%%metro compact_offsets: true
+%%metro x_spacing: 100
+%%metro y_spacing: 90
+%%metro legend: bl
+%%metro line: core | Joint assembly | #4C78A8
+%%metro line: coverage | Contig coverage | #F58518
+%%metro line: bin | Contig binning | #54A24B
+%%metro line: annotation | Bin QC and annotation | #FF9DA6
+%%metro line: reporting | Reports and docs | #9D755D
+%%metro marker_legend: circle, solid | Mandatory process
+%%metro marker_legend: square, solid | Optional process
+%%metro marker: mmseqs_taxonomy | square, solid
+%%metro marker: taxvamb | square, solid
+%%metro marker: dcvbin | square, solid
+%%metro marker: checkm2 | square, solid
+%%metro marker: kofamscan | square, solid
+%%metro marker: eggnog | square, solid
+%%metro grid: joint_assembly | 1,0
+%%metro grid: coverage_features | 2,0
+%%metro grid: binning_candidates | 2,1
+%%metro grid: reporting_stage, bin_annotation | 1,1
+
+graph LR
+
+    subgraph joint_assembly [Read QC and joint assembly]
+        %%metro direction: LR
+        raw_reads([Input reads])
+        fastqc([FASTQC])
+        trimgalore([TRIMGALORE or bypass])
+        bbnorm([BBNORM])
+        read_correction([READ_CORRECTION])
+        merge_corrected([MERGE_CORRECTED])
+        spades_joint([SPADES_JOINT])
+        assembly_contigs([Joint assembly contigs])
+
+        raw_reads -->|reporting| fastqc
+        raw_reads -->|core| trimgalore
+        trimgalore -->|core| bbnorm
+        bbnorm -->|core| read_correction
+        read_correction -->|core| merge_corrected
+        merge_corrected -->|core| spades_joint
+        spades_joint -->|core| assembly_contigs
+    end
+
+    subgraph coverage_features [Read remapping and coverage feature preparation]
+        %%metro direction: LR
+        bowtie2_remap([BOWTIE2_INDEX])
+        remap([BOWTIE2_REMAP])
+        merge_bams([MERGE_BAMS])
+        prepare_features([PREPARE_FEATURES])
+        coverage_features_out([Coverage feature matrices])
+
+        bowtie2_remap -->|coverage| remap
+        remap -->|coverage| merge_bams
+        merge_bams -->|coverage| prepare_features
+        prepare_features -->|coverage| coverage_features_out
+    end
+
+    subgraph binning_candidates [Binning candidate generation]
+        %%metro direction: RL
+        filter_assembly([FILTER_ASSEMBLY])
+        taxvamb([TaxVAMB])
+        cooccurrence_binning([COOCCURRENCE_BINNING])
+        extract_bins([EXTRACT_BINS])
+        mmseqs_taxonomy([MMSEQS_CONTIG_TAXONOMY])
+        mmseqs2semibin([MMSEQS2SEMIBIN])
+        semibin2([SEMIBIN2])
+        filter_contigs([FILTER_CONTIGS])
+        filter_bam([FILTER_BAM])
+        dcvbin([DCVBIN])
+        das_tool([DAS_TOOL])
+
+        filter_assembly -->|bin| cooccurrence_binning
+        cooccurrence_binning -->|bin| extract_bins
+        filter_assembly -->|bin| mmseqs_taxonomy
+        mmseqs_taxonomy -->|bin| mmseqs2semibin
+        mmseqs2semibin -->|bin| semibin2
+        filter_assembly -->|bin| taxvamb
+        filter_assembly -->|bin| filter_contigs
+        filter_contigs -->|bin| filter_bam
+        filter_bam -->|bin| dcvbin
+        extract_bins -->|bin| das_tool
+        dcvbin -->|bin| das_tool
+        taxvamb -->|bin| das_tool
+        semibin2 -->|bin| das_tool
+    end
+
+    subgraph bin_annotation [Bin QC and annotation]
+        %%metro direction: RL
+        consensus_bins([Consensus bins])
+        prokka([PROKKA])
+        kofamscan([KOFAMSCAN])
+        eggnog([EGGNOG])
+        checkm2([CHECKM2])
+
+        consensus_bins -->|annotation| prokka
+        consensus_bins -->|annotation| checkm2
+        prokka -->|annotation| kofamscan
+        prokka -->|annotation| eggnog
+    end
+
+    subgraph reporting_stage [Reporting and docs]
+        %%metro direction: LR
+        multiqc([MULTIQC])
+        output_documentation([DOCUMENTATION])
+
+        multiqc -->|reporting| output_documentation
+    end
+
+    assembly_contigs -->|coverage| bowtie2_remap
+    coverage_features_out -->|bin| filter_assembly
+    das_tool -->|annotation| consensus_bins
+
