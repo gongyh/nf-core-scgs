@@ -43,11 +43,13 @@ The gongyh/nf-core-scgs pipeline comes with documentation about the pipeline, fo
 
 - [Local installation](docs/configuration/local.md)
 - [Adding your own system](docs/configuration/adding_your_own.md)
+- [Database configuration](docs/configuration/databases.md)
 - [Reference genomes](docs/configuration/reference_genomes.md)
 
 3. [Running the pipeline](docs/usage.md)
 4. [Output and how to interpret the results](docs/output.md)
 5. [Troubleshooting](docs/troubleshooting.md)
+6. [MINIMETA workflow guide](MINIMETA.md)
 
 ## Related publications
 
