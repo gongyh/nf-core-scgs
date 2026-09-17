@@ -14,7 +14,7 @@
 
 The pipeline is used for single cell genome sequencing data analysis and built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker / singularity containers making installation trivial and results highly reproducible.
 
-![Schematic image of scgs pipeline](scgs_pipeline.png)
+![Schematic image of scgs pipeline](docs/diagrams/scgs.svg)
 
 ## Quick start
 

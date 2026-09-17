@@ -1,0 +1,135 @@
+%%metro mode: dark
+%%metro style: nfcore
+%%metro animate: true
+%%metro line_order: definition
+%%metro line_spread: bundle
+%%metro fold_threshold: 99
+%%metro row_align: top
+%%metro compact_offsets: true
+%%metro x_spacing: 100
+%%metro y_spacing: 90
+%%metro legend: bl
+%%metro line: core | Read QC | #1885F5
+%%metro line: reference | Reference genome | #F11FF1
+%%metro line: reference2 | SAG assessment | #F58518
+%%metro line: assembly | SAG assembly | #54A24B
+%%metro line: contig | Contig QC | #E45756
+%%metro line: annotation | Gene annotation | #B279A2
+%%metro line: reporting | Reports | #72B7B2
+%%metro marker_legend: circle, solid | Mandatory process
+%%metro marker_legend: square, solid | Optional process
+%%metro marker: kraken | square, solid
+%%metro marker: checkm2 | square, solid
+%%metro marker: blastn | square, solid
+%%metro marker: blobtools | square, solid
+%%metro marker: acdc | square, solid
+%%metro marker: bakta | square, solid
+%%metro marker: eggnog | square, solid
+%%metro marker: kofamscan | square, solid
+%%metro marker: gtdbtk | square, solid
+%%metro grid: read_preparation | 0,0
+%%metro grid: reporting_stage, reference_prepare | 0,1
+%%metro grid: assembly_stage | 1,0
+%%metro grid: reference_analyses | 1,1
+%%metro grid: contig_analysis | 2,0
+%%metro grid: annotation_stage | 2,1
+
+graph LR
+
+    subgraph read_preparation [Read preparation]
+        raw_reads([Input reads])
+        fastqc([FASTQC])
+        trimgalore([TRIMGALORE])
+        bbmap_align([Host removal])
+        kraken([KRAKEN])
+        umap([UMAP])
+        processed_reads([Clean reads])
+
+        raw_reads -->|core| trimgalore
+        trimgalore -->|core| bbmap_align
+        bbmap_align -->|core| processed_reads
+        raw_reads -->|core| fastqc
+        processed_reads -->|core| umap
+        processed_reads -->|core| kraken
+    end
+
+    subgraph reference_prepare [Reference preparation]
+        reference_input([Reference genome])
+        bowtie2_build([BOWTIE2_BUILD])
+
+        reference_input -->|reference| bowtie2_build
+    end
+    
+    subgraph reference_analyses [Reference-guided analyses]
+        bowtie2_align([BOWTIE2_ALIGN])
+        preseq([PRESEQ])
+        qualimap([QUALIMAP])
+        monovar([MONOVAR])
+        doubletd([DOUBLETD])
+        circlize([CIRCLIZE])
+
+        bowtie2_align -->|reference2| preseq
+        bowtie2_align -->|reference2| circlize
+        bowtie2_align -->|reference2| qualimap
+        bowtie2_align -->|reference2| monovar
+        bowtie2_align -->|reference2| doubletd
+    end
+
+    subgraph assembly_stage [Assembly]
+        bbnorm([BBNORM])
+        spades([SPADES])
+        contigs([Contigs])
+        bbnorm -->|assembly| spades
+        spades -->|assembly| contigs
+        
+    end
+
+    subgraph contig_analysis [Contig QC]
+        contigs2([])
+        quast([QUAST])
+        checkm1([CHECKM1])
+        blastn([BLASTN])
+        blobtools([BLOBTOOLS])
+        acdc([ACDC])
+        checkm2([CHECKM2])
+
+        contigs2 -->|contig| quast
+        contigs2 -->|contig| checkm1
+        contigs2 -->|contig| blastn
+        blastn -->|contig| blobtools
+        contigs2 -->|contig| acdc
+        contigs2 -->|contig| checkm2
+    end
+
+    subgraph annotation_stage [Gene annotation]
+        contigs3([])
+        prokka([PROKKA])
+        bakta([BAKTA])
+        uniop([UNIOP])
+        phispy([PHISPY])
+        eggnog([EGGNOG])
+        kofamscan([KOFAMSCAN])
+        gtdbtk([GTDBTK])
+
+        contigs3 -->|annotation| prokka
+        contigs3 -->|annotation| uniop
+        prokka -->|annotation| phispy
+        contigs3 -->|annotation| bakta
+        prokka -->|annotation| eggnog
+        prokka -->|annotation| kofamscan
+        contigs3 -->|annotation| gtdbtk
+    end
+
+    subgraph reporting_stage [Reporting and docs]
+        multiqc([MULTIQC])
+        output_documentation([DOCUMENTATION])
+        
+        multiqc -->|reporting| output_documentation
+    end
+
+    processed_reads -->|reference2| bowtie2_align
+    bowtie2_build -->|reference2| bowtie2_align
+    processed_reads -->|assembly| bbnorm
+    contigs -->|contig| contigs2
+    contigs -->|annotation| contigs3
+

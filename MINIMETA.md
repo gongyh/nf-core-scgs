@@ -5,6 +5,8 @@ combines read processing, per-cell read correction, joint assembly, coverage
 estimation, complementary binning methods, bin consolidation, quality
 assessment, and optional functional annotation.
 
+![Schematic image of minimeta pipeline](docs/diagrams/minimeta.svg)
+
 For installation and executor configuration, see the main
 [README](README.md) and [installation guide](docs/installation.md).
 
