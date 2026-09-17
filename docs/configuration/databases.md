@@ -47,18 +47,18 @@ The table below maps each preparation selector to its output and the pipeline
 parameter that consumes it. Paths are shown relative to the database output
 directory.
 
-| `--db_type` value | Prepared resource | Use it with | Workflow |
-| --- | --- | --- | --- |
-| `checkm2` | `checkm2_db/` | `--checkm2_db /path/to/checkm2_db` | SCGS and MINIMETA |
-| `mmseqs` | `mmseqs_db/` | `--mmseqs_db /path/to/mmseqs_db` | MINIMETA |
-| `kofam` | `kofam_db/profiles/` and `kofam_db/ko_list` | `--kofam_profile /path/to/profiles --kofam_kolist /path/to/ko_list` | SCGS and MINIMETA |
-| `eggnog` | `eggnog_db/` | `--eggnog_db /path/to/eggnog_db` | SCGS and MINIMETA |
-| `kraken2` | `kraken2_db/` | `--kraken2_db /path/to/kraken2_db` | SCGS |
-| `gtdb` | `gtdb_db/` | `--gtdb /path/to/gtdb_db` | SCGS |
-| `blob` | `blob_db/nodesDB.txt` | `--blob_db /path/to/blob_db/nodesDB.txt` | SCGS |
-| `metabuli` | `metabuli_db/` | `--metabuli_db /path/to/metabuli_db` | MINIMETA |
-| `genomad` | `db/` | `--genomad_db /path/to/db` | SCGS |
-| `nt` | `nt_db/` | `--nt_db /path/to/nt_db` | SCGS |
+| `--db_type` value | Prepared resource                           | Use it with                                                         | Workflow          |
+| ----------------- | ------------------------------------------- | ------------------------------------------------------------------- | ----------------- |
+| `checkm2`         | `checkm2_db/`                               | `--checkm2_db /path/to/checkm2_db`                                  | SCGS and MINIMETA |
+| `mmseqs`          | `mmseqs_db/`                                | `--mmseqs_db /path/to/mmseqs_db`                                    | MINIMETA          |
+| `kofam`           | `kofam_db/profiles/` and `kofam_db/ko_list` | `--kofam_profile /path/to/profiles --kofam_kolist /path/to/ko_list` | SCGS and MINIMETA |
+| `eggnog`          | `eggnog_db/`                                | `--eggnog_db /path/to/eggnog_db`                                    | SCGS and MINIMETA |
+| `kraken2`         | `kraken2_db/`                               | `--kraken2_db /path/to/kraken2_db`                                  | SCGS              |
+| `gtdb`            | `gtdb_db/`                                  | `--gtdb /path/to/gtdb_db`                                           | SCGS              |
+| `blob`            | `blob_db/nodesDB.txt`                       | `--blob_db /path/to/blob_db/nodesDB.txt`                            | SCGS              |
+| `metabuli`        | `metabuli_db/`                              | `--metabuli_db /path/to/metabuli_db`                                | MINIMETA          |
+| `genomad`         | `db/`                                       | `--genomad_db /path/to/db`                                          | SCGS              |
+| `nt`              | `nt_db/`                                    | `--nt_db /path/to/nt_db`                                            | SCGS              |
 
 `checkm2` enables CheckM2 quality assessment. In MINIMETA,
 `--run_cooccurrence_checkm` additionally runs CheckM2 on co-occurrence bins.
@@ -109,16 +109,16 @@ trigger their associated analysis steps.
 The preparation workflow does not download every optional SCGS resource. You
 must obtain and configure the following independently when needed:
 
-| Resource | Parameter | Used for |
-| --- | --- | --- |
-| Kraken1 database | `--kraken1_db` | ACDC |
-| Krona taxonomy file | `--krona_db` | Offline Krona reports |
-| UniProt protein database and taxonomy mapping | `--uniprot_db`, `--uniprot_taxids` | DIAMOND and BlobTools annotation |
-| Trusted Prokka proteins | `--prokka_proteins` | Prokka annotation |
-| Bakta database | `--bakta_db` | Bakta annotation |
-| EukCC database | `--eukcc_db` | Eukaryotic completeness assessment |
-| MGPG database | `--mgpg_db` | Pangenome analysis |
-| DNABERT-S model directory | `--DNABERTS_dir` | MINIMETA DCVBIN integration |
+| Resource                                      | Parameter                          | Used for                           |
+| --------------------------------------------- | ---------------------------------- | ---------------------------------- |
+| Kraken1 database                              | `--kraken1_db`                     | ACDC                               |
+| Krona taxonomy file                           | `--krona_db`                       | Offline Krona reports              |
+| UniProt protein database and taxonomy mapping | `--uniprot_db`, `--uniprot_taxids` | DIAMOND and BlobTools annotation   |
+| Trusted Prokka proteins                       | `--prokka_proteins`                | Prokka annotation                  |
+| Bakta database                                | `--bakta_db`                       | Bakta annotation                   |
+| EukCC database                                | `--eukcc_db`                       | Eukaryotic completeness assessment |
+| MGPG database                                 | `--mgpg_db`                        | Pangenome analysis                 |
+| DNABERT-S model directory                     | `--DNABERTS_dir`                   | MINIMETA DCVBIN integration        |
 
 See the [SCGS usage guide](../usage.md) and the
 [MINIMETA workflow guide](../../MINIMETA.md) for the analysis options that
