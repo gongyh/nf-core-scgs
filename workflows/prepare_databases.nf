@@ -6,17 +6,21 @@ def helpMessage() {
 
     Usage:
 
-    The typical command for running the database preparation pipeline is as follows:
-
     nextflow run gongyh/nf-core-scgs --prepare_databases -profile docker
 
-    Options:
-    --outdir                      The output directory where the databases will be saved (Default: ./databases)
-    --db_type                     Comma-separated list of databases to prepare. Options: mmseqs, checkm2, kofam, eggnog, kraken2, gtdb, blob, metabuli, genomad, nt, all
+    Workflow selection:
+    --prepare_databases           Run the database preparation workflow
 
-    Generic options:
+    Database options:
+    --db_type <list>              Comma-separated databases to prepare (default: all)
+                                  Available: mmseqs, checkm2, kofam, eggnog, kraken2,
+                                  gtdb, blob, metabuli, genomad, nt, all
+
+    Output and execution:
+    --outdir <path>               Output directory for prepared databases (default: ./databases)
+    --monochrome_logs             Disable coloured log output
     --help                        Display this help message
-    --monochrome_logs             Do not use coloured log outputs
+    -profile                      Configuration profile(s), for example: docker, singularity, conda
     """.stripIndent()
 }
 

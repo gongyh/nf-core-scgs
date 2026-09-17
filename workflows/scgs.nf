@@ -4,114 +4,103 @@ def helpMessage() {
 
     Usage:
 
-    The typical command for running the pipeline is as follows:
-
     nextflow run gongyh/nf-core-scgs --reads '*_R{1,2}.fastq.gz' -profile docker
 
-    Mandatory arguments:
-    --reads                       Path to input data (must be surrounded with quotes)
-    -profile                      Configuration profile to use. Can use multiple (comma separated). Available: conda, docker, singularity, awsbatch, test and more.
+    Input options:
+    --reads <glob>                Input reads glob (default: data/*{1,2}.fastq.gz)
+    --readPaths <list>            Structured sample/read list supplied in a Nextflow config
+    --single_end                  Treat input reads as single-end
+    --bulk                        Process bulk-DNA reads instead of single-cell MDA reads
+    --mg                          Enable metagenome assembly mode
 
-    Options:
-    --vcf                         Variantion graph construction
-    --bulk                        WGS of bulk DNA, not MDA
-    --mg                          WGS of bulk DNA, assemble in metagenome mode
-    --genome                      Name of iGenomes reference
-    --single_end                  Specifies that the input is single end reads
-    --snv                         Enable detection of single nucleotide variation
-    --cnv                         Enable detection of copy number variation
-    --bbmap                       Enable bbmap to remove host-derived contamination
-    --doubletd                    Enable detection of doublet
-    --acdc                        Enable acdc
-    --saturation                  Enable sequencing saturation analysis
-    --ass                         Assemble using SPAdes
-    --genomad                     Enable genomad analysis
-    --blastn                      Enable NCBI Nt database annotation
-    --blob                        Enable Blobtools analysis
-    --kraken                      Enable Kraken2 annotation
-    --eggnog                      Enable EggNOG database annotation
-    --kofam                       Enable KEGG Ortholog annotation
-    --checkm2                     Enable CheckM2 analysis
-    --gtdbtk                      Enable gtdbtk analysis
-    --split                       Split the draft genomes and annotation(Bacteria)
-    --split_euk                   Split the draft genomes and annotation(Eukaryota)
-    --split_bac_level             Level of split for Bacteria
-    --split_euk_level             Level of split for Eukaryota
-    --graphbin                    Enable graphbin to bin
+    Reference options:
+    --genome <name>               Configured iGenomes reference name
+    --genomes <map>               Configured iGenomes reference map (normally set in a config)
+    --fasta <path>                Reference genome FASTA
+    --gff <path>                  Reference genome GFF annotation
+    --vcf <path>                  VCF used to construct a variation graph with --fasta
+    --euk                         Analyse a eukaryotic genome
+    --fungus                      Analyse a fungal genome
+    --genus <name>                Supply genus context to CheckM
+
+    Read processing and assembly:
+    --notrim                      Skip adapter and quality trimming
+    --saveTrimmed                 Publish trimmed reads
+    --clip_r1 <int>               Remove bases from the 5' end of read 1
+    --clip_r2 <int>               Remove bases from the 5' end of read 2
+    --three_prime_clip_r1 <int>   Remove bases from the 3' end of read 1 after trimming
+    --three_prime_clip_r2 <int>   Remove bases from the 3' end of read 2 after trimming
+    --bbmap                       Remove host-derived reads with BBMap
+    --host_ref <path>             Host reference sequence used with --bbmap
+    --ass                         Assemble reads with SPAdes
+    --no_normalize                Skip read normalization before assembly
+    --pasa                        Enable PASA scaffolding
+    --refs_fna <path>             Scaffold FASTA files or a PanTA database directory
+    --allow_multi_align           Retain secondary and unmapped remapping alignments
+    --saveAlignedIntermediates    Publish intermediate alignment BAM files
+    --saturation                  Run sequencing saturation analysis
+
+    Variant and genome analyses:
+    --snv                         Call single-nucleotide variants with MonoVar
+    --cnv                         Call copy-number variants
+    --doubletd                    Detect doublets after MonoVar calling
+    --genomad                     Run geNomad analysis
+    --checkm2                     Run CheckM2 when --checkm2_db is available
+    --split                       Split bacterial draft genomes by taxonomic annotation
+    --split_euk                   Split eukaryotic draft genomes by taxonomic annotation
+    --split_bac_level <level>     Bacterial taxonomic level for --split (default: genus)
+    --split_euk_level <level>     Eukaryotic taxonomic level for --split_euk (default: genus)
+    --graphbin                    Run GraphBin when splitting de novo assemblies
+    --gtdbtk                      Run GTDB-Tk when --gtdb is available
     --pangenome                   Enable pangenome analysis
-    --completeness                Calculate the completeness of assembling contigs using pan-genomic methods based on core genes
-    --tree                        Draw a phylogenetic tree
+    --mgpg_db <path>              Microbiome graph pangenome database
+    --genusName <name>            Genus name for pangenome analysis
+    --coreGenesFile <path>        Core-genes list for pangenome analysis
+    --completeness                Calculate pangenome completeness
+    --tree                        Build a pangenome phylogenetic tree
 
-    References:                   If not specified in the configuration file or you wish to overwrite any of the references.
-    --fasta                       Path to Fasta reference
-    --gff                         Path to GFF reference
-    --genus                       Genus information for use in CheckM
+    Annotation and ARG analyses:
+    --kraken                      Run Kraken2 when --kraken2_db is available
+    --blastn                      Run NCBI nt annotation when --nt_db is available
+    --blob                        Run BlobTools when --blob_db is available
+    --acdc                        Run ACDC when --kraken1_db is available
+    --eggnog                      Run EggNOG annotation when --eggnog_db is available
+    --kofam                       Run KOfam annotation when profile and KO-list files are available
+    --acquired                    Call acquired antimicrobial-resistance genes
+    --point                       Call resistance-associated point mutations
+    --pointfinder_species <name>  PointFinder species (default: escherichia_coli)
+    --evalue <number>             E-value threshold for nt and UniProt searches (default: 1e-25)
+    --blockSize <number>          DIAMOND sequence block size in billions of letters (default: 2.0)
 
-    External databases:
-    --genomad_db                  geNomad database
-    --prokka_proteins             FASTA file of trusted proteins to first annotate from (optional)
-    --nt_db                       NCBI Nt database (BLAST)
-    --blob_db                     Blobtools nodesDB.txt
-    --krona_db                    Krona taxonomy.tab (if used offline)
-    --uniprot_db                  Uniprot proteomes database (diamond) !!! time consuming !!!
-    --uniprot_taxids              Sequence id to taxa id mapping file
-    --kraken2_db                  Kraken2 database
-    --kraken1_db                  Kraken1 database (for ACDC)
-    --eggnog_db                   EggNOG v4.5.1 database for emapper-1.0.3
-    --kofam_profile               KOfam profile database
-    --kofam_kolist                KOfam ko_list file
-    --augustus_species            Augustus species, default 'saccharomyces'
-    --eukcc_db                    EukCC database
-    --checkm2_db                  CheckM2 database
-    --gtdb                        GTDB database
-    --bakta_db                    Bakta database
-    --host_ref                    Specify the reference sequence for host removal
+    Databases and annotation resources:
+    --genomad_db <path>           geNomad database
+    --checkm2_db <path>           CheckM2 database
+    --nt_db <path>                NCBI nt database
+    --blob_db <path>              BlobTools nodesDB.txt
+    --krona_db <path>             Krona taxonomy.tab for offline use
+    --uniprot_db <path>           UniProt proteomes database
+    --uniprot_taxids <path>       UniProt sequence-to-taxonomy mapping
+    --kraken2_db <path>           Kraken2 database
+    --kraken1_db <path>           Kraken1 database for ACDC
+    --eggnog_db <path>            EggNOG database
+    --kofam_profile <path>        KOfam profile database
+    --kofam_kolist <path>         KOfam KO-list file
+    --prokka_proteins <path>      Trusted proteins FASTA for Prokka
+    --bakta_db <path>             Bakta database
+    --eukcc_db <path>             EukCC database
+    --gtdb <path>                 GTDB database
+    --augustus_species <name>     Augustus species (default: saccharomyces)
 
-    Trimming options:
-    --notrim                      Specifying --notrim will skip the adapter trimming step.
-    --saveTrimmed                 Save the trimmed Fastq files in the the Results directory.
-    --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1 (or single-end reads)
-    --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2 (paired-end reads only)
-    --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1 AFTER adapter/quality trimming has been performed
-    --three_prime_clip_r2 [int]   Instructs Trim Galore to remove bp from the 3' end of read 2 AFTER adapter/quality trimming has been performed
-
-    Mapping options:
-    --allow_multi_align           Secondary alignments and unmapped reads are also reported in addition to primary alignments
-    --saveAlignedIntermediates    Save the intermediate BAM files from the Alignment step  - not done by default
-
-    Assembly options:
-    --no_normalize                Specifying --no_normalize will skip the reads normalizing step.
-    --pasa                        Enable PASA scaffolding (default: false)
-    --refs_fna                    Genome files for PASA or RAGTAG scaffolding
-
-    Quast options:
-    --euk                         Euk genome
-    --fungus                      Fungal genome
-
-    Pangenome options:
-    --mgpg_db                     Microbiome graph pangenome database
-    --genusName                   Genus Name
-    --coreGenesFile               Core genes txt file
-
-    Taxa annotation options:
-    --evalue                      E-value for blasting NCBI-nt and uniprot reference proteomes database (default=1e-25)
-
-    Diamond options:
-    --blockSize                   Sequence block size in billions of letters (default=2.0)
-
-    ARG related options:
-    --acquired                    Enable ARG analysis
-    --point                       Enable point mutation analysis
-    --pointfinder_species         Species for pointfinder, default 'escherichia_coli'
-
-    Output options:
-    --outdir                      The output directory where the results will be saved
-    --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
-    --maxMultiqcEmailFileSize     Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB)
-
-    AWSBatch options:
-    --awsqueue                    The AWSBatch JobQueue that needs to be set when running on AWSBatch
-    --awsregion                   The AWS Region for your AWS Batch job to run on
+    Output and execution:
+    --outdir <path>               Output directory (default: ./results)
+    --multiqc_config <path>       Custom MultiQC configuration file
+    --email <address>             Address for the completion email
+    --maxMultiqcEmailFileSize     Maximum MultiQC email attachment size in bytes (default: 25 MB)
+    --monochrome_logs             Disable coloured log output
+    --help                        Display this help message
+    --awsqueue <name>             AWS Batch job queue
+    --awsregion <region>          AWS Batch region
+    -profile                      Configuration profile(s), for example: docker, singularity, conda
     """.stripIndent()
 }
 

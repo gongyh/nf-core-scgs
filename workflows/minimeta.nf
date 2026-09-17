@@ -4,42 +4,51 @@ def helpMessage() {
 
     Usage:
 
-    The typical command for running the minimeta pipeline is as follows:
-
     nextflow run gongyh/nf-core-scgs --reads '*_R{1,2}.fastq.gz' --minimeta -profile docker
 
-    Mandatory arguments:
-    --reads                       Path to input data (must be surrounded with quotes)
-    -profile                      Configuration profile to use. Can use multiple (comma separated). Available: conda, docker, singularity, awsbatch, test and more.
+    Workflow selection:
+    --minimeta                    Run the MINIMETA workflow
 
-    Workflow options:
-    --single_end                  Specifies that the input is single end reads
-    --notrim                      Specifying --notrim will skip the adapter trimming step
-    --saveTrimmed                 Save the trimmed Fastq files in the results directory
-    --allow_multi_align           Allow multi-mapping of reads during remapping
+    Input options:
+    --reads <glob>                Input reads glob (default: data/*{1,2}.fastq.gz)
+    --readPaths <list>            Structured sample/read list supplied in a Nextflow config
+    --single_end                  Treat input reads as single-end
 
-    Trimming options:
-    --clip_r1 [int]               Instructs Trim Galore to remove bp from the 5' end of read 1
-    --clip_r2 [int]               Instructs Trim Galore to remove bp from the 5' end of read 2
-    --three_prime_clip_r1 [int]   Instructs Trim Galore to remove bp from the 3' end of read 1
-    --three_prime_clip_r2 [int]   Instructs Trim Galore to remove bp from the 3' end of read 2
+    Read processing:
+    --notrim                      Skip adapter and quality trimming
+    --saveTrimmed                 Publish trimmed reads
+    --clip_r1 <int>               Remove bases from the 5' end of read 1
+    --clip_r2 <int>               Remove bases from the 5' end of read 2
+    --three_prime_clip_r1 <int>   Remove bases from the 3' end of read 1 after trimming
+    --three_prime_clip_r2 <int>   Remove bases from the 3' end of read 2 after trimming
+    --allow_multi_align           Retain secondary and unmapped remapping alignments
 
-    External databases:
-    --mmseqs_db                   Path to the MMseqs2 database for taxonomic classification
-    --metabuli_db                 Path to MetaBuli database for taxonomic classification
-    --checkm2_db                  Path to CheckM2 database
-    --kofam_profile               Path to KOfam profile database
-    --kofam_kolist                Path to KOfam ko_list file
-    --eggnog_db                   Path to EggNOG database for emapper
+    Binning and quality assessment:
+    --min_length <int>            Minimum contig length for co-occurrence binning (default: 10000)
+    --cooccurrence_eps <number>   Distance threshold for co-occurrence binning (default: 0.05)
+    --run_cooccurrence_checkm     Run CheckM2 on co-occurrence bins when --checkm2_db is available
+    --checkm2_db <path>           CheckM2 database
+    --mmseqs_db <path>            MMseqs2 database for contig taxonomy and SemiBin2
+    --metabuli_db <path>          MetaBuli database; enables TaxVAMB integration
+    --DNABERTS_dir <path>         DNABERT-S model directory; enables DCVBIN integration
 
-    Output options:
-    --outdir                      The output directory where the results will be saved
-    --email                       Set this parameter to your e-mail address to get a summary e-mail
-    --maxMultiqcEmailFileSize     Threshold size for MultiQC report to be attached in notification email (Default: 25MB)
+    Functional annotation:
+    --kofam                       Run KOfam annotation when profile and KO-list files are available
+    --kofam_profile <path>        KOfam profile database
+    --kofam_kolist <path>         KOfam KO-list file
+    --eggnog                      Run EggNOG annotation when --eggnog_db is available
+    --eggnog_db <path>            EggNOG database
 
-    AWSBatch options:
-    --awsqueue                    The AWSBatch JobQueue
-    --awsregion                   The AWS Region
+    Output and execution:
+    --outdir <path>               Output directory (default: ./results)
+    --multiqc_config <path>       Custom MultiQC configuration file
+    --email <address>             Address for the completion email
+    --maxMultiqcEmailFileSize     Maximum MultiQC email attachment size in bytes (default: 25 MB)
+    --monochrome_logs             Disable coloured log output
+    --help                        Display this help message
+    --awsqueue <name>             AWS Batch job queue
+    --awsregion <region>          AWS Batch region
+    -profile                      Configuration profile(s), for example: docker, singularity, conda
     """.stripIndent()
 }
 
