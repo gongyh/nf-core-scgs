@@ -14,18 +14,19 @@ process SPLIT_CHECKM {
     split_bac_level: String
     split_euk_level: String
 
+    stage:
+    stageAs spades, 'results/spades/*'
+    stageAs blob, 'results/blob/*'
+    stageAs prokka, 'results/prokka/*'
+    stageAs kofam, 'results/kofam/*'
+
     output:
-    record(output: file("split/*"), fa: file("split/fa/*"), csv: file("split/*.csv"), versions: file("split/versions.yml"))
+    record(output: file("split", type: "dir"), fa: files("split/fa/*.fasta", optional: true), csv: files("split/*.csv"), versions: file("split/versions.yml"))
     topic:
     file('split/versions.yml') >> 'local_versions'
 
     script:
     """
-    mkdir -p results/spades results/blob results/prokka results/kofam
-    ln -s ${spades} results/spades/
-    ln -s ${blob} results/blob/
-    if [ -n "${prokka}" ]; then ln -s ${prokka} results/prokka/; fi
-    if [ -n "${kofam}" ]; then ln -s ${kofam} results/kofam/; fi
     cli.py tools scgs_split --level-bacteria ${split_bac_level} --level-eukaryota ${split_euk_level}
     cd split
     if [ ! -d fa ];then

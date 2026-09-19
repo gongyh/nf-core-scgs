@@ -396,7 +396,12 @@ summary = [:]
     //
     if ( params.run_cooccurrence_checkm ) {
         if ( params.checkm2_db ) {
-            checkm2_cooccurrence = CHECKM2_COOCCURRENCE(extract_bins.map { result -> result.bins }, 'fa', file(params.checkm2_db))
+            ch_cooccurrence_bins = extract_bins
+                .flatMap { result ->
+                    file(result.bins).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
+                }
+                .collect()
+            checkm2_cooccurrence = CHECKM2_COOCCURRENCE(ch_cooccurrence_bins, 'fa', file(params.checkm2_db))
             ch_multiqc_files = ch_multiqc_files.mix(checkm2_cooccurrence.map { result -> result.mqc_tsv }.collect().ifEmpty([]))
             ch_published = ch_published.mix(checkm2_cooccurrence.map { result -> [destination: 'CheckM2', files: result] })
         } else {
@@ -464,9 +469,14 @@ summary = [:]
     ch_bins_dir = das_tool.map { result -> result.bins }
     ch_published = ch_published.mix(das_tool.map { result -> [destination: 'binning/das_tool', files: result] })
 
+    ch_bin_files = ch_bins_dir.flatMap { bin_dir ->
+        file(bin_dir).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
+    }
+    ch_bins_for_checkm2 = ch_bin_files.collect().filter { bin_files -> !bin_files.isEmpty() }
+
     // CHECKM2
     if (params.checkm2_db) {
-        checkm2 = CHECKM2(ch_bins_dir, 'fa', checkm2_db)
+        checkm2 = CHECKM2(ch_bins_for_checkm2, 'fa', checkm2_db)
         ch_multiqc_checkm2 = checkm2.map { result -> result.mqc_tsv }
         ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2)
         ch_published = ch_published.mix(checkm2.map { result -> [destination: 'CheckM2', files: result] })
@@ -474,31 +484,31 @@ summary = [:]
         ch_multiqc_checkm2 = channel.empty()
     }
     //
-    ch_bins_for_prokka = ch_bins_dir.flatMap { bin_dir ->
-        def bin_files = file(bin_dir).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
-        if (!bin_files) {
-            log.warn "No .fa files found in ${bin_dir}, skipping PROKKA"
-            return []
-        }
-        bin_files.collect { bin_file ->
-            [ [id: bin_file.baseName], bin_file ]
-        }
+    ch_bins_for_prokka = ch_bin_files.map { bin_file ->
+        [ [id: bin_file.baseName], bin_file ]
     }
 
     //PROKKA
     prokka = PROKKA(ch_bins_for_prokka, [] as List<Path>)
     ch_published = ch_published.mix(prokka.map { result -> [destination: 'prokka', files: result] })
 
+    ch_prokka_for_annot = prokka
+        .filter { result ->
+            def faa = result.faa
+            faa != null && faa.exists() && faa.size() > 0
+        }
+        .map { result -> tuple(result.meta, result.faa) }
+
     // KOFAMSCAN
     if (params.kofam && params.kofam_profile && params.kofam_kolist) {
-        kofamscan = KOFAMSCAN(prokka.map { result -> tuple(result.meta, result.faa) }, kofam_profile, kofam_kolist)
+        kofamscan = KOFAMSCAN(ch_prokka_for_annot, kofam_profile, kofam_kolist)
         ch_multiqc_files = ch_multiqc_files.mix(kofamscan.map { result -> result.kofamscan }.collect().ifEmpty([]))
         ch_published = ch_published.mix(kofamscan.map { result -> [destination: 'kofam', files: result] })
     }
 
     // EGGNOG
     if (params.eggnog && params.eggnog_db) {
-        eggnog = EGGNOG(prokka.map { result -> tuple(result.meta, result.faa) }, eggnog_db)
+        eggnog = EGGNOG(ch_prokka_for_annot, eggnog_db)
         ch_multiqc_files = ch_multiqc_files.mix(eggnog.map { result -> result.annotations }.collect().ifEmpty([]))
         ch_published = ch_published.mix(eggnog.map { result -> [destination: 'eggnog', files: result] })
     }

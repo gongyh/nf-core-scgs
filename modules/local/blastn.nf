@@ -15,7 +15,7 @@ process BLASTN {
     evalue: Float
 
     output:
-    record(meta: meta, contigs: file("*.fasta"), nt: file("*_nt.out"), versions: file("versions.yml"))
+    record(meta: meta, contigs: file("*.fasta", includeInputs: true), nt: file("*_nt.out"), versions: file("versions.yml"))
     topic:
     file('versions.yml') >> 'local_versions'
 

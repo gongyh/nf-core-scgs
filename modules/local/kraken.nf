@@ -20,9 +20,10 @@ process KRAKEN {
     script:
     def mode = meta.single_end ? "" : "--paired"
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def read_args = reads.join(' ')
     """
     TAXONOMY=\$(find -L . -name '*.tab' -exec dirname {} \\;)
-    kraken2 --db $db --threads ${task.cpus} --report ${prefix}.krk --output ${prefix}.k2 --gzip-compressed ${mode} $reads
+    kraken2 --db $db --threads ${task.cpus} --report ${prefix}.krk --output ${prefix}.k2 --gzip-compressed ${mode} ${read_args}
     kreport2krona.py -r ${prefix}.krk -o ${prefix}.krn
     ktImportText -o ${prefix}_taxonomy.html ${prefix}.krn
     # Taxonomic Discovery Algorithm

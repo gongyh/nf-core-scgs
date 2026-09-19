@@ -20,7 +20,7 @@ process ANEUFINDER {
     script:
     """
     mkdir bams
-    ln -s *.bam *.bai bams/
+    cd bams && ln -s ../*.bam ../*.bai . && cd ..
     aneuf.R ./bams CNV_output ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml

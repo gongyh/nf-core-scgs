@@ -926,7 +926,7 @@ summary = [:]
         blastn = BLASTN(
             ctg200,
             nt_db,
-            params.evalue
+            Float.valueOf(params.evalue.toString())
         )
         ch_published = ch_published.mix(blastn.map { result -> [destination: 'blob', files: result] })
 
@@ -1049,7 +1049,7 @@ summary = [:]
             kofam_profile,
             kofam_kolist
         )
-        kofam_scan = kofamscan.map { result -> tuple(result.meta, result.txt) }
+        kofam_scan = kofamscan.flatMap { result -> result.txt }
         ch_published = ch_published.mix(kofamscan.map { result -> [destination: 'kofam', files: result] })
     }
 
@@ -1073,7 +1073,7 @@ summary = [:]
                 ctg200.collect { entry -> entry[1] },
                 tax_split.collect { entry -> entry[1] },
                 prokka_for_split.collect { entry -> entry[1] }.ifEmpty([]),
-                kofam_scan.collect { entry -> entry[1] }.ifEmpty([]),
+                kofam_scan.collect().ifEmpty([]),
                 eukcc_db,
                 params.split_bac_level,
                 params.split_euk_level
@@ -1086,7 +1086,7 @@ summary = [:]
                 ctg200.collect { entry -> entry[1] },
                 tax_split.collect { entry -> entry[1] },
                 prokka_for_split.collect { entry -> entry[1] }.ifEmpty([]),
-                kofam_scan.collect { entry -> entry[1] }.ifEmpty([]),
+                kofam_scan.collect().ifEmpty([]),
                 params.split_bac_level,
                 params.split_euk_level
             )

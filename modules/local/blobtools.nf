@@ -14,7 +14,7 @@ process BLOBTOOLS {
     db: Path
 
     output:
-    record(meta: meta, tax: file("*/*.blobDB*table.txt"), contigs: file("*.fasta"), tax_split: file("*", type: "dir"), versions: file("versions.yml"))
+    record(meta: meta, tax: file("*/*.blobDB*table.txt"), contigs: file("*.fasta", includeInputs: true), tax_split: file("*", type: "dir"), versions: file("versions.yml"))
     topic:
     file('versions.yml') >> 'local_versions'
 

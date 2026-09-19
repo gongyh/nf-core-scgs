@@ -12,15 +12,16 @@ process PROKKA {
     proteins: List<Path>
 
     output:
-    record(meta: meta, prokka_for_split: file("*", type: "dir"), faa: file("*/*.faa"), gbk: file("*/*.gbk"), versions: file("versions.yml"))
+    record(meta: meta, prokka_for_split: file("*", type: "dir"), faa: file("*.faa"), gbk: file("*/*.gbk"), versions: file("versions.yml"))
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
     def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
     """
     prokka --outdir $prefix --prefix $prefix --strain $prefix --addgenes --addmrna --cpus ${task.cpus} $proteins_opt $contigs
+    cp ${prefix}/${prefix}.faa .
     sed '/^##FASTA/Q' ${prefix}/${prefix}.gff > ${prefix}/${prefix}_noseq.gff
-    gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | grep _gene | sed 's/_gene//g' > ${prefix}/${prefix}_ctg_genes.tsv
+    gff2bed < ${prefix}/${prefix}_noseq.gff | cut -f1,4 | sed -n '/_gene/ { s/_gene//g; p; }' > ${prefix}/${prefix}_ctg_genes.tsv
     prokka_postprocess.py ${prefix}/${prefix}_ctg_genes.tsv ${prefix}/${prefix}.tsv > ${prefix}/${prefix}_all.tsv
 
     cat <<-END_VERSIONS > versions.yml

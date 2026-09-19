@@ -203,8 +203,8 @@ class Abundance:
             threads=len(paths),
             min_identity=minid,
             # Note: pycoverm's trim_upper=0.1 is same as CoverM trim-upper 90.
-            trim_upper=0.1,
-            trim_lower=0.1,
+            trim_upper=0.0,
+            trim_lower=0.0,
         )
 
         assert coverage.shape == (len(headers), len(paths))

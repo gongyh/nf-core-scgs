@@ -13,7 +13,7 @@ process KOFAMSCAN {
     ko_list: Path
 
     output:
-    record(meta: meta, txt: file("*_KOs_*.txt"), kofamscan: file("*_KOs_ko.kofamscan"), versions: file("versions.yml"))
+    record(meta: meta, txt: files("*_KOs_*.txt"), kofamscan: file("*_KOs_ko.kofamscan"), versions: file("versions.yml"))
     topic:
     file('versions.yml') >> 'local_versions'
 

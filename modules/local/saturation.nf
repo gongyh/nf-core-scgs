@@ -11,7 +11,7 @@ process SATURATION {
     tuple(meta: Map, reads: List<Path>)
 
     output:
-    record(meta: meta, pdf: file("${prefix}_kmer.pdf"), csv: file("${prefix}_cov31_*.csv"), versions: file('versions.yml'))
+    record(meta: meta, pdf: file("${prefix}_kmer.pdf"), csv: files("${prefix}_cov31_*.csv"), versions: file('versions.yml'))
     topic:
     file('versions.yml') >> 'local_versions'
 

@@ -15,14 +15,17 @@ workflow DCVBIN {
     main:
     ch_published = channel.empty()
     // contig features from DNABERT-S
-    ch_embedding_input = contigs_fasta.map { meta, fasta ->
+    ch_contigs_fasta = contigs_fasta.map { meta, fasta ->
+        tuple(meta, fasta)
+    }
+    ch_embedding_input = ch_contigs_fasta.map { meta, fasta ->
         tuple(meta, fasta, file(params.DNABERTS_dir, type: 'dir'))
     }
     contig_embedding = CONTIG_EMBEDDING(ch_embedding_input)
     ch_published = ch_published.mix(contig_embedding.map { result -> [destination: 'dcvbin_embeddings', files: result] })
 
     // TNF & RPKM
-    ch_tnf_rpkm_input = contigs_fasta.combine(sorted_bam)
+    ch_tnf_rpkm_input = ch_contigs_fasta.combine(sorted_bam)
     tnf_rpkm = TNF_RPKM(ch_tnf_rpkm_input)
     ch_published = ch_published.mix(tnf_rpkm.map { result -> [destination: "dcvbin_tnf_rpkm/${result.meta.id}", files: result] })
 
@@ -36,13 +39,13 @@ workflow DCVBIN {
     ch_published = ch_published.mix(feature_fusion.map { result -> [destination: "dcvbin_vae/${result.meta.id}", files: result] })
 
     // k-mer feature
-    contig_kmer = CONTIG_KMER(contigs_fasta)
+    contig_kmer = CONTIG_KMER(ch_contigs_fasta)
     ch_published = ch_published.mix(contig_kmer.map { result -> [destination: 'dcvbin_kmer', files: result] })
 
     // Initial number of clusters by marker genes
     ch_marker_input = contig_kmer
         .map { result -> tuple(result.meta, result.kmer) }
-        .combine(contigs_fasta.map { _meta, fasta -> fasta })
+        .combine(ch_contigs_fasta.map { _meta, fasta -> fasta })
     marker_nclusters = MARKER_NCLUSTERS(ch_marker_input)
     ch_published = ch_published.mix(marker_nclusters.map { result -> [destination: 'dcvbin_marker', files: result] })
 
@@ -50,7 +53,7 @@ workflow DCVBIN {
     ch_binning_input = feature_fusion
         .map { result -> tuple(result.meta, result.features) }
         .combine(marker_nclusters.map { result -> result.marker_cv })
-        .combine(contigs_fasta.map { _meta, fasta -> fasta })
+        .combine(ch_contigs_fasta.map { _meta, fasta -> fasta })
     dcvbin_bin = DCVBIN_BIN(ch_binning_input)
     ch_published = ch_published.mix(dcvbin_bin.map { result -> [destination: 'dcvbin_bins', files: result] })
 
