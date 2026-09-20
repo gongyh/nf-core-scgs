@@ -136,8 +136,7 @@ include { PROKKA                            } from '../modules/local/prokka'
 include { KOFAMSCAN                         } from '../modules/local/kofamscan'
 include { EGGNOG                            } from '../modules/local/eggnog'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
-include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
-include { softwareVersionsToYAML           } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 
 workflow MINIMETA {
     main:
