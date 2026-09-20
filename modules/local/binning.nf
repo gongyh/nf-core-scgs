@@ -29,8 +29,8 @@ process COOCCURRENCE_BINNING {
         N_BINS=0
     fi
 
-    printf "Metric\tValue\n" > cooccurrence_mqc.tsv
-    printf "Number of genome bins\t\${N_BINS}\n" >> cooccurrence_mqc.tsv
+    printf "Metric\\tValue\\n" > cooccurrence_mqc.tsv
+    printf "Number of genome bins\\t\${N_BINS}\\n" >> cooccurrence_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1)

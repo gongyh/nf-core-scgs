@@ -33,9 +33,9 @@ process CONTIG_COVERAGE {
         N_CONTIGS=0; N_SAMPLES=0
     fi
 
-    printf "Metric\tValue\n" > coverage_mqc.tsv
-    printf "Number of contigs\t\${N_CONTIGS}\n" >> coverage_mqc.tsv
-    printf "Number of sub-samples\t\${N_SAMPLES}\n" >> coverage_mqc.tsv
+    printf "Metric\\tValue\\n" > coverage_mqc.tsv
+    printf "Number of contigs\\t\${N_CONTIGS}\\n" >> coverage_mqc.tsv
+    printf "Number of sub-samples\\t\${N_SAMPLES}\\n" >> coverage_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
