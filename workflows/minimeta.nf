@@ -519,11 +519,9 @@ summary = [:]
     }
 
     // GET_SOFTWARE_VERSIONS
-    ch_multiqc_versions = channel.empty()
-    software_versions = softwareVersionsToYAML(topic_versions.versions_file.mix(ch_vendor_versions))
+    ch_multiqc_versions = softwareVersionsToYAML(topic_versions.versions_file.mix(ch_vendor_versions))
         .mix(topic_versions_string)
-    ch_multiqc_versions = software_versions.map { result -> result.mqc_yml }
-    ch_published = ch_published.mix(software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
+        .collectFile(name: 'collated_versions.yml', newLine: true)
 
     // MODULE: MULTIQC
     workflow_summary = create_workflow_summary(summary)
