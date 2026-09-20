@@ -10,7 +10,7 @@ process DOUBLETD {
     vcf: Path
 
     output:
-    record(prediction: file('prediction.tsv'), versions: file('versions.yml'))
+    record(prediction: file('prediction.tsv'))
     topic:
     file('versions.yml') >> 'local_versions'
 

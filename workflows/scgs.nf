@@ -733,7 +733,7 @@ summary = [:]
         ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2/stats', files: result.stats] })
         ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.txt, result.pdf]] })
         if (params.saveAlignedIntermediates) {
-            ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.bam, result.bai, result.bed, result.versions]] })
+            ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.bam, result.bai, result.bed]] })
         }
 
         preseq = PRESEQ(ch_samtools_bed)

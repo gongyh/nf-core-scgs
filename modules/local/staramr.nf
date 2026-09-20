@@ -13,7 +13,7 @@ process STARAMR {
     tuple(meta: Map, contigs: Path, acquired: Boolean, point: Boolean, species: String)
 
     output:
-    record(meta: meta, out_put: file("${task.ext.prefix ?: meta.id}", type: "dir"), versions: file('versions.yml'))
+    record(meta: meta, out_put: file("${task.ext.prefix ?: meta.id}", type: "dir"))
     topic:
     file('versions.yml') >> 'local_versions'
 

@@ -11,7 +11,7 @@ process FEATURE_FUSION {
     tuple(meta: Map, fpf_file: Path, tnf_file: Path, rpkm_file: Path)
 
     output:
-    record(meta: meta, features: file("${prefix}_vae_features.npy"), versions: file('versions.yml'))
+    record(meta: meta, features: file("${prefix}_vae_features.npy"))
     topic:
     file('versions.yml') >> 'local_versions'
 

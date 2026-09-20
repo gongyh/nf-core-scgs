@@ -22,9 +22,9 @@ process SPLIT_CHECKM_EUKCC {
     stageAs kofam, 'results/kofam/*'
 
     output:
-    record(output: file("split", type: "dir"), fa: files("split/fa/*.fasta", optional: true), csv: files("split/*.csv"), versions: file("split/versions.yml"))
+    record(output: file("split", type: "dir"), fa: files("split/fa/*.fasta", optional: true), csv: files("split/*.csv"))
     topic:
-    file('split/versions.yml') >> 'local_versions'
+    file("split/versions.yml") >> 'local_versions'
 
     script:
     """

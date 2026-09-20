@@ -9,7 +9,7 @@ process NT_DBDOWNLOAD {
         'biocontainers/blast:2.13.0--hf3cf87c_0' }"
 
     output:
-    record(db: file('nt_db'), versions: file('versions.yml'))
+    record(db: file('nt_db'))
     topic:
     file('versions.yml') >> 'local_versions'
 

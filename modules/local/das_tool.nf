@@ -12,7 +12,9 @@ process DAS_TOOL {
 
 
     output:
-    record(bins: file('das_tool_bins'), versions: file('versions.yml'))
+    record(bins: file('das_tool_bins'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     def my_labels = raw_info.findAll { entry -> entry instanceof String }.join(',')

@@ -13,7 +13,7 @@ process GET_SOFTWARE_VERSIONS {
     versions: Path
 
     output:
-    record(yml: file('software_versions.yml'), mqc_yml: file('software_versions_mqc.yml'), versions: file('versions.yml'))
+    record(yml: file('software_versions.yml'), mqc_yml: file('software_versions_mqc.yml'))
 
     script:
     def args = task.ext.args ?: ''

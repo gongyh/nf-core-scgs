@@ -13,7 +13,7 @@ process ANEUFINDER {
     bais: Bag<Path>
 
     output:
-    record(cnv: file('CNV_output', type: 'dir'), versions: file('versions.yml'))
+    record(cnv: file('CNV_output', type: 'dir'))
     topic:
     file('versions.yml') >> 'local_versions'
 

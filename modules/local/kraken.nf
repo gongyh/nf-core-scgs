@@ -13,9 +13,9 @@ process KRAKEN {
     taxonomy: Path
 
     output:
-    record(meta: meta, report: file("*.krk"), html: file("*.html"), tda: file("*.TDA_genus.txt"), versions: file("versions.yml"))
+    record(meta: meta, report: file("*.krk"), html: file("*.html"), tda: file("*.TDA_genus.txt"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'local_versions'
 
     script:
     def mode = meta.single_end ? "" : "--paired"
@@ -32,7 +32,7 @@ process KRAKEN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        kraken2: \$(echo \$(kraken --version 2>&1) | sed 's/^.*kraken //; s/Using.*\$//')
+        kraken2: \$(kraken2 --version 2>&1 | grep version | sed 's/Kraken version //')
     END_VERSIONS
     """
 }

@@ -12,7 +12,7 @@ process METABULI_TAXA {
     db_dir: Path
 
     output:
-    record(meta: meta, taxonomy: file('taxonomy.tsv'), versions: file('versions.yml'))
+    record(meta: meta, taxonomy: file('taxonomy.tsv'))
     topic:
     file('versions.yml') >> 'local_versions'
 

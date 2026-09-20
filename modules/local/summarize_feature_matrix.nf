@@ -13,7 +13,9 @@ process SUMMARIZE_FEATURE_MATRIX {
     tuple(meta: Map, fasta: Path, depth: Path, kmer_size: Integer, k4_csv: Path, gff: Path)
 
     output:
-    record(matrix: file('final_feature_matrix.csv'), versions: file('versions.yml'))
+    record(matrix: file('final_feature_matrix.csv'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

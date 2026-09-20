@@ -10,7 +10,7 @@ process UMAP {
     tda: Bag<Path>
 
     output:
-    record(h5ad: file('umap.h5ad'), pkl: file('umap.pkl'), pdf: file('umap.pdf'), html: file('umap.html'), versions: file('versions.yml'))
+    record(h5ad: file('umap.h5ad'), pkl: file('umap.pkl'), pdf: file('umap.pdf'), html: file('umap.html'))
     topic:
     file('versions.yml') >> 'local_versions'
 

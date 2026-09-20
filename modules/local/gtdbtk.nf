@@ -16,7 +16,7 @@ process GTDBTK {
     stageAs fa, 'genome/*'
 
     output:
-    record(out: file('out', type: "dir"), taxa: file('taxa.txt'), mqc_tsv: file('GTDBtk_mqc.tsv'), versions: file('versions.yml'))
+    record(out: file('out', type: "dir"), taxa: file('taxa.txt'), mqc_tsv: file('GTDBtk_mqc.tsv'))
     topic:
     file('versions.yml') >> 'local_versions'
 

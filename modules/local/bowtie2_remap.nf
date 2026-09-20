@@ -13,7 +13,9 @@ process BOWTIE2_REMAP {
     tuple(meta: Map, contigs: Path)
 
     output:
-    record(meta: meta, index: file("*Bowtie2Index"), versions: file("*Bowtie2Index/versions.yml"))
+    record(meta: meta, index: file("*Bowtie2Index"))
+    topic:
+    file("*Bowtie2Index/versions.yml") >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

@@ -12,7 +12,9 @@ process EXTRACT_BINS {
     assembly: Path
 
     output:
-    record(bins: file('bins'), versions: file('versions.yml'), mqc_tsv: file('extract_bins_mqc.tsv'), scaffolds2bin: file('scaffolds2bin.tsv'))
+    record(bins: file('bins'), mqc_tsv: file('extract_bins_mqc.tsv'), scaffolds2bin: file('scaffolds2bin.tsv'))
+    topic:
+    file('versions.yml') >> 'local_versions'
     script:
     """
     mkdir -p bins

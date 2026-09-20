@@ -12,7 +12,7 @@ process CONTIG_EMBEDDING {
     tuple(meta: Map, ctgs_2k: Path, model_dir: Path)
 
     output:
-    record(meta: meta, fpf: file("${prefix}_fpf.npy"), versions: file('versions.yml'))
+    record(meta: meta, fpf: file("${prefix}_fpf.npy"))
     topic:
     file('versions.yml') >> 'local_versions'
 

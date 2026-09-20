@@ -7,7 +7,7 @@ process KOFAM_DBDOWNLOAD {
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
-    record(db: file('kofam_db'), versions: file('versions.yml'))
+    record(db: file('kofam_db'))
     topic:
     file('versions.yml') >> 'local_versions'
 

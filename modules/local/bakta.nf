@@ -16,9 +16,9 @@ process BAKTA {
     prodigal_tf: List<Path>
 
     output:
-    record(meta: meta, bakta_dir: file("${task.ext.prefix ?: meta.id}", type: "dir"), versions: file("versions.yml"))
+    record(meta: meta, bakta_dir: file("${task.ext.prefix ?: meta.id}", type: "dir"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'local_versions'
 
     script:
     def args = task.ext.args   ?: ''

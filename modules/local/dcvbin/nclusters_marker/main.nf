@@ -10,7 +10,7 @@ process MARKER_NCLUSTERS {
     tuple(meta: Map, kmer_file: Path, fasta_file: Path)
 
     output:
-    record(meta: meta, marker_cv: file('cluster_value'), versions: file('versions.yml'))
+    record(meta: meta, marker_cv: file('cluster_value'))
     topic:
     file('versions.yml') >> 'local_versions'
 

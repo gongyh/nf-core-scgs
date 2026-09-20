@@ -12,7 +12,7 @@ process FILTER_CONTIGS {
     min_len: Integer
 
     output:
-    record(filtered: file('filtered.fasta'), versions: file('versions.yml'))
+    record(filtered: file('filtered.fasta'))
     topic:
     file('versions.yml') >> 'local_versions'
     script:

@@ -11,7 +11,9 @@ process KMER_COUNT {
     kmer: Integer
 
     output:
-    record(meta: meta, kmer: kmer, csv: file("${meta.id}_k${kmer}.csv"), versions: file("versions.yml"))
+    record(meta: meta, kmer: kmer, csv: file("${meta.id}_k${kmer}.csv"))
+    topic:
+    file("versions.yml") >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

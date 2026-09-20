@@ -43,20 +43,16 @@ workflow PREPARE_FEATURES_MULTI {
         .combine(ch_fai_file)
     contig_coverage = CONTIG_COVERAGE(ch_coverage_input)
     ch_all_depth = contig_coverage.map { result -> result.depth }.collect()
-    ch_versions = contig_coverage.map { result -> result.versions }
 
     merge_coverage = MERGE_COVERAGE(ch_all_depth)
-    ch_versions = ch_versions.mix(merge_coverage.map { result -> result.versions })
     ch_coverage_mqc = contig_coverage.map { result -> result.mqc_tsv }
     ch_published = ch_published.mix(contig_coverage.map { result -> [destination: 'coverage_depth', files: result.depth] })
     // PRODIGAL
     prodigal = PRODIGAL(ch_fasta)
-    ch_versions = ch_versions.mix(prodigal.map { result -> result.versions })
     ch_published = ch_published.mix(prodigal.map { result -> [destination: 'prodigal', files: result] })
 
     // K-mer
     kmer_count = KMER_COUNT(ch_fasta, 4)
-    ch_versions = ch_versions.mix(kmer_count.map { result -> result.versions })
     ch_published = ch_published.mix(kmer_count.map { result -> [destination: 'kmer', files: result.csv] })
 
     // Coverage + Kmer + Genes
@@ -65,13 +61,11 @@ workflow PREPARE_FEATURES_MULTI {
         .combine(kmer_count.map { result -> tuple(result.kmer, result.csv) })
         .combine(prodigal.map { result -> result.gff })
     summarize_feature_matrix = SUMMARIZE_FEATURE_MATRIX(ch_feature_input)
-    ch_versions = ch_versions.mix(summarize_feature_matrix.map { result -> result.versions })
     ch_published = ch_published.mix(summarize_feature_matrix.map { result -> [destination: 'feature_matrix', files: result] })
 
     emit:
     feature_matrix: Channel<Path> = summarize_feature_matrix.map { result -> result.matrix }
     coverage_matrix: Value<Path> = merge_coverage.map { result -> result.matrix }
     coverage_mqc: Channel<Path> = ch_coverage_mqc
-    versions: Channel<Path> = ch_versions
     published: Channel<Map> = ch_published
 }

@@ -13,7 +13,7 @@ process VG_INDEX {
     tuple(meta: Map, reads: List<Path>, vg: Path)
 
     output:
-    record(meta: meta, gam: file("${prefix}.gam"), txt: file('*.stats.txt'), versions: file('versions.yml'))
+    record(meta: meta, gam: file("${prefix}.gam"), txt: file('*.stats.txt'))
     topic:
     file('versions.yml') >> 'local_versions'
 

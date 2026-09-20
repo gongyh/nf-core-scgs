@@ -10,7 +10,7 @@ process TNF_RPKM {
     tuple(meta: Map, fasta_file: Path, bam_file: Path)
 
     output:
-    record(meta: meta, tnf: file('tnf_and_rpkm/*tnf.npz'), rpkm: file('tnf_and_rpkm/*rpkm.npz'), versions: file('versions.yml'))
+    record(meta: meta, tnf: file('tnf_and_rpkm/*tnf.npz'), rpkm: file('tnf_and_rpkm/*rpkm.npz'))
     topic:
     file('versions.yml') >> 'local_versions'
 

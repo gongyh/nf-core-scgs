@@ -10,7 +10,7 @@ process CONTIG_KMER {
     tuple(meta: Map, fasta_file: Path)
 
     output:
-    record(meta: meta, kmer: file('*4mer.csv'), seqid: file('*seqid.csv'), versions: file('versions.yml'))
+    record(meta: meta, kmer: file('*4mer.csv'), seqid: file('*seqid.csv'))
     topic:
     file('versions.yml') >> 'local_versions'
 

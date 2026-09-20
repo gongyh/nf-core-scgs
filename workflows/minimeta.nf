@@ -277,17 +277,7 @@ summary = [:]
     display_header(summary, custom_runName, single_end)
     ch_published = channel.empty()
     ch_multiqc_files = channel.empty()
-    ch_optional_topic_versions = channel.empty()
-    if (
-        params.checkm2_db ||
-        params.mmseqs_db ||
-        params.metabuli_db ||
-        params.DNABERTS_dir ||
-        (params.kofam && params.kofam_profile && params.kofam_kolist) ||
-        (params.eggnog && params.eggnog_db)
-    ) {
-        ch_optional_topic_versions = channel.topic('local_versions')
-    }
+    ch_local_versions = channel.topic('local_versions')
 
     // FASTQC
     ch_multiqc_fastqc = channel.empty()
@@ -515,25 +505,14 @@ summary = [:]
 
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = channel.empty()
-    ch_local_versions = trimgalore.map { result -> result.versions }
-        .mix(bbnorm.map { result -> result.versions })
-        .mix(read_correction.map { result -> result.versions })
-        .mix(spades_joint.map { result -> result.versions })
-        .mix(bowtie2_remap.map { result -> result.versions })
-        .mix(remap.map { result -> result.versions })
-        .mix(merge_bams.map { result -> result.versions })
-        .mix(samtools_faidx.map { result -> result.versions })
-        .mix(PREPARE_FEATURES_SINGLE.out.versions)
-        .mix(PREPARE_FEATURES_MULTI.out.versions)
-        .mix(filter_assembly.map { result -> result.versions })
-        .mix(cooccurrence_binning.map { result -> result.versions })
-        .mix(extract_bins.map { result -> result.versions })
-        .mix(semibin2.map { result -> result.versions })
-        .mix(das_tool.map { result -> result.versions })
-        .mix(prokka.map { result -> result.versions })
+    // Optional topic producers are not invoked in every MINIMETA run.
+    ch_local_versions_complete = ch_published
+        .collect()
+        .map { '__local_versions_complete__' }
     software_versions = GET_SOFTWARE_VERSIONS(
         ch_local_versions
-            .mix(ch_optional_topic_versions)
+            .mix(ch_local_versions_complete)
+            .until { version -> version == '__local_versions_complete__' }
             .mix(ch_vendor_versions)
             .map { version ->
                 def lines = version.text.readLines()

@@ -12,7 +12,9 @@ process FILTER_ASSEMBLY {
     min_len: Integer
 
     output:
-    record(filtered: file('filtered.fasta'), filtered_ids: file('filtered_ids.txt'), versions: file('versions.yml'))
+    record(filtered: file('filtered.fasta'), filtered_ids: file('filtered_ids.txt'))
+    topic:
+    file('versions.yml') >> 'local_versions'
 
     script:
     """

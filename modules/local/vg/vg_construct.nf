@@ -14,7 +14,7 @@ process VG_CONSTRUCT {
     vcf: Path
 
     output:
-    record(vg: file('graph.vg'), versions: file('versions.yml'))
+    record(vg: file('graph.vg'))
     topic:
     file('versions.yml') >> 'local_versions'
 

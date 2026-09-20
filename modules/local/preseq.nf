@@ -11,7 +11,7 @@ process PRESEQ {
     tuple(meta: Map, sbed: Path)
 
     output:
-    record(meta: meta, results: file('preseq', type: 'dir'), versions: file('versions.yml'))
+    record(meta: meta, results: file('preseq', type: 'dir'))
     topic:
     file('versions.yml') >> 'local_versions'
 

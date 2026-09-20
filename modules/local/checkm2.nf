@@ -14,7 +14,7 @@ process CHECKM2 {
     db: Path
 
     output:
-    record(txt: file('Checkm2_results.txt'), mqc_tsv: file('CheckM2_mqc.tsv'), versions: file('versions.yml'))
+    record(txt: file('Checkm2_results.txt'), mqc_tsv: file('CheckM2_mqc.tsv'))
     topic:
     file('versions.yml') >> 'local_versions'
 

@@ -13,7 +13,7 @@ process METARON {
     tuple(meta: Map, contigs: Path, gene_model: Path)
 
     output:
-    record(meta: meta, out_operon: file("${prefix}", type: 'dir'), versions: file('versions.yml'))
+    record(meta: meta, out_operon: file("${prefix}", type: 'dir'))
     topic:
     file('versions.yml') >> 'local_versions'
 

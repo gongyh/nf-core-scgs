@@ -13,9 +13,9 @@ process KOFAMSCAN {
     ko_list: Path
 
     output:
-    record(meta: meta, txt: files("*_KOs_*.txt"), kofamscan: file("*_KOs_ko.kofamscan"), versions: file("versions.yml"))
+    record(meta: meta, txt: files("*_KOs_*.txt"), kofamscan: file("*_KOs_ko.kofamscan"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'local_versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

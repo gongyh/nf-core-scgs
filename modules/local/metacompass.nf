@@ -11,7 +11,7 @@ process METACOMPASS {
     tuple(meta: Map, reads: List<Path>, refs_fna: List<Path>)
 
     output:
-    record(meta: meta, contig: file("${prefix}_*.metacompass.ctg.fa"), assembly: file("${prefix}_*.metacompass_out", type: 'dir'), versions: file('versions.yml'))
+    record(meta: meta, contig: file("${prefix}_*.metacompass.ctg.fa"), assembly: file("${prefix}_*.metacompass_out", type: 'dir'))
     topic:
     file('versions.yml') >> 'local_versions'
 

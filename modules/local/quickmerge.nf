@@ -11,7 +11,7 @@ process QUICKMERGE {
     tuple(meta: Map, denovo_contigs: Path, refass_contigs: List<Path>) // denovo and ref-guided assembled assemblies
 
     output:
-    record(meta: meta, merged_assembly: file("${prefix}.hybrid200.fasta"), merged_clean: file("${prefix}.hybrid.fasta"), versions: file('versions.yml'))
+    record(meta: meta, merged_assembly: file("${prefix}.hybrid200.fasta"), merged_clean: file("${prefix}.hybrid.fasta"))
     topic:
     file('versions.yml') >> 'local_versions'
 

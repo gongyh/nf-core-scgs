@@ -11,7 +11,7 @@ process INDELREALIGN {
     tuple(meta: Map, bam: Path, fa: Path)
 
     output:
-    record(meta: meta, bam: file('*.realign.bam'), bai: file('*.realign.bam.bai'), versions: file('versions.yml'))
+    record(meta: meta, bam: file('*.realign.bam'), bai: file('*.realign.bam.bai'))
     topic:
     file('versions.yml') >> 'local_versions'
 

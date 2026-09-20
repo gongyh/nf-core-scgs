@@ -21,9 +21,9 @@ process GRAPHBIN {
     stageAs csv, 'csv/*'
 
     output:
-    record(out_put: file("binning", type: "dir"), versions: file("versions.yml"))
+    record(out_put: file("binning", type: "dir"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'local_versions'
 
     script:
     """

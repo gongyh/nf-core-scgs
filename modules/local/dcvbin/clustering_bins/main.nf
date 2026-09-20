@@ -10,7 +10,7 @@ process DCVBIN_BIN {
     tuple(meta: Map, vae_features_file: Path, cluster_value_file: Path, fasta_file: Path)
 
     output:
-    record(meta: meta, bins_dir: file("${prefix}_bins", type: 'dir'), label_file: file("${prefix}_prinum.txt"), scaffolds2bin: file("${prefix}_scaffolds2bin.tsv"), mqc_tsv: file("${prefix}_mqc.tsv"), versions: file('versions.yml'))
+    record(meta: meta, bins_dir: file("${prefix}_bins", type: 'dir'), label_file: file("${prefix}_prinum.txt"), scaffolds2bin: file("${prefix}_scaffolds2bin.tsv"), mqc_tsv: file("${prefix}_mqc.tsv"))
     topic:
     file('versions.yml') >> 'local_versions'
 
