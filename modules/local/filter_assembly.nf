@@ -22,7 +22,7 @@ process FILTER_ASSEMBLY {
     seqkit seq -m ${min_len} ${fasta} -n -i > filtered_ids.txt
     cat <<-END_VERSIONS > versions.yml
     "NFCORE_MINIMETA:MINIMETA:FILTER_ASSEMBLY":
-        seqkit: \$(seqkit version 2>&1 | sed 's/^.*version //; s/ .*\$//')
+        seqkit: \$(seqkit version | sed 's/seqkit //')
     END_VERSIONS
     """
 }

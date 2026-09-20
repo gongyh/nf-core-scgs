@@ -54,7 +54,7 @@ process EXTRACT_BINS {
     printf "Total bin size (bp)\t\${TOTAL_SIZE}\n" >> extract_bins_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        seqtk: \$(seqtk 2>&1 | grep -oP 'Version \\K[0-9.]+' || echo "unknown")
+        seqtk: \$(seqtk 2>&1 | grep Version | sed 's/Version: //')
     END_VERSIONS
     """
 }

@@ -18,6 +18,6 @@ process FILTER_CONTIGS {
     script:
     """
     seqkit seq -m ${min_len} ${fasta} > filtered.fasta
-    echo "seqtk: \$(seqtk 2>&1 | head -1)" > versions.yml
+    echo "seqtk: \$(seqkit version | sed 's/seqkit //')" > versions.yml
     """
 }

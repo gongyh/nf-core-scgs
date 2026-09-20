@@ -56,7 +56,7 @@ process KMER_COUNT {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python3 --version | sed 's/Python //')
-        kpal: \$(kpal -v 2>&1 | head -n1 | sed 's/^.*kpal //')
+        kpal: \$(kpal -v 2>&1 | head -n1 | sed 's/^.*kpal version //')
     END_VERSIONS
     """
 }

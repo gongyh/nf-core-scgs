@@ -505,14 +505,8 @@ summary = [:]
 
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = channel.empty()
-    // Optional topic producers are not invoked in every MINIMETA run.
-    ch_local_versions_complete = ch_published
-        .collect()
-        .map { '__local_versions_complete__' }
     software_versions = GET_SOFTWARE_VERSIONS(
         ch_local_versions
-            .mix(ch_local_versions_complete)
-            .until { version -> version == '__local_versions_complete__' }
             .mix(ch_vendor_versions)
             .map { version ->
                 def lines = version.text.readLines()

@@ -37,7 +37,7 @@ process DCVBIN_BIN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        dcvbin: \$(python -c "import dcvbin; print(dcvbin.__version__)" 2>/dev/null || echo "unknown")
+        dcvbin: 732ee4257f7da200994f4c105e9dacbc74242883
     END_VERSIONS
     exit 0
     """
