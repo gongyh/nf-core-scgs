@@ -277,9 +277,22 @@ summary = [:]
     display_header(summary, custom_runName, single_end)
     ch_published = channel.empty()
     ch_multiqc_files = channel.empty()
-    ch_versions = channel.topic('versions')
-    ch_local_versions = ch_versions.filter { version -> version instanceof Path }
-    ch_nfcore_topic_versions = ch_versions.filter { version -> version instanceof List }
+
+    def topic_versions = channel.topic('versions')
+        .branch { entry ->
+            versions_file: entry instanceof Path
+            versions_tuple: true
+        }
+
+    def topic_versions_string = topic_versions.versions_tuple.unique()
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by: 0)
+        .map { process, tool_versions ->
+            tool_versions.unique().sort()
+            "${process}:\n${tool_versions.join('\n')}"
+        }
 
     // FASTQC
     ch_multiqc_fastqc = channel.empty()
@@ -507,31 +520,8 @@ summary = [:]
 
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = channel.empty()
-    ch_nfcore_topic_versions_string = ch_nfcore_topic_versions
-        .map { process, tool, version ->
-            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
-        }
-        .groupTuple(by: 0)
-        .map { process, tool_versions ->
-            tool_versions.unique().sort()
-            "${process}:\n${tool_versions.join('\n')}"
-        }
-    software_versions = GET_SOFTWARE_VERSIONS(
-        ch_local_versions
-            .mix(ch_vendor_versions)
-            .map { version ->
-                def lines = version.text.readLines()
-                def first_content = lines.find { line -> line.trim() && line.trim() != 'END_VERSIONS' }
-                def indentation = first_content ? first_content.length() - first_content.stripLeading().length() : 0
-                lines
-                    .findAll { line -> line.trim() != 'END_VERSIONS' }
-                    .collect { line -> indentation > 0 && line.length() >= indentation ? line.substring(indentation) : line }
-                    .join('\n') + '\n'
-            }
-            .mix(ch_nfcore_topic_versions_string)
-            .unique()
-            .collectFile(name: 'collated_versions.yml', newLine: true)
-    )
+    software_versions = softwareVersionsToYAML(topic_versions.versions_file.mix(ch_vendor_versions))
+        .mix(topic_versions_string)
     ch_multiqc_versions = software_versions.map { result -> result.mqc_yml }
     ch_published = ch_published.mix(software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
 
