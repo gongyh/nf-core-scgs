@@ -14,7 +14,7 @@ process PROKKA {
     output:
     record(meta: meta, prokka_for_split: file("*", type: "dir"), faa: file("*.faa"), gbk: file("*/*.gbk"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

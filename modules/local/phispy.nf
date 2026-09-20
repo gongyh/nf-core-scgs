@@ -13,7 +13,7 @@ process PHISPY {
     output:
     record(meta: meta, out_operon: file("${prefix}", type: 'dir'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

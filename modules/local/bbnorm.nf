@@ -13,7 +13,7 @@ process BBNORM {
     output:
     record(meta: meta, single_fastq: file('*_norm.fastq.gz', optional: true), fastq1: file('*_norm_R1.fastq.gz', optional: true), fastq2: file('*_norm_R2.fastq.gz', optional: true), log: file('*.log'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args = task.ext.args ?: ''

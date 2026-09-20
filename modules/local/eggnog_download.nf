@@ -11,7 +11,7 @@ process EGGNOG_DBDOWNLOAD {
     output:
     record(db: file('eggnog_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

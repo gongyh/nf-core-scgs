@@ -15,7 +15,7 @@ process KRAKEN {
     output:
     record(meta: meta, report: file("*.krk"), html: file("*.html"), tda: file("*.TDA_genus.txt"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def mode = meta.single_end ? "" : "--paired"

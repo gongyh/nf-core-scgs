@@ -15,7 +15,7 @@ process TRIMGALORE {
     output:
     record(meta: meta, single_read: file('*_trimmed.fq.gz', optional: true), read1: file('*_val_1.fq.gz', optional: true), read2: file('*_val_2.fq.gz', optional: true), logs: file('logs', type: 'dir'), fastqc: file('FastQC', type: 'dir'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def c_r1 = params.clip_r1 > 0 ? "--clip_r1 ${params.clip_r1}" : ''

@@ -13,7 +13,7 @@ process QUICKMERGE {
     output:
     record(meta: meta, merged_assembly: file("${prefix}.hybrid200.fasta"), merged_clean: file("${prefix}.hybrid.fasta"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args = task.ext.args ?: ''

@@ -16,7 +16,7 @@ process VG_CONSTRUCT {
     output:
     record(vg: file('graph.vg'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

@@ -15,7 +15,7 @@ process VG_CALL {
     output:
     record(call: file('*.calls.vcf'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

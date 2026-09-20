@@ -13,7 +13,7 @@ process RAGTAG {
     output:
     record(meta: meta, scaffolded_assembly: file("${prefix}_scaffolds.fasta"), denovo_assembly: file("${prefix}.denovo.clean.fasta"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args = task.ext.args ?: ''

@@ -12,7 +12,7 @@ process CONTIG_KMER {
     output:
     record(meta: meta, kmer: file('*4mer.csv'), seqid: file('*seqid.csv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''

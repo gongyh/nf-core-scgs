@@ -15,7 +15,7 @@ process MERGE_BAMS {
     output:
     record(merged_bam: file('merged.bam'), merged_bai: file('merged.bam.bai'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

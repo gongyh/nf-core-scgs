@@ -10,7 +10,7 @@ process MMSEQS2SEMIBIN {
     output:
     record(meta: meta, tax: file("*_semibin_tax.tsv"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

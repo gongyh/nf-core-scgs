@@ -14,7 +14,7 @@ process FILTER_ASSEMBLY {
     output:
     record(filtered: file('filtered.fasta'), filtered_ids: file('filtered_ids.txt'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

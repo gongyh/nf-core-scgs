@@ -16,7 +16,7 @@ process EGGNOG {
     output:
     record(meta: meta, annotations: file("*.emapper.annotations"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

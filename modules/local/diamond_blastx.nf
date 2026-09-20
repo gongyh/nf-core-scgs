@@ -19,7 +19,7 @@ process DIAMOND_BLASTX {
     output:
     record(meta: meta, uniprot: file("*_uniprot.taxified.out"), contigs: file("*.fasta", includeInputs: true), nt: file("*_nt.out", includeInputs: true), has_uniprot: has_uniprot, out_put: files("*_uniprot.*"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

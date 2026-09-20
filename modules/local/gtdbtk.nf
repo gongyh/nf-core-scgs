@@ -18,7 +18,7 @@ process GTDBTK {
     output:
     record(out: file('out', type: "dir"), taxa: file('taxa.txt'), mqc_tsv: file('GTDBtk_mqc.tsv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

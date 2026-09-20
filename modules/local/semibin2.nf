@@ -13,7 +13,7 @@ process SEMIBIN2 {
     output:
     record(bins: file('bins_merged'), mqc_tsv: file('semibin2_mqc.tsv'), scaffolds2bin: file('scaffolds2bin.tsv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
     script:
     def bam_args = "-b ${merged_bam}"
     def tax_args = taxonomy ? "--taxonomy ${taxonomy}" : ""

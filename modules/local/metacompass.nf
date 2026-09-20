@@ -13,7 +13,7 @@ process METACOMPASS {
     output:
     record(meta: meta, contig: file("${prefix}_*.metacompass.ctg.fa"), assembly: file("${prefix}_*.metacompass_out", type: 'dir'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

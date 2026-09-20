@@ -24,7 +24,7 @@ process SPLIT_CHECKM_EUKCC {
     output:
     record(output: file("split", type: "dir"), fa: files("split/fa/*.fasta", optional: true), csv: files("split/*.csv"))
     topic:
-    file("split/versions.yml") >> 'local_versions'
+    file("split/versions.yml") >> 'versions'
 
     script:
     """

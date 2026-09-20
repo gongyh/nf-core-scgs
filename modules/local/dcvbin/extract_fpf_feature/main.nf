@@ -14,7 +14,7 @@ process CONTIG_EMBEDDING {
     output:
     record(meta: meta, fpf: file("${prefix}_fpf.npy"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''

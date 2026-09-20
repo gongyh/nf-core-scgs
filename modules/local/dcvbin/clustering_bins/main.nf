@@ -12,7 +12,7 @@ process DCVBIN_BIN {
     output:
     record(meta: meta, bins_dir: file("${prefix}_bins", type: 'dir'), label_file: file("${prefix}_prinum.txt"), scaffolds2bin: file("${prefix}_scaffolds2bin.tsv"), mqc_tsv: file("${prefix}_mqc.tsv"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''

@@ -12,7 +12,7 @@ process OUTPUT_DOCUMENTATION {
     output:
     record(html: file('results_description.html'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

@@ -15,7 +15,7 @@ process VAMB_BIN {
     output:
     record(meta: meta, scaffolds2bin: file("${prefix}/scaffolds2bin.tsv"), bins: files("${prefix}/bins/*.fna.gz", optional: true), clusters_metadata: file("${prefix}/vae*_clusters_metadata.tsv"), clusters_split: file("${prefix}/vae*_clusters_split.tsv", optional: true), clusters_unsplit: file("${prefix}/vae*_clusters_unsplit.tsv"), taxometer_results: file("${prefix}/results_taxometer.tsv", optional: true), latent_encoding: file("${prefix}/latent.npz", optional: true), abundance: file("${prefix}/abundance.npz"), composition: file("${prefix}/composition.npz"), log: file("${prefix}/log.txt"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''

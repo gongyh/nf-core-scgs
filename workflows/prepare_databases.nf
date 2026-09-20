@@ -122,7 +122,8 @@ workflow PREPARE_DATABASES {
 
     // GET_SOFTWARE_VERSIONS
     software_versions = GET_SOFTWARE_VERSIONS (
-        channel.topic('local_versions')
+        channel.topic('versions')
+            .filter { version -> version instanceof Path }
             .unique()
             .collectFile(name: 'collated_versions.yml', newLine: true)
     )

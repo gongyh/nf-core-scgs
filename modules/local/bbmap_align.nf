@@ -16,7 +16,7 @@ process BBMAP_ALIGN {
     output:
     record(meta: meta, clean_fastq: files("*_removehost*.fq.gz"), log: file("*.log"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def args = task.ext.args ?: ''

@@ -16,7 +16,7 @@ process REBLOBTOOLS {
     output:
     record(meta: meta, tax: file("*/*.blobDB*table.txt"), contigs: file("*.fasta", includeInputs: true), tax_split: file("*", type: "dir"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

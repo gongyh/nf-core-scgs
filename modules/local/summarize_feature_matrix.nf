@@ -15,7 +15,7 @@ process SUMMARIZE_FEATURE_MATRIX {
     output:
     record(matrix: file('final_feature_matrix.csv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

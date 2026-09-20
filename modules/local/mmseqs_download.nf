@@ -11,7 +11,7 @@ process MMSEQS_DBDOWNLOAD {
     output:
     record(db: file('mmseqs_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

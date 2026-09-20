@@ -9,7 +9,7 @@ process GTDB_DBDOWNLOAD {
     output:
     record(db: file('gtdb_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

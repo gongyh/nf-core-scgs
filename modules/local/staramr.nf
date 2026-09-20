@@ -15,7 +15,7 @@ process STARAMR {
     output:
     record(meta: meta, out_put: file("${task.ext.prefix ?: meta.id}", type: "dir"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

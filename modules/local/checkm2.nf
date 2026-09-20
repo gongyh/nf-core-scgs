@@ -16,7 +16,7 @@ process CHECKM2 {
     output:
     record(txt: file('Checkm2_results.txt'), mqc_tsv: file('CheckM2_mqc.tsv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

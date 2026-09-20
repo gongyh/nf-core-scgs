@@ -16,7 +16,7 @@ process BOWTIE2_ALIGN {
     output:
     record(meta: meta, bam: file("*.bam"), log: file("*.log"), fastq: files("*fastq.gz", optional: true))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def args = task.ext.args ?: ""

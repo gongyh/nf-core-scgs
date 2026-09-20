@@ -18,7 +18,7 @@ process BAKTA {
     output:
     record(meta: meta, bakta_dir: file("${task.ext.prefix ?: meta.id}", type: "dir"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def args = task.ext.args   ?: ''

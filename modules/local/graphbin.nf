@@ -23,7 +23,7 @@ process GRAPHBIN {
     output:
     record(out_put: file("binning", type: "dir"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     """

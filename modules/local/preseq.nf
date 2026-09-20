@@ -13,7 +13,7 @@ process PRESEQ {
     output:
     record(meta: meta, results: file('preseq', type: 'dir'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     pp_outdir = "${params.outdir}/preseq"

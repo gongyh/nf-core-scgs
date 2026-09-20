@@ -12,7 +12,7 @@ process UMAP {
     output:
     record(h5ad: file('umap.h5ad'), pkl: file('umap.pkl'), pdf: file('umap.pdf'), html: file('umap.html'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     template('umap.py')

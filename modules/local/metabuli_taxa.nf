@@ -14,7 +14,7 @@ process METABULI_TAXA {
     output:
     record(meta: meta, taxonomy: file('taxonomy.tsv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args = task.ext.args ?: ''

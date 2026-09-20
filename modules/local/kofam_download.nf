@@ -9,7 +9,7 @@ process KOFAM_DBDOWNLOAD {
     output:
     record(db: file('kofam_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

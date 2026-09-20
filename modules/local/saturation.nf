@@ -13,7 +13,7 @@ process SATURATION {
     output:
     record(meta: meta, pdf: file("${prefix}_kmer.pdf"), csv: files("${prefix}_cov31_*.csv"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

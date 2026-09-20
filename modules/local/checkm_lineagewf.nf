@@ -15,7 +15,7 @@ process CHECKM_LINEAGEWF {
     output:
     record(txt: file('spades_checkM.txt'), mqc_tsv: file('CheckM_mqc.tsv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def checkm_wf = genus ? "taxonomy_wf" : "lineage_wf"

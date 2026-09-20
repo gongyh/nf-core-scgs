@@ -16,7 +16,7 @@ process EUKCC {
     output:
     record(meta: meta, out_put: file("*", type: "dir"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

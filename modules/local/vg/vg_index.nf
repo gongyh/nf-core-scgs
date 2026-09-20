@@ -15,7 +15,7 @@ process VG_INDEX {
     output:
     record(meta: meta, gam: file("${prefix}.gam"), txt: file('*.stats.txt'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

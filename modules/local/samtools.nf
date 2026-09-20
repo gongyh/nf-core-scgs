@@ -13,7 +13,7 @@ process SAMTOOLS {
     output:
     record(meta: meta, bam: file('*.markdup.bam'), bai: file('*.markdup.bam.bai'), bed: file('*.markdup.bed'), stats: file('*.stats.txt', optional: true), txt: file("${prefix}_1k_bins.txt"), pdf: file("${prefix}_pdrc.pdf"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

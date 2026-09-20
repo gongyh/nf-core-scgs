@@ -9,7 +9,7 @@ process KTUPDATETAXONOMY {
     output:
     record(taxonomy: file('taxonomy/taxonomy.tab'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args = task.ext.args ?: ''

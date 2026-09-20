@@ -12,7 +12,7 @@ process MARKER_NCLUSTERS {
     output:
     record(meta: meta, marker_cv: file('cluster_value'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''

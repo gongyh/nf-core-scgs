@@ -18,7 +18,7 @@ process QUAST_DENOVO {
     output:
     record(results: file("quast_*"), tsv: file("quast_*/report.tsv"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def euk_cmd = euk ? (fungus ? "--fungus" : "-e") : ""

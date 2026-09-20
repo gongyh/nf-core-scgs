@@ -1117,7 +1117,8 @@ summary = [:]
 
     ch_multiqc_versions = channel.empty()
     software_versions = GET_SOFTWARE_VERSIONS(
-        channel.topic('local_versions')
+        channel.topic('versions')
+            .filter { version -> version instanceof Path }
             .mix(ch_vendor_versions)
             .map { version ->
                 def lines = version.text.readLines()

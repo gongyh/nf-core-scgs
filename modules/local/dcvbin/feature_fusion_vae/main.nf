@@ -13,7 +13,7 @@ process FEATURE_FUSION {
     output:
     record(meta: meta, features: file("${prefix}_vae_features.npy"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''

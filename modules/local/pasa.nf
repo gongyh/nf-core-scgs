@@ -13,7 +13,7 @@ process PANTA {
     output:
     record(db: file("panta_refs", type: "dir"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     """
@@ -58,7 +58,7 @@ process PASA {
     output:
     record(meta: meta, scaffolds: file("*.scaffolds.fasta"), ctg200: file("*.pasa200.fasta"), ctg: file("*.pasa.fasta"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

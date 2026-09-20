@@ -14,7 +14,7 @@ process SAMTOOLS_FAIDX {
     output:
     record(meta: meta, fai: file('*.fai'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

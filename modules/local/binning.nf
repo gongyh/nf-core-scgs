@@ -13,7 +13,7 @@ process COOCCURRENCE_BINNING {
     output:
     record(clusters: file('clusters.tsv'), mqc_tsv: file('cooccurrence_mqc.tsv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
     script:
     def script_path = "${projectDir}/bin/cooccurrence_binning.py"
     def args = task.ext.args ?: ''

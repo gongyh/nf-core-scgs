@@ -277,7 +277,9 @@ summary = [:]
     display_header(summary, custom_runName, single_end)
     ch_published = channel.empty()
     ch_multiqc_files = channel.empty()
-    ch_local_versions = channel.topic('local_versions')
+    ch_versions = channel.topic('versions')
+    ch_local_versions = ch_versions.filter { version -> version instanceof Path }
+    ch_nfcore_topic_versions = ch_versions.filter { version -> version instanceof List }
 
     // FASTQC
     ch_multiqc_fastqc = channel.empty()
@@ -505,6 +507,15 @@ summary = [:]
 
     // GET_SOFTWARE_VERSIONS
     ch_multiqc_versions = channel.empty()
+    ch_nfcore_topic_versions_string = ch_nfcore_topic_versions
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by: 0)
+        .map { process, tool_versions ->
+            tool_versions.unique().sort()
+            "${process}:\n${tool_versions.join('\n')}"
+        }
     software_versions = GET_SOFTWARE_VERSIONS(
         ch_local_versions
             .mix(ch_vendor_versions)
@@ -517,6 +528,7 @@ summary = [:]
                     .collect { line -> indentation > 0 && line.length() >= indentation ? line.substring(indentation) : line }
                     .join('\n') + '\n'
             }
+            .mix(ch_nfcore_topic_versions_string)
             .unique()
             .collectFile(name: 'collated_versions.yml', newLine: true)
     )

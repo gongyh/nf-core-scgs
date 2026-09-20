@@ -13,7 +13,7 @@ process NORMALIZE {
     output:
     record(meta: meta, reads: files('*_norm*.fastq.gz'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

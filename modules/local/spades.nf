@@ -13,7 +13,7 @@ process SPADES {
     output:
     record(meta: meta, corrected_read: file("*.corrected_R1.fastq.gz", optional: true), corrected_read2: file("*.corrected_R2.fastq.gz", optional: true), contig: file("*.contigs.fasta"), contig_path: file("*.contigs.paths"), contig_graph: file("*.spades_out/*.contigs.gfa"), ctg200: file("*.ctg200.fasta"), ctg: file("*.ctgs.fasta"), assembly: file("*.spades_out", type: "dir"), mqc_tsv: file("spades_joint_mqc.tsv"))
     topic:
-    file("versions.yml") >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
