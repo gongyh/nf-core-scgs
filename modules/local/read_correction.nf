@@ -1,6 +1,6 @@
 nextflow.enable.types = true
 
-process SPADES {
+process READ_CORRECTION {
     tag "${meta.id}"
     label 'process_high'
 

@@ -110,7 +110,8 @@ include { MULTIQC                           } from '../modules/nf-core/multiqc/m
 
 include { TRIMGALORE                        } from '../modules/local/trimgalore'
 include { BBNORM                            } from '../modules/local/bbnorm'
-include { SPADES as READ_CORRECTION; SPADES } from '../modules/local/spades'
+include { SPADES                            } from '../modules/local/spades'
+include { READ_CORRECTION                   } from '../modules/local/read_correction'
 include { MERGE_CORRECTED                   } from '../modules/local/merge_corrected'
 include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
 include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_remap'
@@ -136,7 +137,7 @@ include { PROKKA                            } from '../modules/local/prokka'
 include { KOFAMSCAN                         } from '../modules/local/kofamscan'
 include { EGGNOG                            } from '../modules/local/eggnog'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
-include { softwareVersionsToYAML            } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
 workflow MINIMETA {
     main:
@@ -277,22 +278,6 @@ summary = [:]
     display_header(summary, custom_runName, single_end)
     ch_published = channel.empty()
     ch_multiqc_files = channel.empty()
-
-    def topic_versions = channel.topic('versions')
-        .branch { entry ->
-            versions_file: entry instanceof Path
-            versions_tuple: true
-        }
-
-    def topic_versions_string = topic_versions.versions_tuple.unique()
-        .map { process, tool, version ->
-            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
-        }
-        .groupTuple(by: 0)
-        .map { process, tool_versions ->
-            tool_versions.unique().sort()
-            "${process}:\n${tool_versions.join('\n')}"
-        }
 
     // FASTQC
     ch_multiqc_fastqc = channel.empty()
@@ -519,9 +504,39 @@ summary = [:]
     }
 
     // GET_SOFTWARE_VERSIONS
-    ch_multiqc_versions = softwareVersionsToYAML(topic_versions.versions_file.mix(ch_vendor_versions))
-        .mix(topic_versions_string)
-        .collectFile(name: 'collated_versions.yml', newLine: true)
+    def topic_versions = channel.topic('versions')
+        .branch { entry ->
+            versions_file: entry instanceof Path
+            versions_tuple: true
+        }
+
+    def topic_versions_string = topic_versions.versions_tuple.unique()
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by: 0)
+        .map { process, tool_versions ->
+            tool_versions.unique().sort()
+            "${process}:\n${tool_versions.join('\n')}"
+        }
+
+    ch_multiqc_versions = channel.empty()
+    software_versions = GET_SOFTWARE_VERSIONS(
+        topic_versions.versions_file
+        .mix(ch_vendor_versions)
+            .map { version ->
+                def lines = version.text.readLines()
+                def first_content = lines.find { line -> line.trim() && line.trim() != 'END_VERSIONS' }
+                def indentation = first_content ? first_content.length() - first_content.stripLeading().length() : 0
+                lines
+                    .findAll { line -> line.trim() != 'END_VERSIONS' }
+                    .collect { line -> indentation > 0 && line.length() >= indentation ? line.substring(indentation) : line }
+                    .join('\n') + '\n'
+            }.unique().mix(topic_versions_string)
+            .collectFile(name: 'collated_versions.yml', newLine: true)
+    )
+    ch_multiqc_versions = software_versions.map { result -> result.mqc_yml }
+    ch_published = ch_published.mix(software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
 
     // MODULE: MULTIQC
     workflow_summary = create_workflow_summary(summary)
