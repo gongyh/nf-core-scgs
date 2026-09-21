@@ -367,7 +367,7 @@
                 "db_type": {
                     "type": "string",
                     "default": "all",
-                    "description": "Comma-separated databases to prepare: mmseqs, checkm2, kofam, eggnog, kraken2, gtdb, blob, metabuli, genomad, nt, or all."
+                    "description": "Comma-separated databases to prepare: mmseqs, checkm2, kofam, eggnog, kraken2, kraken1, krona, gtdb, blob, metabuli, genomad, nt, bakta, dnaberts, eukcc, or all."
                 },
                 "genus": {
                     "type": "string",

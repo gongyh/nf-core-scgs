@@ -23,4 +23,15 @@ process KTUPDATETAXONOMY {
         krona: '2.7.1'
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir -p taxonomy
+    touch taxonomy/taxonomy.tab
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        krona: '2.7.1'
+    END_VERSIONS
+    """
 }
