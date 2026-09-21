@@ -13,5 +13,6 @@ lint:
   files_unchanged:
     - .github/workflows/linting.yml
     - .prettierignore
+    - .gitattributes
   template_strings: False
   merge_markers: False
