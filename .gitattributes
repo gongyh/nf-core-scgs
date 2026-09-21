@@ -1,3 +1,4 @@
+*.nf linguist-language=nextflow
 *.config linguist-language=nextflow
 *.nf.test linguist-language=nextflow
 modules/nf-core/** linguist-generated
