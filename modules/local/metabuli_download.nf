@@ -24,4 +24,14 @@ process METABULI_DBDOWNLOAD {
     "version": "1.0.0"
 EOF
     """
+
+    stub:
+    """
+    mkdir -p metabuli_db
+
+    cat > versions.yml << 'EOF'
+"metabuli_download":
+    "version": "1.0.0"
+EOF
+    """
 }

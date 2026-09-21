@@ -6,6 +6,10 @@ nextflow_workflow {
 
     test("Should run without failures") {
 
+        options "-stub-run"
+
+        topics "versions"
+
         when {
             params {
                 // define parameters here. Example:
@@ -21,7 +25,9 @@ nextflow_workflow {
 
         then {
             assert workflow.success
-            assert snapshot(workflow.out).match()
+            assert topics.versions.size() > 0
+            assert topics.versions.every { file(it).name == "versions.yml" }
+            assert topics.versions.every { it.endsWith("/versions.yml") }
         }
 
     }

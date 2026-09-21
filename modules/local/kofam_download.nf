@@ -26,4 +26,14 @@ process KOFAM_DBDOWNLOAD {
     "version": "1.0.0"
 EOF
     """
+
+    stub:
+    """
+    mkdir -p kofam_db
+
+    cat > versions.yml << 'EOF'
+"kofam_download":
+    "version": "1.0.0"
+EOF
+    """
 }

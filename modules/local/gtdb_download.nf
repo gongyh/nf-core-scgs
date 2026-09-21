@@ -25,4 +25,14 @@ process GTDB_DBDOWNLOAD {
         "version": "1.0.0"
     EOF
     """
+
+    stub:
+    """
+    mkdir -p gtdb_db
+
+    cat > versions.yml << 'EOF'
+    "gtdb_download":
+        "version": "1.0.0"
+    EOF
+    """
 }

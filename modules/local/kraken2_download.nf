@@ -24,4 +24,14 @@ process KRAKEN2_DBDOWNLOAD {
     "version": "1.0.0"
 EOF
     """
+
+    stub:
+    """
+    mkdir -p kraken2_db
+
+    cat > versions.yml << 'EOF'
+"kraken2_download":
+    "version": "1.0.0"
+EOF
+    """
 }

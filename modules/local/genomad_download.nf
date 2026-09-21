@@ -26,4 +26,14 @@ process GENOMAD_DBDOWNLOAD {
         genomad: \$(echo \$(genomad --version 2>&1) | sed 's/^.*geNomad, version //; s/ .*\$//')
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir -p db
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        genomad: '1.7.4'
+    END_VERSIONS
+    """
 }

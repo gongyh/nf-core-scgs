@@ -25,4 +25,14 @@ process CHECKM2_DBDOWNLOAD {
         checkm2: \$( checkm2 --version )
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir -p checkm2_db
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        checkm2: '1.0.1'
+    END_VERSIONS
+    """
 }

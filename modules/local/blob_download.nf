@@ -28,4 +28,14 @@ process BLOB_DBDOWNLOAD {
         blobtools: \$(echo \$(blobtools -v 2>&1) | sed 's/^.*blobtools v//; s/Using.*\$//')
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir -p blob_db
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        blobtools: '1.1.1'
+    END_VERSIONS
+    """
 }

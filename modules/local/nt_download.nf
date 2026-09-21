@@ -26,4 +26,14 @@ process NT_DBDOWNLOAD {
         blastn: \$(blastn -version 2>&1 | grep blastn | sed 's/^.*blastn: //; s/Using.*\$//')
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir -p nt_db
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        blastn: '2.13.0'
+    END_VERSIONS
+    """
 }

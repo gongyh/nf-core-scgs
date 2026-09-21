@@ -26,4 +26,14 @@ process MMSEQS_DBDOWNLOAD {
     "version": "1.0.0"
 EOF
     """
+
+    stub:
+    """
+    mkdir -p mmseqs_db
+
+    cat > versions.yml << 'EOF'
+"mmseqs_download":
+    "version": "1.0.0"
+EOF
+    """
 }

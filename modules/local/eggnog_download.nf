@@ -25,4 +25,14 @@ process EGGNOG_DBDOWNLOAD {
         eggnog: \$(echo \$(emapper.py --version | grep emapper 2>&1 ) | cut -d'/' -f1 | sed 's/^.*emapper-//; s/Using.*\$//')
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir -p eggnog_db
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        eggnog: '2.1.11'
+    END_VERSIONS
+    """
 }

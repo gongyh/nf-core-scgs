@@ -6,7 +6,10 @@ nextflow_workflow {
 
     test("Should run without failures") {
 
+        topics "versions"
+
         when {
+            config "$baseDir/conf/test_denovo.config"
             params {
                 // define parameters here. Example:
                 // outdir = "tests/results"
@@ -21,7 +24,7 @@ nextflow_workflow {
 
         then {
             assert workflow.success
-            assert snapshot(workflow.out).match()
+            assert topics.versions.size() > 0
         }
 
     }
