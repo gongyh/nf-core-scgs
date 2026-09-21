@@ -10,9 +10,9 @@ process CONTIG_KMER {
     tuple(meta: Map, fasta_file: Path)
 
     output:
-    record(meta: meta, kmer: file('*4mer.csv'), seqid: file('*seqid.csv'), versions: file('versions.yml'))
+    record(meta: meta, kmer: file('*4mer.csv'), seqid: file('*seqid.csv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''
@@ -26,7 +26,7 @@ process CONTIG_KMER {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        dcvbin: \$(python -c "import dcvbin; print(dcvbin.__version__)" 2>/dev/null || echo "unknown")
+        dcvbin: 732ee4257f7da200994f4c105e9dacbc74242883
     END_VERSIONS
     """
 }

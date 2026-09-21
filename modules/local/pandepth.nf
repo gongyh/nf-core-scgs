@@ -13,9 +13,9 @@ process CONTIG_COVERAGE {
     tuple(meta: Map, bam: Path, bai: List<Path>, fasta: Path, fai: Path)
 
     output:
-    record(meta: meta, depth: file("${meta.id}.depth"), versions: file("versions.yml"))
+    record(meta: meta, depth: file("${meta.id}.depth"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def pandepth_bin = "${projectDir}/bin/pandepth"
@@ -46,9 +46,9 @@ process MERGE_COVERAGE {
     depth_files: Bag<Path>
 
     output:
-    record(matrix: file("abundance_matrix.tsv"), versions: file("versions.yml"))
+    record(matrix: file("abundance_matrix.tsv"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     """

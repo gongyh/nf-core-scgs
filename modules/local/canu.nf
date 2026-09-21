@@ -11,9 +11,9 @@ process CANU {
     tuple(meta: Map, reads: List<Path>)
 
     output:
-    record(meta: meta, ctg200: file("${prefix}.ctg200.fasta"), ctg: file("${prefix}.ctgs.fasta"), versions: file('versions.yml'))
+    record(meta: meta, ctg200: file("${prefix}.ctg200.fasta"), ctg: file("${prefix}.ctgs.fasta"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

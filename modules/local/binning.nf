@@ -11,7 +11,9 @@ process COOCCURRENCE_BINNING {
     coverage_tsv: Path
     filtered_ids: Path
     output:
-    record(clusters: file('clusters.tsv'), versions: file('versions.yml'), mqc_tsv: file('cooccurrence_mqc.tsv'))
+    record(clusters: file('clusters.tsv'), mqc_tsv: file('cooccurrence_mqc.tsv'))
+    topic:
+    file('versions.yml') >> 'versions'
     script:
     def script_path = "${projectDir}/bin/cooccurrence_binning.py"
     def args = task.ext.args ?: ''
@@ -27,8 +29,8 @@ process COOCCURRENCE_BINNING {
         N_BINS=0
     fi
 
-    printf "Metric\tValue\n" > cooccurrence_mqc.tsv
-    printf "Number of genome bins\t\${N_BINS}\n" >> cooccurrence_mqc.tsv
+    printf "Metric\\tValue\\n" > cooccurrence_mqc.tsv
+    printf "Number of genome bins\\t\${N_BINS}\\n" >> cooccurrence_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1)

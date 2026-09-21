@@ -17,9 +17,9 @@ process DIAMOND_BLASTX {
     has_uniprot: Boolean
 
     output:
-    record(meta: meta, uniprot: file("*_uniprot.taxified.out"), contigs: file("*.fasta"), nt: file("*.out"), has_uniprot: has_uniprot, versions: file("versions.yml"), out_put: file("*_uniprot.*"))
+    record(meta: meta, uniprot: file("*_uniprot.taxified.out"), contigs: file("*.fasta", includeInputs: true), nt: file("*_nt.out", includeInputs: true), has_uniprot: has_uniprot, out_put: files("*_uniprot.*"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

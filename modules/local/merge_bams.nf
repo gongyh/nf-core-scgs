@@ -13,7 +13,9 @@ process MERGE_BAMS {
     bam_files: List<Path>
 
     output:
-    record(merged_bam: file('merged.bam'), merged_bai: file('merged.bam.bai'), versions: file('versions.yml'))
+    record(merged_bam: file('merged.bam'), merged_bai: file('merged.bam.bai'))
+    topic:
+    file('versions.yml') >> 'versions'
 
     script:
     """

@@ -9,9 +9,9 @@ process MMSEQS_DBDOWNLOAD {
         : 'community.wave.seqera.io/library/mmseqs2_wget:aa683a2c5355899d'}"
 
     output:
-    record(db: file('mmseqs_db'), versions: file('versions.yml'))
+    record(db: file('mmseqs_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

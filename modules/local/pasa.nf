@@ -11,9 +11,9 @@ process PANTA {
     refs_fna: Bag<Path>
 
     output:
-    record(db: file("panta_refs", type: "dir"), versions: file("versions.yml"))
+    record(db: file("panta_refs", type: "dir"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     """
@@ -56,9 +56,9 @@ process PASA {
     panta_refs: Path
 
     output:
-    record(meta: meta, scaffolds: file("*.scaffolds.fasta"), ctg200: file("*.pasa200.fasta"), ctg: file("*.pasa.fasta"), versions: file("versions.yml"))
+    record(meta: meta, scaffolds: file("*.scaffolds.fasta"), ctg200: file("*.pasa200.fasta"), ctg: file("*.pasa.fasta"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

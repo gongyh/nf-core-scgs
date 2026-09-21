@@ -12,7 +12,9 @@ process SAMTOOLS_FAIDX {
     tuple(meta: Map, fasta: Path)
 
     output:
-    record(meta: meta, fai: file('*.fai'), versions: file('versions.yml'))
+    record(meta: meta, fai: file('*.fai'))
+    topic:
+    file('versions.yml') >> 'versions'
 
     script:
     """

@@ -12,7 +12,9 @@ process DAS_TOOL {
 
 
     output:
-    record(bins: file('das_tool_bins'), versions: file('versions.yml'))
+    record(bins: file('das_tool_bins'))
+    topic:
+    file('versions.yml') >> 'versions'
 
     script:
     def my_labels = raw_info.findAll { entry -> entry instanceof String }.join(',')
@@ -38,7 +40,7 @@ process DAS_TOOL {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        das_tool: \$(DAS_Tool --version 2>&1 | head -1)
+        das_tool: \$(DAS_Tool --version 2>&1 | grep version | sed 's/DAS Tool version //')
     END_VERSIONS
     """
 }

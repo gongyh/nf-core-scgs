@@ -9,9 +9,9 @@ process BLOB_DBDOWNLOAD {
         'biocontainers/blobtools:1.1.1--py_1' }"
 
     output:
-    record(db: file('blob_db'), versions: file('versions.yml'))
+    record(db: file('blob_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

@@ -11,9 +11,9 @@ process TSNE {
     tuple(meta: Map, contigs: Path)
 
     output:
-    record(meta: meta, tsv: file("${prefix}_tsne.tsv"), versions: file('versions.yml'))
+    record(meta: meta, tsv: file("${prefix}_tsne.tsv"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -28,7 +28,7 @@ process TSNE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        kpal: \$( checkm 2>&1 | grep 'kpal' | sed 's/.*kpal version//;s/ .*//' )
+        kpal: \$( kpal -v 2>&1 | grep version | sed 's/kpal version //' )
     END_VERSIONS
     """
 }

@@ -9,9 +9,9 @@ process CHECKM2_DBDOWNLOAD {
         'community.wave.seqera.io/library/checkm2:1.0.1--034a3a15afae63b1' }"
 
     output:
-    record(db: file('checkm2_db'), versions: file('versions.yml'))
+    record(db: file('checkm2_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

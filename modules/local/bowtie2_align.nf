@@ -14,9 +14,9 @@ process BOWTIE2_ALIGN {
     sort_bam: Boolean
 
     output:
-    record(meta: meta, bam: file("*.bam"), log: file("*.log"), fastq: file("*fastq.gz", optional: true), versions: file("versions.yml"))
+    record(meta: meta, bam: file("*.bam"), log: file("*.log"), fastq: files("*fastq.gz", optional: true))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def args = task.ext.args ?: ""

@@ -11,7 +11,9 @@ process SEMIBIN2 {
     merged_bam: Path
     taxonomy: Path?
     output:
-    record(bins: file('bins_merged'), mqc_tsv: file('semibin2_mqc.tsv'), versions: file('versions.yml'), scaffolds2bin: file('scaffolds2bin.tsv'))
+    record(bins: file('bins_merged'), mqc_tsv: file('semibin2_mqc.tsv'), scaffolds2bin: file('scaffolds2bin.tsv'))
+    topic:
+    file('versions.yml') >> 'versions'
     script:
     def bam_args = "-b ${merged_bam}"
     def tax_args = taxonomy ? "--taxonomy ${taxonomy}" : ""

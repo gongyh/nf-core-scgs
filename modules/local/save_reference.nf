@@ -11,9 +11,9 @@ process SAVE_REFERENCE {
     gff: Path
 
     output:
-    record(fa: file('genome.fa'), gff: file('genome.gff'), bed: file('genome.bed'), gc_bed: file('gc.bed'), gc_skew_bed: file('gcSkew.bed'), genes_bed: file('genes.bed'), versions: file('versions.yml'))
+    record(fa: file('genome.fa'), gff: file('genome.gff'), bed: file('genome.bed'), gc_bed: file('gc.bed'), gc_skew_bed: file('gcSkew.bed'), genes_bed: file('genes.bed'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

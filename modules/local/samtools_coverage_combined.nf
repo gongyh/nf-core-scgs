@@ -13,7 +13,9 @@ process CONTIG_COVERAGE {
     tuple(meta: Map, bam: Path, bai: List<Path>, fasta: Path, fai: Path)
 
     output:
-    record(meta: meta, depth: file("${meta.id}.depth"), mqc_tsv: file('coverage_mqc.tsv'), versions: file('versions.yml'))
+    record(meta: meta, depth: file("${meta.id}.depth"), mqc_tsv: file('coverage_mqc.tsv'))
+    topic:
+    file('versions.yml') >> 'versions'
 
     script:
     """
@@ -31,9 +33,9 @@ process CONTIG_COVERAGE {
         N_CONTIGS=0; N_SAMPLES=0
     fi
 
-    printf "Metric\tValue\n" > coverage_mqc.tsv
-    printf "Number of contigs\t\${N_CONTIGS}\n" >> coverage_mqc.tsv
-    printf "Number of sub-samples\t\${N_SAMPLES}\n" >> coverage_mqc.tsv
+    printf "Metric\\tValue\\n" > coverage_mqc.tsv
+    printf "Number of contigs\\t\${N_CONTIGS}\\n" >> coverage_mqc.tsv
+    printf "Number of sub-samples\\t\${N_SAMPLES}\\n" >> coverage_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
@@ -53,7 +55,9 @@ process MERGE_COVERAGE {
     depth_files: Bag<Path>
 
     output:
-    record(matrix: file('abundance_matrix.tsv'), versions: file('versions.yml'))
+    record(matrix: file('abundance_matrix.tsv'))
+    topic:
+    file('versions.yml') >> 'versions'
 
     script:
     """

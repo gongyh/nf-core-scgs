@@ -35,7 +35,7 @@ nextflow run gongyh/nf-core-scgs \
 are:
 
 ```text
-mmseqs, checkm2, kofam, eggnog, kraken2, gtdb, blob, metabuli, genomad, nt, all
+mmseqs, checkm2, kofam, eggnog, kraken2, kraken1, krona, gtdb, blob, metabuli, genomad, nt, bakta, dnaberts, eukcc, all
 ```
 
 Do not use this workflow for every analysis by default. Prepare only the
@@ -54,11 +54,16 @@ directory.
 | `kofam`           | `kofam_db/profiles/` and `kofam_db/ko_list` | `--kofam_profile /path/to/profiles --kofam_kolist /path/to/ko_list` | SCGS and MINIMETA |
 | `eggnog`          | `eggnog_db/`                                | `--eggnog_db /path/to/eggnog_db`                                    | SCGS and MINIMETA |
 | `kraken2`         | `kraken2_db/`                               | `--kraken2_db /path/to/kraken2_db`                                  | SCGS              |
+| `kraken1`         | `kraken1_db/`                               | `--kraken1_db /path/to/kraken1_db`                                  | SCGS              |
+| `krona`           | `krona_db/taxonomy.tab`                     | `--krona_db /path/to/krona_db/taxonomy.tab`                         | SCGS              |
 | `gtdb`            | `gtdb_db/`                                  | `--gtdb /path/to/gtdb_db`                                           | SCGS              |
 | `blob`            | `blob_db/nodesDB.txt`                       | `--blob_db /path/to/blob_db/nodesDB.txt`                            | SCGS              |
 | `metabuli`        | `metabuli_db/`                              | `--metabuli_db /path/to/metabuli_db`                                | MINIMETA          |
 | `genomad`         | `db/`                                       | `--genomad_db /path/to/db`                                          | SCGS              |
 | `nt`              | `nt_db/`                                    | `--nt_db /path/to/nt_db`                                            | SCGS              |
+| `bakta`           | `bakta_db/`                                 | `--bakta_db /path/to/bakta_db`                                      | SCGS              |
+| `dnaberts`        | `dnaberts_db/`                              | `--DNABERTS_dir /path/to/dnaberts_db`                               | MINIMETA          |
+| `eukcc`           | `eukcc_db/`                                 | `--eukcc_db /path/to/eukcc_db`                                      | SCGS              |
 
 `checkm2` enables CheckM2 quality assessment. In MINIMETA,
 `--run_cooccurrence_checkm` additionally runs CheckM2 on co-occurrence bins.
@@ -80,10 +85,15 @@ params {
     mmseqs_db     = '/shared/scgs-databases/mmseqs_db'
     metabuli_db   = '/shared/scgs-databases/metabuli_db'
     kraken2_db    = '/shared/scgs-databases/kraken2_db'
+    kraken1_db    = '/shared/scgs-databases/kraken1_db'
+    krona_db      = '/shared/scgs-databases/krona_db/taxonomy.tab'
     gtdb          = '/shared/scgs-databases/gtdb_db'
     blob_db       = '/shared/scgs-databases/blob_db/nodesDB.txt'
     genomad_db    = '/shared/scgs-databases/db'
     nt_db         = '/shared/scgs-databases/nt_db'
+    bakta_db      = '/shared/scgs-databases/bakta_db'
+    DNABERTS_dir  = '/shared/scgs-databases/dnaberts_db'
+    eukcc_db      = '/shared/scgs-databases/eukcc_db'
     kofam_profile = '/shared/scgs-databases/kofam_db/profiles'
     kofam_kolist  = '/shared/scgs-databases/kofam_db/ko_list'
     eggnog_db     = '/shared/scgs-databases/eggnog_db'
@@ -109,16 +119,11 @@ trigger their associated analysis steps.
 The preparation workflow does not download every optional SCGS resource. You
 must obtain and configure the following independently when needed:
 
-| Resource                                      | Parameter                          | Used for                           |
-| --------------------------------------------- | ---------------------------------- | ---------------------------------- |
-| Kraken1 database                              | `--kraken1_db`                     | ACDC                               |
-| Krona taxonomy file                           | `--krona_db`                       | Offline Krona reports              |
-| UniProt protein database and taxonomy mapping | `--uniprot_db`, `--uniprot_taxids` | DIAMOND and BlobTools annotation   |
-| Trusted Prokka proteins                       | `--prokka_proteins`                | Prokka annotation                  |
-| Bakta database                                | `--bakta_db`                       | Bakta annotation                   |
-| EukCC database                                | `--eukcc_db`                       | Eukaryotic completeness assessment |
-| MGPG database                                 | `--mgpg_db`                        | Pangenome analysis                 |
-| DNABERT-S model directory                     | `--DNABERTS_dir`                   | MINIMETA DCVBIN integration        |
+| Resource                                      | Parameter                          | Used for                         |
+| --------------------------------------------- | ---------------------------------- | -------------------------------- |
+| UniProt protein database and taxonomy mapping | `--uniprot_db`, `--uniprot_taxids` | DIAMOND and BlobTools annotation |
+| Trusted Prokka proteins                       | `--prokka_proteins`                | Prokka annotation                |
+| MGPG database                                 | `--mgpg_db`                        | Pangenome analysis               |
 
 See the [SCGS usage guide](../usage.md) and the
 [MINIMETA workflow guide](../../MINIMETA.md) for the analysis options that

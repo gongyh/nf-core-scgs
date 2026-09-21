@@ -9,20 +9,22 @@ process GTDBTK {
         'biocontainers/gtdbtk:2.7.2--pyhdfd78af_1' }"
 
     input:
-    fa: Path
+    fa: Set<Path>
     gtdb: Path
 
+    stage:
+    stageAs fa, 'genome/*'
+
     output:
-    record(out: file('out/*'), scaffolds: file('genome/*'), taxa: file('taxa.txt'), mqc_tsv: file('GTDBtk_mqc.tsv'), versions: file('versions.yml'))
+    record(out: file('out', type: "dir"), taxa: file('taxa.txt'), mqc_tsv: file('GTDBtk_mqc.tsv'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """
     export GTDBTK_DATA_PATH=$gtdb
 
     mkdir -p genome
-    cp $fa genome
 
     echo \"# plot_type: 'table'\" > GTDBtk_mqc.tsv
     echo \"# section_name: 'GTDBtk'\" >> GTDBtk_mqc.tsv
@@ -33,7 +35,7 @@ process GTDBTK {
         mkdir -p out
         echo \$'genome\\td__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
     else
-        if [ ! -f genome/no_fasta.txt ];then
+        if [ -n "\$(ls -A genome)" ]; then
             gtdbtk classify_wf \\
                 --pplacer_cpus 1 \\
                 --genome_dir genome \\

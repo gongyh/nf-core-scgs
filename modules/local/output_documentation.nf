@@ -10,7 +10,9 @@ process OUTPUT_DOCUMENTATION {
     output_docs: Path
 
     output:
-    record(html: file('results_description.html'), versions: file('versions.yml'))
+    record(html: file('results_description.html'))
+    topic:
+    file('versions.yml') >> 'versions'
 
     script:
     """

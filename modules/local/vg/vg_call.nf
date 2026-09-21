@@ -13,9 +13,9 @@ process VG_CALL {
     tuple(meta: Map, gam: Path, vg: Path)
 
     output:
-    record(call: file('*.calls.vcf'), versions: file('versions.yml'))
+    record(call: file('*.calls.vcf'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

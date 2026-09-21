@@ -9,9 +9,9 @@ process EGGNOG_DBDOWNLOAD {
         'biocontainers/eggnog-mapper:2.1.11--pyhdfd78af_0' }"
 
     output:
-    record(db: file('eggnog_db'), versions: file('versions.yml'))
+    record(db: file('eggnog_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

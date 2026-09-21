@@ -10,9 +10,9 @@ process TNF_RPKM {
     tuple(meta: Map, fasta_file: Path, bam_file: Path)
 
     output:
-    record(meta: meta, tnf: file('tnf_and_rpkm/*tnf.npz'), rpkm: file('tnf_and_rpkm/*rpkm.npz'), versions: file('versions.yml'))
+    record(meta: meta, tnf: file('tnf_and_rpkm/*tnf.npz'), rpkm: file('tnf_and_rpkm/*rpkm.npz'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''
@@ -27,7 +27,7 @@ process TNF_RPKM {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        dcvbin: \$(python -c "import dcvbin; print(dcvbin.__version__)" 2>/dev/null || echo "unknown")
+        dcvbin: 732ee4257f7da200994f4c105e9dacbc74242883
     END_VERSIONS
     """
 }

@@ -33,22 +33,18 @@ workflow PREPARE_FEATURES_SINGLE {
     contig_coverage = CONTIG_COVERAGE(ch_coverage_input)
     ch_coverage = contig_coverage.map { result -> result.depth }
     ch_coverage_mqc = contig_coverage.map { result -> result.mqc_tsv }
-    ch_versions = contig_coverage.map { result -> result.versions }
     ch_published = ch_published.mix(contig_coverage.map { result -> [destination: 'coverage_depth', files: result.depth] })
     // PRODIGAL
     prodigal = PRODIGAL(ch_fasta)
-    ch_versions = ch_versions.mix(prodigal.map { result -> result.versions })
     ch_published = ch_published.mix(prodigal.map { result -> [destination: 'prodigal', files: result] })
 
     // K-mer
     kmer_count = KMER_COUNT(ch_fasta, 4)
-    ch_versions = ch_versions.mix(kmer_count.map { result -> result.versions })
     ch_published = ch_published.mix(kmer_count.map { result -> [destination: 'kmer', files: result.csv] })
 
     emit:
     feature_matrix: Channel<Path> = channel.empty()
     coverage_matrix: Channel<Path> = ch_coverage
     coverage_mqc: Channel<Path> = ch_coverage_mqc
-    versions: Channel<Path> = ch_versions
     published: Channel<Map> = ch_published
 }

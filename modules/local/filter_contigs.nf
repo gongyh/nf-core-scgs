@@ -12,12 +12,15 @@ process FILTER_CONTIGS {
     min_len: Integer
 
     output:
-    record(filtered: file('filtered.fasta'), versions: file('versions.yml'))
+    record(filtered: file('filtered.fasta'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
     script:
     """
     seqkit seq -m ${min_len} ${fasta} > filtered.fasta
-    echo "seqtk: \$(seqtk 2>&1 | head -1)" > versions.yml
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        seqtk: \$(seqkit version | sed 's/seqkit //')
+    END_VERSIONS
     """
 }

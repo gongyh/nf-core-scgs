@@ -11,9 +11,9 @@ process AUGUSTUS {
     tuple(meta: Map, contigs: Path)
 
     output:
-    record(meta: meta, faa: file("${prefix}.aa"), out_put: file("${prefix}*"), versions: file('versions.yml'))
+    record(meta: meta, faa: file("${prefix}.aa"), out_put: files("${prefix}*"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"

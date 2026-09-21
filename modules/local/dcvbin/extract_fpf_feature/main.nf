@@ -12,9 +12,9 @@ process CONTIG_EMBEDDING {
     tuple(meta: Map, ctgs_2k: Path, model_dir: Path)
 
     output:
-    record(meta: meta, fpf: file("${prefix}_fpf.npy"), versions: file('versions.yml'))
+    record(meta: meta, fpf: file("${prefix}_fpf.npy"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''
@@ -29,7 +29,7 @@ process CONTIG_EMBEDDING {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        dcvbin: \$(python -c "import dcvbin; print(dcvbin.__version__)" 2>/dev/null || echo "unknown")
+        dcvbin: 732ee4257f7da200994f4c105e9dacbc74242883
     END_VERSIONS
     """
 }

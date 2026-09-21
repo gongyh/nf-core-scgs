@@ -14,18 +14,19 @@ process GRAPHBIN {
     gfa: Bag<Path>
     csv: Bag<Path>
 
+    stage:
+    stageAs contigs, 'contigs/*'
+    stageAs paths, 'paths/*'
+    stageAs gfa, 'gfa/*'
+    stageAs csv, 'csv/*'
+
     output:
-    record(out_put: file("binning/*"), versions: file("versions.yml"))
+    record(out_put: file("binning", type: "dir"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     """
-    mkdir -p contigs paths gfa csv
-    ln -s ${contigs} contigs/
-    ln -s ${paths} paths/
-    ln -s ${gfa} gfa/
-    ln -s ${csv} csv/
     mkdir binning
     samples=(`ls contigs/*.contigs.fasta | sed 's~contigs/~~g;s~.contigs.fasta~~g'`)
     for sample in \${samples[*]}; do

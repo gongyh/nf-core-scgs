@@ -12,7 +12,9 @@ process EXTRACT_BINS {
     assembly: Path
 
     output:
-    record(bins: file('bins'), versions: file('versions.yml'), mqc_tsv: file('extract_bins_mqc.tsv'), scaffolds2bin: file('scaffolds2bin.tsv'))
+    record(bins: file('bins'), mqc_tsv: file('extract_bins_mqc.tsv'), scaffolds2bin: file('scaffolds2bin.tsv'))
+    topic:
+    file('versions.yml') >> 'versions'
     script:
     """
     mkdir -p bins
@@ -47,12 +49,12 @@ process EXTRACT_BINS {
         N_BINS=0; TOTAL_SIZE=0
     fi
 
-    printf "Metric\tValue\n" > extract_bins_mqc.tsv
-    printf "Number of bins extracted\t\${N_BINS}\n" >> extract_bins_mqc.tsv
-    printf "Total bin size (bp)\t\${TOTAL_SIZE}\n" >> extract_bins_mqc.tsv
+    printf "Metric\\tValue\\n" > extract_bins_mqc.tsv
+    printf "Number of bins extracted\\t\${N_BINS}\\n" >> extract_bins_mqc.tsv
+    printf "Total bin size (bp)\\t\${TOTAL_SIZE}\\n" >> extract_bins_mqc.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        seqtk: \$(seqtk 2>&1 | grep -oP 'Version \\K[0-9.]+' || echo "unknown")
+        seqtk: \$(seqtk 2>&1 | grep Version | sed 's/Version: //')
     END_VERSIONS
     """
 }

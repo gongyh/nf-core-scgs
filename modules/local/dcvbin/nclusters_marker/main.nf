@@ -10,9 +10,9 @@ process MARKER_NCLUSTERS {
     tuple(meta: Map, kmer_file: Path, fasta_file: Path)
 
     output:
-    record(meta: meta, marker_cv: file('cluster_value'), versions: file('versions.yml'))
+    record(meta: meta, marker_cv: file('cluster_value'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''
@@ -25,7 +25,7 @@ process MARKER_NCLUSTERS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        copygen: \$(python -c "import copygen; print(copygen.__version__)" 2>/dev/null || echo "unknown")
+        dcvbin: 732ee4257f7da200994f4c105e9dacbc74242883
     END_VERSIONS
     """
 }

@@ -9,9 +9,9 @@ process GENOMAD_DBDOWNLOAD {
         'community.wave.seqera.io/library/genomad:1.7.4--605ab516f999b1b4' }"
 
     output:
-    record(db: file('db'), versions: file('versions.yml'))
+    record(db: file('db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

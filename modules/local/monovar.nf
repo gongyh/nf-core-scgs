@@ -14,9 +14,9 @@ process MONOVAR {
     fa: Path
 
     output:
-    record(vcf: file('monovar.vcf'), versions: file('versions.yml'))
+    record(vcf: file('monovar.vcf'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

@@ -13,14 +13,14 @@ process ANEUFINDER {
     bais: Bag<Path>
 
     output:
-    record(cnv: file('CNV_output', type: 'dir'), versions: file('versions.yml'))
+    record(cnv: file('CNV_output', type: 'dir'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """
     mkdir bams
-    ln -s *.bam *.bai bams/
+    cd bams && ln -s ../*.bam ../*.bai . && cd ..
     aneuf.R ./bams CNV_output ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml

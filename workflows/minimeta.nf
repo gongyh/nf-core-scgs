@@ -110,7 +110,8 @@ include { MULTIQC                           } from '../modules/nf-core/multiqc/m
 
 include { TRIMGALORE                        } from '../modules/local/trimgalore'
 include { BBNORM                            } from '../modules/local/bbnorm'
-include { SPADES as READ_CORRECTION; SPADES } from '../modules/local/spades'
+include { SPADES                            } from '../modules/local/spades'
+include { READ_CORRECTION                   } from '../modules/local/read_correction'
 include { MERGE_CORRECTED                   } from '../modules/local/merge_corrected'
 include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
 include { BOWTIE2_REMAP                     } from '../modules/local/bowtie2_remap'
@@ -226,6 +227,7 @@ if (params.eggnog_db) {
 ch_multiqc_config = channel.fromPath(params.multiqc_config, checkIfExists: true)
 ch_multiqc_custom_config = channel.empty()
 ch_multiqc_logo = channel.empty()
+ch_multiqc_files = channel.empty()
 ch_output_docs = channel.fromPath("$baseDir/docs/output.md")
 
 
@@ -277,17 +279,6 @@ summary = [:]
     display_header(summary, custom_runName, single_end)
     ch_published = channel.empty()
     ch_multiqc_files = channel.empty()
-    ch_optional_topic_versions = channel.empty()
-    if (
-        params.checkm2_db ||
-        params.mmseqs_db ||
-        params.metabuli_db ||
-        params.DNABERTS_dir ||
-        (params.kofam && params.kofam_profile && params.kofam_kolist) ||
-        (params.eggnog && params.eggnog_db)
-    ) {
-        ch_optional_topic_versions = channel.topic('local_versions')
-    }
 
     // FASTQC
     ch_multiqc_fastqc = channel.empty()
@@ -396,7 +387,12 @@ summary = [:]
     //
     if ( params.run_cooccurrence_checkm ) {
         if ( params.checkm2_db ) {
-            checkm2_cooccurrence = CHECKM2_COOCCURRENCE(extract_bins.map { result -> result.bins }, 'fa', file(params.checkm2_db))
+            ch_cooccurrence_bins = extract_bins
+                .flatMap { result ->
+                    file(result.bins).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
+                }
+                .collect()
+            checkm2_cooccurrence = CHECKM2_COOCCURRENCE(ch_cooccurrence_bins, 'fa', file(params.checkm2_db))
             ch_multiqc_files = ch_multiqc_files.mix(checkm2_cooccurrence.map { result -> result.mqc_tsv }.collect().ifEmpty([]))
             ch_published = ch_published.mix(checkm2_cooccurrence.map { result -> [destination: 'CheckM2', files: result] })
         } else {
@@ -464,9 +460,14 @@ summary = [:]
     ch_bins_dir = das_tool.map { result -> result.bins }
     ch_published = ch_published.mix(das_tool.map { result -> [destination: 'binning/das_tool', files: result] })
 
+    ch_bin_files = ch_bins_dir.flatMap { bin_dir ->
+        file(bin_dir).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
+    }
+    ch_bins_for_checkm2 = ch_bin_files.collect().filter { bin_files -> !bin_files.isEmpty() }
+
     // CHECKM2
     if (params.checkm2_db) {
-        checkm2 = CHECKM2(ch_bins_dir, 'fa', checkm2_db)
+        checkm2 = CHECKM2(ch_bins_for_checkm2, 'fa', checkm2_db)
         ch_multiqc_checkm2 = checkm2.map { result -> result.mqc_tsv }
         ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2)
         ch_published = ch_published.mix(checkm2.map { result -> [destination: 'CheckM2', files: result] })
@@ -474,57 +475,56 @@ summary = [:]
         ch_multiqc_checkm2 = channel.empty()
     }
     //
-    ch_bins_for_prokka = ch_bins_dir.flatMap { bin_dir ->
-        def bin_files = file(bin_dir).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
-        if (!bin_files) {
-            log.warn "No .fa files found in ${bin_dir}, skipping PROKKA"
-            return []
-        }
-        bin_files.collect { bin_file ->
-            [ [id: bin_file.baseName], bin_file ]
-        }
+    ch_bins_for_prokka = ch_bin_files.map { bin_file ->
+        [ [id: bin_file.baseName], bin_file ]
     }
 
     //PROKKA
     prokka = PROKKA(ch_bins_for_prokka, [] as List<Path>)
     ch_published = ch_published.mix(prokka.map { result -> [destination: 'prokka', files: result] })
 
+    ch_prokka_for_annot = prokka
+        .filter { result ->
+            def faa = result.faa
+            faa != null && faa.exists() && faa.size() > 0
+        }
+        .map { result -> tuple(result.meta, result.faa) }
+
     // KOFAMSCAN
     if (params.kofam && params.kofam_profile && params.kofam_kolist) {
-        kofamscan = KOFAMSCAN(prokka.map { result -> tuple(result.meta, result.faa) }, kofam_profile, kofam_kolist)
+        kofamscan = KOFAMSCAN(ch_prokka_for_annot, kofam_profile, kofam_kolist)
         ch_multiqc_files = ch_multiqc_files.mix(kofamscan.map { result -> result.kofamscan }.collect().ifEmpty([]))
         ch_published = ch_published.mix(kofamscan.map { result -> [destination: 'kofam', files: result] })
     }
 
     // EGGNOG
     if (params.eggnog && params.eggnog_db) {
-        eggnog = EGGNOG(prokka.map { result -> tuple(result.meta, result.faa) }, eggnog_db)
+        eggnog = EGGNOG(ch_prokka_for_annot, eggnog_db)
         ch_multiqc_files = ch_multiqc_files.mix(eggnog.map { result -> result.annotations }.collect().ifEmpty([]))
         ch_published = ch_published.mix(eggnog.map { result -> [destination: 'eggnog', files: result] })
     }
 
     // GET_SOFTWARE_VERSIONS
+    def topic_versions = channel.topic('versions')
+        .branch { entry ->
+            versions_file: entry instanceof Path
+            versions_tuple: true
+        }
+
+    def topic_versions_string = topic_versions.versions_tuple.unique()
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by: 0)
+        .map { process, tool_versions ->
+            tool_versions.unique().sort()
+            "${process}:\n${tool_versions.join('\n')}"
+        }
+
     ch_multiqc_versions = channel.empty()
-    ch_local_versions = trimgalore.map { result -> result.versions }
-        .mix(bbnorm.map { result -> result.versions })
-        .mix(read_correction.map { result -> result.versions })
-        .mix(spades_joint.map { result -> result.versions })
-        .mix(bowtie2_remap.map { result -> result.versions })
-        .mix(remap.map { result -> result.versions })
-        .mix(merge_bams.map { result -> result.versions })
-        .mix(samtools_faidx.map { result -> result.versions })
-        .mix(PREPARE_FEATURES_SINGLE.out.versions)
-        .mix(PREPARE_FEATURES_MULTI.out.versions)
-        .mix(filter_assembly.map { result -> result.versions })
-        .mix(cooccurrence_binning.map { result -> result.versions })
-        .mix(extract_bins.map { result -> result.versions })
-        .mix(semibin2.map { result -> result.versions })
-        .mix(das_tool.map { result -> result.versions })
-        .mix(prokka.map { result -> result.versions })
     software_versions = GET_SOFTWARE_VERSIONS(
-        ch_local_versions
-            .mix(ch_optional_topic_versions)
-            .mix(ch_vendor_versions)
+        topic_versions.versions_file
+        .mix(ch_vendor_versions)
             .map { version ->
                 def lines = version.text.readLines()
                 def first_content = lines.find { line -> line.trim() && line.trim() != 'END_VERSIONS' }
@@ -533,8 +533,7 @@ summary = [:]
                     .findAll { line -> line.trim() != 'END_VERSIONS' }
                     .collect { line -> indentation > 0 && line.length() >= indentation ? line.substring(indentation) : line }
                     .join('\n') + '\n'
-            }
-            .unique()
+            }.unique().mix(topic_versions_string)
             .collectFile(name: 'collated_versions.yml', newLine: true)
     )
     ch_multiqc_versions = software_versions.map { result -> result.mqc_yml }
@@ -544,7 +543,6 @@ summary = [:]
     workflow_summary = create_workflow_summary(summary)
     ch_workflow_summary = channel.value(workflow_summary)
 
-    ch_multiqc_files = channel.empty()
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect { entry -> entry[1] }.ifEmpty([]))

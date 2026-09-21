@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import vcf
-import pysam
+#import pysam
 
 
 # read VCF file

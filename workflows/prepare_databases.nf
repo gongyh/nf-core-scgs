@@ -13,8 +13,9 @@ def helpMessage() {
 
     Database options:
     --db_type <list>              Comma-separated databases to prepare (default: all)
-                                    Available: mmseqs, checkm2, kofam, eggnog, kraken2,
-                                    gtdb, blob, metabuli, genomad, nt, all
+    Available: mmseqs, checkm2, kofam, eggnog, kraken2,
+                                    kraken1, krona, gtdb, blob, metabuli, genomad, nt,
+                                    bakta, dnaberts, eukcc, all
 
     Output and execution:
     --outdir <path>               Output directory for prepared databases (default: ./databases)
@@ -37,6 +38,11 @@ include { BLOB_DBDOWNLOAD           } from '../modules/local/blob_download'
 include { METABULI_DBDOWNLOAD       } from '../modules/local/metabuli_download'
 include { GENOMAD_DBDOWNLOAD        } from '../modules/local/genomad_download'
 include { NT_DBDOWNLOAD             } from '../modules/local/nt_download'
+include { BAKTA_DBDOWNLOAD          } from '../modules/local/bakta_download'
+include { KRAKEN1_DBDOWNLOAD        } from '../modules/local/kraken1_download'
+include { KTUPDATETAXONOMY as KRONA_DBDOWNLOAD } from '../modules/local/ktupdatetaxonomy'
+include { DNABERTS_DBDOWNLOAD       } from '../modules/local/dnaberts_download'
+include { EUKCC_DBDOWNLOAD          } from '../modules/local/eukcc_download'
 include { GET_SOFTWARE_VERSIONS     } from '../modules/local/get_software_versions/main'
 
 /*
@@ -85,6 +91,20 @@ workflow PREPARE_DATABASES {
         log.info "Prepared Kraken2 database: ${params.outdir}/kraken2_db"
     }
 
+    // Kraken1 database
+    if (db_types.contains("all") || db_types.contains("kraken1")) {
+        kraken1_download = KRAKEN1_DBDOWNLOAD()
+        ch_published = ch_published.mix(kraken1_download.map { result -> [destination: '.', files: result.db] })
+        log.info "Prepared Kraken1 database: ${params.outdir}/kraken1_db"
+    }
+
+    // Krona taxonomy
+    if (db_types.contains("all") || db_types.contains("krona")) {
+        krona_download = KRONA_DBDOWNLOAD()
+        ch_published = ch_published.mix(krona_download.map { result -> [destination: 'krona_db', files: result.taxonomy] })
+        log.info "Prepared Krona taxonomy: ${params.outdir}/krona_db/taxonomy.tab"
+    }
+
     // GTDB database
     if (db_types.contains("all") || db_types.contains("gtdb")) {
         gtdb_download = GTDB_DBDOWNLOAD()
@@ -120,9 +140,31 @@ workflow PREPARE_DATABASES {
         log.info "Prepared NCBI nt database: ${params.outdir}/nt_db"
     }
 
+    // Bakta database
+    if (db_types.contains("all") || db_types.contains("bakta")) {
+        bakta_download = BAKTA_DBDOWNLOAD()
+        ch_published = ch_published.mix(bakta_download.map { result -> [destination: '.', files: result.db] })
+        log.info "Prepared Bakta database: ${params.outdir}/bakta_db"
+    }
+
+    // DNABERT-S model
+    if (db_types.contains("all") || db_types.contains("dnaberts")) {
+        dnaberts_download = DNABERTS_DBDOWNLOAD()
+        ch_published = ch_published.mix(dnaberts_download.map { result -> [destination: '.', files: result.db] })
+        log.info "Prepared DNABERT-S model: ${params.outdir}/dnaberts_db"
+    }
+
+    // EukCC database
+    if (db_types.contains("all") || db_types.contains("eukcc")) {
+        eukcc_download = EUKCC_DBDOWNLOAD()
+        ch_published = ch_published.mix(eukcc_download.map { result -> [destination: '.', files: result.db] })
+        log.info "Prepared EukCC database: ${params.outdir}/eukcc_db"
+    }
+
     // GET_SOFTWARE_VERSIONS
     software_versions = GET_SOFTWARE_VERSIONS (
-        channel.topic('local_versions')
+        channel.topic('versions')
+            .filter { version -> version instanceof Path }
             .unique()
             .collectFile(name: 'collated_versions.yml', newLine: true)
     )

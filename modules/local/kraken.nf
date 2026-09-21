@@ -13,16 +13,17 @@ process KRAKEN {
     taxonomy: Path
 
     output:
-    record(meta: meta, report: file("*.krk"), html: file("*.html"), tda: file("*.TDA_genus.txt"), versions: file("versions.yml"))
+    record(meta: meta, report: file("*.krk"), html: file("*.html"), tda: file("*.TDA_genus.txt"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file("versions.yml") >> 'versions'
 
     script:
     def mode = meta.single_end ? "" : "--paired"
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def read_args = reads.join(' ')
     """
     TAXONOMY=\$(find -L . -name '*.tab' -exec dirname {} \\;)
-    kraken2 --db $db --threads ${task.cpus} --report ${prefix}.krk --output ${prefix}.k2 --gzip-compressed ${mode} $reads
+    kraken2 --db $db --threads ${task.cpus} --report ${prefix}.krk --output ${prefix}.k2 --gzip-compressed ${mode} ${read_args}
     kreport2krona.py -r ${prefix}.krk -o ${prefix}.krn
     ktImportText -o ${prefix}_taxonomy.html ${prefix}.krn
     # Taxonomic Discovery Algorithm
@@ -31,7 +32,7 @@ process KRAKEN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        kraken2: \$(echo \$(kraken --version 2>&1) | sed 's/^.*kraken //; s/Using.*\$//')
+        kraken2: \$(kraken2 --version 2>&1 | grep version | sed 's/Kraken version //')
     END_VERSIONS
     """
 }

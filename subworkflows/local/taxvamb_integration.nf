@@ -16,7 +16,6 @@ workflow TAXVAMB_INTEGRATION {
         metabuli_taxa = METABULI_TAXA(ch_assembly_tuple, file(params.metabuli_db, type: 'dir'))
         ch_published = ch_published.mix(metabuli_taxa.map { result -> [destination: 'taxonomy/metabuli', files: result] })
         ch_taxonomy_path = metabuli_taxa.map { result -> result.taxonomy }
-        ch_versions = metabuli_taxa.map { result -> result.versions }
         ch_vamb_input = ch_assembly
             .combine(ch_coverage)
             .combine(ch_taxonomy_path)
@@ -26,15 +25,12 @@ workflow TAXVAMB_INTEGRATION {
         vamb_bin = VAMB_BIN(ch_vamb_input)
         ch_published = ch_published.mix(vamb_bin.map { result -> [destination: 'binning/taxvamb', files: result] })
         ch_scaffolds2bin = vamb_bin.map { result -> tuple(result.meta, result.scaffolds2bin) }
-        ch_versions = ch_versions.mix(vamb_bin.map { result -> result.versions })
     } else {
         ch_scaffolds2bin = channel.empty()
-        ch_versions = channel.empty()
     }
 
     emit:
     scaffolds2bin: Channel<Tuple<Map,Path>> = ch_scaffolds2bin
     mqc_tsv: Channel<Path> = channel.empty()
-    versions: Channel<Path> = ch_versions
     published: Channel<Map> = ch_published
 }

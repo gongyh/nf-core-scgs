@@ -10,9 +10,9 @@ process DCVBIN_BIN {
     tuple(meta: Map, vae_features_file: Path, cluster_value_file: Path, fasta_file: Path)
 
     output:
-    record(meta: meta, bins_dir: file("${prefix}_bins", type: 'dir'), label_file: file("${prefix}_prinum.txt"), scaffolds2bin: file("${prefix}_scaffolds2bin.tsv"), mqc_tsv: file("${prefix}_mqc.tsv"), versions: file('versions.yml'))
+    record(meta: meta, bins_dir: file("${prefix}_bins", type: 'dir'), label_file: file("${prefix}_prinum.txt"), scaffolds2bin: file("${prefix}_scaffolds2bin.tsv"), mqc_tsv: file("${prefix}_mqc.tsv"))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args    = task.ext.args ?: ''
@@ -37,7 +37,7 @@ process DCVBIN_BIN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        dcvbin: \$(python -c "import dcvbin; print(dcvbin.__version__)" 2>/dev/null || echo "unknown")
+        dcvbin: 732ee4257f7da200994f4c105e9dacbc74242883
     END_VERSIONS
     exit 0
     """

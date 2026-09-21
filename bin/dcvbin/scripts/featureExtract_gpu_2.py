@@ -37,16 +37,11 @@ args = parser.parse_args()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-
-#tokenizer = AutoTokenizer.from_pretrained(args.model_dir, trust_remote_code=True)
-#model = AutoModel.from_pretrained(args.model_dir, trust_remote_code=True).to(device)
-
 from pathlib import Path
 
 # 统一解析模型目录为绝对路径（支持相对路径）
 model_dir = Path(args.model_dir).resolve()
 
-#tokenizer = AutoTokenizer.from_pretrained(str(model_dir), trust_remote_code=True)
 tokenizer = AutoTokenizer.from_pretrained(str(model_dir), trust_remote_code=True, local_files_only=True)
 model = AutoModel.from_pretrained(str(model_dir), trust_remote_code=True).to(device)
 
@@ -56,8 +51,6 @@ with open(args.seq_file,"w") as ouput_file:
         seq = str(record.seq)
         if len(seq)>=2000:
             ouput_file.write(seq+'\n')
-
-time.sleep(5)
 
 # Read sequences from file#
 with open(args.seq_file, "r", encoding="UTF-8") as f:
@@ -82,8 +75,4 @@ np.save(args.fpf_file, np.stack(feature_list))
 end_time = time.time()
 print("提取特征耗费时间：%d" %(end_time-start_time))
 print(len(feature_list))
-
-
-
-
 

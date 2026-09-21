@@ -7,9 +7,9 @@ process KTUPDATETAXONOMY {
     container "scgs/mulled-v2-b85de0f0888e1a8481d8c5d0c3b52736036932cc:96c1f81ca967332ad179c5bc0a350133f6bdf2a8-0"
 
     output:
-    record(taxonomy: file('taxonomy/taxonomy.tab'), versions: file('versions.yml'))
+    record(taxonomy: file('taxonomy/taxonomy.tab'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     def args = task.ext.args ?: ''
@@ -17,6 +17,17 @@ process KTUPDATETAXONOMY {
     ktUpdateTaxonomy.sh \\
         $args \\
         taxonomy/
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        krona: '2.7.1'
+    END_VERSIONS
+    """
+
+    stub:
+    """
+    mkdir -p taxonomy
+    touch taxonomy/taxonomy.tab
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

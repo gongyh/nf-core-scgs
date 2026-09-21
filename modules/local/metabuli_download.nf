@@ -7,9 +7,9 @@ process METABULI_DBDOWNLOAD {
     container "community.wave.seqera.io/library/wget:1.25.0--817c089a96769e94"
 
     output:
-    record(db: file('metabuli_db'), versions: file('versions.yml'))
+    record(db: file('metabuli_db'))
     topic:
-    file('versions.yml') >> 'local_versions'
+    file('versions.yml') >> 'versions'
 
     script:
     """

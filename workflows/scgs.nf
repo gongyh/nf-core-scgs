@@ -445,7 +445,7 @@ if (params.eukcc_db) {
     eukcc_db  = file(params.eukcc_db)
     if ( !eukcc_db.exists() ) exit 1, "EukCC database not found: ${params.eukcc_db}"
 } else {
-    eukcc_db = file("/dev/null")
+    eukcc_db = channel.empty()
 }
 
 // Configure Checkm2 database
@@ -733,7 +733,7 @@ summary = [:]
         ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2/stats', files: result.stats] })
         ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.txt, result.pdf]] })
         if (params.saveAlignedIntermediates) {
-            ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.bam, result.bai, result.bed, result.versions]] })
+            ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.bam, result.bai, result.bed]] })
         }
 
         preseq = PRESEQ(ch_samtools_bed)
@@ -926,7 +926,7 @@ summary = [:]
         blastn = BLASTN(
             ctg200,
             nt_db,
-            params.evalue
+            Float.valueOf(params.evalue.toString())
         )
         ch_published = ch_published.mix(blastn.map { result -> [destination: 'blob', files: result] })
 
@@ -1049,7 +1049,7 @@ summary = [:]
             kofam_profile,
             kofam_kolist
         )
-        kofam_scan = kofamscan.map { result -> tuple(result.meta, result.txt) }
+        kofam_scan = kofamscan.flatMap { result -> result.txt }
         ch_published = ch_published.mix(kofamscan.map { result -> [destination: 'kofam', files: result] })
     }
 
@@ -1073,7 +1073,7 @@ summary = [:]
                 ctg200.collect { entry -> entry[1] },
                 tax_split.collect { entry -> entry[1] },
                 prokka_for_split.collect { entry -> entry[1] }.ifEmpty([]),
-                kofam_scan.collect { entry -> entry[1] }.ifEmpty([]),
+                kofam_scan.collect().ifEmpty([]),
                 eukcc_db,
                 params.split_bac_level,
                 params.split_euk_level
@@ -1086,7 +1086,7 @@ summary = [:]
                 ctg200.collect { entry -> entry[1] },
                 tax_split.collect { entry -> entry[1] },
                 prokka_for_split.collect { entry -> entry[1] }.ifEmpty([]),
-                kofam_scan.collect { entry -> entry[1] }.ifEmpty([]),
+                kofam_scan.collect().ifEmpty([]),
                 params.split_bac_level,
                 params.split_euk_level
             )
@@ -1117,7 +1117,8 @@ summary = [:]
 
     ch_multiqc_versions = channel.empty()
     software_versions = GET_SOFTWARE_VERSIONS(
-        channel.topic('local_versions')
+        channel.topic('versions')
+            .filter { version -> version instanceof Path }
             .mix(ch_vendor_versions)
             .map { version ->
                 def lines = version.text.readLines()
