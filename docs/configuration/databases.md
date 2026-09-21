@@ -119,11 +119,11 @@ trigger their associated analysis steps.
 The preparation workflow does not download every optional SCGS resource. You
 must obtain and configure the following independently when needed:
 
-| Resource                                      | Parameter                          | Used for                           |
-| --------------------------------------------- | ---------------------------------- | ---------------------------------- |
-| UniProt protein database and taxonomy mapping | `--uniprot_db`, `--uniprot_taxids` | DIAMOND and BlobTools annotation   |
-| Trusted Prokka proteins                       | `--prokka_proteins`                | Prokka annotation                  |
-| MGPG database                                 | `--mgpg_db`                        | Pangenome analysis                 |
+| Resource                                      | Parameter                          | Used for                         |
+| --------------------------------------------- | ---------------------------------- | -------------------------------- |
+| UniProt protein database and taxonomy mapping | `--uniprot_db`, `--uniprot_taxids` | DIAMOND and BlobTools annotation |
+| Trusted Prokka proteins                       | `--prokka_proteins`                | Prokka annotation                |
+| MGPG database                                 | `--mgpg_db`                        | Pangenome analysis               |
 
 See the [SCGS usage guide](../usage.md) and the
 [MINIMETA workflow guide](../../MINIMETA.md) for the analysis options that
