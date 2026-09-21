@@ -445,7 +445,7 @@ if (params.eukcc_db) {
     eukcc_db  = file(params.eukcc_db)
     if ( !eukcc_db.exists() ) exit 1, "EukCC database not found: ${params.eukcc_db}"
 } else {
-    eukcc_db = file("/dev/null")
+    eukcc_db = channel.empty()
 }
 
 // Configure Checkm2 database

@@ -227,6 +227,7 @@ if (params.eggnog_db) {
 ch_multiqc_config = channel.fromPath(params.multiqc_config, checkIfExists: true)
 ch_multiqc_custom_config = channel.empty()
 ch_multiqc_logo = channel.empty()
+ch_multiqc_files = channel.empty()
 ch_output_docs = channel.fromPath("$baseDir/docs/output.md")
 
 
@@ -542,7 +543,6 @@ summary = [:]
     workflow_summary = create_workflow_summary(summary)
     ch_workflow_summary = channel.value(workflow_summary)
 
-    ch_multiqc_files = channel.empty()
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect { entry -> entry[1] }.ifEmpty([]))
