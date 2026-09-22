@@ -49,15 +49,15 @@ graph LR
         bowtie2_align([BOWTIE2])
         preseq([PRESEQ])
         qualimap([QUALIMAP])
+        circlize([CIRCLIZE])
         monovar([MONOVAR])
         doubletd([DOUBLETD])
-        circlize([CIRCLIZE])
 
         bowtie2_align -->|reference| preseq
         bowtie2_align -->|reference| circlize
         bowtie2_align -->|reference| qualimap
         bowtie2_align -->|reference| monovar
-        bowtie2_align -->|reference| doubletd
+        monovar -->|reference| doubletd
     end
 
     subgraph assembly_stage [De novo Assembly]
