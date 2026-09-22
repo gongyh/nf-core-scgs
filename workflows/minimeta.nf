@@ -110,7 +110,6 @@ include { MULTIQC                           } from '../modules/nf-core/multiqc/m
 
 include { TRIMGALORE                        } from '../modules/local/trimgalore'
 include { BBNORM                            } from '../modules/local/bbnorm'
-include { SPADES                            } from '../modules/local/spades'
 include { READ_CORRECTION                   } from '../modules/local/read_correction'
 include { MERGE_CORRECTED                   } from '../modules/local/merge_corrected'
 include { SPADES as SPADES_JOINT            } from '../modules/local/spades'
@@ -122,7 +121,7 @@ include { PREPARE_FEATURES_SINGLE           } from '../subworkflows/local/prepar
 include { PREPARE_FEATURES_MULTI            } from '../subworkflows/local/prepare_features_multi'
 include { FILTER_ASSEMBLY                   } from '../modules/local/filter_assembly'
 include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
-include { CHECKM2 as CHECKM2_COOCCURRENCE   } from '../modules/local/checkm2'
+include { CHECKM2_COOCCURRENCE              } from '../modules/local/checkm2_cooccurrence'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
 include { MMSEQS_CONTIG_TAXONOMY            } from '../subworkflows/local/mmseqs_contig_taxonomy'
@@ -522,8 +521,7 @@ summary = [:]
         }
 
     ch_multiqc_versions = channel.empty()
-    software_versions = GET_SOFTWARE_VERSIONS(
-        topic_versions.versions_file
+    ch_versions_yml = topic_versions.versions_file
         .mix(ch_vendor_versions)
             .map { version ->
                 def lines = version.text.readLines()
@@ -535,9 +533,9 @@ summary = [:]
                     .join('\n') + '\n'
             }.unique().mix(topic_versions_string)
             .collectFile(name: 'collated_versions.yml', newLine: true)
-    )
-    ch_multiqc_versions = software_versions.map { result -> result.mqc_yml }
-    ch_published = ch_published.mix(software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
+    ch_software_versions = GET_SOFTWARE_VERSIONS( ch_versions_yml )
+    ch_multiqc_versions = ch_software_versions.map { result -> result.mqc_yml }
+    ch_published = ch_published.mix(ch_software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
 
     // MODULE: MULTIQC
     workflow_summary = create_workflow_summary(summary)
