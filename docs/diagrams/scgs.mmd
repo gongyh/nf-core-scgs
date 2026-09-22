@@ -73,17 +73,17 @@ graph LR
         contigs2([])
         checkm([CHECKM])
         quast([QUAST])
-        blastn([BLAST])
-        blobtools([BLOBTOOLS])
         kraken1([KRAKEN])
         acdc([ACDC])
+        blastn([BLAST])
+        blobtools([BLOBTOOLS])
 
         contigs2 -->|contig| checkm
         contigs2 -->|contig| quast
-        contigs2 -->|contig| blastn
-        blastn -->|contig| blobtools
         contigs2 -->|contig| kraken1
         kraken1 -->|contig| acdc
+        contigs2 -->|contig| blastn
+        blastn -->|contig| blobtools
     end
 
     subgraph annotation_stage [Gene annotation]
