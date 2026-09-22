@@ -1,4 +1,4 @@
-%%metro mode: dark
+%%metro mode: light
 %%metro style: nfcore
 %%metro animate: true
 %%metro compact_offsets: true
@@ -11,7 +11,9 @@
 %%metro marker_legend: circle, solid | Mandatory process
 %%metro marker_legend: square, solid | Optional process
 %%metro marker: kraken | square, solid
-%%metro marker: checkm2 | square, solid
+%%metro marker: kraken1 | square, solid
+%%metro marker: checkm | square, solid
+%%metro marker: blastn | square, solid
 %%metro marker: blobtools | square, solid
 %%metro marker: acdc | square, solid
 %%metro marker: bakta | square, solid
@@ -69,17 +71,19 @@ graph LR
 
     subgraph contig_analysis [Contig-level accessment]
         contigs2([])
+        checkm([CHECKM])
         quast([QUAST])
-        checkm1([CHECKM1])
+        blastn([BLAST])
         blobtools([BLOBTOOLS])
+        kraken1([KRAKEN])
         acdc([ACDC])
-        checkm2([CHECKM2])
 
+        contigs2 -->|contig| checkm
         contigs2 -->|contig| quast
-        contigs2 -->|contig| checkm1
-        contigs2 -->|contig| blobtools
-        contigs2 -->|contig| acdc
-        contigs2 -->|contig| checkm2
+        contigs2 -->|contig| blastn
+        blastn -->|contig| blobtools
+        contigs2 -->|contig| kraken1
+        kraken1 -->|contig| acdc
     end
 
     subgraph annotation_stage [Gene annotation]
