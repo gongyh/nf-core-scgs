@@ -406,7 +406,7 @@ summary = [:]
 
         MMSEQS_CONTIG_TAXONOMY( ch_mmseqs_input, ch_mmseqs_db )
         ch_mmseqs_taxonomy = MMSEQS_CONTIG_TAXONOMY.out.taxonomy
-        ch_multiqc_files = ch_multiqc_files.mix(ch_mmseqs_taxonomy.collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_mmseqs_taxonomy.collect { entry -> entry[1] }.ifEmpty([]))
         ch_published = ch_published.mix(MMSEQS_CONTIG_TAXONOMY.out.published)
 
         mmseqs2semibin = MMSEQS2SEMIBIN(ch_mmseqs_taxonomy)
@@ -449,7 +449,7 @@ summary = [:]
         //DCVBIN
         dcvbin = DCVBIN(ch_filtered_fasta_with_meta, ch_bam_path)
         ch_all_s2b = ch_all_s2b.mix(dcvbin.scaffolds2bin.map { _meta, file -> ['DCVBIN', file] })
-        ch_multiqc_files = ch_multiqc_files.mix(dcvbin.mqc_tsv.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(dcvbin.mqc_tsv.map { meta, tsv -> tsv }.ifEmpty([]))
         ch_published = ch_published.mix(dcvbin.published)
     }
 
