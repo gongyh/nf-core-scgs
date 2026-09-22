@@ -3,110 +3,85 @@
 %%metro animate: true
 %%metro compact_offsets: true
 %%metro legend: bl
-%%metro line: core | Read-level QC | #1885F5
-%%metro line: reference | Read-level assessment | #F58518
-%%metro line: assembly | De novo assembly | #54A24B
-%%metro line: contig | Contig-level QC | #E45756
-%%metro line: annotation | Gene annotation | #B279A2
-%%metro marker_legend: circle, solid | Mandatory process
-%%metro marker_legend: square, solid | Optional process
+%%metro line: reference | With reference genome | #F58518
+%%metro line: assembly | Without reference genome | #54A24B
+%%metro legend_combo: reference, assembly | Read quality control
+%%metro marker_legend: circle, solid | Database-free process
+%%metro marker_legend: square, solid | Database-dependent process
 %%metro marker: kraken | square, solid
-%%metro marker: kraken1 | square, solid
 %%metro marker: checkm | square, solid
-%%metro marker: blastn | square, solid
+%%metro marker: genomad | square, solid
 %%metro marker: blobtools | square, solid
 %%metro marker: acdc | square, solid
-%%metro marker: bakta | square, solid
 %%metro marker: eggnog | square, solid
 %%metro marker: kofamscan | square, solid
 %%metro marker: gtdbtk | square, solid
 %%metro grid: read_preparation | 0,0
-%%metro grid: assembly_stage | 1,0
-%%metro grid: reference_analyses | 1,1
-%%metro grid: contig_analysis | 2,0
-%%metro grid: annotation_stage | 2,1
+%%metro grid: assembly_stage | 1,1
+%%metro grid: reference_analyses | 1,0
 
 graph LR
 
-    subgraph read_preparation [Read-level QC]
+    subgraph read_preparation [Quality control]
+        %%metro direction: TB
         raw_reads([Raw reads])
-        fastqc([FASTQC])
-        trimgalore([TRIMGALORE])
+        fastqc([FastQC])
+        trimgalore([TrimGalore])
         bbmap_align([Host removal])
-        kraken([KRAKEN])
-        umap([UMAP])
+        kraken([Kraken])
         clean_reads([Clean reads])
 
-        raw_reads -->|core| fastqc
-        trimgalore -->|core| bbmap_align
-        raw_reads -->|core| trimgalore
-        bbmap_align -->|core| umap
-        bbmap_align -->|core| kraken
-        bbmap_align -->|core| clean_reads
+        raw_reads -->|reference,assembly| fastqc
+        trimgalore -->|reference,assembly| bbmap_align
+        raw_reads -->|reference,assembly| trimgalore
+        bbmap_align -->|reference,assembly| kraken
+        bbmap_align -->|reference,assembly| clean_reads
     end
 
-    subgraph reference_analyses [Read-level accessment]
-        bowtie2_align([BOWTIE2])
-        preseq([PRESEQ])
-        qualimap([QUALIMAP])
-        circlize([CIRCLIZE])
-        monovar([MONOVAR])
-        doubletd([DOUBLETD])
+    subgraph reference_analyses [Reference based analysis]
+        %%metro direction: BT
+        bowtie2_align([Bowtie2])
+        qualimap([QualiMap])
+        monovar([MonoVar])
+        doubletd([doubletD])
+        preseq([Preseq])
+        circlize([Coverage])
 
         bowtie2_align -->|reference| preseq
         bowtie2_align -->|reference| circlize
         bowtie2_align -->|reference| qualimap
         bowtie2_align -->|reference| monovar
-        monovar -->|reference| doubletd
+        bowtie2_align -->|reference| doubletd
     end
 
-    subgraph assembly_stage [De novo Assembly]
-        bbnorm([BBNORM])
-        spades([SPADES])
-        contigs([Contigs])
+    subgraph assembly_stage [Assembly based analysis]
+        %%metro direction: LR
+        bbnorm([BBNorm])
+        spades([SPAdes])
+        acdc([ACDC])
+        checkm([CheckM])
+        gtdbtk([GTDBTk])
+        prokka([Prokka])
+        phispy([PhiSpy])
+        eggnog([eggNOG-mapper])
+        kofamscan([KofamScan])
+        genomad([geNomad])
+        quast([QUAST])
+        blobtools([BlobTools])
 
         bbnorm -->|assembly| spades
-        spades -->|assembly| contigs
-    end
-
-    subgraph contig_analysis [Contig-level accessment]
-        contigs2([])
-        checkm([CHECKM])
-        quast([QUAST])
-        kraken1([KRAKEN])
-        acdc([ACDC])
-        blastn([BLAST])
-        blobtools([BLOBTOOLS])
-
-        contigs2 -->|contig| checkm
-        contigs2 -->|contig| quast
-        contigs2 -->|contig| kraken1
-        kraken1 -->|contig| acdc
-        contigs2 -->|contig| blastn
-        blastn -->|contig| blobtools
-    end
-
-    subgraph annotation_stage [Gene annotation]
-        contigs3([])
-        prokka([PROKKA])
-        bakta([BAKTA])
-        uniop([UNIOP])
-        phispy([PHISPY])
-        eggnog([EGGNOG])
-        kofamscan([KOFAMSCAN])
-        gtdbtk([GTDBTK])
-
-        contigs3 -->|annotation| prokka
-        contigs3 -->|annotation| uniop
-        prokka -->|annotation| phispy
-        contigs3 -->|annotation| bakta
-        prokka -->|annotation| eggnog
-        prokka -->|annotation| kofamscan
-        contigs3 -->|annotation| gtdbtk
+        spades -->|assembly| gtdbtk
+        spades -->|assembly| genomad
+        spades -->|assembly| checkm
+        spades -->|assembly| quast
+        spades -->|assembly| acdc
+        spades -->|assembly| blobtools
+        spades -->|assembly| prokka
+        prokka -->|assembly| phispy
+        prokka -->|assembly| eggnog
+        prokka -->|assembly| kofamscan
     end
 
     clean_reads -->|reference| bowtie2_align
     clean_reads -->|assembly| bbnorm
-    contigs -->|contig| contigs2
-    contigs -->|annotation| contigs3
 
