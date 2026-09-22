@@ -61,6 +61,7 @@ jobs:
 
 workflows:
   test_pipeline:
+    max_auto_reruns: 2
     jobs:
       - test_scgs:
           filters:
