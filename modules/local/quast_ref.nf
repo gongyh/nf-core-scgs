@@ -30,7 +30,10 @@ process QUAST_REF {
     def gene = gff.exists() ? "--features gene:$gff" : ""
     def outdir = quast_outdir.replaceAll(/[\\/:*?"<>|]/, '_').replaceAll(/[\s_]+/, '_').trim()
     def bam_param = bam.join(',')
-    def labels = bam.collect { Path bam_file -> "$bam_file".replaceFirst(/\.markdup\.bam$/, '') }.join(',')
+    def labels = bam.collect { Path bam_file ->
+        def sample = bam_file.name.replaceFirst(/\.markdup\.bam$/, '')
+        quast_outdir == 'quast_spades' ? "${sample}_spades" : sample
+    }.join(',')
     def contig_files = contigs.join(' ')
     """
     quast.py -o $outdir $ref $gene -m 200 -t ${task.cpus} $euk_cmd --rna-finding --bam $bam_param -l $labels --no-sv --no-read-stats $contig_files

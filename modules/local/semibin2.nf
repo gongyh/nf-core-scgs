@@ -35,15 +35,15 @@ process SEMIBIN2 {
     if [ -d bins_merged ] && [ "\$(ls bins_merged/*.fa 2>/dev/null | wc -l)" -gt 0 ]; then
         for bin_fa in bins_merged/*.fa; do
             bin_name=\$(basename "\$bin_fa" .fa)
-            grep "^>" "\$bin_fa" | sed 's/^>//' | awk -v bin="\$bin_name" '{print \$1"\t"bin}'
+            grep "^>" "\$bin_fa" | sed 's/^>//' | awk -v bin="\$bin_name" '{print \$1"\\t"bin}'
         done >> scaffolds2bin.tsv
     else
         echo "WARNING: No .fa files found in bins_merged, creating empty scaffolds2bin.tsv" >&2
         touch scaffolds2bin.tsv
     fi
     N_BINS=\$(find bins_merged -maxdepth 1 -name '*.fa' | wc -l)
-    printf "Metric\tValue\\n" > semibin2_mqc.tsv
-    printf "Number of bins recovered\t\${N_BINS}\\n" >> semibin2_mqc.tsv
+    printf "Metric\\tValue\\n" > semibin2_mqc.tsv
+    printf "Number of bins recovered\\t\${N_BINS}\\n" >> semibin2_mqc.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -12,7 +12,7 @@ process REMAP {
     allow_multi_align: Boolean
 
     output:
-    record(meta: meta, bam: file("*_ass.sort.bam"), bai: file("*_ass.sort.bam.bai"), mqc_tsv: file("remap_mqc.tsv"))
+    record(meta: meta, bam: file("*_ass.sort.bam"), bai: file("*_ass.sort.bam.bai"), mqc_tsv: file("${meta.id}_remap_mqc.tsv"))
     topic:
     file("versions.yml") >> 'versions'
 
@@ -27,8 +27,16 @@ process REMAP {
     samtools index ${prefix}_ass.sort.bam
 
     ALIGN_RATE=\$(grep "overall alignment rate" bowtie2.log | awk '{print \$1}' | tr -d '%')
-    printf "Metric\tValue\n" > remap_mqc.tsv
-    printf "Overall alignment rate (%%)\t\${ALIGN_RATE}\n" >> remap_mqc.tsv
+    cat > ${meta.id}_remap_mqc.tsv <<'EOF'
+# id: remap
+# section_name: Remap
+# plot_type: bargraph
+# pconfig:
+#   id: remap_alignment_rate
+#   title: Overall alignment rate
+#   ylab: Alignment rate (%)
+EOF
+    printf "Sample\\tOverall alignment rate (%%)\\n${meta.id}\\t%s\\n" "\${ALIGN_RATE}" >> ${meta.id}_remap_mqc.tsv
 
     cat <<-END_VERSIONS > versions.yml
 "${task.process}":
@@ -43,8 +51,16 @@ END_VERSIONS
     samtools index ${prefix}_ass.sort.bam
 
     ALIGN_RATE=\$(grep "overall alignment rate" bowtie2.log | awk '{print \$1}' | tr -d '%')
-    printf "Metric\tValue\n" > remap_mqc.tsv
-    printf "Overall alignment rate (%%)\t\${ALIGN_RATE}\n" >> remap_mqc.tsv
+    cat > ${meta.id}_remap_mqc.tsv <<'EOF'
+# id: remap
+# section_name: Remap
+# plot_type: bargraph
+# pconfig:
+#   id: remap_alignment_rate
+#   title: Overall alignment rate
+#   ylab: Alignment rate (%)
+EOF
+    printf "Sample\\tOverall alignment rate (%%)\\n${meta.id}\\t%s\\n" "\${ALIGN_RATE}" >> ${meta.id}_remap_mqc.tsv
 
     cat <<-END_VERSIONS > versions.yml
 "${task.process}":

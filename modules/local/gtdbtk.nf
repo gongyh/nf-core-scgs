@@ -28,12 +28,16 @@ process GTDBTK {
 
     echo \"# plot_type: 'table'\" > GTDBtk_mqc.tsv
     echo \"# section_name: 'GTDBtk'\" >> GTDBtk_mqc.tsv
+    echo \"# file_format: 'tsv'\" >> GTDBtk_mqc.tsv
+    echo \"# id: scgs_gtdbtk\" >> GTDBtk_mqc.tsv
+    printf 'genome\\tclassification\\n' >> GTDBtk_mqc.tsv
 
-    echo \$'genome\\tg__' >  taxa.txt
+    printf 'genome\\tg__\\n' > taxa.txt
 
     if [[ -f $gtdb ]]; then
         mkdir -p out
-        echo \$'genome\\td__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
+        printf 'genome\\td__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli\\n' > taxa.txt
+        cat taxa.txt >> GTDBtk_mqc.tsv
     else
         if [ -n "\$(ls -A genome)" ]; then
             gtdbtk classify_wf \\
@@ -43,16 +47,24 @@ process GTDBTK {
                 --out_dir out \\
                 --cpus $task.cpus
 
-            if [ -f out/*.summary.tsv ]; then
-                cut -f1,2 out/*.summary.tsv | grep -v classification > taxa.txt
-                cut -f1,2 out/*.summary.tsv >> GTDBtk_mqc.tsv
+            for summary in out/*.summary.tsv; do
+                [ -f \"\$summary\" ] || continue
+                tail -n +2 \"\$summary\" | cut -f1,2 >> GTDBtk_mqc.tsv
+            done
+            if [ \$(wc -l < GTDBtk_mqc.tsv) -gt 5 ]; then
+                tail -n +6 GTDBtk_mqc.tsv > taxa.txt
             fi
         else
             mkdir -p out
             touch out/no_results.txt
             echo "No fasta to taxonomy!" > out/no_results.txt
-            echo \$'genome\\td__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
+            printf 'genome\\td__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli\\n' > taxa.txt
+            printf 'genome\\td__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli\\n' >> GTDBtk_mqc.tsv
         fi
+    fi
+
+    if [ \$(wc -l < GTDBtk_mqc.tsv) -eq 5 ]; then
+        printf 'No classified genomes\\tNA\\n' >> GTDBtk_mqc.tsv
     fi
 
     cat <<-END_VERSIONS > versions.yml

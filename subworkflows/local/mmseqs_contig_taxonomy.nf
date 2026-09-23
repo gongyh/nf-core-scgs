@@ -1,6 +1,7 @@
 include { MMSEQS_CREATEDB  } from '../../modules/nf-core/mmseqs/createdb/main'
 include { MMSEQS_TAXONOMY  } from '../../modules/nf-core/mmseqs/taxonomy/main'
 include { MMSEQS_CREATETSV } from '../../modules/nf-core/mmseqs/createtsv/main'
+include { MMSEQS_TAXONOMY_MULTIQC } from '../../modules/local/mmseqs_taxonomy_multiqc'
 
 workflow MMSEQS_CONTIG_TAXONOMY {
 
@@ -36,10 +37,12 @@ workflow MMSEQS_CONTIG_TAXONOMY {
     // MMSEQS_CREATETSV
     MMSEQS_CREATETSV ( ch_taxonomy_querydb_taxdb, [[:],[]], ch_taxonomy_querydb )
     ch_taxonomy_tsv = MMSEQS_CREATETSV.out.tsv
+    MMSEQS_TAXONOMY_MULTIQC ( ch_taxonomy_tsv )
     ch_published = ch_published.mix(ch_taxonomy_tsv.map { result -> [destination: 'binning/mmseqs2_taxa', files: result] })
 
     emit:
     taxonomy    = ch_taxonomy_tsv           // channel: [ val(meta), tsv ]
+    mqc_tsv     = MMSEQS_TAXONOMY_MULTIQC.out.map { result -> tuple(result.meta, result.mqc_tsv) }
     db_mmseqs   = ch_mmseqs_db              // channel: [ val(meta), mmseqs_database ]
     db_taxonomy = ch_taxonomy_querydb_taxdb // channel: [ val(meta), db_taxonomy ]
     db_contig   = ch_taxonomy_querydb       // channel: [ val(meta), db ]

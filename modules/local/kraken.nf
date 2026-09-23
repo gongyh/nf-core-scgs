@@ -28,7 +28,7 @@ process KRAKEN {
     ktImportText -o ${prefix}_taxonomy.html ${prefix}.krn
     # Taxonomic Discovery Algorithm
     bracken -d $db -i ${prefix}.krk -o ${prefix}.bracken -w /dev/null -r 150 -l G
-    awk -F '\\t' 'BEGIN{ print "genus\tabundance" }NR>1{print \$1"|"\$2"\\t"\$7}' ${prefix}.bracken > ${prefix}.TDA_genus.txt
+    awk -F '\\t' 'BEGIN{ print "genus\\tabundance" }NR>1{print \$1"|"\$2"\\t"\$7}' ${prefix}.bracken > ${prefix}.TDA_genus.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

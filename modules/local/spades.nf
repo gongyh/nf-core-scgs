@@ -11,7 +11,7 @@ process SPADES {
     tuple(meta: Map, reads: List<Path>)
 
     output:
-    record(meta: meta, corrected_read: file("*.corrected_R1.fastq.gz", optional: true), corrected_read2: file("*.corrected_R2.fastq.gz", optional: true), contig: file("*.contigs.fasta"), contig_path: file("*.contigs.paths"), contig_graph: file("*.spades_out/*.contigs.gfa"), ctg200: file("*.ctg200.fasta"), ctg: file("*.ctgs.fasta"), assembly: file("*.spades_out", type: "dir"), mqc_tsv: file("spades_joint_mqc.tsv"))
+    record(meta: meta, corrected_read: file("*.corrected_R1.fastq.gz", optional: true), corrected_read2: file("*.corrected_R2.fastq.gz", optional: true), contig: file("*.contigs.fasta"), contig_path: file("*.contigs.paths"), contig_graph: file("*.spades_out/*.contigs.gfa"), ctg200: file("*.ctg200.fasta"), ctg: file("*.ctgs.fasta"), assembly: file("*.spades_out", type: "dir"), mqc_tsv: file("spades_joint_mqc.tsv"), scgs_mqc_tsv: file("${meta.id}_spades_mqc.tsv"))
     topic:
     file("versions.yml") >> 'versions'
 
@@ -72,6 +72,14 @@ process SPADES {
     printf "Total assembly size (bp)\\t\${TOTAL}\\n" >> spades_joint_mqc.tsv
     printf "N50 (bp)\\t\${N50}\\n" >> spades_joint_mqc.tsv
     printf "Longest contig (bp)\\t\${LONGEST}\\n" >> spades_joint_mqc.tsv
+
+    cat > "${meta.id}_spades_mqc.tsv" <<'EOF'
+# id: scgs_spades
+# section_name: SPAdes Assembly
+# plot_type: table
+EOF
+    printf 'Sample\\tContigs (>=200 bp)\\tAssembly size (bp)\\tN50 (bp)\\tLongest contig (bp)\\n' >> "${meta.id}_spades_mqc.tsv"
+    printf '%s\\t%s\\t%s\\t%s\\t%s\\n' '${meta.id}' "\${NUM}" "\${TOTAL}" "\${N50}" "\${LONGEST}" >> "${meta.id}_spades_mqc.tsv"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

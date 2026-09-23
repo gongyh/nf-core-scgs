@@ -13,7 +13,7 @@ process VAMB_BIN {
     tuple(meta: Map, assembly: Path, abundance_tsv: Path, taxonomy: Path)
 
     output:
-    record(meta: meta, scaffolds2bin: file("${prefix}/scaffolds2bin.tsv"), bins: files("${prefix}/bins/*.fna.gz", optional: true), clusters_metadata: file("${prefix}/vae*_clusters_metadata.tsv"), clusters_split: file("${prefix}/vae*_clusters_split.tsv", optional: true), clusters_unsplit: file("${prefix}/vae*_clusters_unsplit.tsv"), taxometer_results: file("${prefix}/results_taxometer.tsv", optional: true), latent_encoding: file("${prefix}/latent.npz", optional: true), abundance: file("${prefix}/abundance.npz"), composition: file("${prefix}/composition.npz"), log: file("${prefix}/log.txt"))
+    record(meta: meta, scaffolds2bin: file("${prefix}/scaffolds2bin.tsv"), bins: files("${prefix}/bins/*.fna.gz", optional: true), clusters_metadata: file("${prefix}/vae*_clusters_metadata.tsv"), clusters_split: file("${prefix}/vae*_clusters_split.tsv", optional: true), clusters_unsplit: file("${prefix}/vae*_clusters_unsplit.tsv"), taxometer_results: file("${prefix}/results_taxometer.tsv", optional: true), latent_encoding: file("${prefix}/latent.npz", optional: true), abundance: file("${prefix}/abundance.npz"), composition: file("${prefix}/composition.npz"), log: file("${prefix}/log.txt"), mqc_tsv: file("${meta.id}_taxvamb_mqc.tsv"))
     topic:
     file('versions.yml') >> 'versions'
 
@@ -52,7 +52,25 @@ process VAMB_BIN {
         ${tax_input} \\
         ${args}
 
-    awk -F'\\t' 'NR>1 {print \$2"\t"\$1}' ${prefix}/vae*_clusters_unsplit.tsv > ${prefix}/scaffolds2bin.tsv
+    awk -F'\\t' 'NR>1 {print \$2"\\t"\$1}' ${prefix}/vae*_clusters_unsplit.tsv > ${prefix}/scaffolds2bin.tsv
+
+    cat > "${meta.id}_taxvamb_mqc.tsv" <<'EOF'
+# id: taxvamb
+# section_name: TaxVAMB Binning
+# plot_type: table
+EOF
+    printf 'Sample\\tClusters\\tMulti-contig clusters\\tClustered contigs\\tClustered bases (bp)\\n' >> "${meta.id}_taxvamb_mqc.tsv"
+    awk -F '\\t' -v sample='${meta.id}' '
+        NR > 1 && NF >= 6 {
+            clusters++
+            if (\$6 > 1) multi++
+            contigs += \$6
+            bases += \$5
+        }
+        END {
+            printf "%s\\t%d\\t%d\\t%d\\t%d\\n", sample, clusters, multi, contigs, bases
+        }
+    ' ${prefix}/vae*_clusters_metadata.tsv >> "${meta.id}_taxvamb_mqc.tsv"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -78,6 +96,13 @@ process VAMB_BIN {
     touch ${prefix}/abundance.npz
     touch ${prefix}/composition.npz
     touch ${prefix}/log.txt
+    cat > "${meta.id}_taxvamb_mqc.tsv" <<'EOF'
+# id: taxvamb
+# section_name: TaxVAMB Binning
+# plot_type: table
+Sample	Clusters	Multi-contig clusters	Clustered contigs	Clustered bases (bp)
+${meta.id}	0	0	0	0
+EOF
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         vamb: stub

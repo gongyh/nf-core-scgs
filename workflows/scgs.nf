@@ -602,6 +602,9 @@ summary = [:]
 
     display_header(summary, custom_runName, single_end)
     ch_published = channel.empty()
+    ch_multiqc_remap = channel.empty()
+    ch_multiqc_eggnog = channel.empty()
+    ch_multiqc_kofam = channel.empty()
 
     // FASTQC
     ch_multiqc_fastqc = channel.empty()
@@ -695,6 +698,7 @@ summary = [:]
     }
 
     // ALIGN
+    ch_multiqc_bowtie2 = channel.empty()
     if (denovo == false) {
         bowtie2_align = BOWTIE2_ALIGN(
             trimmed_reads,
@@ -703,6 +707,7 @@ summary = [:]
             true
         )
         bb_bam = bowtie2_align.map { result -> tuple(result.meta, result.bam) }
+        ch_multiqc_bowtie2 = bowtie2_align.map { result -> result.log }
         if (params.saveAlignedIntermediates) {
             ch_published = ch_published.mix(bowtie2_align.map { result -> [destination: 'bowtie2', files: result] })
         }
@@ -784,6 +789,7 @@ summary = [:]
     // ASSEMBLY
     ctg200 = channel.empty()
     ctg = channel.empty()
+    ch_multiqc_spades = channel.empty()
     if ( params.ass ) {
         // NORMALIZE
         if ( params.no_normalize ) {
@@ -801,6 +807,7 @@ summary = [:]
         }
 
         spades = SPADES(normalized_reads)
+        ch_multiqc_spades = spades.map { result -> result.scgs_mqc_tsv }
         ch_published = ch_published.mix(spades.map { result -> [destination: 'spades', files: result] })
         contig = spades.map { result -> tuple(result.meta, result.contig) }
         contig_path = spades.map { result -> tuple(result.meta, result.contig_path) }
@@ -849,6 +856,7 @@ summary = [:]
 
     // QUAST
     ch_multiqc_quast = channel.empty()
+    ch_multiqc_quast_spades = channel.empty()
     if (denovo == false) {
         if (params.refs_fna) { // hybrid assembly, add quast for spades
             ch_ctgd_bam_bai = ctg_denovo.join(quast_bam).join(quast_bai).collect(flat: false)
@@ -862,6 +870,7 @@ summary = [:]
                 params.fungus,
                 "quast_spades"
             )
+            ch_multiqc_quast_spades = quast_ref0.map { result -> result.tsv }
             ch_published = ch_published.mix(quast_ref0.map { result -> [destination: 'quast', files: result] })
         }
         ch_ctg_bam_bai = ctg.join(quast_bam).join(quast_bai).collect(flat: false)
@@ -885,6 +894,7 @@ summary = [:]
                 params.fungus,
                 "quast_spades"
             )
+            ch_multiqc_quast_spades = quast_denovo0.map { result -> result.tsv }
             ch_published = ch_published.mix(quast_denovo0.map { result -> [destination: 'quast', files: result] })
         }
         quast_denovo = QUAST_DENOVO(
@@ -957,6 +967,7 @@ summary = [:]
                 bowtie2_remap = BOWTIE2_REMAP(ctg200)
                 remap_input = trimmed_reads.join(bowtie2_remap.map { result -> tuple(result.meta, result.index) })
                 remap = REMAP(remap_input, params.allow_multi_align)
+                ch_multiqc_remap = remap.map { result -> result.mqc_tsv }
                 ch_published = ch_published.mix(remap.map { result -> [destination: 'remap', files: result] })
                 ch_reblob_input = diamond_blastx
                     .map { result -> tuple(result.meta, result.contigs, result.nt, result.uniprot, result.has_uniprot) }
@@ -1038,6 +1049,7 @@ summary = [:]
             faa,
             eggnog_db
         )
+        ch_multiqc_eggnog = eggnog.map { result -> result.mqc_tsv }
         ch_published = ch_published.mix(eggnog.map { result -> [destination: 'eggnog', files: result] })
     }
 
@@ -1049,6 +1061,7 @@ summary = [:]
             kofam_profile,
             kofam_kolist
         )
+        ch_multiqc_kofam = kofamscan.map { result -> result.mqc_tsv }
         kofam_scan = kofamscan.flatMap { result -> result.txt }
         ch_published = ch_published.mix(kofamscan.map { result -> [destination: 'kofam', files: result] })
     }
@@ -1144,6 +1157,7 @@ summary = [:]
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect { entry -> entry[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_bowtie2.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_versions)
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_samtools.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_preseq.collect { entry -> entry[1] }.ifEmpty([]))
@@ -1152,8 +1166,13 @@ summary = [:]
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_gtdb.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_quast.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_quast_spades.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_spades.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_prokka.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_kraken.collect { entry -> entry[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_remap.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_eggnog.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_kofam.collect().ifEmpty([]))
 
     MULTIQC (
         ch_multiqc_files.collect(),

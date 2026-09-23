@@ -25,12 +25,14 @@ workflow TAXVAMB_INTEGRATION {
         vamb_bin = VAMB_BIN(ch_vamb_input)
         ch_published = ch_published.mix(vamb_bin.map { result -> [destination: 'binning/taxvamb', files: result] })
         ch_scaffolds2bin = vamb_bin.map { result -> tuple(result.meta, result.scaffolds2bin) }
+        ch_mqc_tsv = vamb_bin.map { result -> result.mqc_tsv }
     } else {
         ch_scaffolds2bin = channel.empty()
+        ch_mqc_tsv = channel.empty()
     }
 
     emit:
     scaffolds2bin: Channel<Tuple<Map,Path>> = ch_scaffolds2bin
-    mqc_tsv: Channel<Path> = channel.empty()
+    mqc_tsv: Channel<Path> = ch_mqc_tsv
     published: Channel<Map> = ch_published
 }

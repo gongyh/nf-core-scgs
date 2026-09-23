@@ -32,7 +32,7 @@ process METABULI_TAXA {
         --threads ${task.cpus} \
         ${args} \
         --lineage 1
-    awk 'BEGIN {print "contigs\tpredictions"} NR>1 && !/^#/ {print \$2"\t"\$3}' metabuli_out/${prefix}_job_classifications.tsv > taxonomy.tsv
+    awk 'BEGIN {print "contigs\\tpredictions"} NR>1 && !/^#/ {print \$2"\\t"\$3}' metabuli_out/${prefix}_job_classifications.tsv > taxonomy.tsv
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         metabuli: \$(metabuli --version 2>&1 | awk '/metabuli Version:/ {print \$3}')

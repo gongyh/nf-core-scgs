@@ -22,7 +22,7 @@ process FILTER_BAM {
     """
     set -x
     grep '^>' "${fasta}" | sed 's/^>//' | awk '{print \$1}' > ${prefix}_keep_names.txt
-    awk '{print \$1 "\t0\t1"}' ${prefix}_keep_names.txt > ${prefix}_contig_names.bed
+    awk '{print \$1 "\\t0\\t1"}' ${prefix}_keep_names.txt > ${prefix}_contig_names.bed
 
     samtools view -b -L ${prefix}_contig_names.bed "${bam}" > ${prefix}_body.bam
     samtools faidx "${fasta}"

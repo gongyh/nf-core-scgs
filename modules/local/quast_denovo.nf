@@ -23,9 +23,10 @@ process QUAST_DENOVO {
     script:
     def euk_cmd = euk ? (fungus ? "--fungus" : "-e") : ""
     def outdir = quast_outdir.replaceAll(/[\\/:*?"<>|]/, '_').replaceAll(/[\s_]+/, '_').trim()
+    def label_suffix = quast_outdir == 'quast_spades' ? '_spades' : ''
     """
     contigs=\$(ls *.fasta | paste -sd " " -)
-    labels=\$(ls *.fasta | paste -sd "," - | sed 's/.fasta//g')
+    labels=\$(ls *.fasta | sed 's/\\.fasta\$/${label_suffix}/' | paste -sd "," -)
     quast.py -o $outdir -m 200 -t ${task.cpus} $euk_cmd --rna-finding -l \$labels --no-sv --no-read-stats \$contigs
 
     cat <<-END_VERSIONS > versions.yml

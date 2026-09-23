@@ -406,7 +406,7 @@ summary = [:]
 
         MMSEQS_CONTIG_TAXONOMY( ch_mmseqs_input, ch_mmseqs_db )
         ch_mmseqs_taxonomy = MMSEQS_CONTIG_TAXONOMY.out.taxonomy
-        ch_multiqc_files = ch_multiqc_files.mix(ch_mmseqs_taxonomy.collect { entry -> entry[1] }.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(MMSEQS_CONTIG_TAXONOMY.out.mqc_tsv.map { meta, tsv -> tsv }.ifEmpty([]))
         ch_published = ch_published.mix(MMSEQS_CONTIG_TAXONOMY.out.published)
 
         mmseqs2semibin = MMSEQS2SEMIBIN(ch_mmseqs_taxonomy)
@@ -492,14 +492,14 @@ summary = [:]
     // KOFAMSCAN
     if (params.kofam && params.kofam_profile && params.kofam_kolist) {
         kofamscan = KOFAMSCAN(ch_prokka_for_annot, kofam_profile, kofam_kolist)
-        ch_multiqc_files = ch_multiqc_files.mix(kofamscan.map { result -> result.kofamscan }.collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(kofamscan.map { result -> result.mqc_tsv }.collect().ifEmpty([]))
         ch_published = ch_published.mix(kofamscan.map { result -> [destination: 'kofam', files: result] })
     }
 
     // EGGNOG
     if (params.eggnog && params.eggnog_db) {
         eggnog = EGGNOG(ch_prokka_for_annot, eggnog_db)
-        ch_multiqc_files = ch_multiqc_files.mix(eggnog.map { result -> result.annotations }.collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(eggnog.map { result -> result.mqc_tsv }.collect().ifEmpty([]))
         ch_published = ch_published.mix(eggnog.map { result -> [destination: 'eggnog', files: result] })
     }
 
@@ -545,6 +545,7 @@ summary = [:]
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect { entry -> entry[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(merge_corrected.map { result -> result.manifest_mqc })
     ch_multiqc_files = ch_multiqc_files.mix(spades_joint.map { result -> result.mqc_tsv }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(remap.map { result -> result.mqc_tsv }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_MULTI.out.coverage_mqc.ifEmpty([]))

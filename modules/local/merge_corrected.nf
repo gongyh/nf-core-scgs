@@ -29,14 +29,14 @@ process MERGE_CORRECTED {
 # description: "List of merged samples with their original read file paths."
 # format: "tsv"
 # plot_type: "table"
-# Sample_ID	R1_File_Path	R2_File_Path
+Sample_ID	R1_File_Path	R2_File_Path
 EOF
 
     > manifest.txt
 
-    paste <(printf '%s\\n' \$p1_sorted) <(printf '%s\\n' \$p2_sorted) | while IFS=\$'\t' read r1 r2;
+    paste <(printf '%s\\n' \$p1_sorted) <(printf '%s\\n' \$p2_sorted) | while IFS=\$'\\t' read r1 r2;
 do
-        id=\$(basename "\$r1" | cut -d'.' -f1)
+        id=\$(basename "\$r1" .corrected_R1.fastq.gz)
         printf "%s\\t%s\\t%s\\n" "\$id" "\$r1" "\$r2" >> manifest.txt
         printf "%s\\t%s\\t%s\\n" "\$id" "\$r1" "\$r2" >> manifest_mqc.tsv
     done

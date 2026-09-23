@@ -13,7 +13,7 @@ process CONTIG_COVERAGE {
     tuple(meta: Map, bam: Path, bai: List<Path>, fasta: Path, fai: Path)
 
     output:
-    record(meta: meta, depth: file("${meta.id}.depth"), mqc_tsv: file('coverage_mqc.tsv'))
+    record(meta: meta, depth: file("${meta.id}.depth"), mqc_tsv: file("${meta.id}_coverage_mqc.tsv"))
     topic:
     file('versions.yml') >> 'versions'
 
@@ -23,19 +23,19 @@ process CONTIG_COVERAGE {
         samtools index "${bam}"
     fi
     samtools coverage --reference "${fasta}" -o "${meta.id}.cov" "${bam}"
-    awk '!/^#/ {print \$1"\t"\$7}' "${meta.id}.cov" | sort -k1,1 > "${meta.id}.depth"
+    awk '!/^#/ {print \$1"\\t"\$7}' "${meta.id}.cov" | sort -k1,1 > "${meta.id}.depth"
     rm "${meta.id}.cov"
 
-    if [ -f "coverage_matrix.tsv" ]; then
-        N_CONTIGS=\$(tail -n +2 coverage_matrix.tsv | wc -l)
-        N_SAMPLES=\$(head -1 coverage_matrix.tsv | awk '{print NF-1}')
-    else
-        N_CONTIGS=0; N_SAMPLES=0
-    fi
-
-    printf "Metric\\tValue\\n" > coverage_mqc.tsv
-    printf "Number of contigs\\t\${N_CONTIGS}\\n" >> coverage_mqc.tsv
-    printf "Number of sub-samples\\t\${N_SAMPLES}\\n" >> coverage_mqc.tsv
+    cat > "${meta.id}_coverage_mqc.tsv" <<'EOF'
+# id: coverage
+# section_name: Coverage
+# plot_type: table
+EOF
+    printf 'Sample\\tContigs\\tContigs with coverage\\tMean depth\\n' >> "${meta.id}_coverage_mqc.tsv"
+    awk -F '\\t' -v sample='${meta.id}' '
+        { contigs++; if (\$2 > 0) covered++; depth += \$2 }
+        END { printf "%s\\t%d\\t%d\\t%.4f\\n", sample, contigs, covered, contigs ? depth / contigs : 0 }
+    ' "${meta.id}.depth" >> "${meta.id}_coverage_mqc.tsv"
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(samtools --version | head -1 | sed 's/^.*samtools //')
@@ -64,12 +64,12 @@ process MERGE_COVERAGE {
     samples=(\$(ls *.depth | sed 's/.depth//'))
     cut -f1 *.depth | sort -u > all_contigs.tmp
     for sample in \${samples[*]}; do
-        join -a1 -e0 -o '2.2' -t \$'\t' all_contigs.tmp "\${sample}.depth" > "\${sample}.depth_col"
+        join -a1 -e0 -o '2.2' -t \$'\\t' all_contigs.tmp "\${sample}.depth" > "\${sample}.depth_col"
     done
     paste all_contigs.tmp \$(for s in \${samples[*]}; do echo "\${s}.depth_col"; done) > abundance_matrix.tsv
     header="contig_id"
     for sample in \${samples[*]}; do
-        header="\${header}\t\${sample}"
+        header="\${header}\\t\${sample}"
     done
     (echo -e "\${header}" && cat abundance_matrix.tsv) > abundance_matrix.tsv.tmp && mv abundance_matrix.tsv.tmp abundance_matrix.tsv
     rm -f *.depth *.depth_col all_contigs.tmp

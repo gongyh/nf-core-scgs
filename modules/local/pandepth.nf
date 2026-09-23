@@ -55,12 +55,12 @@ process MERGE_COVERAGE {
     samples=(\$(ls *.depth | sed 's/.depth//'))
     cut -f1 *.depth | sort -u > all_contigs.tmp
     for sample in \${samples[*]}; do
-        join -a1 -e0 -o '2.2' -t \$'\t' all_contigs.tmp "\${sample}.depth" > "\${sample}.depth_col"
+        join -a1 -e0 -o '2.2' -t \$'\\t' all_contigs.tmp "\${sample}.depth" > "\${sample}.depth_col"
     done
     paste all_contigs.tmp \$(for s in \${samples[*]}; do echo "\${s}.depth_col"; done) > abundance_matrix.tsv
     header="contig_id"
     for sample in \${samples[*]}; do
-        header="\${header}\t\${sample}"
+        header="\${header}\\t\${sample}"
     done
     (echo -e "\${header}" && cat abundance_matrix.tsv) > abundance_matrix.tsv.tmp && mv abundance_matrix.tsv.tmp abundance_matrix.tsv
     rm -f *.depth *.depth_col all_contigs.tmp

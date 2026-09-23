@@ -38,7 +38,7 @@ process EXTRACT_BINS {
     for bin_fa in bins/*.fa; do
         if [ -f "\$bin_fa" ]; then
             bin_name=\$(basename "\$bin_fa" .fa)
-            grep "^>" "\$bin_fa" | sed 's/^>//' | awk -v bin="\$bin_name" '{print \$1"\t"bin}'
+            grep "^>" "\$bin_fa" | sed 's/^>//' | awk -v bin="\$bin_name" '{print \$1"\\t"bin}'
         fi
     done >> scaffolds2bin.tsv
     if [ -d "bins" ]; then

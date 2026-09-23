@@ -31,9 +31,9 @@ process DCVBIN_BIN {
     paste ${prefix}_contig_names.txt ${prefix}_prinum.txt > ${prefix}_scaffolds2bin.tsv
     N_BINS=\$(ls -1 ${prefix}_bins/*.fa 2>/dev/null | wc -l)
     N_CONTIGS=\$(wc -l < ${prefix}_prinum.txt)
-    echo -e "Metric\tValue" > ${prefix}_mqc.tsv
-    echo -e "Number of bins\t\${N_BINS}" >> ${prefix}_mqc.tsv
-    echo -e "Number of contigs in bins\t\${N_CONTIGS}" >> ${prefix}_mqc.tsv
+    echo -e "Metric\\tValue" > ${prefix}_mqc.tsv
+    echo -e "Number of bins\\t\${N_BINS}" >> ${prefix}_mqc.tsv
+    echo -e "Number of contigs in bins\\t\${N_CONTIGS}" >> ${prefix}_mqc.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
