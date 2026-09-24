@@ -13,6 +13,8 @@ def helpMessage() {
     --reads <glob>                Input reads glob (default: data/*{1,2}.fastq.gz)
     --readPaths <list>            Structured sample/read list supplied in a Nextflow config
     --single_end                  Treat input reads as single-end
+    --ass                         Normalize reads with BBNORM and run joint SPAdes assembly
+    --fasta <path>                Preassembled metagenome FASTA (required without --ass)
 
     Read processing:
     --notrim                      Skip adapter and quality trimming
@@ -60,6 +62,8 @@ def display_header(summary, custom_runName, single_end) {
     summary['Reads']            = params.reads
     summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
     summary['Workflow']         = 'minimeta'
+    summary['Assembly']         = params.ass ? 'Joint SPAdes assembly (BBNORM)' : 'Preassembled FASTA'
+    if (params.fasta) summary['Fasta'] = params.fasta
     if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
     summary['Output dir']       = params.outdir
     summary['Launch dir']       = workflow.launchDir
@@ -169,6 +173,8 @@ params.saveTrimmed = false
 params.bulk = false
 params.mg = false
 params.allow_multi_align = false
+params.ass = true
+params.fasta = null
 params.min_length = 10000
 params.run_cooccurrence_checkm = false
 params.cooccurrence_eps = 0.05
@@ -186,6 +192,9 @@ if(workflow.profile == 'awsbatch') {
     if (!workflow.workDir.startsWith('s3') || !params.outdir.startsWith('s3')) exit 1, "Specify S3 URLs for workDir and outdir parameters on AWSBatch!"
     if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
 }
+
+if (!params.ass && !params.fasta) exit 1, "MINIMETA requires --fasta when --ass is false. Supply a preassembled metagenome FASTA or enable --ass."
+if (params.fasta && !file(params.fasta).exists()) exit 1, "Fasta file not found: ${params.fasta}"
 
 // Configure Checkm2 database
 checkm2_db = false
@@ -308,40 +317,43 @@ summary = [:]
         }
     }
 
-    // BBNORM
-    bbnorm = BBNORM(trimmed_reads)
-    normalized_reads = bbnorm.map { result ->
-        def reads = result.meta.single_end ? [result.single_fastq] : [result.fastq1, result.fastq2]
-        tuple(result.meta, reads)
+    ch_multiqc_assembly = channel.empty()
+    ch_multiqc_manifest = channel.empty()
+    if (params.ass) {
+        bbnorm = BBNORM(trimmed_reads)
+        normalized_reads = bbnorm.map { result ->
+            def reads = result.meta.single_end ? [result.single_fastq] : [result.fastq1, result.fastq2]
+            tuple(result.meta, reads)
+        }
+
+        read_correction = READ_CORRECTION(normalized_reads.map { meta, reads ->
+            def meta_clone = meta.clone()
+            meta_clone.only_error_correction = true
+            tuple(meta_clone, reads)
+        })
+        corrected_reads = read_correction.map { result ->
+            def reads = result.meta.single_end ? [result.corrected_read] : [result.corrected_read, result.corrected_read2]
+            tuple(result.meta, reads)
+        }
+        ch_published = ch_published.mix(read_correction.map { result -> [destination: 'spades', files: result] })
+        p1_list = corrected_reads.map { meta, reads -> reads[0] }.collect()
+        p2_list = corrected_reads.map { meta, reads -> reads[1] }.collect()
+
+        merge_corrected = MERGE_CORRECTED(p1_list, p2_list)
+        joint_reads = merge_corrected.map { result -> [ [id:'merged', single_end:false], [result.r1, result.r2] ] }
+        ch_published = ch_published.mix(merge_corrected.map { result -> [destination: 'merged', files: result] })
+        ch_multiqc_manifest = merge_corrected.map { result -> result.manifest_mqc }
+
+        spades_joint = SPADES_JOINT(joint_reads)
+        ch_published = ch_published.mix(spades_joint.map { result -> [destination: 'spades', files: result] })
+        ch_contig = spades_joint.map { result -> tuple(result.meta, result.contig) }
+        ch_multiqc_assembly = spades_joint.map { result -> result.mqc_tsv }
+    } else {
+        ch_contig = channel.value(tuple([id: 'merged', single_end: false], file(params.fasta)))
     }
-
-    // Performs read error correction for each minimeta sample
-    read_correction = READ_CORRECTION(normalized_reads.map { meta, reads ->
-        def meta_clone = meta.clone()
-        meta_clone.only_error_correction = true;
-        tuple(meta_clone, reads)
-    })
-    corrected_reads = read_correction.map { result ->
-        def reads = result.meta.single_end ? [result.corrected_read] : [result.corrected_read, result.corrected_read2]
-        tuple(result.meta, reads)
-    }
-    ch_published = ch_published.mix(read_correction.map { result -> [destination: 'spades', files: result] })
-    // Sort
-    p1_list = corrected_reads.map { meta, reads -> reads[0] }.collect()
-    p2_list = corrected_reads.map { meta, reads -> reads[1] }.collect()
-
-    //Merge_corrected
-    merge_corrected = MERGE_CORRECTED(p1_list, p2_list)
-    joint_reads = merge_corrected.map { result -> [ [id:'merged', single_end:false], [result.r1, result.r2] ] }
-    ch_published = ch_published.mix(merge_corrected.map { result -> [destination: 'merged', files: result] })
-
-    //SPADES_JOINT
-    spades_joint = SPADES_JOINT(joint_reads)
-    ch_published = ch_published.mix(spades_joint.map { result -> [destination: 'spades', files: result] })
 
     //BOWTIE2_REMAP
-    ch_spades_contig = spades_joint.map { result -> tuple(result.meta, result.contig) }
-    bowtie2_remap = BOWTIE2_REMAP(ch_spades_contig)
+    bowtie2_remap = BOWTIE2_REMAP(ch_contig)
     //REMAP
     remap_input = trimmed_reads.combine(bowtie2_remap.map { result -> tuple(result.meta, result.index) }).map { entry ->
         tuple(entry[0] + [id_index: 'merged'], entry[1], entry[3])
@@ -358,7 +370,7 @@ summary = [:]
     ch_published = ch_published.mix(merge_bams.map { result -> [destination: 'merged_bam', files: result] })
 
     //PREPARE_FEATURES
-    ch_fasta = ch_spades_contig
+    ch_fasta = ch_contig
     samtools_faidx = SAMTOOLS_FAIDX(ch_fasta)
     ch_fai = samtools_faidx.map { result -> [result.meta, result.fai] }
     PREPARE_FEATURES_SINGLE( ch_fasta, ch_fai, ch_bam_for_coverage )
@@ -369,7 +381,7 @@ summary = [:]
     ch_published = ch_published.mix(PREPARE_FEATURES_MULTI.out.published)
 
     // binning
-    ch_assembly = spades_joint.map { result -> result.contig }
+    ch_assembly = ch_contig.map { meta, contig -> contig }
     ch_all_s2b = channel.empty()
 
     def min_len = params.min_length ?: 10000
@@ -545,8 +557,8 @@ summary = [:]
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_fastqc.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_log.collect { entry -> entry[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_trim_zip.collect { entry -> entry[1] }.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(merge_corrected.map { result -> result.manifest_mqc })
-    ch_multiqc_files = ch_multiqc_files.mix(spades_joint.map { result -> result.mqc_tsv }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_manifest)
+    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_assembly.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(remap.map { result -> result.mqc_tsv }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_MULTI.out.coverage_mqc.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(PREPARE_FEATURES_SINGLE.out.coverage_mqc.ifEmpty([]))

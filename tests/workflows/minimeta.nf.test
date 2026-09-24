@@ -28,4 +28,25 @@ nextflow_workflow {
 
     }
 
+    test("Should use imported contigs without assembly") {
+
+        topics "versions"
+
+        when {
+            config "$baseDir/conf/test_minimeta.config"
+            params {
+                ass = false
+                fasta = "$baseDir/test-datasets/ATCC25922.fa"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert topics.versions.size() > 0
+            assert !topics.versions.any { entry ->
+                entry instanceof List && entry[0].toString() =~ /(?:BBNORM|READ_CORRECTION|MERGE_CORRECTED|SPADES_JOINT)/
+            }
+        }
+    }
+
 }

@@ -52,8 +52,8 @@
                 "fasta": {
                     "type": "string",
                     "fa_icon": "fas fa-font",
-                    "description": "Path to FASTA genome file.",
-                    "help_text": "If you have no genome reference available, the pipeline can build one using a FASTA file. This requires additional time and resources, so it's better to use a pre-build index if possible."
+                    "description": "Path to a reference FASTA (SCGS) or preassembled metagenome FASTA (MINIMETA).",
+                    "help_text": "For MINIMETA, supply the joint-assembly-equivalent contigs FASTA when --ass is false. With --ass enabled, MINIMETA assembles the reads instead. For SCGS, provide a reference genome FASTA."
                 },
                 "igenomes_base": {
                     "type": "string",
@@ -347,7 +347,7 @@
                 "ass": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Assemble draft genomes?"
+                    "description": "Enable assembly: SCGS draft genomes or MINIMETA BBNORM normalization and joint SPAdes assembly."
                 },
                 "genomad": {
                     "type": "boolean",

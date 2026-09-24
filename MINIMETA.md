@@ -1,7 +1,7 @@
 # MINIMETA Workflow
 
 MINIMETA is the metagenomic single-cell workflow in `gongyh/nf-core-scgs`. It
-combines read processing, per-cell read correction, joint assembly, coverage
+combines read processing, optional per-cell read correction and joint assembly, coverage
 estimation, complementary binning methods, bin consolidation, quality
 assessment, and optional functional annotation.
 
@@ -17,6 +17,7 @@ Run MINIMETA by adding `--minimeta`:
 ```bash
 nextflow run gongyh/nf-core-scgs \
     --minimeta \
+    --ass \
     --reads 'data/*_R{1,2}.fastq.gz' \
     --outdir results/minimeta \
     -profile docker
@@ -58,11 +59,29 @@ params {
 
 Launch with the config file using `-c samples.config`.
 
+Use `--ass` to normalize reads with BBNORM and create joint SPAdes contigs.
+Without `--ass`, supply the preassembled metagenome contigs with `--fasta`:
+
+```bash
+nextflow run gongyh/nf-core-scgs \
+    --minimeta \
+    --reads 'data/*_R{1,2}.fastq.gz' \
+    --fasta /path/to/merged.contigs.fasta \
+    --outdir results/minimeta \
+    -profile docker
+```
+
+The supplied FASTA replaces the joint SPAdes contigs; read correction,
+merging, and joint assembly are skipped. The reads are still trimmed and
+remapped to those contigs for coverage and binning. `--fasta` is required when
+`--ass` is false. When both are supplied, assembly runs and the FASTA is not
+used as the MINIMETA contig input.
+
 ## What The Workflow Does
 
 1. Runs FastQC and, unless `--notrim` is set, Trim Galore.
-2. Normalizes reads with BBNorm and performs per-sample SPAdes read correction.
-3. Merges corrected reads, performs a joint SPAdes assembly, then remaps the trimmed reads to that assembly.
+2. With `--ass`, normalizes reads with BBNORM, corrects each sample, merges corrected reads, and performs joint SPAdes assembly.
+3. Otherwise, imports the `--fasta` contigs. Remaps trimmed reads to the assembled or imported contigs.
 4. Builds single-sample and multi-sample coverage features.
 5. Produces bins with co-occurrence binning and SemiBin2. TaxVAMB and DCVBIN are enabled when their respective resources are provided.
 6. Consolidates available bin sets with DAS Tool.
@@ -74,6 +93,8 @@ Launch with the config file using `-c samples.config`.
 | Parameter                     | Default     | Purpose                                                         |
 | ----------------------------- | ----------- | --------------------------------------------------------------- |
 | `--minimeta`                  | `false`     | Select the MINIMETA workflow.                                   |
+| `--ass`                       | `false`     | Run BBNORM normalization, correction, and joint SPAdes assembly. |
+| `--fasta <path>`              | unset       | Preassembled contigs; required without `--ass`.                  |
 | `--outdir <path>`             | `./results` | Directory for published results.                                |
 | `--notrim`                    | `false`     | Skip adapter and quality trimming.                              |
 | `--saveTrimmed`               | `false`     | Publish trimmed reads.                                          |
@@ -102,6 +123,7 @@ provided. A practical full-featured configuration looks like this:
 ```bash
 nextflow run gongyh/nf-core-scgs \
     --minimeta \
+    --ass \
     --reads 'data/*_R{1,2}.fastq.gz' \
     --checkm2_db /path/to/checkm2_db \
     --mmseqs_db /path/to/mmseqs_db \
@@ -133,8 +155,8 @@ MINIMETA publishes its results below `--outdir`. Key directories include:
 | ------------------------------------------ | ------------------------------------------------------------------------- |
 | `fastqc/`                                  | Raw-read FastQC reports and archives.                                     |
 | `trim_galore/`                             | Trimming logs, post-trimming FastQC output, and optionally trimmed reads. |
-| `spades/`                                  | Per-sample correction and joint assembly results.                         |
-| `merged/` and `merged_bam/`                | Merged corrected reads and combined alignment files.                      |
+| `spades/`                                  | Per-sample correction and joint assembly results when `--ass` is set.     |
+| `merged/` and `merged_bam/`                | Merged corrected reads (with `--ass`) and combined alignment files.       |
 | `cooccurrence_bins/` and `extracted_bins/` | Co-occurrence clustering and extracted bins.                              |
 | `semibin2_bins/`                           | SemiBin2 binning results.                                                 |
 | `binning/das_tool/`                        | Consolidated bin set produced by DAS Tool.                                |
