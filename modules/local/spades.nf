@@ -19,8 +19,8 @@ process SPADES {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ''
     def mode = '--sc --careful'
-    if (params.bulk) { mode = '--cov-cutoff auto --careful' }
-    if (params.mg) { mode = '--meta' }
+    if (BooleanParams.value(params, 'bulk')) { mode = '--cov-cutoff auto --careful' }
+    if (BooleanParams.value(params, 'mg')) { mode = '--meta' }
     def rcl = meta.single_end ? "-s ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
     def se_pe = meta.single_end ? "SE" : "PE"
     """

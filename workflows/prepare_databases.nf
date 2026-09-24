@@ -1,5 +1,6 @@
 nextflow.enable.types = true
 
+
 def helpMessage() {
     log.info nfcoreHeader()
     log.info"""
@@ -50,6 +51,7 @@ include { GET_SOFTWARE_VERSIONS     } from '../modules/local/get_software_versio
  */
 workflow PREPARE_DATABASES {
     main:
+    BooleanParams.validate(params)
     params.outdir = "./databases"
     params.db_type = "all"
     ch_published = channel.empty()
@@ -177,15 +179,16 @@ workflow PREPARE_DATABASES {
 }
 
 def nfcoreHeader(){
-    def c_reset = params.monochrome_logs ? '' : "\033[0m";
-    def c_dim = params.monochrome_logs ? '' : "\033[2m";
-    def c_black = params.monochrome_logs ? '' : "\033[0;30m";
-    def c_green = params.monochrome_logs ? '' : "\033[0;32m";
-    def c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
-    def c_blue = params.monochrome_logs ? '' : "\033[0;34m";
-    def c_purple = params.monochrome_logs ? '' : "\033[0;35m";
-    def c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
-    def c_white = params.monochrome_logs ? '' : "\033[0;37m";
+    def monochrome = BooleanParams.value(params, 'monochrome_logs')
+    def c_reset = monochrome ? '' : "\033[0m";
+    def c_dim = monochrome ? '' : "\033[2m";
+    def c_black = monochrome ? '' : "\033[0;30m";
+    def c_green = monochrome ? '' : "\033[0;32m";
+    def c_yellow = monochrome ? '' : "\033[0;33m";
+    def c_blue = monochrome ? '' : "\033[0;34m";
+    def c_purple = monochrome ? '' : "\033[0;35m";
+    def c_cyan = monochrome ? '' : "\033[0;36m";
+    def c_white = monochrome ? '' : "\033[0;37m";
 
     return """    ${c_dim}----------------------------------------------------${c_reset}
                                             ${c_green},--.${c_black}/${c_green},-.${c_reset}

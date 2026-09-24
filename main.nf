@@ -12,6 +12,7 @@
 
 nextflow.enable.dsl=2
 
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOW FOR PIPELINE
@@ -77,11 +78,12 @@ workflow NFCORE_PREPARE_DATABASES {
 
 workflow {
     main:
+    BooleanParams.validate(params)
     ch_published = channel.empty()
 
-    if (params.prepare_databases) {
+    if (BooleanParams.value(params, 'prepare_databases')) {
         // Show help message
-        if (params.help){
+        if (BooleanParams.value(params, 'help')){
             helpMessagePrepareDB()
             exit 0
         }
@@ -90,9 +92,9 @@ workflow {
         workflow.onComplete = {
             completionSummary()
         }
-    } else if (params.minimeta) {
+    } else if (BooleanParams.value(params, 'minimeta')) {
         // Show help message
-        if (params.help){
+        if (BooleanParams.value(params, 'help')){
             helpMessageMinimeta()
             exit 0
         }
@@ -114,7 +116,7 @@ workflow {
         }
     } else {
         // Show help message
-        if (params.help){
+        if (BooleanParams.value(params, 'help')){
             helpMessageSCGS()
             exit 0
         }

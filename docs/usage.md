@@ -68,6 +68,10 @@ configured `--genome`. The MINIMETA workflow also assembles by default; see the
 [MINIMETA guide](../MINIMETA.md) for using `--ass false` with a preassembled
 metagenome FASTA.
 
+Boolean options accept `true` or `false` explicitly (for example,
+`--notrim false` or `--run_cooccurrence_checkm false`). A bare flag enables
+it; invalid values are rejected.
+
 Note that the pipeline will create the following files in your working directory:
 
 ```bash

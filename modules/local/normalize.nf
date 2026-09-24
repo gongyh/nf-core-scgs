@@ -17,7 +17,7 @@ process NORMALIZE {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def mode = params.bulk ? "bulk" : "mda"
+    def mode = BooleanParams.value(params, 'bulk') ? "bulk" : "mda"
     if (meta.single_end) {
     """
     if [ \"${mode}\" == \"bulk\" ]; then

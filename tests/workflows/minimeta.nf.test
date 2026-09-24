@@ -37,6 +37,11 @@ nextflow_workflow {
             params {
                 ass = false
                 fasta = "$baseDir/test-datasets/ATCC25922.fa"
+                notrim = 'false'
+                single_end = 'false'
+                run_cooccurrence_checkm = 'false'
+                kofam = 'false'
+                eggnog = 'false'
             }
         }
 
@@ -46,6 +51,21 @@ nextflow_workflow {
             assert !topics.versions.any { entry ->
                 entry instanceof List && entry[0].toString() =~ /(?:BBNORM|READ_CORRECTION|MERGE_CORRECTED|SPADES_JOINT)/
             }
+        }
+    }
+
+    test("Rejects invalid boolean text") {
+        tag "boolean"
+        when {
+            config "$baseDir/conf/test_minimeta.config"
+            params {
+                notrim = 'maybe'
+            }
+        }
+
+        then {
+            assert !workflow.success
+            assert workflow.stdout.any { it.contains('--notrim must be true or false') }
         }
     }
 

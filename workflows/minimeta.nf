@@ -28,7 +28,7 @@ def helpMessage() {
     Binning and quality assessment:
     --min_length <int>            Minimum contig length for co-occurrence binning (default: 10000)
     --cooccurrence_eps <number>   Distance threshold for co-occurrence binning (default: 0.05)
-    --run_cooccurrence_checkm     Run CheckM2 on co-occurrence bins when --checkm2_db is available
+    --run_cooccurrence_checkm [true|false]  Run CheckM2 on co-occurrence bins (default: false; requires --checkm2_db)
     --checkm2_db <path>           CheckM2 database
     --mmseqs_db <path>            MMseqs2 database for contig taxonomy and SemiBin2
     --metabuli_db <path>          MetaBuli database; enables TaxVAMB integration
@@ -62,7 +62,7 @@ def display_header(summary, custom_runName, single_end) {
     summary['Reads']            = params.reads
     summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
     summary['Workflow']         = 'minimeta'
-    summary['Assembly']         = params.ass.toString().toBoolean() ? 'Joint SPAdes assembly (BBNORM)' : 'Preassembled FASTA'
+    summary['Assembly']         = BooleanParams.value(params, 'ass') ? 'Joint SPAdes assembly (BBNORM)' : 'Preassembled FASTA'
     if (params.fasta) summary['Fasta'] = params.fasta
     if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
     summary['Output dir']       = params.outdir
@@ -70,7 +70,7 @@ def display_header(summary, custom_runName, single_end) {
     summary['Working dir']      = workflow.workDir
     summary['Script dir']       = workflow.projectDir
     summary['User']             = workflow.userName
-    if( params.notrim ){
+    if( BooleanParams.value(params, 'notrim') ){
         summary['Trimming Step'] = 'Skipped'
     } else {
         summary["Trimming Step"] = 'Trim Glore'
@@ -144,13 +144,13 @@ include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_softwar
 
 workflow MINIMETA {
     main:
+    BooleanParams.validate(params)
     /*
  * SET UP CONFIGURATION VARIABLES
  */
 // default values
 params.reads = "data/*{1,2}.fastq.gz"
 params.outdir = "./results"
-params.notrim = false
 params.awsregion = "eu-west-1"
 params.awsqueue = "default"
 params.config_profile_description = null
@@ -158,7 +158,6 @@ params.config_profile_contact = null
 params.config_profile_url = null
 params.email = null
 params.maxMultiqcEmailFileSize = 25 * 1024 * 1024
-params.single_end = false
 params.checkm2_db = null
 params.kofam_profile = null
 params.kofam_kolist = null
@@ -169,23 +168,15 @@ params.clip_r2 = 0
 params.three_prime_clip_r1 = 0
 params.three_prime_clip_r2 = 0
 params.readPaths = null
-params.saveTrimmed = false
-params.bulk = false
-params.mg = false
-params.allow_multi_align = false
 params.fasta = null
-ass = params.ass.toString().toBoolean()
+ass = BooleanParams.value(params, 'ass')
 params.min_length = 10000
-params.run_cooccurrence_checkm = false
 params.cooccurrence_eps = 0.05
 params.mmseqs_db = null
 params.metabuli_db = null
 params.DNABERTS_dir = null
-params.kofam = true
-params.eggnog = true
-params.monochrome_logs = false
 custom_runName = workflow.runName
-single_end = params.single_end
+single_end = BooleanParams.value(params, 'single_end')
 
 if(workflow.profile == 'awsbatch') {
     if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
@@ -300,7 +291,7 @@ summary = [:]
     trimmed_reads = channel.empty()
     ch_multiqc_trim_log = channel.empty()
     ch_multiqc_trim_zip = channel.empty()
-    if (params.notrim) {
+    if (BooleanParams.value(params, 'notrim')) {
         trimmed_reads = read_files_trimming
     } else {
         trimgalore = TRIMGALORE(read_files_trimming)
@@ -312,7 +303,7 @@ summary = [:]
         }
         ch_published = ch_published.mix(trimgalore.map { result -> [destination: "trim_galore/${result.meta.id}", files: result.fastqc] })
         ch_published = ch_published.mix(trimgalore.map { result -> [destination: "trim_galore/${result.meta.id}", files: result.logs] })
-        if (params.saveTrimmed) {
+        if (BooleanParams.value(params, 'saveTrimmed')) {
             ch_published = ch_published.mix(trimmed_reads.map { _meta, reads -> [destination: 'trim_galore', files: reads] })
         }
     }
@@ -358,7 +349,7 @@ summary = [:]
     remap_input = trimmed_reads.combine(bowtie2_remap.map { result -> tuple(result.meta, result.index) }).map { entry ->
         tuple(entry[0] + [id_index: 'merged'], entry[1], entry[3])
     }
-    remap = REMAP(remap_input, params.allow_multi_align)
+    remap = REMAP(remap_input, BooleanParams.value(params, 'allow_multi_align'))
     ch_published = ch_published.mix(remap.map { result -> [destination: 'remap', files: result] })
 
     //MERGE BAMS
@@ -396,7 +387,7 @@ summary = [:]
     ch_published = ch_published.mix(extract_bins.map { result -> [destination: 'extracted_bins', files: result] })
 
     //
-    if ( params.run_cooccurrence_checkm ) {
+    if ( BooleanParams.value(params, 'run_cooccurrence_checkm') ) {
         if ( params.checkm2_db ) {
             ch_cooccurrence_bins = extract_bins
                 .flatMap { result ->
@@ -502,14 +493,14 @@ summary = [:]
         .map { result -> tuple(result.meta, result.faa) }
 
     // KOFAMSCAN
-    if (params.kofam && params.kofam_profile && params.kofam_kolist) {
+    if (BooleanParams.value(params, 'kofam') && params.kofam_profile && params.kofam_kolist) {
         kofamscan = KOFAMSCAN(ch_prokka_for_annot, kofam_profile, kofam_kolist)
         ch_multiqc_files = ch_multiqc_files.mix(kofamscan.map { result -> result.mqc_tsv }.collect().ifEmpty([]))
         ch_published = ch_published.mix(kofamscan.map { result -> [destination: 'kofam', files: result] })
     }
 
     // EGGNOG
-    if (params.eggnog && params.eggnog_db) {
+    if (BooleanParams.value(params, 'eggnog') && params.eggnog_db) {
         eggnog = EGGNOG(ch_prokka_for_annot, eggnog_db)
         ch_multiqc_files = ch_multiqc_files.mix(eggnog.map { result -> result.mqc_tsv }.collect().ifEmpty([]))
         ch_published = ch_published.mix(eggnog.map { result -> [destination: 'eggnog', files: result] })
@@ -588,15 +579,16 @@ summary = [:]
 
 def nfcoreHeader(){
     // Log colors ANSI codes
-    def c_reset = params.monochrome_logs ? '' : "\033[0m";
-    def c_dim = params.monochrome_logs ? '' : "\033[2m";
-    def c_black = params.monochrome_logs ? '' : "\033[0;30m";
-    def c_green = params.monochrome_logs ? '' : "\033[0;32m";
-    def c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
-    def c_blue = params.monochrome_logs ? '' : "\033[0;34m";
-    def c_purple = params.monochrome_logs ? '' : "\033[0;35m";
-    def c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
-    def c_white = params.monochrome_logs ? '' : "\033[0;37m";
+    def monochrome = BooleanParams.value(params, 'monochrome_logs')
+    def c_reset = monochrome ? '' : "\033[0m";
+    def c_dim = monochrome ? '' : "\033[2m";
+    def c_black = monochrome ? '' : "\033[0;30m";
+    def c_green = monochrome ? '' : "\033[0;32m";
+    def c_yellow = monochrome ? '' : "\033[0;33m";
+    def c_blue = monochrome ? '' : "\033[0;34m";
+    def c_purple = monochrome ? '' : "\033[0;35m";
+    def c_cyan = monochrome ? '' : "\033[0;36m";
+    def c_white = monochrome ? '' : "\033[0;37m";
 
     return """    ${c_dim}----------------------------------------------------${c_reset}
                                             ${c_green},--.${c_black}/${c_green},-.${c_reset}

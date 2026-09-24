@@ -18,7 +18,7 @@ process BBNORM {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def mode = params.bulk ? "bulk" : "mda"
+    def mode = BooleanParams.value(params, 'bulk') ? "bulk" : "mda"
     def memory = ((task.memory.toGiga() * 0.8) as Integer) + 'g'
     if (meta.single_end) {
     """

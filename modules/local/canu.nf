@@ -17,7 +17,7 @@ process CANU {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def mode = params.bulk ? "bulk" : "mda"
+    def mode = BooleanParams.value(params, 'bulk') ? "bulk" : "mda"
     """
     if [ \"${mode}\" == \"bulk\" ]; then
         #canu -d ${prefix}.spades_out -p ${prefix} genomeSize=4m useGrid=false maxThreads=${task.cpus} maxMemory=${task.memory.toGiga()}g -nanopore ${reads[0]}

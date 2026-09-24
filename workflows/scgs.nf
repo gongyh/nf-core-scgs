@@ -112,14 +112,14 @@ def display_header(summary, custom_runName, single_end) {
     summary['Reads']            = params.reads
     summary['Fasta Ref']        = params.fasta
     summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
-    summary['Bulk']             = params.bulk ? 'Yes' : 'No'
+    summary['Bulk']             = BooleanParams.value(params, 'bulk') ? 'Yes' : 'No'
     if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
     summary['Output dir']       = params.outdir
     summary['Launch dir']       = workflow.launchDir
     summary['Working dir']      = workflow.workDir
     summary['Script dir']       = workflow.projectDir
     summary['User']             = workflow.userName
-    if( params.notrim ){
+    if( BooleanParams.value(params, 'notrim') ){
         summary['Trimming Step'] = 'Skipped'
     } else {
         summary["Trimming Step"] = 'Trim Glore'
@@ -229,6 +229,7 @@ include { VG                    } from '../subworkflows/local/vg'
 
 workflow SCGS {
     main:
+    BooleanParams.validate(params)
     /*
  * SET UP CONFIGURATION VARIABLES
  */
@@ -236,9 +237,7 @@ workflow SCGS {
 // default values
 params.reads = "data/*{1,2}.fastq.gz"
 params.fasta = false
-params.bulk = false
 params.outdir = "./results"
-params.notrim = false
 params.awsregion = "eu-west-1"
 params.awsqueue = "default"
 params.config_profile_description = null
@@ -251,9 +250,6 @@ params.genome = false
 params.gff = false
 params.vcf = false
 params.graph_vcf = null
-params.single_end = false
-params.fungus = false
-params.euk = false
 params.genomad_db = null
 params.prokka_proteins = null
 params.nt_db = null
@@ -271,7 +267,6 @@ params.bakta_db = null
 params.mgpg_db = null
 params.coreGenesFile = null
 params.host_ref = null
-params.bbmap = false
 params.kofam_profile = null
 params.kofam_kolist = null
 params.multiqc_config = "$baseDir/assets/multiqc_config.yml"
@@ -281,43 +276,15 @@ params.three_prime_clip_r1 = 0
 params.three_prime_clip_r2 = 0
 params.readPaths = null
 params.refs_fna = null
-params.saveTrimmed = false
-params.saveAlignedIntermediates = false
-params.kraken = true
-params.saturation = false
-params.snv = false
-params.doubletd = false
-params.cnv = false
-ass = params.ass.toString().toBoolean()
-params.no_normalize = false
-params.mg = false
-params.pasa = false
-params.genomad = false
+ass = BooleanParams.value(params, 'ass')
 params.genus = null
-params.checkm2 = true
-params.blastn = true
 params.evalue = 1e-25
 params.blockSize = 2.0
-params.blob = true
-params.allow_multi_align = false
-params.acdc = false
-params.pangenome = false
 params.genusName = null
-params.completeness = false
-params.tree = false
 params.augustus_species = "saccharomyces"
-params.eggnog = true
-params.kofam = true
-params.acquired = false
-params.point = false
 params.pointfinder_species = "escherichia_coli"
-params.split = false
-params.split_euk = false
 params.split_bac_level = "genus"
 params.split_euk_level = "genus"
-params.graphbin = false
-params.gtdbtk = true
-params.monochrome_logs = false
 
 
 // Check if genome exists in the config file
@@ -346,10 +313,10 @@ if (params.vcf) {
     graph_vcf = file("/dev/null")
 }
 
-single_end = params.single_end
+single_end = BooleanParams.value(params, 'single_end')
 
 euk = false
-if (params.fungus || params.euk) {
+if (BooleanParams.value(params, 'fungus') || BooleanParams.value(params, 'euk')) {
     euk = true
 }
 
@@ -499,7 +466,7 @@ if (params.host_ref) {
     host_ref  = file(params.host_ref)
     if ( !host_ref.exists() ) exit 1, "Host reference file not found: ${params.host_ref}"
 } else {
-    if (params.bbmap) exit 1, "Host reference file not set"
+    if (BooleanParams.value(params, 'bbmap')) exit 1, "Host reference file not set"
 }
 
 // Configure KOfam search database
@@ -639,11 +606,11 @@ summary = [:]
     trimmed_reads = channel.empty()
     ch_multiqc_trim_log = channel.empty()
     ch_multiqc_trim_zip = channel.empty()
-    if (params.notrim) {
-        if (params.bbmap) {
+    if (BooleanParams.value(params, 'notrim')) {
+        if (BooleanParams.value(params, 'bbmap')) {
             bbmap_align = BBMAP_ALIGN(read_files_trimming, host_ref)
             trimmed_reads = bbmap_align.map { result -> tuple(result.meta, result.clean_fastq) }
-            if (params.saveTrimmed) {
+            if (BooleanParams.value(params, 'saveTrimmed')) {
                 ch_published = ch_published.mix(bbmap_align.map { result -> [destination: 'remove_hostReads', files: result] })
             }
         } else {
@@ -659,13 +626,13 @@ summary = [:]
         }
         ch_published = ch_published.mix(trimgalore.map { result -> [destination: "trim_galore/${result.meta.id}", files: result.fastqc] })
         ch_published = ch_published.mix(trimgalore.map { result -> [destination: "trim_galore/${result.meta.id}", files: result.logs] })
-        if (params.saveTrimmed) {
+        if (BooleanParams.value(params, 'saveTrimmed')) {
             ch_published = ch_published.mix(trimgalore_reads.map { _meta, reads -> [destination: 'trim_galore', files: reads] })
         }
-        if (params.bbmap) {
+        if (BooleanParams.value(params, 'bbmap')) {
             bbmap_align = BBMAP_ALIGN(trimgalore_reads, host_ref)
             trimmed_reads = bbmap_align.map { result -> tuple(result.meta, result.clean_fastq) }
-            if (params.saveTrimmed) {
+            if (BooleanParams.value(params, 'saveTrimmed')) {
                 ch_published = ch_published.mix(bbmap_align.map { result -> [destination: 'remove_hostReads', files: result] })
             }
         } else {
@@ -675,7 +642,7 @@ summary = [:]
 
     // KRAKEN
     ch_multiqc_kraken = channel.empty()
-    if (params.kraken && params.kraken2_db != null) {
+    if (BooleanParams.value(params, 'kraken') && params.kraken2_db != null) {
         if (!krona_db) {
             krona_download = KTUPDATETAXONOMY()
             krona_db = krona_download.map { result -> result.taxonomy }
@@ -692,7 +659,7 @@ summary = [:]
     }
 
     // SATURATION
-    if (params.saturation) {
+    if (BooleanParams.value(params, 'saturation')) {
         saturation = SATURATION(trimmed_reads)
         ch_published = ch_published.mix(saturation.map { result -> [destination: 'saturation', files: result] })
     }
@@ -708,7 +675,7 @@ summary = [:]
         )
         bb_bam = bowtie2_align.map { result -> tuple(result.meta, result.bam) }
         ch_multiqc_bowtie2 = bowtie2_align.map { result -> result.log }
-        if (params.saveAlignedIntermediates) {
+        if (BooleanParams.value(params, 'saveAlignedIntermediates')) {
             ch_published = ch_published.mix(bowtie2_align.map { result -> [destination: 'bowtie2', files: result] })
         }
     }
@@ -737,7 +704,7 @@ summary = [:]
         ch_multiqc_samtools = samtools.map { result -> tuple(result.meta, result.stats) }
         ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2/stats', files: result.stats] })
         ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.txt, result.pdf]] })
-        if (params.saveAlignedIntermediates) {
+        if (BooleanParams.value(params, 'saveAlignedIntermediates')) {
             ch_published = ch_published.mix(samtools.map { result -> [destination: 'bowtie2', files: [result.bam, result.bai, result.bed]] })
         }
 
@@ -755,26 +722,26 @@ summary = [:]
             ch_published = ch_published.mix(QUALIMAP_BAMQC.out.results.map { result -> [destination: 'qualimap_bamqc', files: result] })
             ch_published = ch_published.mix(QUALIMAP_BAMQC.out.versions.map { result -> [destination: 'qualimap_bamqc', files: result] })
         }
-        if (params.snv) {
+        if (BooleanParams.value(params, 'snv')) {
             ch_indelrealign_input = quast_bam.map { meta, bam -> tuple(meta, bam, fasta) }
             indelrealign = INDELREALIGN(ch_indelrealign_input)
             ch_indelrealign_bam = indelrealign.map { result -> tuple(result.meta, result.bam) }
             ch_indelrealign_bai = indelrealign.map { result -> tuple(result.meta, result.bai) }
             ch_published = ch_published.mix(indelrealign.map { result -> [destination: 'gatk', files: result] })
         }
-        if (!params.bulk && params.snv) {
+        if (!BooleanParams.value(params, 'bulk') && BooleanParams.value(params, 'snv')) {
             monovar = MONOVAR(
                 ch_indelrealign_bam.collect { entry -> entry[1] },
                 ch_indelrealign_bai.collect { entry -> entry[1] },
                 fasta
             )
             ch_published = ch_published.mix(monovar.map { result -> [destination: 'monovar', files: result.vcf] })
-            if ( params.doubletd ) {
+            if ( BooleanParams.value(params, 'doubletd') ) {
                 doubletd = DOUBLETD(monovar.map { result -> result.vcf })
                 ch_published = ch_published.mix(doubletd.map { result -> [destination: 'doubletd', files: result] })
             }
         }
-        if (!params.bulk && params.cnv && !single_end) {
+        if (!BooleanParams.value(params, 'bulk') && BooleanParams.value(params, 'cnv') && !single_end) {
             aneufinder = ANEUFINDER(
                 quast_bam.collect { entry -> entry[1] },
                 quast_bai.collect { entry -> entry[1] }
@@ -792,7 +759,7 @@ summary = [:]
     ch_multiqc_spades = channel.empty()
     if ( ass ) {
         // NORMALIZE
-        if ( params.no_normalize ) {
+        if ( BooleanParams.value(params, 'no_normalize') ) {
             trimmed_reads.set{ normalized_reads }
         } else {
             /**
@@ -832,7 +799,7 @@ summary = [:]
     }
 
     // GENOMAD
-    if ( params.genomad ) {
+    if ( BooleanParams.value(params, 'genomad') ) {
         GENOMAD_ENDTOEND(
             ctg,
             genomad_db
@@ -867,7 +834,7 @@ summary = [:]
                 ch_ctgd_bam_bai.flatMap { entry -> entry }.map { entry -> entry[2] }.collect(),
                 ch_ctgd_bam_bai.flatMap { entry -> entry }.map { entry -> entry[3] }.collect(),
                 euk,
-                params.fungus,
+                BooleanParams.value(params, 'fungus'),
                 "quast_spades"
             )
             ch_multiqc_quast_spades = quast_ref0.map { result -> result.tsv }
@@ -881,7 +848,7 @@ summary = [:]
             ch_ctg_bam_bai.flatMap { entry -> entry }.map { entry -> entry[2] }.collect(),
             ch_ctg_bam_bai.flatMap { entry -> entry }.map { entry -> entry[3] }.collect(),
             euk,
-            params.fungus,
+            BooleanParams.value(params, 'fungus'),
             "quast_ref"
         )
         ch_multiqc_quast = quast_ref.map { result -> result.tsv }
@@ -891,7 +858,7 @@ summary = [:]
             quast_denovo0 = QUAST_DENOVO0(
                 ctg_denovo.collect { entry -> entry[1] },
                 euk,
-                params.fungus,
+                BooleanParams.value(params, 'fungus'),
                 "quast_spades"
             )
             ch_multiqc_quast_spades = quast_denovo0.map { result -> result.tsv }
@@ -900,7 +867,7 @@ summary = [:]
         quast_denovo = QUAST_DENOVO(
             ctg.collect { entry -> entry[1] },
             euk,
-            params.fungus,
+            BooleanParams.value(params, 'fungus'),
             "quast_denovo"
         )
         ch_multiqc_quast = quast_denovo.map { result -> result.tsv }
@@ -920,7 +887,7 @@ summary = [:]
 
     // CHECKM2
     ch_multiqc_checkm2 = channel.empty()
-    if (!euk && params.checkm2 && params.checkm2_db) {
+    if (!euk && BooleanParams.value(params, 'checkm2') && params.checkm2_db) {
         checkm2 = CHECKM2(
             ctg.collect { entry -> entry[1] },
             'fasta',
@@ -931,7 +898,7 @@ summary = [:]
     }
 
     tax_split = channel.empty()
-    if (params.blastn && params.nt_db) {
+    if (BooleanParams.value(params, 'blastn') && params.nt_db) {
         // BLASTN
         blastn = BLASTN(
             ctg200,
@@ -953,8 +920,8 @@ summary = [:]
         acdc_tax = channel.empty()
 
         // BLOBTOOLS
-        if (params.blob && params.blob_db) {
-            if (params.no_normalize && !params.refs_fna) {
+        if (BooleanParams.value(params, 'blob') && params.blob_db) {
+            if (BooleanParams.value(params, 'no_normalize') && !params.refs_fna) {
                 ch_blob_input = diamond_blastx.map { result ->
                     tuple(result.meta, result.contigs, result.nt, result.uniprot, result.has_uniprot)
                 }
@@ -966,7 +933,7 @@ summary = [:]
             } else {
                 bowtie2_remap = BOWTIE2_REMAP(ctg200)
                 remap_input = trimmed_reads.join(bowtie2_remap.map { result -> tuple(result.meta, result.index) })
-                remap = REMAP(remap_input, params.allow_multi_align)
+                remap = REMAP(remap_input, BooleanParams.value(params, 'allow_multi_align'))
                 ch_multiqc_remap = remap.map { result -> result.mqc_tsv }
                 ch_published = ch_published.mix(remap.map { result -> [destination: 'remap', files: result] })
                 ch_reblob_input = diamond_blastx
@@ -979,7 +946,7 @@ summary = [:]
                 ch_published = ch_published.mix(reblobtools.map { result -> [destination: 'reblob', files: result] })
             }
 
-            if (params.acdc && params.kraken1_db) {
+            if (BooleanParams.value(params, 'acdc') && params.kraken1_db) {
                 acdc = ACDC(
                     acdc_contigs,
                     acdc_tax,
@@ -993,16 +960,16 @@ summary = [:]
     ch_published = ch_published.mix(tsne.map { result -> [destination: 'tsne', files: result] })
 
     // PANGENOME ANALYSIS
-    if (params.pangenome) {
+    if (BooleanParams.value(params, 'pangenome')) {
         if (params.genusName && params.coreGenesFile) {
             ch_pangenome_input = ctg.map { meta, contigs ->
                 tuple(meta, contigs, params.genusName, mgpg_db, coreGenesFile)
             }
-            if (params.completeness) {
+            if (BooleanParams.value(params, 'completeness')) {
                 completeness = COMPLETENESS(ch_pangenome_input)
                 ch_published = ch_published.mix(completeness.map { result -> [destination: 'mgpg', files: result] })
             }
-            if (params.tree) {
+            if (BooleanParams.value(params, 'tree')) {
                 tree = TREE(ch_pangenome_input)
                 ch_published = ch_published.mix(tree.map { result -> [destination: 'mgpg', files: result] })
             }
@@ -1044,7 +1011,7 @@ summary = [:]
         ch_published = ch_published.mix(eukcc.map { result -> [destination: 'eukcc', files: result] })
     }
 
-    if (params.eggnog && params.eggnog_db) {
+    if (BooleanParams.value(params, 'eggnog') && params.eggnog_db) {
         eggnog = EGGNOG(
             faa,
             eggnog_db
@@ -1055,7 +1022,7 @@ summary = [:]
 
     // KOFAMSCAN
     kofam_scan = channel.empty()
-    if (params.kofam && params.kofam_profile && params.kofam_kolist) {
+    if (BooleanParams.value(params, 'kofam') && params.kofam_profile && params.kofam_kolist) {
         kofamscan = KOFAMSCAN(
             faa,
             kofam_profile,
@@ -1067,10 +1034,10 @@ summary = [:]
     }
 
     // STARAMR
-    if (!params.euk) {
-        if (params.acquired || params.point) {
+    if (!BooleanParams.value(params, 'euk')) {
+        if (BooleanParams.value(params, 'acquired') || BooleanParams.value(params, 'point')) {
             ch_staramr_input = ctg.map { meta, contigs ->
-                tuple(meta, contigs, params.acquired, params.point, params.pointfinder_species ?: '')
+                tuple(meta, contigs, BooleanParams.value(params, 'acquired'), BooleanParams.value(params, 'point'), params.pointfinder_species ?: '')
             }
             staramr = STARAMR(ch_staramr_input)
             ch_published = ch_published.mix(staramr.map { result -> [destination: 'ARG', files: result] })
@@ -1078,10 +1045,10 @@ summary = [:]
     }
 
     ch_multiqc_gtdb = channel.empty()
-    if (params.split) {
+    if (BooleanParams.value(params, 'split')) {
         split_fa = channel.empty()
         bin_csv = channel.empty()
-        if (params.split_euk && params.eukcc_db) {
+        if (BooleanParams.value(params, 'split_euk') && params.eukcc_db) {
             split_checkm_eukcc = SPLIT_CHECKM_EUKCC(
                 ctg200.collect { entry -> entry[1] },
                 tax_split.collect { entry -> entry[1] },
@@ -1094,7 +1061,7 @@ summary = [:]
             split_fa = split_checkm_eukcc.map { result -> result.fa }
             bin_csv = split_checkm_eukcc.map { result -> result.csv }
             ch_published = ch_published.mix(split_checkm_eukcc.map { result -> [destination: '.', files: result] })
-        } else if (!params.split_euk) {
+        } else if (!BooleanParams.value(params, 'split_euk')) {
             split_checkm = SPLIT_CHECKM(
                 ctg200.collect { entry -> entry[1] },
                 tax_split.collect { entry -> entry[1] },
@@ -1108,7 +1075,7 @@ summary = [:]
             ch_published = ch_published.mix(split_checkm.map { result -> [destination: '.', files: result] })
         }
 
-        if (params.graphbin && !params.refs_fna) {
+        if (BooleanParams.value(params, 'graphbin') && !params.refs_fna) {
             graphbin = GRAPHBIN(
                 contig.collect { entry -> entry[1] },
                 contig_path.collect { entry -> entry[1] },
@@ -1118,7 +1085,7 @@ summary = [:]
             ch_published = ch_published.mix(graphbin.map { result -> [destination: 'graphbin', files: result] })
         }
 
-        if (params.gtdbtk && params.gtdb) {
+        if (BooleanParams.value(params, 'gtdbtk') && params.gtdb) {
             gtdbtk = GTDBTK(
                 split_fa,
                 gtdb
@@ -1194,15 +1161,16 @@ summary = [:]
 
 def nfcoreHeader(){
     // Log colors ANSI codes
-    def c_reset = params.monochrome_logs ? '' : "\033[0m";
-    def c_dim = params.monochrome_logs ? '' : "\033[2m";
-    def c_black = params.monochrome_logs ? '' : "\033[0;30m";
-    def c_green = params.monochrome_logs ? '' : "\033[0;32m";
-    def c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
-    def c_blue = params.monochrome_logs ? '' : "\033[0;34m";
-    def c_purple = params.monochrome_logs ? '' : "\033[0;35m";
-    def c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
-    def c_white = params.monochrome_logs ? '' : "\033[0;37m";
+    def monochrome = BooleanParams.value(params, 'monochrome_logs')
+    def c_reset = monochrome ? '' : "\033[0m";
+    def c_dim = monochrome ? '' : "\033[2m";
+    def c_black = monochrome ? '' : "\033[0;30m";
+    def c_green = monochrome ? '' : "\033[0;32m";
+    def c_yellow = monochrome ? '' : "\033[0;33m";
+    def c_blue = monochrome ? '' : "\033[0;34m";
+    def c_purple = monochrome ? '' : "\033[0;35m";
+    def c_cyan = monochrome ? '' : "\033[0;36m";
+    def c_white = monochrome ? '' : "\033[0;37m";
 
     return """    ${c_dim}----------------------------------------------------${c_reset}
                                             ${c_green},--.${c_black}/${c_green},-.${c_reset}

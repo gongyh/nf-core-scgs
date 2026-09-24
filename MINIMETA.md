@@ -78,6 +78,9 @@ remapped to those contigs for coverage and binning. `--fasta` is required when
 `--ass false` is set. When both are supplied, assembly runs and the FASTA is not
 used as the MINIMETA contig input.
 
+Boolean options accept `true` or `false` explicitly. For example,
+`--run_cooccurrence_checkm false` keeps co-occurrence CheckM2 disabled.
+
 ## What The Workflow Does
 
 1. Runs FastQC and, unless `--notrim` is set, Trim Galore.
@@ -102,7 +105,7 @@ used as the MINIMETA contig input.
 | `--allow_multi_align`         | `false`     | Retain secondary and unmapped remapping alignments.              |
 | `--min_length <int>`          | `10000`     | Minimum contig length for co-occurrence binning.                 |
 | `--cooccurrence_eps <number>` | `0.05`      | Distance threshold for co-occurrence binning.                    |
-| `--run_cooccurrence_checkm`   | `false`     | Run CheckM2 on co-occurrence bins when `--checkm2_db` is set.    |
+| `--run_cooccurrence_checkm [true\|false]` | `false` | Run CheckM2 on co-occurrence bins when `--checkm2_db` is set. |
 | `--checkm2_db <path>`         | unset       | CheckM2 database for bin quality assessment.                     |
 | `--mmseqs_db <path>`          | unset       | MMseqs2 database for contig taxonomy and SemiBin2.               |
 | `--metabuli_db <path>`        | unset       | Enable the TaxVAMB integration.                                  |

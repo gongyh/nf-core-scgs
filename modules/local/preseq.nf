@@ -19,7 +19,7 @@ process PRESEQ {
     pp_outdir = "${params.outdir}/preseq"
     def prefix = task.ext.prefix ?: "${meta.id}"
     def mode = meta.single_end ? "" : "-P"
-    if (params.bulk) {
+    if (BooleanParams.value(params, 'bulk')) {
     """
     preseq c_curve ${mode} -s 1e+5 -o ${prefix}_c.txt $sbed
     preseq lc_extrap ${mode} -s 1e+5 -D -o ${prefix}_lc.txt $sbed
