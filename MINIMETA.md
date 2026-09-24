@@ -90,27 +90,27 @@ used as the MINIMETA contig input.
 
 ## MINIMETA Parameters
 
-| Parameter                     | Default     | Purpose                                                         |
-| ----------------------------- | ----------- | --------------------------------------------------------------- |
-| `--minimeta`                  | `false`     | Select the MINIMETA workflow.                                   |
+| Parameter                     | Default     | Purpose                                                          |
+| ----------------------------- | ----------- | ---------------------------------------------------------------- |
+| `--minimeta`                  | `false`     | Select the MINIMETA workflow.                                    |
 | `--ass`                       | `false`     | Run BBNORM normalization, correction, and joint SPAdes assembly. |
 | `--fasta <path>`              | unset       | Preassembled contigs; required without `--ass`.                  |
-| `--outdir <path>`             | `./results` | Directory for published results.                                |
-| `--notrim`                    | `false`     | Skip adapter and quality trimming.                              |
-| `--saveTrimmed`               | `false`     | Publish trimmed reads.                                          |
-| `--allow_multi_align`         | `false`     | Retain secondary and unmapped remapping alignments.             |
-| `--min_length <int>`          | `10000`     | Minimum contig length for co-occurrence binning.                |
-| `--cooccurrence_eps <number>` | `0.05`      | Distance threshold for co-occurrence binning.                   |
-| `--run_cooccurrence_checkm`   | `false`     | Run CheckM2 on co-occurrence bins when `--checkm2_db` is set.   |
-| `--checkm2_db <path>`         | unset       | CheckM2 database for bin quality assessment.                    |
-| `--mmseqs_db <path>`          | unset       | MMseqs2 database for contig taxonomy and SemiBin2.              |
-| `--metabuli_db <path>`        | unset       | Enable the TaxVAMB integration.                                 |
-| `--DNABERTS_dir <path>`       | unset       | Enable the DCVBIN integration.                                  |
-| `--kofam`                     | `true`      | Enable KOfam annotation when both KOfam resources are supplied. |
-| `--kofam_profile <path>`      | unset       | KOfam profile database.                                         |
-| `--kofam_kolist <path>`       | unset       | KOfam KO-list file.                                             |
-| `--eggnog`                    | `true`      | Enable EggNOG annotation when `--eggnog_db` is supplied.        |
-| `--eggnog_db <path>`          | unset       | EggNOG database.                                                |
+| `--outdir <path>`             | `./results` | Directory for published results.                                 |
+| `--notrim`                    | `false`     | Skip adapter and quality trimming.                               |
+| `--saveTrimmed`               | `false`     | Publish trimmed reads.                                           |
+| `--allow_multi_align`         | `false`     | Retain secondary and unmapped remapping alignments.              |
+| `--min_length <int>`          | `10000`     | Minimum contig length for co-occurrence binning.                 |
+| `--cooccurrence_eps <number>` | `0.05`      | Distance threshold for co-occurrence binning.                    |
+| `--run_cooccurrence_checkm`   | `false`     | Run CheckM2 on co-occurrence bins when `--checkm2_db` is set.    |
+| `--checkm2_db <path>`         | unset       | CheckM2 database for bin quality assessment.                     |
+| `--mmseqs_db <path>`          | unset       | MMseqs2 database for contig taxonomy and SemiBin2.               |
+| `--metabuli_db <path>`        | unset       | Enable the TaxVAMB integration.                                  |
+| `--DNABERTS_dir <path>`       | unset       | Enable the DCVBIN integration.                                   |
+| `--kofam`                     | `true`      | Enable KOfam annotation when both KOfam resources are supplied.  |
+| `--kofam_profile <path>`      | unset       | KOfam profile database.                                          |
+| `--kofam_kolist <path>`       | unset       | KOfam KO-list file.                                              |
+| `--eggnog`                    | `true`      | Enable EggNOG annotation when `--eggnog_db` is supplied.         |
+| `--eggnog_db <path>`          | unset       | EggNOG database.                                                 |
 
 Use `nextflow run gongyh/nf-core-scgs --minimeta --help` to display the
 workflow-specific help text.
