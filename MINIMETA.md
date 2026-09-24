@@ -17,7 +17,6 @@ Run MINIMETA by adding `--minimeta`:
 ```bash
 nextflow run gongyh/nf-core-scgs \
     --minimeta \
-    --ass \
     --reads 'data/*_R{1,2}.fastq.gz' \
     --outdir results/minimeta \
     -profile docker
@@ -59,12 +58,14 @@ params {
 
 Launch with the config file using `-c samples.config`.
 
-Use `--ass` to normalize reads with BBNORM and create joint SPAdes contigs.
-Without `--ass`, supply the preassembled metagenome contigs with `--fasta`:
+By default, MINIMETA normalizes reads with BBNORM and creates joint SPAdes
+contigs (`--ass true`). To use preassembled metagenome contigs instead, disable
+assembly and supply `--fasta`:
 
 ```bash
 nextflow run gongyh/nf-core-scgs \
     --minimeta \
+    --ass false \
     --reads 'data/*_R{1,2}.fastq.gz' \
     --fasta /path/to/merged.contigs.fasta \
     --outdir results/minimeta \
@@ -74,14 +75,14 @@ nextflow run gongyh/nf-core-scgs \
 The supplied FASTA replaces the joint SPAdes contigs; read correction,
 merging, and joint assembly are skipped. The reads are still trimmed and
 remapped to those contigs for coverage and binning. `--fasta` is required when
-`--ass` is false. When both are supplied, assembly runs and the FASTA is not
+`--ass false` is set. When both are supplied, assembly runs and the FASTA is not
 used as the MINIMETA contig input.
 
 ## What The Workflow Does
 
 1. Runs FastQC and, unless `--notrim` is set, Trim Galore.
-2. With `--ass`, normalizes reads with BBNORM, corrects each sample, merges corrected reads, and performs joint SPAdes assembly.
-3. Otherwise, imports the `--fasta` contigs. Remaps trimmed reads to the assembled or imported contigs.
+2. By default, normalizes reads with BBNORM, corrects each sample, merges corrected reads, and performs joint SPAdes assembly.
+3. With `--ass false`, imports the `--fasta` contigs instead. Remaps trimmed reads to the assembled or imported contigs.
 4. Builds single-sample and multi-sample coverage features.
 5. Produces bins with co-occurrence binning and SemiBin2. TaxVAMB and DCVBIN are enabled when their respective resources are provided.
 6. Consolidates available bin sets with DAS Tool.
@@ -93,8 +94,8 @@ used as the MINIMETA contig input.
 | Parameter                     | Default     | Purpose                                                          |
 | ----------------------------- | ----------- | ---------------------------------------------------------------- |
 | `--minimeta`                  | `false`     | Select the MINIMETA workflow.                                    |
-| `--ass`                       | `false`     | Run BBNORM normalization, correction, and joint SPAdes assembly. |
-| `--fasta <path>`              | unset       | Preassembled contigs; required without `--ass`.                  |
+| `--ass [true\|false]`         | `true`      | Run BBNORM normalization, correction, and joint SPAdes assembly. |
+| `--fasta <path>`              | unset       | Preassembled contigs; required with `--ass false`.               |
 | `--outdir <path>`             | `./results` | Directory for published results.                                 |
 | `--notrim`                    | `false`     | Skip adapter and quality trimming.                               |
 | `--saveTrimmed`               | `false`     | Publish trimmed reads.                                           |
@@ -123,7 +124,6 @@ provided. A practical full-featured configuration looks like this:
 ```bash
 nextflow run gongyh/nf-core-scgs \
     --minimeta \
-    --ass \
     --reads 'data/*_R{1,2}.fastq.gz' \
     --checkm2_db /path/to/checkm2_db \
     --mmseqs_db /path/to/mmseqs_db \

@@ -62,6 +62,12 @@ nextflow run gongyh/nf-core-scgs --reads '*_R{1,2}.fastq.gz' -profile base,docke
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
 
+SCGS assembles reads with SPAdes by default (`--ass true`). To skip assembly,
+set `--ass false`; reference-based analyses can still use `--fasta` or a
+configured `--genome`. The MINIMETA workflow also assembles by default; see the
+[MINIMETA guide](../MINIMETA.md) for using `--ass false` with a preassembled
+metagenome FASTA.
+
 Note that the pipeline will create the following files in your working directory:
 
 ```bash

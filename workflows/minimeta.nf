@@ -13,8 +13,8 @@ def helpMessage() {
     --reads <glob>                Input reads glob (default: data/*{1,2}.fastq.gz)
     --readPaths <list>            Structured sample/read list supplied in a Nextflow config
     --single_end                  Treat input reads as single-end
-    --ass                         Normalize reads with BBNORM and run joint SPAdes assembly
-    --fasta <path>                Preassembled metagenome FASTA (required without --ass)
+    --ass [true|false]            Normalize reads with BBNORM and run joint SPAdes assembly (default: true)
+    --fasta <path>                Preassembled metagenome FASTA (required with --ass false)
 
     Read processing:
     --notrim                      Skip adapter and quality trimming
@@ -62,7 +62,7 @@ def display_header(summary, custom_runName, single_end) {
     summary['Reads']            = params.reads
     summary['Data Type']        = single_end ? 'Single-End' : 'Paired-End'
     summary['Workflow']         = 'minimeta'
-    summary['Assembly']         = params.ass ? 'Joint SPAdes assembly (BBNORM)' : 'Preassembled FASTA'
+    summary['Assembly']         = params.ass.toString().toBoolean() ? 'Joint SPAdes assembly (BBNORM)' : 'Preassembled FASTA'
     if (params.fasta) summary['Fasta'] = params.fasta
     if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
     summary['Output dir']       = params.outdir
@@ -173,8 +173,8 @@ params.saveTrimmed = false
 params.bulk = false
 params.mg = false
 params.allow_multi_align = false
-params.ass = true
 params.fasta = null
+ass = params.ass.toString().toBoolean()
 params.min_length = 10000
 params.run_cooccurrence_checkm = false
 params.cooccurrence_eps = 0.05
@@ -193,7 +193,7 @@ if(workflow.profile == 'awsbatch') {
     if (!workflow.workDir.startsWith('s3:') || !params.outdir.startsWith('s3:')) exit 1, "Workdir or Outdir not on S3 - specify S3 Buckets for each to run on AWSBatch!"
 }
 
-if (!params.ass && !params.fasta) exit 1, "MINIMETA requires --fasta when --ass is false. Supply a preassembled metagenome FASTA or enable --ass."
+if (!ass && !params.fasta) exit 1, "MINIMETA requires --fasta when --ass is false. Supply a preassembled metagenome FASTA or enable --ass."
 if (params.fasta && !file(params.fasta).exists()) exit 1, "Fasta file not found: ${params.fasta}"
 
 // Configure Checkm2 database
@@ -319,7 +319,7 @@ summary = [:]
 
     ch_multiqc_assembly = channel.empty()
     ch_multiqc_manifest = channel.empty()
-    if (params.ass) {
+    if (ass) {
         bbnorm = BBNORM(trimmed_reads)
         normalized_reads = bbnorm.map { result ->
             def reads = result.meta.single_end ? [result.single_fastq] : [result.fastq1, result.fastq2]

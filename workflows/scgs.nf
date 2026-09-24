@@ -32,7 +32,7 @@ def helpMessage() {
     --three_prime_clip_r2 <int>   Remove bases from the 3' end of read 2 after trimming
     --bbmap                       Remove host-derived reads with BBMap
     --host_ref <path>             Host reference sequence used with --bbmap
-    --ass                         Assemble reads with SPAdes
+    --ass [true|false]            Assemble reads with SPAdes (default: true)
     --no_normalize                Skip read normalization before assembly
     --pasa                        Enable PASA scaffolding
     --refs_fna <path>             Scaffold FASTA files or a PanTA database directory
@@ -288,7 +288,7 @@ params.saturation = false
 params.snv = false
 params.doubletd = false
 params.cnv = false
-params.ass = false
+ass = params.ass.toString().toBoolean()
 params.no_normalize = false
 params.mg = false
 params.pasa = false
@@ -790,7 +790,7 @@ summary = [:]
     ctg200 = channel.empty()
     ctg = channel.empty()
     ch_multiqc_spades = channel.empty()
-    if ( params.ass ) {
+    if ( ass ) {
         // NORMALIZE
         if ( params.no_normalize ) {
             trimmed_reads.set{ normalized_reads }

@@ -346,8 +346,8 @@
                 },
                 "ass": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Enable assembly: SCGS draft genomes or MINIMETA BBNORM normalization and joint SPAdes assembly."
+                    "default": true,
+                    "description": "Enable assembly by default: SCGS draft genomes or MINIMETA BBNORM normalization and joint SPAdes assembly. Use --ass false to skip assembly."
                 },
                 "genomad": {
                     "type": "boolean",
