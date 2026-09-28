@@ -24,7 +24,7 @@ process CONTIG_COVERAGE {
     fi
     samtools coverage --reference "${fasta}" -o "${meta.id}.cov" "${bam}"
     awk '!/^#/ {
-        depth = \$5 > 0 ? \$7 * (\$3 - \$2 + 1) / \$5 : 0
+        depth = \$7 * (\$3 - \$2 + 1)
         print \$1"\\t"depth
     }' "${meta.id}.cov" | sort -k1,1 > "${meta.id}.depth"
     rm "${meta.id}.cov"

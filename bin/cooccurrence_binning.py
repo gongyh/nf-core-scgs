@@ -191,14 +191,11 @@ def main():
     processed = 0
     for i, j in combinations(range(n), 2):
         a = np.sum((vecs[i] == 1) & (vecs[j] == 1))
-        b = np.sum((vecs[i] == 0) & (vecs[j] == 1))
-        c = np.sum((vecs[i] == 1) & (vecs[j] == 0))
+        b = np.sum((vecs[i] == 1) & (vecs[j] == 0))
+        c = np.sum((vecs[i] == 0) & (vecs[j] == 1))
         d = np.sum((vecs[i] == 0) & (vecs[j] == 0))
         table = [[a, b], [c, d]]
-        if a == 0 or b == 0 or c == 0:
-            p = 1.0
-        else:
-            _, p = fisher_exact(table, alternative="two-sided")
+        _, p = fisher_exact(table, alternative="two-sided")
         dist[i, j] = p
         dist[j, i] = p
         processed += 1
