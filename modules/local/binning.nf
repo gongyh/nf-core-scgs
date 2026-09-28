@@ -4,14 +4,14 @@ process COOCCURRENCE_BINNING {
     tag "cooccurrence"
     label 'process_low'
 
-    conda "conda-forge::python=3.9 conda-forge::pandas conda-forge::scipy conda-forge::scikit-learn bioconda::samtools"
-    container "community.wave.seqera.io/library/samtools_pandas_scikit-learn_scipy:01d109078e7b563b"
+    conda "conda-forge::python=3.9 conda-forge::pandas conda-forge::scipy conda-forge::scikit-learn conda-forge::matplotlib-base"
+    container "community.wave.seqera.io/library/dnaberts:7a7299083f265248"
 
     input:
     coverage_tsv: Path
     filtered_ids: Path
     output:
-    record(clusters: file('clusters.tsv'), mqc_tsv: file('cooccurrence_mqc.tsv'), N_BINS: env('N_BINS'))
+    record(clusters: file('clusters.tsv'), mqc_tsv: file('cooccurrence_mqc.tsv'), N_BINS: env('N_BINS'), coverage_heatmap: file('coverage_heatmap.png'), pvalue_heatmap: file('pvalue_heatmap.png'), tsne_embedding: file('tsne_embedding.png', optional: true))
     topic:
     file('versions.yml') >> 'versions'
     script:
@@ -19,8 +19,9 @@ process COOCCURRENCE_BINNING {
     def args = task.ext.args ?: ''
     def eps = params.cooccurrence_eps ?: 0.05
     """
+    export MPLCONFIGDIR="\$PWD/.matplotlib"
     python ${script_path} \\
-        abundance_matrix.tsv ${filtered_ids} clusters.tsv \\
+        ${coverage_tsv} ${filtered_ids} clusters.tsv \\
         --eps ${eps} ${args}
 
     if [ -f "clusters.tsv" ]; then
@@ -37,7 +38,7 @@ process COOCCURRENCE_BINNING {
         pandas: \$(python -c "import pandas; print(pandas.__version__)" 2>/dev/null || echo "N/A")
         scipy: \$(python -c "import scipy; print(scipy.__version__)" 2>/dev/null || echo "N/A")
         sklearn: \$(python -c "import sklearn; print(sklearn.__version__)" 2>/dev/null || echo "N/A")
-        samtools: \$(samtools --version 2>&1 | head -1)
+        matplotlib: \$(python -c "import matplotlib; print(matplotlib.__version__)")
     END_VERSIONS
     """
 }

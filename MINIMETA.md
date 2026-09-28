@@ -154,20 +154,26 @@ database guidance.
 
 MINIMETA publishes its results below `--outdir`. Key directories include:
 
-| Directory                                  | Contents                                                                  |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| `fastqc/`                                  | Raw-read FastQC reports and archives.                                     |
-| `trim_galore/`                             | Trimming logs, post-trimming FastQC output, and optionally trimmed reads. |
-| `spades/`                                  | Per-sample correction and joint assembly results when `--ass` is set.     |
-| `merged/` and `merged_bam/`                | Merged corrected reads (with `--ass`) and combined alignment files.       |
-| `cooccurrence_bins/` and `extracted_bins/` | Co-occurrence clustering and extracted bins.                              |
-| `semibin2_bins/`                           | SemiBin2 binning results.                                                 |
-| `binning/das_tool/`                        | Consolidated bin set produced by DAS Tool.                                |
-| `CheckM2/`                                 | CheckM2 quality-assessment output, when configured.                       |
-| `prokka/`, `kofam/`, and `eggnog/`         | Bin annotation results when enabled.                                      |
-| `MultiQC/`                                 | MultiQC report, parsed data, plots, and version information.              |
-| `pipeline_info/`                           | Collated software versions.                                               |
+| Directory                                  | Contents                                                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `fastqc/`                                  | Raw-read FastQC reports and archives.                                                                   |
+| `trim_galore/`                             | Trimming logs, post-trimming FastQC output, and optionally trimmed reads.                               |
+| `spades/`                                  | Per-sample correction and joint assembly results when `--ass` is set.                                   |
+| `merged/` and `merged_bam/`                | Merged corrected reads (with `--ass`) and combined alignment files.                                     |
+| `cooccurrence_bins/` and `extracted_bins/` | Co-occurrence clustering, coverage and p-value heatmaps, t-SNE plot (when enabled), and extracted bins. |
+| `semibin2_bins/`                           | SemiBin2 binning results.                                                                               |
+| `binning/das_tool/`                        | Consolidated bin set produced by DAS Tool.                                                              |
+| `CheckM2/`                                 | CheckM2 quality-assessment output, when configured.                                                     |
+| `prokka/`, `kofam/`, and `eggnog/`         | Bin annotation results when enabled.                                                                    |
+| `MultiQC/`                                 | MultiQC report, parsed data, plots, and version information.                                            |
+| `pipeline_info/`                           | Collated software versions.                                                                             |
 
 Optional TaxVAMB and DCVBIN outputs are also published when those branches are
 enabled. See the shared [output documentation](docs/output.md) for details on
 FastQC and MultiQC files.
+
+The `cooccurrence_bins/` directory includes `coverage_heatmap.png` (samples as
+rows, filtered contigs as columns, `log2(coverage + 1)`), `pvalue_heatmap.png`
+(the contig-contig p-value matrix on a 0-1 scale), and `tsne_embedding.png`
+when t-SNE is enabled and at least one contig remains. Embedding points are
+coloured by bin; unbinned contigs are grey.
