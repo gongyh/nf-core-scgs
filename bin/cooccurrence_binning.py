@@ -209,7 +209,8 @@ def main():
         output_dir / "pvalue_heatmap.png",
         "Contig-contig Fisher exact test p-values",
         "p-value (log10)",
-        cmap="magma_r"
+        cmap="magma_r",
+        cluster=True,
     )
 
     if args.tsne and n > 1:
