@@ -127,7 +127,7 @@ def main():
     parser.add_argument("--eps", type=float, default=0.05, help="DBSCAN eps (default: 0.05)")
     parser.add_argument("--min_samples", type=int, default=2, help="DBSCAN min_samples (default: 2)")
     parser.add_argument("--tsne", action="store_true", help="Apply t-SNE before DBSCAN")
-    parser.add_argument("--tsne_dim", type=int, default=3, help="t-SNE output dimensions (default: 3)")
+    parser.add_argument("--tsne_dim", type=int, default=2, help="t-SNE output dimensions (default: 2)")
     parser.add_argument("--tsne_perplexity", type=float, default=30.0, help="t-SNE perplexity (default: 30)")
     args = parser.parse_args()
     if args.tsne_dim < 1:
@@ -202,14 +202,15 @@ def main():
         if processed % 10000 == 0:
             print(f"Processed {processed}/{total_pairs} pairs", file=sys.stderr)
 
+    dist2 = np.maximum(dist, 1e-16)
     plot_heatmap(
-        np.log10(dist),
+        np.log10(dist2),
         valid_ids,
         valid_ids,
         output_dir / "pvalue_heatmap.png",
         "Contig-contig Fisher exact test p-values",
         "p-value (log10)",
-        cmap="magma_r",
+        cmap="Greys_r",
         cluster=True,
     )
 
