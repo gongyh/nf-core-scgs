@@ -23,7 +23,10 @@ process CONTIG_COVERAGE {
         samtools index "${bam}"
     fi
     samtools coverage --reference "${fasta}" -o "${meta.id}.cov" "${bam}"
-    awk '!/^#/ {print \$1"\\t"\$7}' "${meta.id}.cov" | sort -k1,1 > "${meta.id}.depth"
+    awk '!/^#/ {
+        depth = \$5 > 0 ? \$7 * (\$3 - \$2 + 1) / \$5 : 0
+        print \$1"\\t"depth
+    }' "${meta.id}.cov" | sort -k1,1 > "${meta.id}.depth"
     rm "${meta.id}.cov"
 
     cat > "${meta.id}_coverage_mqc.tsv" <<'EOF'
@@ -31,7 +34,7 @@ process CONTIG_COVERAGE {
 # section_name: Coverage
 # plot_type: table
 EOF
-    printf 'Sample\\tContigs\\tContigs with coverage\\tMean depth\\n' >> "${meta.id}_coverage_mqc.tsv"
+    printf 'Sample\\tContigs\\tContigs with coverage\\tMean depth over covered bases\\n' >> "${meta.id}_coverage_mqc.tsv"
     awk -F '\\t' -v sample='${meta.id}' '
         { contigs++; if (\$2 > 0) covered++; depth += \$2 }
         END { printf "%s\\t%d\\t%d\\t%.4f\\n", sample, contigs, covered, contigs ? depth / contigs : 0 }
