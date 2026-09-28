@@ -381,7 +381,10 @@ summary = [:]
     //COOCCURRENCE
     ch_filtered_ids = filter_assembly.map { result -> result.filtered_ids }
     cooccurrence_binning = COOCCURRENCE_BINNING(ch_multi_coverage, ch_filtered_ids)
-    extract_bins = EXTRACT_BINS(cooccurrence_binning.map { result -> result.clusters }, ch_assembly)
+    ch_cooccurrence_clusters = cooccurrence_binning
+        .filter { result -> result.N_BINS.toInteger() != 0 }
+        .map { result -> result.clusters }
+    extract_bins = EXTRACT_BINS(ch_cooccurrence_clusters, ch_assembly)
     ch_all_s2b = ch_all_s2b.mix(extract_bins.map { result -> ['COOCCURRENCE', result.scaffolds2bin] })
     ch_published = ch_published.mix(cooccurrence_binning.map { result -> [destination: 'cooccurrence_bins', files: result] })
     ch_published = ch_published.mix(extract_bins.map { result -> [destination: 'extracted_bins', files: result] })
@@ -394,6 +397,7 @@ summary = [:]
                     file(result.bins).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
                 }
                 .collect()
+                .filter { bin_files -> !bin_files.isEmpty() }
             checkm2_cooccurrence = CHECKM2_COOCCURRENCE(ch_cooccurrence_bins, 'fa', file(params.checkm2_db))
             ch_multiqc_files = ch_multiqc_files.mix(checkm2_cooccurrence.map { result -> result.mqc_tsv }.collect().ifEmpty([]))
             ch_published = ch_published.mix(checkm2_cooccurrence.map { result -> [destination: 'CheckM2', files: result] })

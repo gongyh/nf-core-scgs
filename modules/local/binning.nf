@@ -11,7 +11,7 @@ process COOCCURRENCE_BINNING {
     coverage_tsv: Path
     filtered_ids: Path
     output:
-    record(clusters: file('clusters.tsv'), mqc_tsv: file('cooccurrence_mqc.tsv'))
+    record(clusters: file('clusters.tsv'), mqc_tsv: file('cooccurrence_mqc.tsv'), N_BINS: env('N_BINS'))
     topic:
     file('versions.yml') >> 'versions'
     script:
@@ -24,7 +24,7 @@ process COOCCURRENCE_BINNING {
         --eps ${eps} ${args}
 
     if [ -f "clusters.tsv" ]; then
-        N_BINS=\$(tail -n +2 clusters.tsv | cut -f2 | sort -u | wc -l)
+        N_BINS=\$(awk 'NR > 1 && \$2 != "unbinned" {bins[\$2] = 1} END {print length(bins)}' clusters.tsv)
     else
         N_BINS=0
     fi
