@@ -173,7 +173,8 @@ enabled. See the shared [output documentation](docs/output.md) for details on
 FastQC and MultiQC files.
 
 The `cooccurrence_bins/` directory includes `coverage_heatmap.png` (samples as
-rows, filtered contigs as columns, `log2(coverage + 1)`), `pvalue_heatmap.png`
+rows, filtered contigs as columns, `log2(coverage + 1)`, both axes clustered
+using average linkage and Euclidean distance with dendrograms), `pvalue_heatmap.png`
 (the contig-contig p-value matrix on a 0-1 scale), and `tsne_embedding.png`
 when t-SNE is enabled and at least one contig remains. Embedding points are
 coloured by bin; unbinned contigs are grey.
