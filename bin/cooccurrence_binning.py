@@ -203,12 +203,12 @@ def main():
             print(f"Processed {processed}/{total_pairs} pairs", file=sys.stderr)
 
     plot_heatmap(
-        dist,
+        np.log10(dist),
         valid_ids,
         valid_ids,
         output_dir / "pvalue_heatmap.png",
         "Contig-contig Fisher exact test p-values",
-        "p-value",
+        "p-value (log10)",
         cmap="magma_r",
         vmin=0,
         vmax=1,
