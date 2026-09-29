@@ -16,7 +16,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from scipy.stats import fisher_exact
+from scipy.stats import fisher_exact, rankdata
 from scipy.cluster.hierarchy import dendrogram, leaves_list, linkage
 from scipy.spatial.distance import pdist, squareform
 from sklearn.manifold import TSNE
@@ -221,7 +221,7 @@ def main():
         )
 
         # 1. Compute Spearman correlation matrix (occ is contigs x samples)
-        corr_matrix = occ.T.corr(method="spearman").to_numpy()
+        corr_matrix = df.T.corr(method="spearman").to_numpy()
 
         # 2. Adjust distance matrix based on correlation: if r(i,j) < 0, then dist_transformed(i,j) = -dist(i,j)
         dist_transformed = dist.copy()
@@ -229,9 +229,10 @@ def main():
         dist_transformed[neg_mask] = -dist_transformed[neg_mask]
 
         # 3. Compute Spearman distance matrix
-        D = squareform(pdist(dist_transformed, "correlation"))
-        D = np.nan_to_num(D, nan=1.0, posinf=1.0, neginf=0.0)
-        D = np.maximum(D, 0)
+        dist_ranked = np.apply_along_axis(rankdata, 1, dist_transformed)
+        D = squareform(pdist(dist_ranked, "correlation"))
+        #D = np.nan_to_num(D, nan=1.0, posinf=1.0, neginf=0.0)
+        #D = np.maximum(D, 0)
         np.fill_diagonal(D, 0)
 
         perplexity = min(args.tsne_perplexity, n - 1)
@@ -239,6 +240,7 @@ def main():
         tsne = TSNE(
             n_components=args.tsne_dim,
             random_state=2015,
+            early_exaggeration=4.0, max_iter=5000,
             perplexity=perplexity,
             metric="precomputed",
             init="random",
