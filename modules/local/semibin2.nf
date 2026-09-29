@@ -20,26 +20,28 @@ process SEMIBIN2 {
     def args = task.ext.args ?: ''
     """
     # Precomputed annotations bypass classification, including its dependency check.
-    python - ${taxonomy ? 'precomputed' : 'self'} single_easy_bin \\
+    cat > semibin_launcher.py <<'PY'
+import sys
+from SemiBin import main
+
+if __name__ == '__main__':
+    mode = sys.argv.pop(1)
+    if mode == 'precomputed':
+        check_install = main.check_install
+        def check_precomputed(*args, **kwargs):
+            kwargs['allow_missing_mmseqs2'] = True
+            return check_install(*args, **kwargs)
+        main.check_install = check_precomputed
+    main.main2(sys.argv[1:])
+PY
+    python semibin_launcher.py ${taxonomy ? 'precomputed' : 'self'} single_easy_bin \\
         -i ${assembly} \\
         ${bam_args} \\
         ${tax_args} \\
         -o bins_merged \\
         --threads ${task.cpus} \\
         --compression none \\
-        ${args} <<'PY'
-import sys
-from SemiBin import main
-
-mode = sys.argv.pop(1)
-if mode == 'precomputed':
-    check_install = main.check_install
-    def check_precomputed(*args, **kwargs):
-        kwargs['allow_missing_mmseqs2'] = True
-        return check_install(*args, **kwargs)
-    main.check_install = check_precomputed
-main.main2(sys.argv[1:])
-PY
+        ${args}
     if [ -d bins_merged/output_bins ]; then
         mv bins_merged/output_bins/* bins_merged/ 2>/dev/null || true
         rmdir bins_merged/output_bins
