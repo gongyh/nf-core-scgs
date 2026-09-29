@@ -3,8 +3,8 @@ nextflow.enable.types = true
 process DAS_TOOL {
     tag "das_tool"
     label 'process_medium'
-    conda "bioconda::das_tool=1.1.2"
-    container 'community.wave.seqera.io/library/das_tool:1.1.2--0fc15370c91e86b2'
+    conda "bioconda::das_tool=1.1.7"
+    container 'biocontainers/das_tool:1.1.7--r44hdfd78af_1'
 
     input:
     assembly: Path
@@ -25,11 +25,9 @@ process DAS_TOOL {
         -c ${assembly} \\
         -l ${my_labels} \\
         -o das_tool_result \\
-        --search_engine diamond \\
-        --threads ${task.cpus} \\
+        -t ${task.cpus} \\
         ${args} \\
-        --create_plots 0 \\
-        --write_bins 1
+        --write_bins
 
     mkdir -p das_tool_bins
     if [ -d das_tool_result_DASTool_bins ]; then

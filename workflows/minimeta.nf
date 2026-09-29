@@ -474,7 +474,8 @@ summary = [:]
 
     // GTDB-Tk classification of final consensus bins.
     if (BooleanParams.value(params, 'gtdbtk') && params.gtdb) {
-        gtdbtk = GTDBTK(ch_bins_for_checkm2, gtdb)
+        ch_bins_for_gtdb = ch_bins_for_checkm2.map { bin_files -> bin_files.toSet() }
+        gtdbtk = GTDBTK(ch_bins_for_gtdb, gtdb)
         ch_multiqc_files = ch_multiqc_files.mix(gtdbtk.map { result -> result.mqc_tsv }.ifEmpty([]))
         ch_published = ch_published.mix(gtdbtk.map { result -> [destination: 'gtdb', files: result] })
     }
