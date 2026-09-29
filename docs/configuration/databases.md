@@ -55,7 +55,7 @@ directory.
 | `kraken2`         | `kraken2_db/`                               | `--kraken2_db /path/to/kraken2_db`                                  | SCGS              |
 | `kraken1`         | `kraken1_db/`                               | `--kraken1_db /path/to/kraken1_db`                                  | SCGS              |
 | `krona`           | `krona_db/taxonomy.tab`                     | `--krona_db /path/to/krona_db/taxonomy.tab`                         | SCGS              |
-| `gtdb`            | `gtdb_db/`                                  | `--gtdb /path/to/gtdb_db`                                           | SCGS              |
+| `gtdb`            | `gtdb_db/`                                  | `--gtdb /path/to/gtdb_db`                                           | SCGS and MINIMETA |
 | `blob`            | `blob_db/nodesDB.txt`                       | `--blob_db /path/to/blob_db/nodesDB.txt`                            | SCGS              |
 | `metabuli`        | `metabuli_db/`                              | `--metabuli_db /path/to/metabuli_db`                                | MINIMETA          |
 | `genomad`         | `db/`                                       | `--genomad_db /path/to/db`                                          | SCGS              |
@@ -66,6 +66,9 @@ directory.
 
 `checkm2` enables CheckM2 quality assessment. In MINIMETA,
 `--run_cooccurrence_checkm` additionally runs CheckM2 on co-occurrence bins.
+
+`gtdb` enables GTDB-Tk classification when `--gtdbtk` is true (the default).
+In MINIMETA, classification runs on the final DAS Tool consensus bins.
 
 `metabuli` provides shared contig taxonomy for SemiBin2 semi-supervised
 training and the optional TaxVAMB branch. Without this database, SemiBin2

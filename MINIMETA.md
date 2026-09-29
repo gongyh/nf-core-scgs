@@ -89,7 +89,7 @@ Boolean options accept `true` or `false` explicitly. For example,
 4. Builds single-sample and multi-sample coverage features.
 5. Produces bins with co-occurrence binning and SemiBin2. TaxVAMB and DCVBIN are enabled when their respective resources are provided.
 6. Consolidates available bin sets with DAS Tool.
-7. Runs CheckM2, Prokka, and optional KOfam and EggNOG annotation when their databases are configured.
+7. Runs CheckM2 and GTDB-Tk on final DAS Tool bins, Prokka, and optional KOfam and EggNOG annotation when their databases are configured.
 8. Generates a MultiQC report and software-version report.
 
 ## MINIMETA Parameters
@@ -107,6 +107,8 @@ Boolean options accept `true` or `false` explicitly. For example,
 | `--cooccurrence_eps <number>`             | `0.05`      | Distance threshold for co-occurrence binning.                    |
 | `--run_cooccurrence_checkm [true\|false]` | `false`     | Run CheckM2 on co-occurrence bins when `--checkm2_db` is set.    |
 | `--checkm2_db <path>`                     | unset       | CheckM2 database for bin quality assessment.                     |
+| `--gtdb <path>`                           | unset       | GTDB-Tk reference database for final DAS Tool bins.              |
+| `--gtdbtk [true\|false]`                  | `true`      | Classify final bins when `--gtdb` is supplied.                   |
 | `--metabuli_db <path>`                    | unset       | Metabuli taxonomy for SemiBin2 and TaxVAMB.                      |
 | `--DNABERTS_dir <path>`                   | unset       | Enable the DCVBIN integration.                                   |
 | `--kofam`                                 | `true`      | Enable KOfam annotation when both KOfam resources are supplied.  |
@@ -128,6 +130,7 @@ nextflow run gongyh/nf-core-scgs \
     --minimeta \
     --reads 'data/*_R{1,2}.fastq.gz' \
     --checkm2_db /path/to/checkm2_db \
+    --gtdb /path/to/gtdb_db \
     --metabuli_db /path/to/metabuli_db \
     --DNABERTS_dir /path/to/dnaberts_model \
     --kofam_profile /path/to/profiles \
@@ -141,7 +144,7 @@ The database preparation workflow can create several supported resources:
 ```bash
 nextflow run gongyh/nf-core-scgs \
     --prepare_databases \
-    --db_type checkm2,kofam,eggnog,metabuli \
+    --db_type checkm2,gtdb,kofam,eggnog,metabuli \
     -profile docker
 ```
 
@@ -153,6 +156,11 @@ converted for TaxVAMB and SemiBin2 semi-supervised training. Without it,
 SemiBin2 uses self-supervised training and TaxVAMB is skipped.
 
 ## Results
+
+GTDB-Tk classification of final consensus bins is published under `gtdb/`,
+including its full output directory, `taxa.txt`, and the MultiQC taxonomy table.
+It is skipped when no final bins are produced, `--gtdb` is unset, or
+`--gtdbtk false` is supplied.
 
 MINIMETA publishes its results below `--outdir`. Key directories include:
 

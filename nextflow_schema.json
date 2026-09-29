@@ -282,7 +282,7 @@
                 "gtdbtk": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable gtdbtk analysis."
+                    "description": "Enable GTDB-Tk analysis, including final DAS Tool bins in MINIMETA, when --gtdb is supplied."
                 },
                 "split": {
                     "type": "boolean",
@@ -464,7 +464,7 @@
                 },
                 "gtdb": {
                     "type": "string",
-                    "description": "Path of gtdb database."
+                    "description": "Path to the GTDB-Tk reference database for SCGS genomes or MINIMETA final bins."
                 },
                 "bakta_db": {
                     "type": "string",

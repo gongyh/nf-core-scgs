@@ -30,6 +30,8 @@ def helpMessage() {
     --cooccurrence_eps <number>   Distance threshold for co-occurrence binning (default: 0.05)
     --run_cooccurrence_checkm [true|false]  Run CheckM2 on co-occurrence bins (default: false; requires --checkm2_db)
     --checkm2_db <path>           CheckM2 database
+    --gtdb <path>                GTDB-Tk reference database for final DAS Tool bins
+    --gtdbtk [true|false]        Classify final bins with GTDB-Tk (default: true; requires --gtdb)
     --metabuli_db <path>          Metabuli taxonomy for SemiBin2 and TaxVAMB
     --DNABERTS_dir <path>         DNABERT-S model directory; enables DCVBIN integration
 
@@ -134,6 +136,7 @@ include { FILTER_BAM                        } from '../modules/local/filter_bam'
 include { DCVBIN                            } from '../subworkflows/local/dcvbin'
 include { DAS_TOOL                          } from '../modules/local/das_tool'
 include { CHECKM2                           } from '../modules/local/checkm2'
+include { GTDBTK                            } from '../modules/local/gtdbtk'
 include { PROKKA                            } from '../modules/local/prokka'
 include { KOFAMSCAN                         } from '../modules/local/kofamscan'
 include { EGGNOG                            } from '../modules/local/eggnog'
@@ -157,6 +160,7 @@ params.config_profile_url = null
 params.email = null
 params.maxMultiqcEmailFileSize = 25 * 1024 * 1024
 params.checkm2_db = null
+params.gtdb = null
 params.kofam_profile = null
 params.kofam_kolist = null
 params.eggnog_db = null
@@ -191,6 +195,12 @@ if (params.checkm2_db) {
     if ( !checkm2_db.exists() ) exit 1, "CheckM2 database not found: ${params.checkm2_db}"
 } else {
     checkm2_db = file("/dev/null")
+}
+
+// Configure GTDB-Tk reference data when classification is enabled.
+gtdb = file('/dev/null')
+if (BooleanParams.value(params, 'gtdbtk') && params.gtdb) {
+    gtdb = file(params.gtdb, type: 'dir', checkIfExists: true)
 }
 
 //kofam database
@@ -461,6 +471,13 @@ summary = [:]
         file(bin_dir).listFiles().findAll { entry -> entry.name.endsWith('.fa') }
     }
     ch_bins_for_checkm2 = ch_bin_files.collect().filter { bin_files -> !bin_files.isEmpty() }
+
+    // GTDB-Tk classification of final consensus bins.
+    if (BooleanParams.value(params, 'gtdbtk') && params.gtdb) {
+        gtdbtk = GTDBTK(ch_bins_for_checkm2, gtdb)
+        ch_multiqc_files = ch_multiqc_files.mix(gtdbtk.map { result -> result.mqc_tsv }.ifEmpty([]))
+        ch_published = ch_published.mix(gtdbtk.map { result -> [destination: 'gtdb', files: result] })
+    }
 
     // CHECKM2
     if (params.checkm2_db) {

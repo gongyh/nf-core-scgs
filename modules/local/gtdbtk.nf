@@ -4,9 +4,9 @@ process GTDBTK {
     label 'process_medium'
 
     conda "bioconda::gtdbtk=2.7.2"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/gtdbtk:2.7.2--pyhdfd78af_1' :
-        'biocontainers/gtdbtk:2.7.2--pyhdfd78af_1' }"
+        'quay.io/biocontainers/gtdbtk:2.7.2--pyhdfd78af_1' }"
 
     input:
     fa: Set<Path>
@@ -21,6 +21,7 @@ process GTDBTK {
     file('versions.yml') >> 'versions'
 
     script:
+    def extension = task.ext.extension ?: 'fasta'
     """
     export GTDBTK_DATA_PATH=$gtdb
 
@@ -43,7 +44,7 @@ process GTDBTK {
             gtdbtk classify_wf \\
                 --pplacer_cpus 1 \\
                 --genome_dir genome \\
-                --extension fasta \\
+                --extension ${extension} \\
                 --out_dir out \\
                 --cpus $task.cpus
 
@@ -71,5 +72,13 @@ process GTDBTK {
     "${task.process}":
         gtdbtk: \$(echo \$(gtdbtk --version -v 2>&1) | sed "s/gtdbtk: version //; s/ Copyright.*//")
     END_VERSIONS
+    """
+
+    stub:
+    """
+    mkdir -p out
+    printf 'genome\\tclassification\\n' > taxa.txt
+    printf '# plot_type: table\\n# section_name: GTDBtk\\ngenome\\tclassification\\n' > GTDBtk_mqc.tsv
+    printf '${task.process}:\\n  gtdbtk: stub\\n' > versions.yml
     """
 }
