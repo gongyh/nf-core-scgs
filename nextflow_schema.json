@@ -367,7 +367,7 @@
                 "db_type": {
                     "type": "string",
                     "default": "all",
-                    "description": "Comma-separated databases to prepare: mmseqs, checkm2, kofam, eggnog, kraken2, kraken1, krona, gtdb, blob, metabuli, genomad, nt, bakta, dnaberts, eukcc, or all."
+                    "description": "Comma-separated databases to prepare: checkm2, kofam, eggnog, kraken2, kraken1, krona, gtdb, blob, metabuli, genomad, nt, bakta, dnaberts, eukcc, or all."
                 },
                 "genus": {
                     "type": "string",
@@ -478,13 +478,9 @@
                     "type": "string",
                     "description": "Reference sequence for BBMap host-read removal."
                 },
-                "mmseqs_db": {
-                    "type": "string",
-                    "description": "Path to the MMseqs2 database for contig taxonomy."
-                },
                 "metabuli_db": {
                     "type": "string",
-                    "description": "Path to the MetaBuli database for contig taxonomy."
+                    "description": "Path to the Metabuli database for taxonomy shared by SemiBin2 and TaxVAMB."
                 },
                 "DNABERTS_dir": {
                     "type": "string",

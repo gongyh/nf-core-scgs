@@ -91,6 +91,7 @@ EOF
     touch ${prefix}/vae_clusters_metadata.tsv
     touch ${prefix}/vae_clusters_split.tsv
     touch ${prefix}/vae_clusters_unsplit.tsv
+    touch ${prefix}/scaffolds2bin.tsv
     touch ${prefix}/latent.npz
     touch ${prefix}/model.pt
     touch ${prefix}/abundance.npz
@@ -103,9 +104,6 @@ EOF
 Sample	Clusters	Multi-contig clusters	Clustered contigs	Clustered bases (bp)
 ${meta.id}	0	0	0	0
 EOF
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        vamb: stub
-    END_VERSIONS
+    printf '${task.process}:\\n  vamb: stub\\n' > versions.yml
     """
 }

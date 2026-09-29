@@ -14,7 +14,7 @@ def helpMessage() {
 
     Database options:
     --db_type <list>              Comma-separated databases to prepare (default: all)
-    Available: mmseqs, checkm2, kofam, eggnog, kraken2,
+    Available: checkm2, kofam, eggnog, kraken2,
                                     kraken1, krona, gtdb, blob, metabuli, genomad, nt,
                                     bakta, dnaberts, eukcc, all
 
@@ -29,7 +29,6 @@ def helpMessage() {
 /*
  * Import modules
  */
-include { MMSEQS_DBDOWNLOAD         } from '../modules/local/mmseqs_download'
 include { CHECKM2_DBDOWNLOAD        } from '../modules/local/checkm2_download'
 include { KOFAM_DBDOWNLOAD          } from '../modules/local/kofam_download'
 include { EGGNOG_DBDOWNLOAD         } from '../modules/local/eggnog_download'
@@ -57,13 +56,6 @@ workflow PREPARE_DATABASES {
     ch_published = channel.empty()
 
     def db_types = params.db_type.toLowerCase().split(',').collect { db_type -> db_type.trim() }
-
-    // MMseqs2 database
-    if (db_types.contains("all") || db_types.contains("mmseqs")) {
-        mmseqs_download = MMSEQS_DBDOWNLOAD()
-        ch_published = ch_published.mix(mmseqs_download.map { result -> [destination: '.', files: result.db] })
-        log.info "Prepared MMseqs2 database: ${params.outdir}/mmseqs_db"
-    }
 
     // CheckM2 database
     if (db_types.contains("all") || db_types.contains("checkm2")) {

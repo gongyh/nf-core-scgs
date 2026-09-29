@@ -13,7 +13,7 @@
 %%metro line: reporting | Reports and docs | #9D755D
 %%metro marker_legend: circle, solid | Mandatory process
 %%metro marker_legend: square, solid | Optional process
-%%metro marker: mmseqs_taxonomy | square, solid
+%%metro marker: metabuli_taxonomy | square, solid
 %%metro marker: taxvamb | square, solid
 %%metro marker: dcvbin | square, solid
 %%metro marker: checkm2 | square, solid
@@ -66,8 +66,8 @@ graph LR
         taxvamb([TaxVAMB])
         cooccurrence_binning([COOCCURRENCE_BINNING])
         extract_bins([EXTRACT_BINS])
-        mmseqs_taxonomy([MMSEQS_CONTIG_TAXONOMY])
-        mmseqs2semibin([MMSEQS2SEMIBIN])
+        metabuli_taxonomy([METABULI_TAXA])
+        taxonomy_tables([METABULI_TAXONOMY_TABLES])
         semibin2([SEMIBIN2])
         filter_contigs([FILTER_CONTIGS])
         filter_bam([FILTER_BAM])
@@ -76,10 +76,9 @@ graph LR
 
         filter_assembly -->|bin| cooccurrence_binning
         cooccurrence_binning -->|bin| extract_bins
-        filter_assembly -->|bin| mmseqs_taxonomy
-        mmseqs_taxonomy -->|bin| mmseqs2semibin
-        mmseqs2semibin -->|bin| semibin2
-        filter_assembly -->|bin| taxvamb
+        metabuli_taxonomy -->|bin| taxonomy_tables
+        taxonomy_tables -->|bin| semibin2
+        taxonomy_tables -->|bin| taxvamb
         filter_assembly -->|bin| filter_contigs
         filter_contigs -->|bin| filter_bam
         filter_bam -->|bin| dcvbin
@@ -112,6 +111,6 @@ graph LR
     end
 
     assembly_contigs -->|coverage| bowtie2_remap
+    assembly_contigs -->|bin| metabuli_taxonomy
     coverage_features_out -->|bin| filter_assembly
     das_tool -->|annotation| consensus_bins
-

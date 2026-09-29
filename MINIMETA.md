@@ -107,8 +107,7 @@ Boolean options accept `true` or `false` explicitly. For example,
 | `--cooccurrence_eps <number>`             | `0.05`      | Distance threshold for co-occurrence binning.                    |
 | `--run_cooccurrence_checkm [true\|false]` | `false`     | Run CheckM2 on co-occurrence bins when `--checkm2_db` is set.    |
 | `--checkm2_db <path>`                     | unset       | CheckM2 database for bin quality assessment.                     |
-| `--mmseqs_db <path>`                      | unset       | MMseqs2 database for contig taxonomy and SemiBin2.               |
-| `--metabuli_db <path>`                    | unset       | Enable the TaxVAMB integration.                                  |
+| `--metabuli_db <path>`                    | unset       | Metabuli taxonomy for SemiBin2 and TaxVAMB.                      |
 | `--DNABERTS_dir <path>`                   | unset       | Enable the DCVBIN integration.                                   |
 | `--kofam`                                 | `true`      | Enable KOfam annotation when both KOfam resources are supplied.  |
 | `--kofam_profile <path>`                  | unset       | KOfam profile database.                                          |
@@ -129,7 +128,6 @@ nextflow run gongyh/nf-core-scgs \
     --minimeta \
     --reads 'data/*_R{1,2}.fastq.gz' \
     --checkm2_db /path/to/checkm2_db \
-    --mmseqs_db /path/to/mmseqs_db \
     --metabuli_db /path/to/metabuli_db \
     --DNABERTS_dir /path/to/dnaberts_model \
     --kofam_profile /path/to/profiles \
@@ -143,12 +141,16 @@ The database preparation workflow can create several supported resources:
 ```bash
 nextflow run gongyh/nf-core-scgs \
     --prepare_databases \
-    --db_type checkm2,mmseqs,kofam,eggnog,metabuli \
+    --db_type checkm2,kofam,eggnog,metabuli \
     -profile docker
 ```
 
 See [database configuration](docs/configuration/databases.md) for general
 database guidance.
+
+With `--metabuli_db`, contigs are classified once and the annotations are
+converted for TaxVAMB and SemiBin2 semi-supervised training. Without it,
+SemiBin2 uses self-supervised training and TaxVAMB is skipped.
 
 ## Results
 

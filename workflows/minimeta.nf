@@ -30,8 +30,7 @@ def helpMessage() {
     --cooccurrence_eps <number>   Distance threshold for co-occurrence binning (default: 0.05)
     --run_cooccurrence_checkm [true|false]  Run CheckM2 on co-occurrence bins (default: false; requires --checkm2_db)
     --checkm2_db <path>           CheckM2 database
-    --mmseqs_db <path>            MMseqs2 database for contig taxonomy and SemiBin2
-    --metabuli_db <path>          MetaBuli database; enables TaxVAMB integration
+    --metabuli_db <path>          Metabuli taxonomy for SemiBin2 and TaxVAMB
     --DNABERTS_dir <path>         DNABERT-S model directory; enables DCVBIN integration
 
     Functional annotation:
@@ -128,8 +127,7 @@ include { COOCCURRENCE_BINNING              } from '../modules/local/binning'
 include { CHECKM2_COOCCURRENCE              } from '../modules/local/checkm2_cooccurrence'
 include { EXTRACT_BINS                      } from '../modules/local/extract_bins'
 include { SEMIBIN2                          } from '../modules/local/semibin2'
-include { MMSEQS_CONTIG_TAXONOMY            } from '../subworkflows/local/mmseqs_contig_taxonomy'
-include { MMSEQS2SEMIBIN                    } from '../modules/local/mmseqs2semibin'
+include { METABULI_CONTIG_TAXONOMY          } from '../subworkflows/local/metabuli_contig_taxonomy'
 include { TAXVAMB_INTEGRATION               } from '../subworkflows/local/taxvamb_integration'
 include { FILTER_CONTIGS                    } from '../modules/local/filter_contigs'
 include { FILTER_BAM                        } from '../modules/local/filter_bam'
@@ -172,7 +170,6 @@ params.fasta = null
 ass = BooleanParams.value(params, 'ass')
 params.min_length = 10000
 params.cooccurrence_eps = 0.05
-params.mmseqs_db = null
 params.metabuli_db = null
 params.DNABERTS_dir = null
 custom_runName = workflow.runName
@@ -405,20 +402,14 @@ summary = [:]
             log.info "INFO: --run_cooccurrence_checkm is set, but --checkm2_db is not provided. Skipping CheckM2 for COOCCURRENCE."
         }
     }
-    //MMseqs2
-    if (params.mmseqs_db ) {
-        //MMseqs_TAXA
-        ch_mmseqs_input = ch_assembly.map { fasta -> [ [id: fasta.baseName], fasta ] }
-        ch_mmseqs_db = channel.fromPath( params.mmseqs_db )
-
-        MMSEQS_CONTIG_TAXONOMY( ch_mmseqs_input, ch_mmseqs_db )
-        ch_mmseqs_taxonomy = MMSEQS_CONTIG_TAXONOMY.out.taxonomy
-        ch_multiqc_files = ch_multiqc_files.mix(MMSEQS_CONTIG_TAXONOMY.out.mqc_tsv.map { meta, tsv -> tsv }.ifEmpty([]))
-        ch_published = ch_published.mix(MMSEQS_CONTIG_TAXONOMY.out.published)
-
-        mmseqs2semibin = MMSEQS2SEMIBIN(ch_mmseqs_taxonomy)
-        ch_semibin_tax = mmseqs2semibin.map { result -> result.tax }
-        //SEMIBIN2_Semi
+    // Share one Metabuli classification between both binners.
+    if (params.metabuli_db) {
+        ch_metabuli_input = ch_assembly.map { fasta -> tuple([id: 'merged'], fasta) }
+        METABULI_CONTIG_TAXONOMY(ch_metabuli_input, file(params.metabuli_db, type: 'dir', checkIfExists: true))
+        ch_metabuli_taxonomy = METABULI_CONTIG_TAXONOMY.out.taxonomy
+        ch_semibin_tax = METABULI_CONTIG_TAXONOMY.out.semibin_taxonomy
+        ch_multiqc_files = ch_multiqc_files.mix(METABULI_CONTIG_TAXONOMY.out.mqc_tsv.ifEmpty([]))
+        ch_published = ch_published.mix(METABULI_CONTIG_TAXONOMY.out.published)
         semibin2 = SEMIBIN2(ch_assembly, ch_merged_bam, ch_semibin_tax)
     } else {
         semibin2 = SEMIBIN2(ch_assembly, ch_merged_bam, null)
@@ -432,7 +423,7 @@ summary = [:]
     ch_published = ch_published.mix(semibin2.map { result -> [destination: 'semibin2_bins', files: result] })
 
     if (params.metabuli_db) {
-        taxvamb = TAXVAMB_INTEGRATION(ch_assembly, ch_single_coverage)
+        taxvamb = TAXVAMB_INTEGRATION(ch_assembly, ch_single_coverage, ch_metabuli_taxonomy)
         ch_all_s2b = ch_all_s2b.mix(taxvamb.scaffolds2bin.map { _meta, file -> ['TAXVAMB', file] })
         ch_published = ch_published.mix(taxvamb.published)
         ch_taxvamb_mqc = taxvamb.mqc_tsv

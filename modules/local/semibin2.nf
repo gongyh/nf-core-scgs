@@ -16,17 +16,30 @@ process SEMIBIN2 {
     file('versions.yml') >> 'versions'
     script:
     def bam_args = "-b ${merged_bam}"
-    def tax_args = taxonomy ? "--taxonomy ${taxonomy}" : ""
+    def tax_args = taxonomy ? "--semi-supervised --taxonomy-annotation-table ${taxonomy}" : "--self-supervised"
     def args = task.ext.args ?: ''
     """
-    SemiBin2 single_easy_bin \\
+    # Precomputed annotations bypass classification, including its dependency check.
+    python - ${taxonomy ? 'precomputed' : 'self'} single_easy_bin \\
         -i ${assembly} \\
         ${bam_args} \\
         ${tax_args} \\
         -o bins_merged \\
         --threads ${task.cpus} \\
         --compression none \\
-        ${args}
+        ${args} <<'PY'
+import sys
+from SemiBin import main
+
+mode = sys.argv.pop(1)
+if mode == 'precomputed':
+    check_install = main.check_install
+    def check_precomputed(*args, **kwargs):
+        kwargs['allow_missing_mmseqs2'] = True
+        return check_install(*args, **kwargs)
+    main.check_install = check_precomputed
+main.main2(sys.argv[1:])
+PY
     if [ -d bins_merged/output_bins ]; then
         mv bins_merged/output_bins/* bins_merged/ 2>/dev/null || true
         rmdir bins_merged/output_bins
@@ -45,9 +58,14 @@ process SEMIBIN2 {
     printf "Metric\\tValue\\n" > semibin2_mqc.tsv
     printf "Number of bins recovered\\t\${N_BINS}\\n" >> semibin2_mqc.tsv
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        semibin2: \$(SemiBin2 --version 2>&1 | head -1)
-    END_VERSIONS
+    printf '${task.process}:\\n  semibin2: %s\\n' "\$(SemiBin2 --version 2>&1 | head -1)" > versions.yml
+    """
+
+    stub:
+    """
+    mkdir -p bins_merged
+    touch scaffolds2bin.tsv
+    printf 'Metric\\tValue\\nNumber of bins recovered\\t0\\n' > semibin2_mqc.tsv
+    printf '${task.process}:\\n  semibin2: stub\\n' > versions.yml
     """
 }

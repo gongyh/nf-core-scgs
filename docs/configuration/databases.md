@@ -15,7 +15,7 @@ Use `--prepare_databases` to select the database workflow:
 ```bash
 nextflow run gongyh/nf-core-scgs \
     --prepare_databases \
-    --db_type checkm2,mmseqs,kofam,eggnog \
+    --db_type checkm2,metabuli,kofam,eggnog \
     -profile docker
 ```
 
@@ -35,7 +35,7 @@ nextflow run gongyh/nf-core-scgs \
 are:
 
 ```text
-mmseqs, checkm2, kofam, eggnog, kraken2, kraken1, krona, gtdb, blob, metabuli, genomad, nt, bakta, dnaberts, eukcc, all
+checkm2, kofam, eggnog, kraken2, kraken1, krona, gtdb, blob, metabuli, genomad, nt, bakta, dnaberts, eukcc, all
 ```
 
 Do not use this workflow for every analysis by default. Prepare only the
@@ -50,7 +50,6 @@ directory.
 | `--db_type` value | Prepared resource                           | Use it with                                                         | Workflow          |
 | ----------------- | ------------------------------------------- | ------------------------------------------------------------------- | ----------------- |
 | `checkm2`         | `checkm2_db/`                               | `--checkm2_db /path/to/checkm2_db`                                  | SCGS and MINIMETA |
-| `mmseqs`          | `mmseqs_db/`                                | `--mmseqs_db /path/to/mmseqs_db`                                    | MINIMETA          |
 | `kofam`           | `kofam_db/profiles/` and `kofam_db/ko_list` | `--kofam_profile /path/to/profiles --kofam_kolist /path/to/ko_list` | SCGS and MINIMETA |
 | `eggnog`          | `eggnog_db/`                                | `--eggnog_db /path/to/eggnog_db`                                    | SCGS and MINIMETA |
 | `kraken2`         | `kraken2_db/`                               | `--kraken2_db /path/to/kraken2_db`                                  | SCGS              |
@@ -68,8 +67,9 @@ directory.
 `checkm2` enables CheckM2 quality assessment. In MINIMETA,
 `--run_cooccurrence_checkm` additionally runs CheckM2 on co-occurrence bins.
 
-`mmseqs` provides contig taxonomy for MINIMETA and can improve SemiBin2
-binning. `metabuli` provides taxonomy for the optional TaxVAMB branch.
+`metabuli` provides shared contig taxonomy for SemiBin2 semi-supervised
+training and the optional TaxVAMB branch. Without this database, SemiBin2
+runs self-supervised training and TaxVAMB is skipped.
 
 KOfam annotation requires both `--kofam_profile` and `--kofam_kolist`.
 EggNOG annotation requires `--eggnog_db`. In both cases, the corresponding
@@ -82,7 +82,6 @@ For repeatable runs, place absolute paths in a project or site config file:
 ```nextflow
 params {
     checkm2_db    = '/shared/scgs-databases/checkm2_db'
-    mmseqs_db     = '/shared/scgs-databases/mmseqs_db'
     metabuli_db   = '/shared/scgs-databases/metabuli_db'
     kraken2_db    = '/shared/scgs-databases/kraken2_db'
     kraken1_db    = '/shared/scgs-databases/kraken1_db'
