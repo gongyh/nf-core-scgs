@@ -1,10 +1,12 @@
 nextflow.enable.types = true
 
 process SEMIBIN2 {
-    tag "coassembly_binning"
+    tag "semibin2_binning"
     label 'process_medium'
-    conda "bioconda::semibin=2.3.0"
-    container 'community.wave.seqera.io/library/semibin:2.3.0--33e3e4e2b94625ad'
+    label 'process_gpu'
+
+    conda "semibin_env.yaml"
+    container 'community.wave.seqera.io/library/python_pip_semibin_torch_torchvision:0f97dc484b384f4c'
 
     input:
     assembly: Path

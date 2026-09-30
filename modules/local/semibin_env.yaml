@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12.14
+  - pip=26.2.1
+  - pip:
+    - semibin==2.3.0
+    - torch==2.14.0
+    - torchvision==0.29.0

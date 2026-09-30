@@ -3,11 +3,10 @@ nextflow.enable.types = true
 process VAMB_BIN {
     tag "$meta.id"
     label 'process_high'
+    label 'process_gpu'
 
-    conda "bioconda::vamb=5.0.4"
-    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/vamb:5.0.4--pyhdfd78af_0':
-        'quay.io/biocontainers/vamb:5.0.4--pyhdfd78af_0' }"
+    conda "vamb_env.yaml"
+    container "community.wave.seqera.io/library/python_pip_vamb_torch_torchvision:544a46b38fe75bc6"
 
     input:
     tuple(meta: Map, assembly: Path, abundance_tsv: Path, taxonomy: Path)
@@ -23,6 +22,7 @@ process VAMB_BIN {
     def mode    = "taxvamb"
     tax_input   = "--taxonomy ${taxonomy}"
     def min_len = task.ext.min_contig_len ?: '250'
+    def cuda_flag = task.accelerator ? '--cuda' : ''
     """
     awk -v min=${min_len} 'BEGIN {RS=">"; ORS=""} NR>1 {seq=\$0; gsub(/\\n/, "", seq); if(length(seq) >= min) print ">"\$0}' ${assembly} > filtered.contigs.fasta
 
@@ -50,6 +50,7 @@ process VAMB_BIN {
         --fasta filtered.contigs.fasta \\
         --abundance_tsv filtered.abundance.tsv \\
         ${tax_input} \\
+        ${cuda_flag} \\
         ${args}
 
     awk -F'\\t' 'NR>1 {print \$2"\\t"\$1}' ${prefix}/vae*_clusters_unsplit.tsv > ${prefix}/scaffolds2bin.tsv
