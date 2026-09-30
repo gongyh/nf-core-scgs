@@ -6,7 +6,7 @@ process SEMIBIN2 {
     label 'process_gpu'
 
     conda "semibin_env.yaml"
-    container 'community.wave.seqera.io/library/python_pip_semibin_torch_torchvision:0f97dc484b384f4c'
+    container 'community.wave.seqera.io/library/python_pip_bedtools_hmmer_pruned:b5edf268fd86239c'
 
     input:
     assembly: Path
