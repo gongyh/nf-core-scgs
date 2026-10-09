@@ -2,9 +2,10 @@ nextflow.enable.types = true
 
 process FEATURE_FUSION {
     tag "$meta.id"
+    label 'process_gpu'
 
     conda "${moduleDir}/dcvbin.yaml"
-    container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
+    container 'community.wave.seqera.io/library/dcvbin:70c1909c7e53478c'
 
 
     input:
