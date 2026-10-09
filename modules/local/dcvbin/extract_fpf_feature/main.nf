@@ -4,9 +4,9 @@ process CONTIG_EMBEDDING {
     tag "$meta.id"
     label 'process_gpu'
 
-    conda "${moduleDir}/dnaberts.yaml"
+    conda "${moduleDir}/dcvbin.yaml"
 
-    container 'community.wave.seqera.io/library/dcvbin:933d4092ad6a07f0'
+    container 'community.wave.seqera.io/library/dcvbin:70c1909c7e53478c'
 
     input:
     tuple(meta: Map, ctgs_2k: Path, model_dir: Path)

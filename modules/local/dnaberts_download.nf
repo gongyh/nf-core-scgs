@@ -15,7 +15,7 @@ process DNABERTS_DBDOWNLOAD {
     script:
     """
     wget -q -O DNABERT-S.tar.gz \
-        https://github.com/gongyh/dcvbin/releases/download/v1.1/DNABERT-S.tar.gz
+        https://github.com/gongyh/dcvbin/releases/download/v1.2/DNABERT-S.tar.gz
     mkdir -p dnaberts_db
     tar -xzf DNABERT-S.tar.gz --strip-components=1 -C dnaberts_db
 
