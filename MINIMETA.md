@@ -32,6 +32,26 @@ To run the bundled MINIMETA test dataset from a local checkout:
 nextflow run . --minimeta -profile test_minimeta,docker
 ```
 
+### GPU Support
+
+Add `gpu` to the execution profiles to enable GPU support for the SemiBin2,
+TaxVAMB, and DCVBIN binners:
+
+```bash
+nextflow run gongyh/nf-core-scgs \
+    --minimeta \
+    --reads 'data/*_R{1,2}.fastq.gz' \
+    --outdir results/minimeta \
+    -profile docker,gpu
+```
+
+The `gpu` profile requests one GPU for GPU-labeled processes. It passes
+`--gpus all --shm-size 8g` to Docker or Podman, or `--nv` to Singularity or
+Apptainer, so the host must provide a compatible GPU and container runtime.
+TaxVAMB still requires `--metabuli_db`, and DCVBIN still requires
+`--DNABERTS_dir`; the GPU profile does not enable optional binners without
+their required resources.
+
 ## Inputs
 
 MINIMETA accepts paired-end reads by default. `--reads` must be a quoted glob
