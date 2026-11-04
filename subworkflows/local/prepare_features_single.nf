@@ -10,7 +10,7 @@ workflow PREPARE_FEATURES_SINGLE {
     take:
     ch_fasta: Tuple
     ch_fai: Tuple
-    tuple(Map, Path, List) ch_bam_for_coverage
+    ch_bam_for_coverage: Tuple
 
     main:
     ch_published = channel.empty()
