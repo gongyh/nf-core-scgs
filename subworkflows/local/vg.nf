@@ -8,7 +8,7 @@ include { VG_CALL               } from '../../modules/local/vg/vg_call'
 workflow VG {
     take:
     fasta: Path
-    trimmed_reads: Channel<Tuple<Map,List<Path>>>
+    tuple(Map, List<Path>) trimmed_reads
     vcf: Path
 
     main:
@@ -25,5 +25,5 @@ workflow VG {
     ch_published = ch_published.mix(vg_call.map { result -> [destination: 'vg/vcf', files: result] })
 
     emit:
-    published: Channel<Map> = ch_published
+    published = ch_published
 }

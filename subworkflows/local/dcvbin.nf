@@ -9,8 +9,8 @@ include { DCVBIN_BIN } from '../../modules/local/dcvbin/clustering_bins/main'
 
 workflow DCVBIN {
     take:
-    contigs_fasta: Channel<Tuple<Map,Path>> // contigs >= 2k
-    sorted_bam: Channel<Path>
+    tuple(Map, Path) contigs_fasta // contigs >= 2k
+    path sorted_bam
 
     main:
     ch_published = channel.empty()
@@ -58,9 +58,9 @@ workflow DCVBIN {
     ch_published = ch_published.mix(dcvbin_bin.map { result -> [destination: 'dcvbin_bins', files: result] })
 
     emit:
-    bins_dir: Channel<Tuple<Map,Path>> = dcvbin_bin.map { result -> tuple(result.meta, result.bins_dir) }
-    label_file: Channel<Tuple<Map,Path>> = dcvbin_bin.map { result -> tuple(result.meta, result.label_file) }
-    scaffolds2bin: Channel<Tuple<Map,Path>> = dcvbin_bin.map { result -> tuple(result.meta, result.scaffolds2bin) }
-    mqc_tsv: Channel<Tuple<Map,Path>> = dcvbin_bin.map { result -> tuple(result.meta, result.mqc_tsv) }
-    published: Channel<Map> = ch_published
+    bins_dir = dcvbin_bin.map { result -> tuple(result.meta, result.bins_dir) }
+    label_file = dcvbin_bin.map { result -> tuple(result.meta, result.label_file) }
+    scaffolds2bin = dcvbin_bin.map { result -> tuple(result.meta, result.scaffolds2bin) }
+    mqc_tsv = dcvbin_bin.map { result -> tuple(result.meta, result.mqc_tsv) }
+    published = ch_published
 }

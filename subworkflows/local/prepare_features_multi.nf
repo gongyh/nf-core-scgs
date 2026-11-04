@@ -8,9 +8,9 @@ include { SUMMARIZE_FEATURE_MATRIX   } from '../../modules/local/summarize_featu
 
 workflow PREPARE_FEATURES_MULTI {
     take:
-    ch_fasta: Channel<Tuple<Map,Path>>
-    ch_fai: Channel<Tuple<Map,Path>>
-    ch_bams: Channel<Tuple<Map,Path>>
+    tuple(Map, Path) ch_fasta
+    tuple(Map, Path) ch_fai
+    tuple(Map, Path) ch_bams
 
     main:
     ch_published = channel.empty()
@@ -64,8 +64,8 @@ workflow PREPARE_FEATURES_MULTI {
     ch_published = ch_published.mix(summarize_feature_matrix.map { result -> [destination: 'feature_matrix', files: result] })
 
     emit:
-    feature_matrix: Channel<Path> = summarize_feature_matrix.map { result -> result.matrix }
+    feature_matrix = summarize_feature_matrix.map { result -> result.matrix }
     coverage_matrix: Value<Path> = merge_coverage.map { result -> result.matrix }
-    coverage_mqc: Channel<Path> = ch_coverage_mqc
-    published: Channel<Map> = ch_published
+    coverage_mqc = ch_coverage_mqc
+    published = ch_published
 }

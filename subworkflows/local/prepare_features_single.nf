@@ -8,9 +8,9 @@ include { KMER_COUNT                 } from '../../modules/local/kmer_count'
 
 workflow PREPARE_FEATURES_SINGLE {
     take:
-    ch_fasta: Channel<Tuple<Map,Path>>
-    ch_fai: Channel<Tuple<Map,Path>>
-    ch_bam_for_coverage: Channel<Tuple<Map,Path,List<Path>>>
+    tuple(Map, Path) ch_fasta
+    tuple(Map, Path) ch_fai
+    tuple(Map, Path, List<Path>) ch_bam_for_coverage
 
     main:
     ch_published = channel.empty()
@@ -43,8 +43,8 @@ workflow PREPARE_FEATURES_SINGLE {
     ch_published = ch_published.mix(kmer_count.map { result -> [destination: 'kmer', files: result.csv] })
 
     emit:
-    feature_matrix: Channel<Path> = channel.empty()
-    coverage_matrix: Channel<Path> = ch_coverage
-    coverage_mqc: Channel<Path> = ch_coverage_mqc
-    published: Channel<Map> = ch_published
+    feature_matrix = channel.empty()
+    coverage_matrix = ch_coverage
+    coverage_mqc = ch_coverage_mqc
+    published = ch_published
 }
