@@ -562,7 +562,7 @@ summary = [:]
     ch_software_versions = GET_SOFTWARE_VERSIONS( ch_versions_yml )
     ch_multiqc_versions = ch_software_versions.map { result -> result.mqc_yml }
     ch_published = ch_published.mix(ch_software_versions.map { result -> [destination: 'pipeline_info', files: [result.yml, result.mqc_yml]] })
- 
+
     // MODULE: MULTIQC
     workflow_summary = create_workflow_summary(summary)
     ch_workflow_summary = channel.value(workflow_summary)

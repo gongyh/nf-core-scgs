@@ -24,7 +24,7 @@ process PREPARE_REASSEMBLY_TARGETS {
 process POST_BINNING_REASSEMBLY {
     tag "reassemble"
     label 'process_high'
-    container "community.wave.seqera.io/library/bowtie2_samtools_spades:cdb9830318b544b0" 
+    container "community.wave.seqera.io/library/bowtie2_samtools_spades:cdb9830318b544b0"
 
     input:
     path targets_dir
