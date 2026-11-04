@@ -8,8 +8,8 @@ include { KMER_COUNT                 } from '../../modules/local/kmer_count'
 
 workflow PREPARE_FEATURES_SINGLE {
     take:
-    tuple(Map, Path) ch_fasta
-    tuple(Map, Path) ch_fai
+    ch_fasta: Tuple
+    ch_fai: Tuple
     tuple(Map, Path, List) ch_bam_for_coverage
 
     main:

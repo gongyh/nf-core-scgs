@@ -8,9 +8,9 @@ include { SUMMARIZE_FEATURE_MATRIX   } from '../../modules/local/summarize_featu
 
 workflow PREPARE_FEATURES_MULTI {
     take:
-    tuple(Map, Path) ch_fasta
-    tuple(Map, Path) ch_fai
-    tuple(Map, Path) ch_bams
+    ch_fasta: Tuple
+    ch_fai: Tuple
+    ch_bams: Tuple
 
     main:
     ch_published = channel.empty()

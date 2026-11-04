@@ -9,7 +9,7 @@ include { DCVBIN_BIN } from '../../modules/local/dcvbin/clustering_bins/main'
 
 workflow DCVBIN {
     take:
-    tuple(Map, Path) contigs_fasta // contigs >= 2k
+    contigs_fasta: Tuple // contigs >= 2k
     path sorted_bam
 
     main:
