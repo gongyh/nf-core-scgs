@@ -10,7 +10,7 @@ include { DCVBIN_BIN } from '../../modules/local/dcvbin/clustering_bins/main'
 workflow DCVBIN {
     take:
     contigs_fasta: Tuple // contigs >= 2k
-    path sorted_bam
+    sorted_bam: Path
 
     main:
     ch_published = channel.empty()
