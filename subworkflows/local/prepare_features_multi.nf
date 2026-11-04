@@ -36,7 +36,7 @@ workflow PREPARE_FEATURES_MULTI {
     ch_fasta_file = ch_fasta.map { _meta, fasta -> fasta }
     ch_fai_file = ch_fai.map { _meta, fai -> fai }
 
-    ch_bams_with_bai = ch_bams.map { meta, bam -> tuple(meta, bam, [] as List<Path>) }
+    ch_bams_with_bai = ch_bams.map { meta, bam -> tuple(meta, bam, [] as List) }
 
     ch_coverage_input = ch_bams_with_bai
         .combine(ch_fasta_file)
