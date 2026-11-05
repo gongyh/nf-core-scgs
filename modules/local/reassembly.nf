@@ -67,7 +67,7 @@ process POST_BINNING_REASSEMBLY {
             spades.py --sc --careful -1 ./\${name}_mapped_1.fq -2 ./\${name}_mapped_2.fq -o reassembled_bins/\${name}_out --threads 8
         else
             echo "Warning: 靶标 \$name 没有提取到任何 Reads，跳过组装。"
-        fi 
+        fi
         rm -rf ./target.fa ./\${name}_db ./\${name}_mapped_1.fq ./\${name}_mapped_2.fq
     done
     """
