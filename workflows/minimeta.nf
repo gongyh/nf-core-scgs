@@ -481,7 +481,6 @@ summary = [:]
         ch_multiqc_files = ch_multiqc_files.mix(gtdbtk.map { result -> result.mqc_tsv }.ifEmpty([]))
         ch_published = ch_published.mix(gtdbtk.map { result -> [destination: 'gtdb', files: result] })
     }
-
     // CHECKM2
     if (params.checkm2_db) {
         checkm2 = CHECKM2(ch_bins_for_checkm2, 'fa', checkm2_db)
