@@ -8,7 +8,7 @@ include { VG_CALL               } from '../../modules/local/vg/vg_call'
 workflow VG {
     take:
     fasta: Path
-    trimmed_reads: Tuple
+    trimmed_reads: Channel<Tuple>
     vcf: Path
 
     main:

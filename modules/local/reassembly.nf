@@ -1,15 +1,17 @@
+nextflow.enable.types = true
+
 process PREPARE_REASSEMBLY_TARGETS {
     tag "prepare_targets"
     label 'process_low'
     container "community.wave.seqera.io/library/dnaberts:7a7299083f265248"
 
     input:
-    path checkm2_report
-    path taxvamb_report
-    path bins_dir
-    path script_py
+    checkm2_report: Path
+    taxvamb_report: Path
+    bins_dir: Path
+    script_py: Path
     output:
-    path "targets", emit: targets_dir
+    targets_dir = file("targets", type: 'dir')
 
     script:
     """
@@ -27,11 +29,11 @@ process POST_BINNING_REASSEMBLY {
     container "community.wave.seqera.io/library/bowtie2_samtools_spades:cdb9830318b544b0"
 
     input:
-    path targets_dir
-    path all_reads
+    targets_dir: Path
+    all_reads: List<Path>
 
     output:
-    path "reassembled_bins", emit: reassembled
+    reassembled_bins = file("reassembled_bins", type: 'dir')
 
     script:
     """
@@ -50,8 +52,9 @@ process POST_BINNING_REASSEMBLY {
         > \${name}_mapped_1.fq
         > \${name}_mapped_2.fq
         for r1 in ${all_reads}; do
-            if [[ "\$r1" == *_1.fastq ]]; then
+            if [[ "\$r1" == *_1.fastq* ]]; then
                 r2=\${r1/_1.fastq/_2.fastq}
+                if [[ "\$r1" == *".gz" ]]; then r2=\${r2}.gz; fi # 如果是压缩包，推导R2也要加.gz
 
                 bowtie2 -x ./\${name}_db -1 \$r1 -2 \$r2 -S tmp.sam -p 4
                 samtools view -b -F 12 tmp.sam | samtools fastq -1 tmp_1.fq -2 tmp_2.fq -0 /dev/null -s /dev/null -
@@ -60,7 +63,11 @@ process POST_BINNING_REASSEMBLY {
                 rm -f tmp.sam tmp_1.fq tmp_2.fq
             fi
         done
-        spades.py --careful -1 ./\${name}_mapped_1.fq -2 ./\${name}_mapped_2.fq -o reassembled_bins/\${name}_out --threads 8
+        if [ -s "\${name}_mapped_1.fq" ]; then
+            spades.py --sc --careful -1 ./\${name}_mapped_1.fq -2 ./\${name}_mapped_2.fq -o reassembled_bins/\${name}_out --threads 8
+        else
+            echo "Warning: 靶标 \$name 没有提取到任何 Reads，跳过组装。"
+        fi 
         rm -rf ./target.fa ./\${name}_db ./\${name}_mapped_1.fq ./\${name}_mapped_2.fq
     done
     """

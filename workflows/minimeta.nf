@@ -488,14 +488,14 @@ summary = [:]
         ch_multiqc_checkm2 = checkm2.map { result -> result.mqc_tsv }
         ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2)
         ch_published = ch_published.mix(checkm2.map { result -> [destination: 'CheckM2', files: result] })
-        ch_checkm2_report = checkm2_cooccurrence.map { result -> result.mqc_tsv }
-        ch_metabuli_tax_clean = ch_metabuli_taxonomy.map { meta, file -> file }
-        ch_extracted_bins = extract_bins.map { result -> result.bins }
+        ch_checkm2_report = checkm2_cooccurrence.map { it[1] }
+        ch_metabuli_tax_clean = ch_metabuli_taxonomy.map { it[1] }
+        ch_extracted_bins = extract_bins.map { it[1] }
         ch_script_py = file("${projectDir}/bin/prepare_reassembly_targets.py")
-        ch_all_reads = channel.fromPath(params.reads.replace('{1,2}', '*')).collect()
+        ch_all_reads = channel.fromPath(params.reads.toString().replace('{1,2}', '*')).collect()
         PREPARE_REASSEMBLY_TARGETS(ch_checkm2_report, ch_metabuli_tax_clean, ch_extracted_bins, ch_script_py)
         POST_BINNING_REASSEMBLY(PREPARE_REASSEMBLY_TARGETS.out.targets_dir, ch_all_reads)
-        ch_published = ch_published.mix(POST_BINNING_REASSEMBLY.out.reassembled.map { dir -> [destination: 'reassembled_bins', files: dir] })
+        ch_published = ch_published.mix(Channel.fromList(POST_BINNING_REASSEMBLY.out.reassembled).map { dir -> [destination: 'reassembly_results', files: dir] })
     } else {
         ch_multiqc_checkm2 = channel.empty()
     }
