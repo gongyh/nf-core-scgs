@@ -23,21 +23,21 @@ def main():
 
     os.makedirs(args.outdir, exist_ok=True)
 
-    print(f"--- 1. 读取 CheckM2 报告 ---")
+    print(f"--- 1. Reading CheckM2 report ---")
     df_checkm = pd.read_csv(args.checkm2, sep='\t', comment='#')
     name_col = 'Name' if 'Name' in df_checkm.columns else df_checkm.columns[0]
     comp_col = 'Completeness' if 'Completeness' in df_checkm.columns else df_checkm.columns[1]
 
-    # 记录所有 bin 的质量
+    # Record quality of all bins
     bin_quality = dict(zip(df_checkm[name_col], df_checkm[comp_col]))
     low_quality_bins = df_checkm[df_checkm[comp_col] < args.min_comp][name_col].tolist()
-    print(f"找到 {len(low_quality_bins)} 个低质量 bin (完整度 < {args.min_comp}%)")
+    print(f"Found {len(low_quality_bins)} low-quality bins (Completeness < {args.min_comp}%)")
 
-    print(f"\n--- 2. 读取 Taxonomy 报告 ---")
+    print(f"\n--- 2. Reading Taxonomy report ---")
     df_tax = pd.read_csv(args.taxonomy, sep='\t', header=None, names=['contig', 'taxonomy'], skiprows=1)
     contig2tax = dict(zip(df_tax['contig'], df_tax['taxonomy']))
 
-    print(f"\n--- 3. 统计所有 bin 的主导物种 ---")
+    print(f"\n--- 3. Determining dominant species for all bins ---")
     all_bin2species = {}
     for bin_name in df_checkm[name_col]:
         bin_path = os.path.join(args.bindir, f"{bin_name}.fa")
@@ -54,11 +54,11 @@ def main():
 
         if species_counts:
             dominant_species = max(species_counts, key=species_counts.get)
-            # 修复 Bug：判断是否存在 ";s_" 单下划线
+            # Fix Bug: Check if species level exists (single underscore ";s_")
             if ";s_" in dominant_species:
                 all_bin2species[bin_name] = dominant_species
 
-    print(f"\n--- 4. 智能合并同物种碎片（含高/低质量）---")
+    print(f"\n--- 4. Smart merging of same-species fragments (including high/low quality)---")
     species2bins = defaultdict(list)
     for b, s in all_bin2species.items():
         species2bins[s].append(b)
@@ -66,15 +66,15 @@ def main():
     merged_count = 0
     for species, bins in species2bins.items():
         if len(bins) > 1:
-            # 核心逻辑：只要这组同物种的 bin 里，有任何一个是不达标的，就触发合并！
+            # Core logic: If ANY bin in this species group is low-quality, trigger merging!
             has_low_quality = any(b in low_quality_bins for b in bins)
 
             if has_low_quality:
                 safe_species_name = clean_filename(species.split(";")[-1])
                 target_file = os.path.join(args.outdir, f"{safe_species_name}.fa")
 
-                print(f"✅ 正在合并: {bins} -> {target_file}")
-                print(f"   (因为其中包含低质量 bin: {[b for b in bins if b in low_quality_bins]})")
+                print(f"✅ Merging: {bins} -> {target_file}")
+                print(f"   (Because it contains low-quality bin(s):  {[b for b in bins if b in low_quality_bins]})")
 
                 seen_contigs = set()
                 with open(target_file, 'w') as out_f:
@@ -95,8 +95,8 @@ def main():
                                     out_f.write(line)
                 merged_count += 1
 
-    print(f"\n--- 结束 ---")
-    print(f"总共创建了 {merged_count} 个目标 fasta 文件。")
+    print(f"\n--- Finished ---")
+    print(f"Total {merged_count} target fasta file(s) created.")
 
 if __name__ == '__main__':
     main()

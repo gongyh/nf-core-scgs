@@ -494,7 +494,7 @@ summary = [:]
         ch_all_reads = channel.fromPath(params.reads.toString().replace('{1,2}', '*')).collect()
         PREPARE_REASSEMBLY_TARGETS(ch_checkm2_report, ch_metabuli_tax_clean, ch_extracted_bins, ch_script_py)
         POST_BINNING_REASSEMBLY(PREPARE_REASSEMBLY_TARGETS.out.targets_dir, ch_all_reads)
-        ch_published = ch_published.mix(Channel.fromList(POST_BINNING_REASSEMBLY.out.reassembled).map { dir -> [destination: 'reassembly_results', files: dir] })
+        ch_published = ch_published.mix(channel.fromList(POST_BINNING_REASSEMBLY.out.reassembled).map { dir -> [destination: 'reassembly_results', files: dir] })
     } else {
         ch_multiqc_checkm2 = channel.empty()
     }

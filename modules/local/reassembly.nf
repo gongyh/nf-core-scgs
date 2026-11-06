@@ -39,14 +39,14 @@ process POST_BINNING_REASSEMBLY {
     """
     mkdir -p reassembled_bins
     if ! ls ${targets_dir}/*.fa >/dev/null 2>&1; then
-        echo "错误：没有找到任何目标 .fa 文件！"
+        echo "Error: No target .fa files found!"
         exit 1
     fi
 
     for target in ${targets_dir}/*.fa; do
         name=\$(basename \$target .fa)
         echo "======================================"
-        echo "开始重组装靶标: \$name"
+        echo "Starting reassembly for target: \$name"
         cp -L \$target ./target.fa
         bowtie2-build ./target.fa ./\${name}_db > /dev/null 2>&1
         > \${name}_mapped_1.fq
@@ -54,7 +54,7 @@ process POST_BINNING_REASSEMBLY {
         for r1 in ${all_reads}; do
             if [[ "\$r1" == *_1.fastq* ]]; then
                 r2=\${r1/_1.fastq/_2.fastq}
-                if [[ "\$r1" == *".gz" ]]; then r2=\${r2}.gz; fi # 如果是压缩包，推导R2也要加.gz
+                if [[ "\$r1" == *".gz" ]]; then r2=\${r2}.gz; fi
 
                 bowtie2 -x ./\${name}_db -1 \$r1 -2 \$r2 -S tmp.sam -p 4
                 samtools view -b -F 12 tmp.sam | samtools fastq -1 tmp_1.fq -2 tmp_2.fq -0 /dev/null -s /dev/null -
@@ -66,7 +66,7 @@ process POST_BINNING_REASSEMBLY {
         if [ -s "\${name}_mapped_1.fq" ]; then
             spades.py --sc --careful -1 ./\${name}_mapped_1.fq -2 ./\${name}_mapped_2.fq -o reassembled_bins/\${name}_out --threads 8
         else
-            echo "Warning: 靶标 \$name 没有提取到任何 Reads，跳过组装。"
+            echo "Warning: No reads extracted for target \$name, skipping assembly."
         fi
         rm -rf ./target.fa ./\${name}_db ./\${name}_mapped_1.fq ./\${name}_mapped_2.fq
     done

@@ -58,9 +58,9 @@ workflow DCVBIN {
     ch_published = ch_published.mix(dcvbin_bin.map { result -> [destination: 'dcvbin_bins', files: result] })
 
     emit:
-    bins_dir = dcvbin_bin.map { result -> tuple(result.meta, result.bins_dir) }
-    label_file = dcvbin_bin.map { result -> tuple(result.meta, result.label_file) }
-    scaffolds2bin = dcvbin_bin.map { result -> tuple(result.meta, result.scaffolds2bin) }
-    mqc_tsv = dcvbin_bin.map { result -> tuple(result.meta, result.mqc_tsv) }
-    published = ch_published
+    bins_dir: Channel<Tuple> = dcvbin_bin.map { result -> tuple(result.meta, result.bins_dir) }
+    label_file: Channel<Tuple> = dcvbin_bin.map { result -> tuple(result.meta, result.label_file) }
+    scaffolds2bin: Channel<Tuple> = dcvbin_bin.map { result -> tuple(result.meta, result.scaffolds2bin) }
+    mqc_tsv: Channel<Tuple> = dcvbin_bin.map { result -> tuple(result.meta, result.mqc_tsv) }
+    published: Channel<Map> = ch_published
 }

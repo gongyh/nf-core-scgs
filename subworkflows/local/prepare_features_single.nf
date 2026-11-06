@@ -43,8 +43,8 @@ workflow PREPARE_FEATURES_SINGLE {
     ch_published = ch_published.mix(kmer_count.map { result -> [destination: 'kmer', files: result.csv] })
 
     emit:
-    feature_matrix = channel.empty()
-    coverage_matrix = ch_coverage
-    coverage_mqc = ch_coverage_mqc
-    published = ch_published
+    feature_matrix: Channel<Path> = channel.empty()
+    coverage_matrix: Channel<Path> = ch_coverage
+    coverage_mqc: Channel<Path> = ch_coverage_mqc
+    published: Channel<Map> = ch_published
 }

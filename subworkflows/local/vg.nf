@@ -25,5 +25,5 @@ workflow VG {
     ch_published = ch_published.mix(vg_call.map { result -> [destination: 'vg/vcf', files: result] })
 
     emit:
-    published = ch_published
+    published: Channel<Map> = ch_published
 }

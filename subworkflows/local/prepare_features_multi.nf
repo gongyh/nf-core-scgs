@@ -64,8 +64,8 @@ workflow PREPARE_FEATURES_MULTI {
     ch_published = ch_published.mix(summarize_feature_matrix.map { result -> [destination: 'feature_matrix', files: result] })
 
     emit:
-    feature_matrix = summarize_feature_matrix.map { result -> result.matrix }
+    feature_matrix: Channel<Path> = summarize_feature_matrix.map { result -> result.matrix }
     coverage_matrix: Value<Path> = merge_coverage.map { result -> result.matrix }
-    coverage_mqc = ch_coverage_mqc
-    published = ch_published
+    coverage_mqc: Channel<Path> = ch_coverage_mqc
+    published: Channel<Map> = ch_published
 }
