@@ -56,7 +56,7 @@ process POST_BINNING_REASSEMBLY {
                 r2=\${r1/_1.fastq/_2.fastq}
                 if [[ "\$r1" == *".gz" ]]; then r2=\${r2}.gz; fi
 
-                bowtie2 -x ./\${name}_db -1 \$r1 -2 \$r2 -S tmp.sam -p 4
+                bowtie2 -x ./\${name}_db -1 \$r1 -2 \$r2 -S tmp.sam -p ${task.cpus}
                 samtools view -b -F 12 tmp.sam | samtools fastq -1 tmp_1.fq -2 tmp_2.fq -0 /dev/null -s /dev/null -
                 cat tmp_1.fq >> \${name}_mapped_1.fq
                 cat tmp_2.fq >> \${name}_mapped_2.fq
@@ -64,7 +64,7 @@ process POST_BINNING_REASSEMBLY {
             fi
         done
         if [ -s "\${name}_mapped_1.fq" ]; then
-            spades.py --sc --careful -1 ./\${name}_mapped_1.fq -2 ./\${name}_mapped_2.fq -o reassembled_bins/\${name}_out --threads 8
+            spades.py --sc --careful -1 ./\${name}_mapped_1.fq -2 ./\${name}_mapped_2.fq -o reassembled_bins/\${name}_out --threads ${task.cpus}
         else
             echo "Warning: No reads extracted for target \$name, skipping assembly."
         fi
