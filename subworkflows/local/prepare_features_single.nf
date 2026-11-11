@@ -8,9 +8,9 @@ include { KMER_COUNT                 } from '../../modules/local/kmer_count'
 
 workflow PREPARE_FEATURES_SINGLE {
     take:
-    ch_fasta: Channel<Tuple<Map,Path>>
-    ch_fai: Channel<Tuple<Map,Path>>
-    ch_bam_for_coverage: Channel<Tuple<Map,Path,List<Path>>>
+    ch_fasta: Channel<Tuple>
+    ch_fai: Channel<Tuple>
+    ch_bam_for_coverage: Channel<Tuple>
 
     main:
     ch_published = channel.empty()

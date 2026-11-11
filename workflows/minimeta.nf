@@ -140,6 +140,8 @@ include { GTDBTK                            } from '../modules/local/gtdbtk'
 include { PROKKA                            } from '../modules/local/prokka'
 include { KOFAMSCAN                         } from '../modules/local/kofamscan'
 include { EGGNOG                            } from '../modules/local/eggnog'
+include { PREPARE_REASSEMBLY_TARGETS        } from '../modules/local/reassembly'
+include { POST_BINNING_REASSEMBLY           } from '../modules/local/reassembly'
 include { OUTPUT_DOCUMENTATION              } from '../modules/local/output_documentation'
 include { GET_SOFTWARE_VERSIONS             } from '../modules/local/get_software_versions/main'
 
@@ -479,13 +481,20 @@ summary = [:]
         ch_multiqc_files = ch_multiqc_files.mix(gtdbtk.map { result -> result.mqc_tsv }.ifEmpty([]))
         ch_published = ch_published.mix(gtdbtk.map { result -> [destination: 'gtdb', files: result] })
     }
-
     // CHECKM2
     if (params.checkm2_db) {
         checkm2 = CHECKM2(ch_bins_for_checkm2, 'fa', checkm2_db)
         ch_multiqc_checkm2 = checkm2.map { result -> result.mqc_tsv }
         ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_checkm2)
         ch_published = ch_published.mix(checkm2.map { result -> [destination: 'CheckM2', files: result] })
+        ch_checkm2_report = checkm2_cooccurrence.map { it[1] }
+        ch_metabuli_tax_clean = ch_metabuli_taxonomy.map { it[1] }
+        ch_extracted_bins = extract_bins.map { it[1] }
+        ch_script_py = file("${projectDir}/bin/prepare_reassembly_targets.py")
+        ch_all_reads = channel.fromPath(params.reads.toString().replace('{1,2}', '*')).collect()
+        PREPARE_REASSEMBLY_TARGETS(ch_checkm2_report, ch_metabuli_tax_clean, ch_extracted_bins, ch_script_py)
+        POST_BINNING_REASSEMBLY(PREPARE_REASSEMBLY_TARGETS.out.targets_dir, ch_all_reads)
+        ch_published = ch_published.mix(channel.fromList(POST_BINNING_REASSEMBLY.out.reassembled).map { dir -> [destination: 'reassembly_results', files: dir] })
     } else {
         ch_multiqc_checkm2 = channel.empty()
     }
