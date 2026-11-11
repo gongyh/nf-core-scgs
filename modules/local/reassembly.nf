@@ -51,9 +51,12 @@ process POST_BINNING_REASSEMBLY {
         bowtie2-build ./target.fa ./\${name}_db > /dev/null 2>&1
         > \${name}_mapped_1.fq
         > \${name}_mapped_2.fq
-        for r1 in ${all_reads}; do
-            if [[ "\$r1" == *_1.fastq* ]]; then
-                r2=\${r1/_1.fastq/_2.fastq}
+        > \${name}_mapped_single.fq
+        for fq in ${all_reads.join(' ')}; do
+             if [[ "\$fq" == *_R1.fastq* || "\$fq" == *_1.fastq* ]]; then
+                r1=\$fq
+                r2=\${r1/_R1.fastq/_R2.fastq}
+                r2=\${r2/_1.fastq/_2.fastq}
                 if [[ "\$r1" == *".gz" ]]; then r2=\${r2}.gz; fi
 
                 bowtie2 -x ./\${name}_db -1 \$r1 -2 \$r2 -S tmp.sam -p ${task.cpus}
@@ -61,14 +64,24 @@ process POST_BINNING_REASSEMBLY {
                 cat tmp_1.fq >> \${name}_mapped_1.fq
                 cat tmp_2.fq >> \${name}_mapped_2.fq
                 rm -f tmp.sam tmp_1.fq tmp_2.fq
+            elif [[ "\$fq" != *_R2.fastq* && "\$fq" != *_2.fastq* ]]; then
+                r1=\$fq
+                bowtie2 -x ./\${name}_db -U \$r1 -S tmp.sam -p ${task.cpus}
+                samtools view -b -F 12 tmp.sam | samtools fastq -0 /dev/null -s /dev/null - > tmp_single.fq
+                cat tmp_single.fq >> \${name}_mapped_single.fq
+                rm -f tmp.sam tmp_single.fq
             fi
         done
         if [ -s "\${name}_mapped_1.fq" ]; then
+            echo "Running Paired-End assembly for \$name"
             spades.py --sc --careful -1 ./\${name}_mapped_1.fq -2 ./\${name}_mapped_2.fq -o reassembled_bins/\${name}_out --threads ${task.cpus}
+        elif [ -s "\${name}_mapped_single.fq" ]; then
+            echo "Running Single-End assembly for \$name"
+            spades.py --sc --careful -s ./\${name}_mapped_single.fq -o reassembled_bins/\${name}_out --threads ${task.cpus}
         else
             echo "Warning: No reads extracted for target \$name, skipping assembly."
         fi
-        rm -rf ./target.fa ./\${name}_db ./\${name}_mapped_1.fq ./\${name}_mapped_2.fq
+        rm -rf ./target.fa ./\${name}_db ./\${name}_mapped_1.fq ./\${name}_mapped_2.fq ./\${name}_mapped_single.fq
     done
     """
 }
