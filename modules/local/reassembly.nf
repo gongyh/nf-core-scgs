@@ -53,7 +53,7 @@ process POST_BINNING_REASSEMBLY {
         > \${name}_mapped_2.fq
         > \${name}_mapped_single.fq
         for fq in ${all_reads.join(' ')}; do
-             if [[ "\$fq" == *_R1.fastq* || "\$fq" == *_1.fastq* ]]; then
+            if [[ "\$fq" == *_R1.fastq* || "\$fq" == *_1.fastq* ]]; then
                 r1=\$fq
                 r2=\${r1/_R1.fastq/_R2.fastq}
                 r2=\${r2/_1.fastq/_2.fastq}
