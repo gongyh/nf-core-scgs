@@ -9,16 +9,16 @@ process PREPARE_REASSEMBLY_TARGETS {
     checkm2_report: Path
     taxvamb_report: Path
     bins_dir: Path
-    script_py: Path
     output:
     targets_dir = file("targets", type: 'dir')
 
     script:
+    def script_path = "${projectDir}/bin/prepare_reassembly_targets.py"
     """
-    python3 ${script_py} \
-        --checkm2 ${checkm2_report} \
-        --taxonomy ${taxvamb_report} \
-        --bindir ${bins_dir} \
+    python3 ${script_path} \\
+        --checkm2 ${checkm2_report} \\
+        --taxonomy ${taxvamb_report} \\
+        --bindir ${bins_dir} \\
         --outdir targets
     """
 }
